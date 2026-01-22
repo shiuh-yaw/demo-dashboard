@@ -1,0 +1,109 @@
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
+
+export const env = createEnv({
+  /*
+   * Server side Environment variables, not available on the client.
+   * Will throw if you access these variables on the client.
+   */
+  server: {
+    COINBASE_API_KEY: z.string(),
+    COINBASE_API_SECRET: z.string(),
+    /**
+     * LI.FI API Key for cross-chain swaps
+     */
+    LIFI_API_KEY: z.string(),
+    /**
+     * Anthropic API key for AI theme extraction (optional)
+     */
+    ANTHROPIC_API_KEY: z.string().optional(),
+    /**
+     * Redis URL for local development
+     * Defaults to redis://localhost:6379
+     * In production, use Upstash Redis (UPSTASH_REDIS_REST_URL/TOKEN)
+     */
+    REDIS_URL: z.string().url().optional().default("redis://localhost:6379"),
+    /**
+     * Node Environment
+     */
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
+    /**
+     * QStash Token for background job processing
+     * Get from https://console.upstash.com/qstash
+     */
+    QSTASH_TOKEN: z.string().optional(),
+    /**
+     * QStash Current Signing Key (for verifying incoming webhooks)
+     */
+    QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
+    /**
+     * QStash Next Signing Key (for key rotation)
+     */
+    QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
+    /**
+     * Base URL for the app (used for QStash callbacks)
+     * In production, this should be your deployed URL
+     */
+    APP_URL: z.string().url().optional(),
+    /**
+     * Upstash Redis REST URL (for production Redis storage)
+     */
+    UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+    /**
+     * Upstash Redis REST Token (for production Redis storage)
+     */
+    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+    /**
+     * Cron Secret for authenticating Vercel cron jobs
+     */
+    CRON_SECRET: z.string().optional(),
+  },
+  /*
+   * Environment variables available on the client (and server).
+   *
+   * 💡 You'll get type errors if these are not prefixed with NEXT_PUBLIC_.
+   */
+  client: {
+    /**
+     * Dynamic Labs Environment ID
+     * Retrieved from the Dynamic dashboard (https://app.dynamic.xyz)
+     * This identifies your Dynamic Labs project/environment
+     */
+    NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string(),
+    /**
+     * Widget Project URL for live preview
+     * Points to the running nextjs-payment-widget project
+     * Defaults to http://localhost:3000
+     */
+    NEXT_PUBLIC_WIDGET_PROJECT_URL: z
+      .string()
+      .url()
+      .default("http://localhost:3000"),
+  },
+  /*
+   * Due to how Next.js bundles environment variables on Edge and Client,
+   * we need to manually destructure them to make sure all are included in bundle.
+   *
+   * 💡 You'll get type errors if not all variables from `server` & `client` are included here.
+   */
+  runtimeEnv: {
+    COINBASE_API_KEY: process.env.COINBASE_API_KEY,
+    COINBASE_API_SECRET: process.env.COINBASE_API_SECRET,
+    LIFI_API_KEY: process.env.LIFI_API_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    REDIS_URL: process.env.REDIS_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    QSTASH_TOKEN: process.env.QSTASH_TOKEN,
+    QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
+    QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
+    APP_URL: process.env.APP_URL,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    CRON_SECRET: process.env.CRON_SECRET,
+    NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
+      process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
+    NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
+  },
+});
