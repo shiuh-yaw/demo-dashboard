@@ -63,9 +63,10 @@ export type AuthenticatedUser = DynamicJwtPayload;
 
 /**
  * Route context that may include params (for Next.js dynamic routes).
+ * In Next.js App Router, params is always present, even if empty.
  */
 type RouteContext = {
-  params?: Promise<Record<string, string>>;
+  params: Promise<Record<string, string>>;
 };
 
 /**
@@ -225,7 +226,7 @@ function createErrorResponse(message: string, status: number): NextResponse {
 export function withAuth<T extends RouteContext = RouteContext>(
   handler: AuthenticatedRequestHandler<T>
 ) {
-  return async (req: NextRequest, context?: T): Promise<NextResponse> => {
+  return async (req: NextRequest, context: T): Promise<NextResponse> => {
     try {
       // Extract environment ID
       const environmentId = extractEnvironmentId(req);

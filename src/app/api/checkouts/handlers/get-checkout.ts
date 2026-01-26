@@ -8,14 +8,15 @@
 import { checkoutService } from "@/lib/services";
 import { NotFoundError } from "@/lib/errors";
 import { parseWithSchema, checkoutIdSchema } from "@/lib/validation";
-import type { WidgetConfig } from "@/lib/widget-config";
+import type { StoredCheckoutConfig } from "@/lib/types/dashboard";
 
-interface GetCheckoutResult {
-  id: string;
-  name: string;
-  description?: string;
-  config: WidgetConfig;
-}
+/**
+ * Get Checkout Result
+ *
+ * Returns the full checkout config (excluding ownerId for security).
+ * This matches StoredCheckoutConfig structure expected by widgets.
+ */
+type GetCheckoutResult = Omit<StoredCheckoutConfig, "ownerId">;
 
 export async function handleGetCheckout(
   rawInput: unknown
@@ -27,11 +28,7 @@ export async function handleGetCheckout(
     throw new NotFoundError("Checkout not found");
   }
 
-  // Return only the necessary fields for rendering (exclude owner info)
-  return {
-    id: checkout.id,
-    name: checkout.name,
-    description: checkout.description,
-    config: checkout.config,
-  };
+  // Return full checkout config (excluding ownerId for security)
+  const { ownerId, ...result } = checkout;
+  return result;
 }

@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, FileText } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { DynamicLogo } from "@/components/dynamic-logo";
 import { CoinbaseIcon } from "@/components/coinbase-icon";
-import { LiFiIcon } from "@/components/lifi-icon";
 import AuthMenu from "./auth-menu";
 
 const navGroups = [
@@ -23,7 +22,11 @@ const navGroups = [
         label: "Coinbase Onramp",
         icon: CoinbaseIcon,
       },
-      { href: "/lifi", label: "LI.FI Swaps", icon: LiFiIcon },
+      {
+        href: "/checkouts/documentation",
+        label: "Checkout Docs",
+        icon: FileText,
+      },
     ],
   },
 ];

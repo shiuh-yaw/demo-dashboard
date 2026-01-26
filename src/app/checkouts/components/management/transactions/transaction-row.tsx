@@ -30,7 +30,7 @@ export function TransactionRow({
       : null;
 
   return (
-    <div className="grid grid-cols-[100px_1fr_140px_150px_120px_100px_80px] px-5 py-3 items-start hover:bg-slate-50">
+    <div className="grid grid-cols-[100px_1fr_140px_150px_120px_100px_80px] px-5 py-3 items-center hover:bg-slate-50">
       {/* Date */}
       <div className="text-xs text-slate-500 flex items-center">
         {new Date(tx.createdAt).toLocaleDateString()}

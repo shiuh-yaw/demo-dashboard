@@ -24,6 +24,10 @@ export default async function CheckoutOverviewPage({ params }: PageProps) {
   ]);
 
   return (
-    <OverviewTab stats={stats} recentTransactions={transactionsResult.items} />
+    <OverviewTab
+      stats={stats}
+      recentTransactions={transactionsResult.items}
+      checkoutId={id}
+    />
   );
 }

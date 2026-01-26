@@ -6,9 +6,9 @@
 
 import { ExternalLink, Terminal, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { PageHeader } from "../components/page-header";
+import { PageHeader } from "../../components/page-header";
 
-export default function LiFiPage() {
+export default function CheckoutDocumentationPage() {
   return (
     <div>
       <PageHeader title="Checkout API Documentation" />
