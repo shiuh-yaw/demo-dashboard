@@ -14,8 +14,8 @@ import { TransactionsPagination } from "./transactions/transactions-pagination";
 
 interface TransactionsTabProps {
   checkoutId: string;
-  initialTransactions: Transaction[];
-  initialTotal: number;
+  initialTransactions?: Transaction[];
+  initialTotal?: number;
   isLoading?: boolean;
 }
 
@@ -38,8 +38,8 @@ export function TransactionsTab({
     handlePageChange,
   } = useTransactions({
     checkoutId,
-    initialTransactions,
-    initialTotal,
+    initialTransactions: initialTransactions ?? [],
+    initialTotal: initialTotal ?? 0,
     initialLoading,
   });
 

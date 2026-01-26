@@ -12,6 +12,10 @@ import {
 import type { CheckoutService } from "../types";
 import { RedisTransactionService } from "./transactions";
 import { RedisUserService } from "./users";
+import {
+  isDemoCheckout,
+  createDemoCheckoutConfig,
+} from "@/lib/utils/demo-checkout";
 
 export class RedisCheckoutService implements CheckoutService {
   private transactionService: RedisTransactionService;
@@ -23,6 +27,9 @@ export class RedisCheckoutService implements CheckoutService {
   }
 
   async get(id: string): Promise<StoredCheckoutConfig | null> {
+    // Support demo checkouts for testing/demo purposes
+    if (isDemoCheckout(id)) return createDemoCheckoutConfig(id);
+
     const redis = getRedis();
     return redis.get<StoredCheckoutConfig>(REDIS_KEYS.checkoutConfig(id));
   }
@@ -56,6 +63,7 @@ export class RedisCheckoutService implements CheckoutService {
       failed: 0,
       expired: 0,
       abandoned: 0,
+      cancelled: 0,
     };
 
     let completedCount = 0;

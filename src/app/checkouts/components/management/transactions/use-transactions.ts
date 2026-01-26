@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   type Transaction,
   type TransactionStatus,
@@ -8,8 +9,8 @@ import { PAGE_SIZE } from "./constants";
 
 interface UseTransactionsOptions {
   checkoutId: string;
-  initialTransactions: Transaction[];
-  initialTotal: number;
+  initialTransactions?: Transaction[];
+  initialTotal?: number;
   initialLoading?: boolean;
 }
 
@@ -19,17 +20,45 @@ export function useTransactions({
   initialTotal,
   initialLoading,
 }: UseTransactionsOptions) {
-  const [transactions, setTransactions] = useState(initialTransactions);
-  const [total, setTotal] = useState(initialTotal);
+  const searchParams = useSearchParams();
+  
+  // Read initial status filter from URL
+  const urlStatus = searchParams.get("status");
+  const initialStatusFilter: TransactionStatus | "all" =
+    urlStatus && urlStatus !== "all" ? (urlStatus as TransactionStatus) : "all";
+
+  const [transactions, setTransactions] = useState<Transaction[]>(
+    initialTransactions ?? []
+  );
+  const [total, setTotal] = useState(initialTotal ?? 0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<TransactionStatus | "all">(
-    "all"
+    initialStatusFilter
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(initialLoading ?? false);
   const skipInitialFetch = useRef(true);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // Sync status filter when URL changes
+  useEffect(() => {
+    const urlStatus = searchParams.get("status");
+    const newStatusFilter: TransactionStatus | "all" =
+      urlStatus && urlStatus !== "all" ? (urlStatus as TransactionStatus) : "all";
+    if (newStatusFilter !== statusFilter) {
+      setStatusFilter(newStatusFilter);
+      setPage(1);
+    }
+  }, [searchParams, statusFilter]);
+
+  // Sync initialTransactions when they change (e.g., from server-side updates)
+  useEffect(() => {
+    if (initialTransactions && skipInitialFetch.current) {
+      setTransactions(initialTransactions);
+      setTotal(initialTotal ?? 0);
+    }
+  }, [initialTransactions, initialTotal]);
 
   // Fetch transactions when page, filter, or search changes
   useEffect(() => {
@@ -47,6 +76,7 @@ export function useTransactions({
           pageSize: PAGE_SIZE.toString(),
         });
         if (statusFilter !== "all") {
+          // Handle comma-separated statuses (for multi-status filters)
           params.set("status", statusFilter);
         }
 
@@ -66,9 +96,11 @@ export function useTransactions({
           }
         );
         if (response.ok) {
-          const data = await response.json();
-          setTransactions(data.items);
-          setTotal(data.total);
+          const json = await response.json();
+          // API responses are wrapped in { success: true, data: ... }
+          const data = json.success ? json.data : json;
+          setTransactions(data?.items ?? []);
+          setTotal(data?.total ?? 0);
         }
       } catch (error) {
         console.error("Failed to fetch transactions:", error);
