@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, FileText } from "lucide-react";
+import { LayoutGrid, FileText, Wallet } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { DynamicLogo } from "@/components/dynamic-logo";
 import { CoinbaseIcon } from "@/components/coinbase-icon";
@@ -16,6 +16,11 @@ const navGroups = [
         label: "Checkouts",
         icon: LayoutGrid,
         matchCheckouts: true,
+      },
+      {
+        href: "/earns",
+        label: "Earn",
+        icon: Wallet,
       },
       {
         href: "/onramp",

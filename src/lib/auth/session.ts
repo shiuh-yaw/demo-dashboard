@@ -5,10 +5,12 @@
  *
  * Server actions for managing authentication sessions via cookies.
  * Uses Dynamic JWT tokens stored in httpOnly cookies.
+ * Cookie expiration is synced with JWT expiration for consistency.
  */
 
 import { cookies } from "next/headers";
 import { env } from "@/env";
+import jwt from "jsonwebtoken";
 import {
   verifyDynamicJWT,
   type DynamicJwtPayload,
@@ -16,7 +18,26 @@ import {
 } from "./dynamic-jwt";
 
 const DYNAMIC_JWT_COOKIE_NAME = "dynamic_jwt";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+const DEFAULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days fallback
+
+/**
+ * Extract expiration time from JWT and calculate remaining seconds
+ * Returns the time until expiration, or default if not available
+ */
+function getJwtExpirationSeconds(token: string): number {
+  try {
+    const decoded = jwt.decode(token) as { exp?: number } | null;
+    if (decoded?.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = decoded.exp - now;
+      // Return remaining time, but cap at default max and ensure at least 60 seconds
+      return Math.max(60, Math.min(remaining, DEFAULT_COOKIE_MAX_AGE));
+    }
+  } catch {
+    // If decoding fails, use default
+  }
+  return DEFAULT_COOKIE_MAX_AGE;
+}
 
 /**
  * Check if user is authenticated for dashboard
@@ -29,18 +50,21 @@ export async function isDashboardAuthenticated(): Promise<boolean> {
 
 /**
  * Set Dynamic JWT token in cookie after successful authentication
- * This is called from the client after Dynamic authentication succeeds
+ * Cookie maxAge is synced with JWT expiration to prevent stale cookies
  */
 export async function setDynamicJWT(
-  jwt: string
+  jwtToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const cookieStore = await cookies();
-    cookieStore.set(DYNAMIC_JWT_COOKIE_NAME, jwt, {
+    // Sync cookie expiration with JWT expiration
+    const maxAge = getJwtExpirationSeconds(jwtToken);
+
+    cookieStore.set(DYNAMIC_JWT_COOKIE_NAME, jwtToken, {
       httpOnly: true,
       secure: env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: COOKIE_MAX_AGE,
+      maxAge,
       path: "/",
     });
 

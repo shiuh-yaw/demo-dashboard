@@ -16,6 +16,7 @@ import {
   waitForClientInitialized as sdkWaitForClientInitialized,
   sendEmailOTP as sdkSendEmailOTP,
   verifyOTP as sdkVerifyOTP,
+  onEvent as sdkOnEvent,
   OTPVerification,
   VerifyResponse,
 } from "@dynamic-labs-sdk/client";
@@ -190,5 +191,50 @@ export const getUser = (): DynamicClient["user"] | null => {
   if (!client) return null;
   return client.user ?? null;
 };
+
+/**
+ * Setup auth event listeners for cookie sync
+ *
+ * The SDK handles token refresh internally - we just need to listen for
+ * tokenChanged events and sync to cookies. No custom scheduling needed.
+ *
+ * @param callbacks.onTokenChange - Callback when token changes (should update cookie)
+ * @param callbacks.onLogout - Callback when user logs out (should clear cookie)
+ * @returns Cleanup function to remove event listeners
+ */
+export function setupAuthEventListeners(callbacks: {
+  onTokenChange?: (token: string | null) => void;
+  onLogout?: () => void;
+}): () => void {
+  const unsubscribers: Array<(() => void) | null> = [];
+
+  // Listen for token changes - SDK handles refresh internally
+  // The SDK passes an object { token: string | null }
+  const unsubToken = sdkOnEvent({
+    event: "tokenChanged" as Parameters<typeof sdkOnEvent>[0]["event"],
+    listener: (args: { token: string | null }) => {
+      if (args.token) {
+        callbacks.onTokenChange?.(args.token);
+      } else {
+        callbacks.onLogout?.();
+      }
+    },
+  });
+  unsubscribers.push(unsubToken || null);
+
+  // Listen for logout events
+  const unsubLogout = sdkOnEvent({
+    event: "logout" as Parameters<typeof sdkOnEvent>[0]["event"],
+    listener: () => {
+      callbacks.onLogout?.();
+    },
+  });
+  unsubscribers.push(unsubLogout || null);
+
+  // Return cleanup function
+  return () => {
+    unsubscribers.forEach((unsub) => unsub?.());
+  };
+}
 
 export type { OTPVerification, DynamicInitStatus };

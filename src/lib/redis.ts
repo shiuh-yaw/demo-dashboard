@@ -219,4 +219,14 @@ export const REDIS_KEYS = {
   /** Cached stats for a checkout */
   checkoutStats: (checkoutId: string) =>
     `${CHECKOUT_PREFIX}:${checkoutId}:stats`,
+
+  // ==========================================================================
+  // Earn configs (theme/branding for Earn demo)
+  // ==========================================================================
+
+  /** Single Earn config by ID */
+  earnConfig: (id: string) => `${DASHBOARD_PREFIX}:earn:${id}`,
+
+  /** Set of all Earn config IDs */
+  earnConfigList: `${DASHBOARD_PREFIX}:earn:list`,
 } as const;

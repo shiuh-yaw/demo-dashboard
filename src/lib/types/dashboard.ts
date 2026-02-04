@@ -74,6 +74,169 @@ export interface UpdateCheckoutConfigRequest {
 export type UpdateWidgetConfigRequest = UpdateCheckoutConfigRequest;
 
 // =============================================================================
+// Earn Configuration (Theme & Branding)
+// =============================================================================
+
+/**
+ * Supported logo/brand types
+ * "custom" allows passing a hosted SVG URL via logoUrl
+ */
+export type EarnBrand = "dynamic" | "youtube" | "meta" | "remitly" | "custom";
+
+/**
+ * Border radius size tokens
+ */
+export type BorderRadiusSize = "xs" | "sm" | "md" | "lg";
+
+/**
+ * Theme configuration for Earn demo
+ */
+export interface EarnTheme {
+  /** Primary brand color (e.g., brand red, Meta blue) */
+  primaryColor?: string;
+  /** Primary color hover state */
+  primaryHoverColor?: string;
+  /** Accent color for highlights */
+  accentColor?: string;
+  /** Main background color */
+  backgroundColor?: string;
+  /** Light background variant */
+  backgroundLightColor?: string;
+  /** Primary text color */
+  foregroundColor?: string;
+  /** Secondary/muted text color */
+  mutedTextColor?: string;
+  /** Border color */
+  borderColor?: string;
+  /** Active/selected background color */
+  activeBgColor?: string;
+  /** Active/selected text color */
+  activeTextColor?: string;
+  /** Border radius size */
+  borderRadius?: BorderRadiusSize;
+}
+
+/**
+ * Branding configuration for Earn demo
+ */
+export interface EarnBranding {
+  /** Which logo to display */
+  logo: EarnBrand;
+  /** URL to a hosted SVG logo (used when logo is "custom") */
+  logoUrl?: string;
+  /** Token name displayed in balances (e.g., "USDC", "PYUSD") */
+  tokenName?: string;
+  /** Page title shown on the main earn page (defaults to "Earn") */
+  pageTitle?: string;
+  /** Page description shown below the title */
+  pageDescription?: string;
+}
+
+/**
+ * Layout/UI configuration for Earn demo
+ */
+export interface EarnLayout {
+  /** Whether to show the sidebar navigation */
+  showSidebar?: boolean;
+}
+
+/**
+ * Full Earn configuration
+ */
+export interface EarnConfig {
+  /** Theme settings */
+  theme?: EarnTheme;
+  /** Branding settings */
+  branding?: EarnBranding;
+  /** Layout/UI settings */
+  layout?: EarnLayout;
+}
+
+/**
+ * Default theme for Earn Dashboard
+ */
+export const DEFAULT_EARN_THEME: Required<EarnTheme> = {
+  primaryColor: "#4779FF",
+  primaryHoverColor: "#3968e8",
+  accentColor: "#1967D2",
+  backgroundColor: "#F9F9F9",
+  backgroundLightColor: "#FFFFFF",
+  foregroundColor: "#030303",
+  mutedTextColor: "#606060",
+  borderColor: "#DADADA",
+  activeBgColor: "#E8F0FE",
+  activeTextColor: "#1967D2",
+  borderRadius: "md",
+};
+
+/**
+ * Default branding (Dynamic logo)
+ * Note: logoUrl is intentionally omitted as it's only used when logo is "custom"
+ */
+export const DEFAULT_EARN_BRANDING: Required<
+  Pick<EarnBranding, "logo" | "tokenName" | "pageTitle" | "pageDescription">
+> = {
+  logo: "dynamic",
+  tokenName: "USDC",
+  pageTitle: "Earn",
+  pageDescription: "Manage your earnings, balance, and payouts.",
+};
+
+/**
+ * Default layout settings
+ */
+export const DEFAULT_EARN_LAYOUT: Required<EarnLayout> = {
+  showSidebar: false,
+};
+
+/**
+ * Default Earn configuration
+ */
+export const DEFAULT_EARN_CONFIG: EarnConfig = {
+  theme: DEFAULT_EARN_THEME,
+  branding: DEFAULT_EARN_BRANDING,
+  layout: DEFAULT_EARN_LAYOUT,
+};
+
+/**
+ * Stored Earn configuration with metadata
+ */
+export interface StoredEarnConfig {
+  /** Unique identifier */
+  id: string;
+  /** Display name for the config */
+  name: string;
+  /** Optional description */
+  description?: string;
+  /** The actual Earn configuration */
+  config: EarnConfig;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+  /** Owner ID who owns this config */
+  ownerId?: string;
+}
+
+/**
+ * Request to create a new Earn config
+ */
+export interface CreateEarnConfigRequest {
+  name: string;
+  description?: string;
+  config?: Partial<EarnConfig>;
+}
+
+/**
+ * Request to update an Earn config
+ */
+export interface UpdateEarnConfigRequest {
+  name?: string;
+  description?: string;
+  config?: Partial<EarnConfig>;
+}
+
+// =============================================================================
 // Token Types
 // =============================================================================
 

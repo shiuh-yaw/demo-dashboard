@@ -59,6 +59,25 @@ export const env = createEnv({
      * Cron Secret for authenticating Vercel cron jobs
      */
     CRON_SECRET: z.string().optional(),
+    /**
+     * BlindPay API URL
+     * Defaults to https://api.blindpay.com/v1
+     */
+    BLINDPAY_API_URL: z
+      .string()
+      .url()
+      .optional()
+      .default("https://api.blindpay.com/v1"),
+    /**
+     * BlindPay Instance ID
+     * Required for BlindPay API integration
+     */
+    BLINDPAY_INSTANCE_ID: z.string().optional(),
+    /**
+     * BlindPay API Key
+     * Required for BlindPay API integration
+     */
+    BLINDPAY_API_KEY: z.string().optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -78,6 +97,15 @@ export const env = createEnv({
      * Defaults to http://localhost:3000
      */
     NEXT_PUBLIC_WIDGET_PROJECT_URL: z
+      .string()
+      .url()
+      .default("http://localhost:3000"),
+    /**
+     * Earn Project URL for live preview
+     * Points to the running demo-earn-dashboard project
+     * Defaults to http://localhost:3000
+     */
+    NEXT_PUBLIC_EARN_PROJECT_URL: z
       .string()
       .url()
       .default("http://localhost:3000"),
@@ -102,8 +130,12 @@ export const env = createEnv({
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     CRON_SECRET: process.env.CRON_SECRET,
+    BLINDPAY_API_URL: process.env.BLINDPAY_API_URL,
+    BLINDPAY_INSTANCE_ID: process.env.BLINDPAY_INSTANCE_ID,
+    BLINDPAY_API_KEY: process.env.BLINDPAY_API_KEY,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
+    NEXT_PUBLIC_EARN_PROJECT_URL: process.env.NEXT_PUBLIC_EARN_PROJECT_URL,
   },
 });
