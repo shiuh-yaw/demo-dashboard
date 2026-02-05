@@ -305,11 +305,12 @@ api/checkouts/
 
 1. Widget sends `POST /api/checkouts/[id]/transactions/[txId]/quote` with swap parameters (auth required)
 2. Handler validates transaction exists and status is mutable
-3. Handler calls `lifiService.getRoutes()` which queries LI.FI API
-4. Handler extracts best route (first route from LI.FI response)
-5. Handler calls `transactionService.addRouteData()` to store route in Redis
-6. Transaction status updated to `draft`
-7. Returns quote and updated transaction
+3. Handler calls `lifiService.getQuote()` which queries LI.FI `/quote` endpoint (GET request)
+4. LI.FI returns single best route with transaction data ready to execute
+5. Handler normalizes the LI.FI Step response to internal Route format (includes `fromAddress`/`toAddress` for SDK validation)
+6. Handler calls `transactionService.addRouteData()` to store route in Redis
+7. Transaction status updated to `draft`
+8. Returns quote and updated transaction
 
 #### Submit Transaction
 
@@ -443,6 +444,8 @@ Content-Type: application/json
         "toToken": { ... },
         "fromAmount": "1000000000",
         "toAmount": "999500000",
+        "fromAddress": "0x...",
+        "toAddress": "0x...",
         "steps": [ ... ]
       },
       "integrator": "dynamic"
@@ -803,31 +806,64 @@ Transactions progress through the following states:
 
 Transactions progress through the following status transitions:
 
+#### UI-Initiated Transitions
+
+These transitions can be triggered by the widget/UI:
+
 - **`[*]` → `initialized`**: Transaction created via `POST /api/checkouts/[id]/transactions`
 - **`initialized` → `draft`**: Route selected via `POST /api/checkouts/[id]/transactions/[txId]/quote`
-- **`initialized` → `failed`**: Error occurred
 - **`initialized` → `cancelled`**: User cancelled
-- **`initialized` → `abandoned`**: User left
-
 - **`draft` → `submitted`**: txHash submitted via `POST /api/checkouts/[id]/transactions/[txId]/submit`
-- **`draft` → `initialized`**: User goes back (resets transaction)
-- **`draft` → `failed`**: Error occurred
 - **`draft` → `cancelled`**: User cancelled
-- **`draft` → `abandoned`**: User left
+- **`draft` → `failed`**: Transaction execution failed
+- **`submitted` → `failed`**: Transaction failed on-chain
+- **`pending` → `failed`**: Cross-chain transaction failed
+- **`failed` → `draft`**: User retries (via quote endpoint, not status update)
+- **`cancelled` → `draft`**: User retries (via quote endpoint, not status update)
+
+#### Backend-Only Transitions
+
+These transitions are managed by the system (background workers) and cannot be set directly by the UI:
 
 - **`submitted` → `pending`**: Source chain confirmed (background monitor)
-- **`submitted` → `failed`**: Transaction failed
-- **`submitted` → `expired`**: Route expired
+- **`submitted` → `confirmed`**: Same-chain transaction confirmed (background monitor)
+- **`pending` → `confirmed`**: Destination chain confirmed (background monitor)
+- **`initialized` → `expired`**: TTL expired (background job)
+- **`draft` → `abandoned`**: TTL expired (background job)
 
-- **`pending` → `confirmed`**: Destination confirmed (background monitor)
-- **`pending` → `failed`**: Cross-chain failed
-- **`pending` → `expired`**: Timeout
+#### Terminal Statuses
 
-- **`confirmed` → `[*]`**: Transaction complete
-- **`failed` → `[*]`**: Terminal state
-- **`expired` → `[*]`**: Terminal state
-- **`cancelled` → `[*]`**: Terminal state
-- **`abandoned` → `[*]`**: Terminal state
+These statuses are final and cannot be changed:
+
+- **`confirmed`**: Transaction completed successfully
+- **`expired`**: Transaction expired before completion
+- **`abandoned`**: Transaction abandoned by user
+
+#### Status Update Restrictions
+
+The `PATCH /api/checkouts/[id]/transactions/[txId]/status` endpoint enforces:
+- UI can only set: `cancelled`, `failed`
+- UI cannot set: `submitted`, `pending`, `confirmed` (system-managed)
+- Terminal statuses cannot be changed
+- Retries (failed/cancelled → draft) must go through the quote endpoint
+
+#### Service Layer: Explicit Transition Methods
+
+The `TransactionService` provides explicit methods for each state transition:
+
+| Method | Allowed From | Target Status | Used By |
+|--------|--------------|---------------|---------|
+| `initialize()` | - | `initialized` | Create transaction handler |
+| `addRouteData()` | initialized/draft/cancelled/failed | `draft` | Quote handler |
+| `submit()` | draft/initialized | `submitted` | Submit handler |
+| `cancel()` | initialized/draft/failed | `cancelled` | Status update handler (UI) |
+| `fail()` | draft/submitted/pending | `failed` | Status update handler, Worker |
+| `markPending()` | submitted | `pending` | Worker |
+| `confirm()` | submitted/pending | `confirmed` | Worker |
+| `markExpired()` | initialized/draft/submitted/pending | `expired` | Reconcile job |
+| `markAbandoned()` | initialized/draft | `abandoned` | Reconcile job |
+
+Each method validates the source status and throws an error if the transition is invalid.
 
 ### Transaction Lifecycle Transitions
 
@@ -846,8 +882,8 @@ Transactions progress through the following status transitions:
 
 1. Widget calls `POST /api/checkouts/[id]/transactions/[txId]/quote` with swap parameters (auth required)
 2. Handler validates transaction exists and status is mutable
-3. Handler calls `lifiService.getRoutes()` which queries LI.FI API
-4. Handler extracts best route (first route from LI.FI response)
+3. Handler calls `lifiService.getQuote()` which queries LI.FI `/quote` endpoint (GET request)
+4. LI.FI returns single best route normalized to internal format (includes `fromAddress`/`toAddress` for SDK execution)
 5. Handler calls `transactionService.addRouteData()` to store route data in Redis
 6. Transaction status updated to `draft`
 7. Returns quote and updated transaction
@@ -873,7 +909,7 @@ Transactions progress through the following status transitions:
 2. Worker fetches transaction from Redis
 3. Worker queries LI.FI status API
 4. Worker detects source chain confirmed (`sending.status === "DONE"`)
-5. Worker calls `transactionService.updateStatus()` to set status to `pending`
+5. Worker calls `transactionService.markPending()` to set status to `pending`
 6. Worker schedules retry with exponential backoff (30s delay)
 
 #### Pending → Confirmed (Destination Confirmed)
@@ -884,7 +920,7 @@ Transactions progress through the following status transitions:
 2. Worker fetches transaction from Redis
 3. Worker queries LI.FI status API
 4. Worker detects destination confirmed (`receiving.status === "DONE"`)
-5. Worker calls `transactionService.updateStatus()` to set status to `confirmed` with `completedAt`
+5. Worker calls `transactionService.confirm()` to set status to `confirmed` with `completedAt`
 6. Worker invalidates checkout stats cache
 7. Worker completes monitoring (no retry)
 
@@ -894,31 +930,30 @@ Transactions progress through the following status transitions:
 
 **User-initiated**:
 1. Widget calls `PATCH /api/checkouts/[id]/transactions/[txId]/status` with `status: "failed"` and `errorMessage` (auth required)
-2. Handler calls `transactionService.updateStatus()` to set status to `failed`
+2. Handler calls `transactionService.fail()` with error message
 3. Returns updated transaction
 
 **System-detected**:
 1. Worker detects error from LI.FI API or blockchain
 2. Worker determines error type (transaction failed, cross-chain failed, etc.)
-3. Worker calls `transactionService.updateStatus()` to set status to `failed` with `errorMessage`
+3. Worker calls `transactionService.fail()` with error message
 
-#### Draft → Initialized (User Goes Back)
-
-**Flow**: Widget → API → Handler → TransactionService → Redis
-
-1. Widget calls `PATCH /api/checkouts/[id]/transactions/[txId]/status` with `status: "initialized"` (auth required)
-2. Handler validates transaction exists
-3. Handler calls `transactionService.updateStatus()` to reset status to `initialized` and clear route data
-4. Returns updated transaction
-
-#### Any Status → Cancelled/Abandoned (User Action)
+#### Any Status → Cancelled (User Action)
 
 **Flow**: Widget → API → Handler → TransactionService → Redis
 
-1. Widget calls `PATCH /api/checkouts/[id]/transactions/[txId]/status` with `status: "cancelled"` or `"abandoned"` (auth required)
-2. Handler validates transaction exists
-3. Handler calls `transactionService.updateStatus()` to set status
+1. Widget calls `PATCH /api/checkouts/[id]/transactions/[txId]/status` with `status: "cancelled"` (auth required)
+2. Handler validates transaction exists and status allows cancellation
+3. Handler calls `transactionService.cancel()`
 4. Returns updated transaction
+
+#### Cancelled/Failed → Draft (User Retries)
+
+**Flow**: Widget → API → Handler → TransactionService → LiFiService → Redis
+
+1. Widget requests a new quote via `POST /api/checkouts/[id]/transactions/[txId]/quote`
+2. Handler calls `transactionService.addRouteData()` which transitions cancelled/failed → draft
+3. Widget proceeds with normal payment flow
 
 #### Status Polling (Widget Checks Status)
 

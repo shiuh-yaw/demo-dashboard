@@ -6,7 +6,7 @@
  */
 
 import { transactionService } from "@/lib/services";
-import { lifiService, LiFiError } from "@/lib/services/lifi";
+import { lifiService, type LiFiQuoteResponse } from "@/lib/services/lifi";
 import { NotFoundError, ConflictError } from "@/lib/errors";
 import { Status, type TransactionStatus } from "@/lib/types/dashboard";
 import {
@@ -16,75 +16,13 @@ import {
 } from "@/lib/validation";
 import type { Transaction } from "@/lib/types/dashboard";
 
-/**
- * LI.FI route response structure (from their API)
- */
-interface LiFiRoute {
-  id: string;
-  fromChainId: number;
-  toChainId: number;
-  fromToken: {
-    address: string;
-    chainId: number;
-    symbol: string;
-    decimals: number;
-    name: string;
-    logoURI?: string;
-    priceUSD?: string;
-    coinKey?: string;
-    tags?: string[];
-  };
-  toToken: {
-    address: string;
-    chainId: number;
-    symbol: string;
-    decimals: number;
-    name: string;
-    logoURI?: string;
-    priceUSD?: string;
-    coinKey?: string;
-    tags?: string[];
-  };
-  fromAmount: string;
-  toAmount: string;
-  fromAmountUSD: string;
-  toAmountUSD: string;
-  gasCostUSD: string;
-  steps: Array<{
-    id: string;
-    type: string;
-    tool: string;
-    action: {
-      fromChainId: number;
-      toChainId: number;
-      fromToken: unknown;
-      toToken: unknown;
-      fromAmount: string;
-    };
-    estimate: {
-      fromAmount: string;
-      toAmount: string;
-      toAmountMin: string;
-      gasCosts: Array<{ amountUSD: string }>;
-      feeCosts?: Array<{ name: string; amountUSD: string }>;
-    };
-  }>;
-}
-
-interface LiFiRoutesResponse {
-  routes: LiFiRoute[];
-}
-
 export interface GetTransactionQuoteResult {
-  quote: {
-    route: LiFiRoute;
-    integrator: string;
-  };
+  quote: LiFiQuoteResponse;
   transaction: Transaction;
 }
 
 export async function handleGetTransactionQuote(
-  rawInput: unknown
+  rawInput: unknown,
 ): Promise<GetTransactionQuoteResult> {
   const {
     checkoutId,
@@ -94,9 +32,14 @@ export async function handleGetTransactionQuote(
     fromTokenAddress,
     toTokenAddress,
     fromAmount,
-    fromAddress,
-    toAddress,
+    fromAddress: rawFromAddress,
+    toAddress: rawToAddress,
   } = parseWithSchema(getTransactionQuoteSchema, rawInput);
+
+  // Normalize wallet addresses to lowercase to avoid LI.FI validation errors
+  // LI.FI SDK is case-sensitive and will reject if addresses don't match exactly
+  const fromAddress = rawFromAddress.toLowerCase();
+  const toAddress = rawToAddress.toLowerCase();
 
   // Verify transaction exists and belongs to checkout
   const existing = await transactionService.get(txId);
@@ -110,14 +53,15 @@ export async function handleGetTransactionQuote(
     Status.PENDING,
     Status.CONFIRMED,
   ];
+
   if (immutableStatuses.includes(existing.status)) {
     throw new ConflictError(
-      `Cannot get quote for transaction with status "${existing.status}". Transaction is already in progress or completed.`
+      `Cannot get quote for transaction with status "${existing.status}". Transaction is already in progress or completed.`,
     );
   }
 
   // Fetch quote from LI.FI
-  const lifiResult = await lifiService.getRoutes({
+  const quote = await lifiService.getQuote({
     fromChainId,
     toChainId,
     fromTokenAddress,
@@ -127,54 +71,43 @@ export async function handleGetTransactionQuote(
     toAddress,
   });
 
-  // Parse LI.FI response
-  // lifiResult.routes is the LI.FI API response object which contains a routes array
-  const routesData = lifiResult.routes as LiFiRoutesResponse;
-  if (!routesData.routes || routesData.routes.length === 0) {
-    throw new Error("No routes found for this swap");
+  if (!quote.route) {
+    throw new Error("No route found for this swap");
   }
 
-  // Get the best route (first one, already sorted by LI.FI)
-  const bestRoute = routesData.routes[0];
-
   // Extract tool from first step (if available)
-  const tool = bestRoute.steps?.[0]?.tool;
+  const tool = quote.route.steps?.[0]?.tool;
 
   // Store route data in transaction atomically
   const transaction = await transactionService.addRouteData(txId, {
     walletAddress: fromAddress,
     fromToken: {
-      address: bestRoute.fromToken.address,
-      chainId: bestRoute.fromToken.chainId,
-      symbol: bestRoute.fromToken.symbol,
-      decimals: bestRoute.fromToken.decimals,
-      name: bestRoute.fromToken.name,
-      logoURI: bestRoute.fromToken.logoURI,
-      priceUSD: bestRoute.fromToken.priceUSD,
-      coinKey: bestRoute.fromToken.coinKey,
-      tags: bestRoute.fromToken.tags,
+      address: quote.route.fromToken.address,
+      chainId: quote.route.fromToken.chainId,
+      symbol: quote.route.fromToken.symbol,
+      decimals: quote.route.fromToken.decimals,
+      name: quote.route.fromToken.name,
+      logoURI: quote.route.fromToken.logoURI,
+      priceUSD: quote.route.fromToken.priceUSD,
+      coinKey: quote.route.fromToken.coinKey,
     },
     toToken: {
-      address: bestRoute.toToken.address,
-      chainId: bestRoute.toToken.chainId,
-      symbol: bestRoute.toToken.symbol,
-      decimals: bestRoute.toToken.decimals,
-      name: bestRoute.toToken.name,
-      logoURI: bestRoute.toToken.logoURI,
-      priceUSD: bestRoute.toToken.priceUSD,
-      coinKey: bestRoute.toToken.coinKey,
-      tags: bestRoute.toToken.tags,
+      address: quote.route.toToken.address,
+      chainId: quote.route.toToken.chainId,
+      symbol: quote.route.toToken.symbol,
+      decimals: quote.route.toToken.decimals,
+      name: quote.route.toToken.name,
+      logoURI: quote.route.toToken.logoURI,
+      priceUSD: quote.route.toToken.priceUSD,
+      coinKey: quote.route.toToken.coinKey,
     },
-    fromAmount: bestRoute.fromAmount,
-    toAmount: bestRoute.toAmount,
+    fromAmount: quote.route.fromAmount,
+    toAmount: quote.route.toAmount,
     tool,
   });
 
   return {
-    quote: {
-      route: bestRoute,
-      integrator: lifiResult.integrator,
-    },
+    quote,
     transaction,
   };
 }

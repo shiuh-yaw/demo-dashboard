@@ -12,7 +12,7 @@ A Next.js application for managing checkout configurations and tracking transact
   - Uses `ioredis` for local development and `@upstash/redis` for production
 - **Background Job Processing** - QStash-powered reliable transaction status polling
 - **Coinbase Onramp API** - Runtime API for fiat-to-crypto demos
-- **LI.FI Swap API** - Proxied routes/status endpoints for cross-chain swaps
+- **LI.FI Quote API** - Single-step quote endpoint for cross-chain swaps and bridges
 - **AI Theme Extraction** - Import branding from any URL using Claude
 
 ## Technology Stack

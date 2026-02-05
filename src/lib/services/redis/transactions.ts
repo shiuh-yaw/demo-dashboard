@@ -1,5 +1,8 @@
 /**
  * Redis Transaction Service Implementation
+ *
+ * Implements explicit state transitions for transaction lifecycle.
+ * Each transition method validates allowed source states.
  */
 
 import { createId } from "@paralleldrive/cuid2";
@@ -14,6 +17,22 @@ import {
 } from "@/lib/types/dashboard";
 import type { TransactionService, TransactionListOptions } from "../types";
 
+/**
+ * Helper to validate a state transition
+ * Throws if the current state is not in the allowed list
+ */
+function assertValidTransition(
+  transaction: Transaction,
+  allowedFromStatuses: TransactionStatus[],
+  targetStatus: TransactionStatus,
+): void {
+  if (!allowedFromStatuses.includes(transaction.status)) {
+    throw new Error(
+      `Cannot transition from "${transaction.status}" to "${targetStatus}"`,
+    );
+  }
+}
+
 export class RedisTransactionService implements TransactionService {
   async initialize(input: InitializeTransactionInput): Promise<Transaction> {
     const redis = getRedis();
@@ -24,11 +43,11 @@ export class RedisTransactionService implements TransactionService {
     if (input.externalId) {
       const existing = await this.findByExternalId(
         input.checkoutId,
-        input.externalId
+        input.externalId,
       );
       if (existing) {
         throw new Error(
-          `Transaction with externalId "${input.externalId}" already exists`
+          `Transaction with externalId "${input.externalId}" already exists`,
         );
       }
     }
@@ -53,7 +72,7 @@ export class RedisTransactionService implements TransactionService {
     if (input.externalId) {
       await redis.set(
         REDIS_KEYS.externalIdIndex(input.checkoutId, input.externalId),
-        id
+        id,
       );
     }
 
@@ -62,7 +81,7 @@ export class RedisTransactionService implements TransactionService {
 
   async addRouteData(
     id: string,
-    data: AddRouteDataInput
+    data: AddRouteDataInput,
   ): Promise<Transaction> {
     const redis = getRedis();
     const transaction = await this.get(id);
@@ -83,7 +102,7 @@ export class RedisTransactionService implements TransactionService {
     ];
     if (!allowedStatuses.includes(transaction.status)) {
       throw new Error(
-        `Cannot add route data to transaction with status "${transaction.status}"`
+        `Cannot add route data to transaction with status "${transaction.status}"`,
       );
     }
 
@@ -115,18 +134,13 @@ export class RedisTransactionService implements TransactionService {
     const redis = getRedis();
     const transaction = await this.get(id);
 
-    if (!transaction) {
-      throw new Error(`Transaction ${id} not found`);
-    }
+    if (!transaction) throw new Error(`Transaction ${id} not found`);
 
-    if (
-      transaction.status !== Status.DRAFT &&
-      transaction.status !== Status.INITIALIZED
-    ) {
-      throw new Error(
-        `Cannot submit transaction with status "${transaction.status}"`
-      );
-    }
+    assertValidTransition(
+      transaction,
+      [Status.DRAFT, Status.INITIALIZED],
+      Status.SUBMITTED,
+    );
 
     const updated: Transaction = {
       ...transaction,
@@ -143,69 +157,220 @@ export class RedisTransactionService implements TransactionService {
     return updated;
   }
 
-  async updateStatus(
-    id: string,
-    status: TransactionStatus,
-    errorMessage?: string,
-    existingTransaction?: Transaction,
-    explorerUrl?: string
-  ): Promise<Transaction> {
+  // ===========================================================================
+  // Explicit Status Transition Methods
+  // ===========================================================================
+
+  /**
+   * Cancel a transaction (user-initiated)
+   * Transition: initialized/draft/failed → cancelled
+   * Idempotent: returns existing transaction if already cancelled
+   */
+  async cancel(id: string): Promise<Transaction> {
     const redis = getRedis();
-    // Use provided transaction if available, otherwise fetch it
-    const transaction = existingTransaction || (await this.get(id));
+    const transaction = await this.get(id);
 
     if (!transaction) {
       throw new Error(`Transaction ${id} not found`);
     }
 
-    const isTerminal =
-      status === Status.CONFIRMED ||
-      status === Status.FAILED ||
-      status === Status.CANCELLED;
-    const now = new Date().toISOString();
+    // Idempotent: if already cancelled, return as-is
+    if (transaction.status === Status.CANCELLED) {
+      return transaction;
+    }
 
-    // When resetting to INITIALIZED, always clear all route data
-    // When resetting to DRAFT, clear route data if it exists (user pressed Back from review)
-    // Note: addRouteData sets status to DRAFT directly (doesn't use updateStatus),
-    // so it won't be affected by this clearing logic
-    const shouldClearRouteData =
-      status === Status.INITIALIZED ||
-      (status === Status.DRAFT &&
-        (transaction.walletAddress ||
-          transaction.fromToken ||
-          transaction.toToken));
+    assertValidTransition(
+      transaction,
+      [Status.INITIALIZED, Status.DRAFT, Status.FAILED],
+      Status.CANCELLED,
+    );
+
+    const now = new Date().toISOString();
+    const updated: Transaction = {
+      ...transaction,
+      status: Status.CANCELLED,
+      updatedAt: now,
+      completedAt: now,
+    };
+
+    await redis.set(REDIS_KEYS.transaction(id), updated);
+    await redis.srem(REDIS_KEYS.pendingTransactions, id);
+
+    return updated;
+  }
+
+  /**
+   * Mark a transaction as failed
+   * Transition: draft/submitted/pending → failed
+   * Idempotent: returns existing transaction if already failed
+   */
+  async fail(id: string, errorMessage: string): Promise<Transaction> {
+    const redis = getRedis();
+    const transaction = await this.get(id);
+
+    if (!transaction) {
+      throw new Error(`Transaction ${id} not found`);
+    }
+
+    // Idempotent: if already failed, return as-is
+    if (transaction.status === Status.FAILED) {
+      return transaction;
+    }
+
+    assertValidTransition(
+      transaction,
+      [Status.DRAFT, Status.SUBMITTED, Status.PENDING],
+      Status.FAILED,
+    );
+
+    const now = new Date().toISOString();
+    const updated: Transaction = {
+      ...transaction,
+      status: Status.FAILED,
+      errorMessage,
+      updatedAt: now,
+      completedAt: now,
+    };
+
+    await redis.set(REDIS_KEYS.transaction(id), updated);
+    await redis.srem(REDIS_KEYS.pendingTransactions, id);
+
+    return updated;
+  }
+
+  /**
+   * Mark transaction as pending (source chain confirmed, awaiting destination)
+   * Internal use only (worker)
+   * Transition: submitted → pending
+   * Idempotent: returns existing transaction if already pending
+   */
+  async markPending(id: string): Promise<Transaction> {
+    const redis = getRedis();
+    const transaction = await this.get(id);
+
+    if (!transaction) {
+      throw new Error(`Transaction ${id} not found`);
+    }
+
+    // Idempotent: if already pending, return as-is
+    if (transaction.status === Status.PENDING) {
+      return transaction;
+    }
+
+    assertValidTransition(transaction, [Status.SUBMITTED], Status.PENDING);
 
     const updated: Transaction = {
       ...transaction,
-      status,
-      errorMessage:
-        errorMessage ??
-        (shouldClearRouteData ? undefined : transaction.errorMessage),
-      explorerUrl: explorerUrl ?? transaction.explorerUrl,
-      updatedAt: now,
-      completedAt: isTerminal ? now : transaction.completedAt,
-      // Clear route data when resetting to initialized
-      ...(shouldClearRouteData && {
-        walletAddress: undefined,
-        fromChainId: undefined,
-        toChainId: undefined,
-        fromToken: undefined,
-        toToken: undefined,
-        fromAmount: undefined,
-        toAmount: undefined,
-        tool: undefined,
-        txHash: undefined,
-        explorerUrl: undefined,
-        completedAt: undefined,
-      }),
+      status: Status.PENDING,
+      updatedAt: new Date().toISOString(),
     };
 
     await redis.set(REDIS_KEYS.transaction(id), updated);
 
-    // Remove from pending set if terminal
-    if (isTerminal) {
-      await redis.srem(REDIS_KEYS.pendingTransactions, id);
-    }
+    return updated;
+  }
+
+  /**
+   * Confirm a transaction (completed successfully)
+   * Internal use only (worker)
+   * Transition: submitted/pending → confirmed
+   * Idempotent: returns existing transaction if already confirmed
+   */
+  async confirm(id: string, explorerUrl?: string): Promise<Transaction> {
+    const redis = getRedis();
+    const transaction = await this.get(id);
+
+    if (!transaction) throw new Error(`Transaction ${id} not found`);
+
+    // Idempotent: if already confirmed, return as-is
+    if (transaction.status === Status.CONFIRMED) return transaction;
+
+    assertValidTransition(
+      transaction,
+      [Status.SUBMITTED, Status.PENDING],
+      Status.CONFIRMED,
+    );
+
+    const now = new Date().toISOString();
+    const updated: Transaction = {
+      ...transaction,
+      status: Status.CONFIRMED,
+      explorerUrl: explorerUrl ?? transaction.explorerUrl,
+      updatedAt: now,
+      completedAt: now,
+    };
+
+    await redis.set(REDIS_KEYS.transaction(id), updated);
+    await redis.srem(REDIS_KEYS.pendingTransactions, id);
+
+    return updated;
+  }
+
+  /**
+   * Mark transaction as expired (route/TTL expired)
+   * Internal use only (system/worker)
+   * Transition: initialized/draft/submitted/pending → expired
+   * Idempotent: returns existing transaction if already expired
+   */
+  async markExpired(id: string): Promise<Transaction> {
+    const redis = getRedis();
+    const transaction = await this.get(id);
+
+    if (!transaction) throw new Error(`Transaction ${id} not found`);
+
+    // Idempotent: if already expired, return as-is
+    if (transaction.status === Status.EXPIRED) return transaction;
+
+    assertValidTransition(
+      transaction,
+      [Status.INITIALIZED, Status.DRAFT, Status.SUBMITTED, Status.PENDING],
+      Status.EXPIRED,
+    );
+
+    const now = new Date().toISOString();
+    const updated: Transaction = {
+      ...transaction,
+      status: Status.EXPIRED,
+      updatedAt: now,
+      completedAt: now,
+    };
+
+    await redis.set(REDIS_KEYS.transaction(id), updated);
+    await redis.srem(REDIS_KEYS.pendingTransactions, id);
+
+    return updated;
+  }
+
+  /**
+   * Mark transaction as abandoned (user left)
+   * Internal use only (system/worker)
+   * Transition: initialized/draft → abandoned
+   * Idempotent: returns existing transaction if already abandoned
+   */
+  async markAbandoned(id: string): Promise<Transaction> {
+    const redis = getRedis();
+    const transaction = await this.get(id);
+
+    if (!transaction) throw new Error(`Transaction ${id} not found`);
+
+    // Idempotent: if already abandoned, return as-is
+    if (transaction.status === Status.ABANDONED) return transaction;
+
+    assertValidTransition(
+      transaction,
+      [Status.INITIALIZED, Status.DRAFT],
+      Status.ABANDONED,
+    );
+
+    const now = new Date().toISOString();
+    const updated: Transaction = {
+      ...transaction,
+      status: Status.ABANDONED,
+      updatedAt: now,
+      completedAt: now,
+    };
+
+    await redis.set(REDIS_KEYS.transaction(id), updated);
 
     return updated;
   }
@@ -217,11 +382,11 @@ export class RedisTransactionService implements TransactionService {
 
   async findByExternalId(
     checkoutId: string,
-    externalId: string
+    externalId: string,
   ): Promise<Transaction | null> {
     const redis = getRedis();
     const txId = await redis.get<string>(
-      REDIS_KEYS.externalIdIndex(checkoutId, externalId)
+      REDIS_KEYS.externalIdIndex(checkoutId, externalId),
     );
     if (!txId) return null;
     return this.get(txId);
@@ -229,7 +394,7 @@ export class RedisTransactionService implements TransactionService {
 
   async list(
     checkoutId: string,
-    options: TransactionListOptions = {}
+    options: TransactionListOptions = {},
   ): Promise<PaginatedResponse<Transaction>> {
     const redis = getRedis();
     const {
@@ -243,7 +408,7 @@ export class RedisTransactionService implements TransactionService {
 
     // Get all transaction IDs for this checkout
     const txIds = await redis.smembers(
-      REDIS_KEYS.checkoutTransactions(checkoutId)
+      REDIS_KEYS.checkoutTransactions(checkoutId),
     );
 
     if (!txIds.length) {
@@ -271,7 +436,7 @@ export class RedisTransactionService implements TransactionService {
     if (walletAddress) {
       const searchLower = walletAddress.toLowerCase();
       filtered = filtered.filter((tx) =>
-        tx.walletAddress?.toLowerCase().includes(searchLower)
+        tx.walletAddress?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -279,14 +444,14 @@ export class RedisTransactionService implements TransactionService {
     if (externalId) {
       const searchLower = externalId.toLowerCase();
       filtered = filtered.filter((tx) =>
-        tx.externalId?.toLowerCase().includes(searchLower)
+        tx.externalId?.toLowerCase().includes(searchLower),
       );
     }
 
     // Sort by createdAt descending
     filtered.sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     // Paginate
@@ -312,13 +477,6 @@ export class RedisTransactionService implements TransactionService {
     const transactions = await Promise.all(txIds.map((id) => this.get(id)));
 
     return transactions.filter((tx): tx is Transaction => tx !== null);
-  }
-
-  async markStale(
-    id: string,
-    status: "abandoned" | "expired"
-  ): Promise<Transaction> {
-    return this.updateStatus(id, status);
   }
 
   async incrementRetry(id: string): Promise<number> {

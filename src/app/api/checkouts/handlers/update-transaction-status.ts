@@ -2,11 +2,17 @@
  * Update Transaction Status Handler
  *
  * Updates the status of a transaction with side effects.
+ *
+ * This handler is limited to UI-initiated status changes:
+ * - cancelled: User wants to cancel the transaction
+ * - failed: Transaction execution failed
+ *
+ * Backend-only statuses (submitted, pending, confirmed) are managed
+ * by their respective handlers/workers with explicit methods.
  */
 
-import { transactionService } from "@/lib/services";
-import { updateTransactionStatusWithEffects } from "@/lib/services/workflows";
-import { NotFoundError } from "@/lib/errors";
+import { transactionService, checkoutService } from "@/lib/services";
+import { NotFoundError, ConflictError } from "@/lib/errors";
 import { Status } from "@/lib/types/dashboard";
 import {
   updateTransactionStatusSchema,
@@ -16,12 +22,12 @@ import {
 } from "@/lib/validation";
 
 export async function handleUpdateTransactionStatus(
-  rawInput: unknown
+  rawInput: unknown,
 ): Promise<TransactionStatusResponse> {
   // Validate input with Zod
   const { checkoutId, txId, status, errorMessage } = parseWithSchema(
     updateTransactionStatusSchema,
-    rawInput
+    rawInput,
   );
 
   // Verify transaction exists and belongs to checkout
@@ -30,20 +36,32 @@ export async function handleUpdateTransactionStatus(
     throw new NotFoundError("Transaction not found");
   }
 
-  // Use workflow for consistent side effects
-  // Pass existing transaction to avoid redundant fetches
-  const transaction = await updateTransactionStatusWithEffects({
-    transactionId: txId,
-    checkoutId,
-    status,
-    previousStatus: existing.status,
-    errorMessage,
-    updateUserStats: status === Status.CONFIRMED,
-    existingTransaction: existing,
-  });
-  if (!transaction) {
-    throw new NotFoundError("Transaction not found after update");
+  // Only allow cancelled and failed from UI
+  // All other status changes go through their specific handlers
+  let transaction;
+
+  switch (status) {
+    case Status.CANCELLED:
+      transaction = await transactionService.cancel(txId);
+      break;
+
+    case Status.FAILED:
+      if (!errorMessage) {
+        throw new ConflictError(
+          "errorMessage is required when setting failed status",
+        );
+      }
+      transaction = await transactionService.fail(txId, errorMessage);
+      break;
+
+    default:
+      throw new ConflictError(
+        `Cannot set status to "${status}" - use the appropriate endpoint`,
+      );
   }
+
+  // Invalidate checkout stats cache
+  await checkoutService.invalidateStats(checkoutId);
 
   return {
     id: transaction.id,

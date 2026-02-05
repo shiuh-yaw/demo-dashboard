@@ -3,13 +3,16 @@
  *
  * Business logic for transaction status monitoring:
  * 1. Check LI.FI status
- * 2. Update transaction status
+ * 2. Update transaction status using explicit transition methods
  * 3. Re-enqueue if still pending
  */
 
-import { transactionService } from "@/lib/services";
+import {
+  transactionService,
+  checkoutService,
+  userService,
+} from "@/lib/services";
 import { lifiService } from "@/lib/services/lifi";
-import { updateTransactionStatusWithEffects } from "@/lib/services/workflows";
 import { enqueueTransactionMonitor, MAX_RETRIES } from "@/lib/upstash/qstash";
 import { Status } from "@/lib/types/dashboard";
 
@@ -32,12 +35,12 @@ export interface WorkerResult {
  * Process a transaction status check
  */
 export async function handleWorker(
-  payload: WorkerPayload
+  payload: WorkerPayload,
 ): Promise<WorkerResult> {
   const { transactionId, txHash, retryCount = 0 } = payload;
 
   console.log(
-    `[Worker] Processing transaction ${transactionId}, retry ${retryCount}`
+    `[Worker] Processing transaction ${transactionId}, retry ${retryCount}`,
   );
 
   // Get transaction from database
@@ -61,7 +64,7 @@ export async function handleWorker(
     transaction.status === Status.ABANDONED
   ) {
     console.log(
-      `[Worker] Transaction ${transactionId} already in terminal state: ${transaction.status}`
+      `[Worker] Transaction ${transactionId} already in terminal state: ${transaction.status}`,
     );
     return {
       success: true,
@@ -73,7 +76,7 @@ export async function handleWorker(
   // Check LI.FI status
   const lifiStatus = await lifiService.getStatus(
     txHash,
-    transaction.fromChainId
+    transaction.fromChainId,
   );
   console.log(`[Worker] LI.FI status for ${transactionId}:`, lifiStatus);
 
@@ -83,15 +86,25 @@ export async function handleWorker(
     const explorerUrl =
       lifiStatus.lifiExplorerLink || lifiStatus.bridgeExplorerLink;
 
-    await updateTransactionStatusWithEffects({
-      transactionId,
-      checkoutId: transaction.checkoutId,
-      status: Status.CONFIRMED,
-      previousStatus: transaction.status,
-      txHash,
-      explorerUrl,
-      updateUserStats: true,
-    });
+    // Use explicit confirm() method
+    await transactionService.confirm(transactionId, explorerUrl);
+
+    // Update user stats on successful completion
+    if (transaction.walletAddress) {
+      try {
+        const user = await userService.findByWallet(transaction.walletAddress);
+        if (user) {
+          await userService.updateStats(user.id, {
+            successfulTransactionCount: 1,
+          });
+        }
+      } catch (err) {
+        console.error("[Worker] Failed to update user stats:", err);
+      }
+    }
+
+    // Invalidate checkout stats
+    await checkoutService.invalidateStats(transaction.checkoutId);
 
     return {
       success: true,
@@ -102,14 +115,14 @@ export async function handleWorker(
 
   // Handle FAILED status
   if (lifiStatus.status === "FAILED") {
-    await updateTransactionStatusWithEffects({
+    // Use explicit fail() method
+    await transactionService.fail(
       transactionId,
-      checkoutId: transaction.checkoutId,
-      status: Status.FAILED,
-      previousStatus: transaction.status,
-      txHash,
-      errorMessage: lifiStatus.error || "Transaction failed",
-    });
+      lifiStatus.error || "Transaction failed",
+    );
+
+    // Invalidate checkout stats
+    await checkoutService.invalidateStats(transaction.checkoutId);
 
     console.log(`[Worker] Transaction ${transactionId} failed`);
     return {
@@ -123,17 +136,17 @@ export async function handleWorker(
   // Handle max retries reached
   if (retryCount >= MAX_RETRIES) {
     console.log(
-      `[Worker] Transaction ${transactionId} max retries reached (${MAX_RETRIES})`
+      `[Worker] Transaction ${transactionId} max retries reached (${MAX_RETRIES})`,
     );
 
-    await updateTransactionStatusWithEffects({
+    // Use explicit fail() method
+    await transactionService.fail(
       transactionId,
-      checkoutId: transaction.checkoutId,
-      status: Status.FAILED,
-      previousStatus: transaction.status,
-      txHash,
-      errorMessage: "Max retries reached - status unknown",
-    });
+      "Max retries reached - status unknown",
+    );
+
+    // Invalidate checkout stats
+    await checkoutService.invalidateStats(transaction.checkoutId);
 
     return {
       success: true,
@@ -142,20 +155,20 @@ export async function handleWorker(
     };
   }
 
-  // Still pending - update status and re-enqueue
+  // Still pending - update status to pending if submitted
   if (transaction.status === Status.SUBMITTED) {
-    await transactionService.updateStatus(transactionId, Status.PENDING);
+    await transactionService.markPending(transactionId);
   }
 
   const newRetryCount = await transactionService.incrementRetry(transactionId);
   const messageId = await enqueueTransactionMonitor(
     transactionId,
     txHash,
-    newRetryCount
+    newRetryCount,
   );
 
   console.log(
-    `[Worker] Re-enqueued transaction ${transactionId}, retry ${newRetryCount}, messageId: ${messageId}`
+    `[Worker] Re-enqueued transaction ${transactionId}, retry ${newRetryCount}, messageId: ${messageId}`,
   );
 
   return {

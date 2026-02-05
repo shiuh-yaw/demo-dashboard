@@ -31,33 +31,77 @@ export interface TransactionListOptions {
 }
 
 export interface TransactionService {
+  // ===========================================================================
+  // Lifecycle Methods (explicit state transitions)
+  // ===========================================================================
+
   /**
    * Initialize a new transaction (server-side only)
    * Creates a transaction with externalId/metadata before user interaction
+   * Transition: [none] → initialized
    */
   initialize(input: InitializeTransactionInput): Promise<Transaction>;
 
   /**
    * Add route data to an initialized transaction
    * Called when user selects a swap route
+   * Transition: initialized/draft/cancelled/failed → draft
    */
   addRouteData(id: string, data: AddRouteDataInput): Promise<Transaction>;
 
   /**
    * Submit a transaction (mark as submitted with txHash)
+   * Transition: draft/initialized → submitted
    */
   submit(id: string, txHash: string): Promise<Transaction>;
 
+  // ===========================================================================
+  // Status Transition Methods (explicit, validated)
+  // ===========================================================================
+
   /**
-   * Update transaction status
+   * Cancel a transaction (user-initiated)
+   * Transition: initialized/draft/failed → cancelled
    */
-  updateStatus(
-    id: string,
-    status: TransactionStatus,
-    errorMessage?: string,
-    existingTransaction?: Transaction,
-    explorerUrl?: string
-  ): Promise<Transaction>;
+  cancel(id: string): Promise<Transaction>;
+
+  /**
+   * Mark a transaction as failed
+   * Transition: draft/submitted/pending → failed
+   */
+  fail(id: string, errorMessage: string): Promise<Transaction>;
+
+  /**
+   * Mark transaction as pending (source chain confirmed, awaiting destination)
+   * Internal use only (worker)
+   * Transition: submitted → pending
+   */
+  markPending(id: string): Promise<Transaction>;
+
+  /**
+   * Confirm a transaction (completed successfully)
+   * Internal use only (worker)
+   * Transition: submitted/pending → confirmed
+   */
+  confirm(id: string, explorerUrl?: string): Promise<Transaction>;
+
+  /**
+   * Mark transaction as expired (route/TTL expired)
+   * Internal use only (system/worker)
+   * Transition: initialized/draft/submitted/pending → expired
+   */
+  markExpired(id: string): Promise<Transaction>;
+
+  /**
+   * Mark transaction as abandoned (user left)
+   * Internal use only (system/worker)
+   * Transition: initialized/draft → abandoned
+   */
+  markAbandoned(id: string): Promise<Transaction>;
+
+  // ===========================================================================
+  // Query Methods
+  // ===========================================================================
 
   /**
    * Get transaction by ID
@@ -69,7 +113,7 @@ export interface TransactionService {
    */
   findByExternalId(
     checkoutId: string,
-    externalId: string
+    externalId: string,
   ): Promise<Transaction | null>;
 
   /**
@@ -77,7 +121,7 @@ export interface TransactionService {
    */
   list(
     checkoutId: string,
-    options?: TransactionListOptions
+    options?: TransactionListOptions,
   ): Promise<PaginatedResponse<Transaction>>;
 
   /**
@@ -85,13 +129,12 @@ export interface TransactionService {
    */
   getPending(): Promise<Transaction[]>;
 
-  /**
-   * Mark transaction as abandoned or expired
-   */
-  markStale(id: string, status: "abandoned" | "expired"): Promise<Transaction>;
+  // ===========================================================================
+  // Utility Methods
+  // ===========================================================================
 
   /**
-   * Increment retry count
+   * Increment retry count (for monitoring)
    */
   incrementRetry(id: string): Promise<number>;
 }
@@ -112,7 +155,7 @@ export interface UserService {
   getOrCreateByWallet(
     checkoutId: string,
     walletAddress: string,
-    chainId?: number
+    chainId?: number,
   ): Promise<User>;
 
   /**
@@ -130,7 +173,7 @@ export interface UserService {
    */
   list(
     checkoutId: string,
-    options?: UserListOptions
+    options?: UserListOptions,
   ): Promise<PaginatedResponse<User>>;
 
   /**
@@ -147,7 +190,7 @@ export interface UserService {
       transactionCount?: number;
       successfulTransactionCount?: number;
       totalVolumeUsd?: string;
-    }
+    },
   ): Promise<User>;
 }
 
