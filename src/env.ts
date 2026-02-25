@@ -78,6 +78,17 @@ export const env = createEnv({
      * Required for BlindPay API integration
      */
     BLINDPAY_API_KEY: z.string().optional(),
+    /**
+     * Iron Finance Environment (production or sandbox)
+     * Defaults to production
+     */
+    IRON_ENVIRONMENT: z.enum(["production", "sandbox"]).optional().default("production"),
+    /**
+     * Iron Finance API Key
+     * Required for Iron Finance API integration
+     * Get from https://app.iron.xyz or https://app.sandbox.iron.xyz
+     */
+    IRON_API_KEY: z.string().optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -133,6 +144,8 @@ export const env = createEnv({
     BLINDPAY_API_URL: process.env.BLINDPAY_API_URL,
     BLINDPAY_INSTANCE_ID: process.env.BLINDPAY_INSTANCE_ID,
     BLINDPAY_API_KEY: process.env.BLINDPAY_API_KEY,
+    IRON_ENVIRONMENT: process.env.IRON_ENVIRONMENT,
+    IRON_API_KEY: process.env.IRON_API_KEY,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

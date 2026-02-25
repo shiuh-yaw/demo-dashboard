@@ -1,6 +1,6 @@
 # Demo Dashboard
 
-A Next.js application for managing checkout configurations and tracking transactions. Features a protected dashboard UI for creating and managing payment/deposit checkouts, real-time transaction monitoring, and API endpoints for runtime integrations.
+A Next.js application for managing checkout configurations and tracking transactions. Features a protected dashboard UI for creating and managing payment/deposit checkouts, real-time transaction monitoring, and comprehensive payment infrastructure integrations.
 
 ## Features
 
@@ -11,6 +11,7 @@ A Next.js application for managing checkout configurations and tracking transact
 - **Service Layer Architecture** - Abstracted data layer (Redis) ready for future migrations
   - Uses `ioredis` for local development and `@upstash/redis` for production
 - **Background Job Processing** - QStash-powered reliable transaction status polling
+- **Iron Finance API** - Enterprise-grade stablecoin payment infrastructure with KYC, customer management, and third-party payments
 - **Coinbase Onramp API** - Runtime API for fiat-to-crypto demos
 - **LI.FI Quote API** - Single-step quote endpoint for cross-chain swaps and bridges
 - **AI Theme Extraction** - Import branding from any URL using Claude
@@ -61,6 +62,7 @@ See `.example.env` for all available configuration options.
 
 **Optional for full features:**
 
+- `IRON_ENVIRONMENT` / `IRON_API_KEY` - Iron Finance payment infrastructure (sandbox or production)
 - `QSTASH_TOKEN` / `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` - Background jobs (QStash)
 - `ANTHROPIC_API_KEY` - AI theme extraction (Claude API)
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Production Redis (Upstash)
@@ -207,19 +209,19 @@ All other endpoints require authentication via Bearer token.
 
 ### Checkouts API
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/checkouts/[id]` | Get checkout configuration | Public |
-| GET | `/api/checkouts/[id]/transactions` | List transactions (paginated, filterable) | Required |
-| POST | `/api/checkouts/[id]/transactions` | Initialize a transaction | Public |
-| GET | `/api/checkouts/[id]/transactions/[txId]` | Get transaction details | Required |
-| PATCH | `/api/checkouts/[id]/transactions/[txId]` | Update transaction (add route data) | Required |
-| POST | `/api/checkouts/[id]/transactions/[txId]/quote` | Get transaction quote from LI.FI | Required |
-| POST | `/api/checkouts/[id]/transactions/[txId]/submit` | Submit transaction with txHash | Required |
-| GET | `/api/checkouts/[id]/transactions/[txId]/status` | Get transaction status | Public |
-| PATCH | `/api/checkouts/[id]/transactions/[txId]/status` | Update transaction status | Required |
-| GET | `/api/checkouts/[id]/users` | List users for checkout | Required |
-| GET | `/api/checkouts/[id]/stats` | Get checkout statistics | Required |
+| Method | Endpoint | Description | Auth | Use Case |
+|--------|----------|-------------|------|----------|
+| GET | `/api/checkouts/[id]` | **Get checkout configuration** - Fetch the checkout settings including theme, supported tokens, and deposit address. Used by the widget to render the checkout UI. | Public | Widget initialization |
+| GET | `/api/checkouts/[id]/transactions` | **List all transactions** - Retrieve paginated transaction history with optional filters (status, user). Returns transaction summaries with amounts, tokens, and current status. | Required | Dashboard transaction list |
+| POST | `/api/checkouts/[id]/transactions` | **Initialize a new transaction** - Create a transaction record when a user opens the checkout widget. Records user info and returns a transaction ID for tracking. | Public | User opens widget |
+| GET | `/api/checkouts/[id]/transactions/[txId]` | **Get transaction details** - Fetch complete transaction data including route information, amounts, fees, and lifecycle events. | Required | Transaction detail view |
+| PATCH | `/api/checkouts/[id]/transactions/[txId]` | **Update transaction metadata** - Add or update route data after the user selects a payment method and gets a quote. Updates transaction to "draft" status. | Required | User selects payment route |
+| POST | `/api/checkouts/[id]/transactions/[txId]/quote` | **Get cross-chain quote** - Request a quote from LI.FI for converting source token to destination token. Returns exact amounts, fees, estimated time, and route steps. | Required | User wants price estimate |
+| POST | `/api/checkouts/[id]/transactions/[txId]/submit` | **Submit blockchain transaction** - Record the on-chain transaction hash after user confirms. Triggers background polling to monitor transaction status. Updates to "submitted" status. | Required | User confirms wallet transaction |
+| GET | `/api/checkouts/[id]/transactions/[txId]/status` | **Get transaction status** - Check the current transaction status and progress. Returns lifecycle state (initialized, submitted, pending, confirmed, etc.). | Public | Widget status polling |
+| PATCH | `/api/checkouts/[id]/transactions/[txId]/status` | **Update transaction status** - Manually update the transaction status. Used by background workers after polling blockchain or for manual reconciliation. | Required | Background worker updates |
+| GET | `/api/checkouts/[id]/users` | **List checkout users** - Get all users who have interacted with this checkout, including their wallet addresses and transaction counts. | Required | User management dashboard |
+| GET | `/api/checkouts/[id]/stats` | **Get checkout analytics** - Retrieve statistics including total volume, transaction counts by status, and completion rates. | Required | Analytics dashboard |
 
 ### Legacy APIs (Deprecated)
 
@@ -229,7 +231,29 @@ All other endpoints require authentication via Bearer token.
 
 **Note**: The `/api/swaps/*` endpoints have been removed. Use the checkouts API endpoints instead.
 
-### Other APIs
+### Payment Infrastructure APIs
+
+#### Iron Finance (Enterprise Stablecoin Payments)
+
+Complete customer lifecycle management with KYC, wallets, banks, and payment operations. **[Official Docs →](https://docs.iron.xyz/)**
+
+| Method | Endpoint | Description | Use Case |
+|--------|----------|-------------|----------|
+| POST | `/api/iron/customers` | **Create a new customer** - Register an individual or business in the Iron system. This is the first step before any payment operations. Required fields include name, email, date of birth, and country. | First step: Register new user |
+| GET | `/api/iron/customers` | **List all customers** - Retrieve all registered customers with their KYC status, wallet count, and account metadata. Supports pagination and filtering. | View customer directory |
+| POST | `/api/iron/wallets/hosted` | **Create Iron-managed wallet** - Generate a blockchain wallet where Iron controls the private keys. Best for exchanges or platforms that want to manage custody. No user signature required. | Platform manages user funds |
+| POST | `/api/iron/wallets/self-hosted` | **Register user's wallet** - Connect a wallet that the user controls (like Dynamic embedded wallets or MetaMask). Requires proof-of-ownership via signed message. This is the recommended approach for self-custody apps. | User controls their wallet |
+| POST | `/api/iron/banks` | **Add bank account** - Register a bank account for receiving fiat (offramps). Supports SEPA (Europe), ACH (US), Wire, PIX (Brazil), and Faster Payments (UK). Used to send money from crypto to the user's bank. | Enable cash-out to bank |
+| POST | `/api/iron/quotes/onramp` | **Get fiat-to-crypto quote** - Request a price quote for converting fiat currency (USD, EUR, etc.) to cryptocurrency (USDC, USDT). Returns exchange rate, fees, and exact amounts. Quote expires in 30 seconds. | "How much USDC for $100?" |
+| POST | `/api/iron/quotes/offramp` | **Get crypto-to-fiat quote** - Request a price quote for converting cryptocurrency to fiat that will be sent to the user's bank account. Returns the amount they'll receive after fees. Quote expires in 30 seconds. | "How much EUR for 100 USDC?" |
+| POST | `/api/iron/onramps` | **Execute fiat-to-crypto** - Start an onramp transaction where the user will send fiat and receive crypto. Returns virtual account details (IBAN or account number) where the user should send their bank transfer. Iron monitors for the incoming transfer. | User wants to buy crypto |
+| POST | `/api/iron/offramps` | **Execute crypto-to-fiat** - Start an offramp (cash-out) transaction where the user sends crypto and receives fiat in their bank. Returns a deposit address where the user should send their crypto. Once received, Iron converts it and sends fiat to their bank. | User wants to cash out |
+| POST | `/api/iron/third-party-payments` | **Business pays for user** - Create a payment where a business pays on behalf of a user (B2B2C model). Useful for platforms that want to cover user transaction fees or provide rewards. | Platform subsidizes user fees |
+| POST | `/api/iron/customers/[id]/kyc` | **Start identity verification** - Initiate KYC (Know Your Customer) verification. Returns a URL to redirect the user to Iron's KYC partner for identity verification. Required before first transaction. | Verify user identity |
+
+**Documentation:** See [Iron Official Docs](https://docs.iron.xyz/), `IRON_API_DOCUMENTATION.md`, `IRON_API_FLOWS.md`, and `API_CREATION_GUIDE.md`
+
+#### Other APIs
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -247,6 +271,42 @@ Checkouts support:
 - **Branding**: Logo, footer toggle
 - **AI Import**: Extract colors and logo from any website URL
 - **Live Preview**: Real-time preview via iframe
+
+## Payment Infrastructure
+
+### Iron Finance Integration
+
+The dashboard includes a complete Iron Finance integration providing enterprise-grade payment infrastructure for converting between crypto and fiat.
+
+**What you can build:**
+- **Onramps**: Users buy crypto with bank transfers (fiat → crypto)
+- **Offramps**: Users cash out crypto to their bank accounts (crypto → fiat)
+- **Customer Management**: Individual and business accounts with full CRUD
+- **KYC Integration**: Built-in identity verification for compliance
+- **Wallet Management**: Hosted (Iron manages keys) and self-hosted (user manages keys)
+- **Bank Accounts**: Support for SEPA (Europe), ACH (USA), Wire, PIX (Brazil), Faster Payments (UK)
+- **Third-Party Payments**: B2B2C model for platforms subsidizing user fees
+- **Multi-Currency**: USD, EUR, GBP, BRL, MXN (fiat) + USDC, USDT, USDB, EURC (crypto)
+- **Multi-Chain**: Ethereum, Solana, Polygon, Arbitrum, Base, and more
+
+**Quick Start:**
+1. Sign up at **[Iron Dashboard](https://app.sandbox.iron.xyz/)** (sandbox) or **[Production](https://app.iron.xyz/)**
+2. Get your API key and add to `.example.env`: `IRON_ENVIRONMENT=sandbox` and `IRON_API_KEY=your_key`
+3. Review **[Official Iron Docs](https://docs.iron.xyz/)** for complete API reference
+4. Read `IRON_API_DOCUMENTATION.md` for detailed endpoint guides
+5. See `IRON_API_FLOWS.md` for visual flow diagrams
+
+**Common Use Cases:**
+- User converts 100 USDC to €92 in their bank account (offramp)
+- User deposits €100 via bank transfer and receives 108.50 USDC (onramp)
+- Platform covers transaction fees for users (third-party payments)
+- Business automates crypto-to-fiat conversions for payroll
+
+**Resources:**
+- **[Official Documentation](https://docs.iron.xyz/)** - Complete API reference
+- `IRON_API_DOCUMENTATION.md` - Detailed endpoint descriptions and code examples
+- `IRON_API_FLOWS.md` - Visual diagrams of user journeys
+- `API_CREATION_GUIDE.md` - How to build new API routes
 
 ## Related Projects
 

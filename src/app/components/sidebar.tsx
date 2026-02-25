@@ -6,6 +6,7 @@ import { LayoutGrid, FileText, Wallet } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { DynamicLogo } from "@/components/dynamic-logo";
 import { CoinbaseIcon } from "@/components/coinbase-icon";
+import { IronIcon } from "@/components/iron-icon";
 import AuthMenu from "./auth-menu";
 
 const navGroups = [
@@ -21,6 +22,11 @@ const navGroups = [
         href: "/earns",
         label: "Earn",
         icon: Wallet,
+      },
+      {
+        href: "/iron",
+        label: "Iron Finance",
+        icon: IronIcon,
       },
       {
         href: "/onramp",

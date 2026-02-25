@@ -16,8 +16,15 @@ import { ZodError, formatZodError, getFieldErrors } from "./validation";
  * Standardizes all API responses to { success: true, data: T } format.
  * CORS headers are automatically added for cross-origin support.
  */
-export function createResponse<T>(data: T, status: number = 200): NextResponse {
-  return addCorsHeaders(NextResponse.json({ success: true, data }, { status }));
+export function createResponse<T>(
+  data: T,
+  status: number = 200,
+  request?: Request
+): NextResponse {
+  return addCorsHeaders(
+    NextResponse.json({ success: true, data }, { status }),
+    request as any
+  );
 }
 
 /**
@@ -26,10 +33,12 @@ export function createResponse<T>(data: T, status: number = 200): NextResponse {
 export function createErrorResponse(
   message: string,
   status: number = 500,
-  code?: string
+  code?: string,
+  request?: Request
 ): NextResponse {
   return addCorsHeaders(
-    NextResponse.json({ error: message, ...(code && { code }) }, { status })
+    NextResponse.json({ error: message, ...(code && { code }) }, { status }),
+    request as any
   );
 }
 
@@ -37,7 +46,11 @@ export function createErrorResponse(
  * Handle errors and return appropriate response
  * Maps AppError subclasses and ZodError to appropriate HTTP responses
  */
-export function handleApiError(error: unknown, context?: string): NextResponse {
+export function handleApiError(
+  error: unknown,
+  context?: string,
+  request?: Request
+): NextResponse {
   // Log error with context
   if (context) console.error(`[${context}]`, error);
   else console.error(error);
@@ -52,19 +65,25 @@ export function handleApiError(error: unknown, context?: string): NextResponse {
           details: getFieldErrors(error),
         },
         { status: 400 }
-      )
+      ),
+      request as any
     );
   }
 
   // Handle known application errors
   if (error instanceof AppError) {
-    return createErrorResponse(error.message, error.statusCode, error.code);
+    return createErrorResponse(
+      error.message,
+      error.statusCode,
+      error.code,
+      request
+    );
   }
 
   // Handle unknown errors
   const message =
     error instanceof Error ? error.message : "An unexpected error occurred";
-  return createErrorResponse(message, 500);
+  return createErrorResponse(message, 500, undefined, request);
 }
 
 /**
