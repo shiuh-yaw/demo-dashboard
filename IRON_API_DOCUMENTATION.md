@@ -990,7 +990,7 @@ async function handler(req: NextRequest) {
     // Your logic here
     const result = await performOperation(validated);
 
-    return createResponse(result, 201, req);
+    return createResponse(result, 201);
   } catch (error) {
     return handleApiError(error, 'operation-name', req);
   }

@@ -1,0 +1,132 @@
+{
+  "totalCreatorBalance": {
+    "amount": "1682.20",
+    "currency": "USDC",
+    "apy": "4.3",
+    "paymentFrequency": "monthly",
+    "fundsLiquid": true
+  },
+  "pendingPayouts": {
+    "availableToRequest": "420.15",
+    "upcoming": "275.50",
+    "fundsOnHold": "112.10"
+  },
+  "recentActivity": [
+    {
+      "id": "1",
+      "date": "2025-04-19",
+      "type": "Transfer",
+      "description": "Balance → Prepaid Card",
+      "amount": "-250.00",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "date": "2025-04-19",
+      "type": "Yield",
+      "description": "Monthly credit",
+      "amount": "+5.63",
+      "status": "completed"
+    }
+  ],
+  "prepaidCard": {
+    "balance": "1682.20",
+    "currency": "USDC",
+    "number": "1337",
+    "fullNumber": ".... .... .... 1337",
+    "expiry": "12/26"
+  },
+  "balance": {
+    "usdc": "1682.20",
+    "pending": "420.15"
+  },
+  "recentPayments": [
+    {
+      "id": "1",
+      "date": "2025-01-25",
+      "amount": "500.00",
+      "source": "Ad Revenue",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "date": "2025-01-20",
+      "amount": "320.15",
+      "source": "Super Chat",
+      "status": "completed"
+    },
+    {
+      "id": "3",
+      "date": "2025-01-15",
+      "amount": "250.00",
+      "source": "Channel Memberships",
+      "status": "completed"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1",
+      "type": "payment",
+      "amount": "500.00",
+      "date": "2025-01-25",
+      "description": "Ad Revenue Payment",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "type": "payment",
+      "amount": "320.15",
+      "date": "2025-01-20",
+      "description": "Super Chat Earnings",
+      "status": "completed"
+    },
+    {
+      "id": "3",
+      "type": "payment",
+      "amount": "250.00",
+      "date": "2025-01-15",
+      "description": "Channel Membership Revenue",
+      "status": "completed"
+    },
+    {
+      "id": "4",
+      "type": "payout",
+      "amount": "100.00",
+      "date": "2025-01-10",
+      "description": "Withdrawal to Bank",
+      "status": "completed"
+    }
+  ],
+  "yieldOpportunities": [
+    {
+      "id": "1",
+      "name": "USDC Yield Pool",
+      "apy": "4.3",
+      "minDeposit": "100",
+      "currentBalance": "0",
+      "description": "Earn yield on your USDC balance"
+    }
+  ],
+  "card": {
+    "number": ".... .... .... 1337",
+    "balance": "1682.20",
+    "expiry": "12/26",
+    "transactions": [
+      {
+        "id": "1",
+        "amount": "50.00",
+        "date": "2025-01-22",
+        "merchant": "Amazon",
+        "status": "completed"
+      },
+      {
+        "id": "2",
+        "amount": "25.00",
+        "date": "2025-01-18",
+        "merchant": "Starbucks",
+        "status": "completed"
+      }
+    ]
+  }
+}
+

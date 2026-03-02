@@ -1,0 +1,13 @@
+{
+  "folders": [
+	{
+		"path": "../.."
+	},
+	{
+		"path": "../../../demo-dashboard"
+	}
+],
+  "settings": {
+    "cSpell.words": ["qstash"]
+  }
+}

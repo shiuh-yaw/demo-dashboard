@@ -1,6 +1,23 @@
-# Demo Dashboard
+# Dynamic Demos
 
-A Next.js application for managing checkout configurations and tracking transactions. Features a protected dashboard UI for creating and managing payment/deposit checkouts, real-time transaction monitoring, and comprehensive payment infrastructure integrations.
+A Turborepo monorepo for managing checkout configurations, tracking transactions, and building payment experiences. The **dashboard** app provides a protected admin UI and API for creating/managing payment checkouts; **checkouts** is the embeddable widget; **earn** and **wallet** are additional demo apps.
+
+## Monorepo Structure
+
+```
+apps/
+├── dashboard/     # Admin UI + API (port 4000) - checkout config, transactions, Iron, Coinbase, LI.FI
+├── checkouts/     # Embeddable checkout widget (port 4001)
+├── earn/          # Earn demo app (port 4002)
+└── wallet/        # Wallet demo with embedded wallets (port 4003)
+
+packages/
+├── ui/            # Shared UI components
+├── theme/         # Shared theme/tokens
+├── types/         # Shared TypeScript types
+├── utils/         # Shared utilities
+└── tsconfig/      # Shared TypeScript config
+```
 
 ## Features
 
@@ -22,6 +39,7 @@ A Next.js application for managing checkout configurations and tracking transact
 - **React** 19.1.4 - UI library
 - **TypeScript** 5.9.3 - Type safety
 - **Tailwind CSS** 4.1.17 - Styling with CSS-in-JS
+- **Turborepo** - Monorepo build system
 - **Dynamic SDK** - Wallet authentication
 - **Upstash Redis/QStash** - Data storage and background jobs
 - **Anthropic Claude** - AI theme extraction
@@ -46,7 +64,7 @@ pnpm install
 
 ### Environment Setup
 
-Copy `.example.env` to `.env` and configure:
+Copy `.example.env` to `.env` at the repo root. Individual apps may have their own `.example.env` (e.g. `apps/dashboard/.example.env`, `apps/earn/.example.env`).
 
 ```bash
 cp .example.env .env
@@ -71,12 +89,23 @@ See `.example.env` for all available configuration options.
 
 ### Development
 
+Run all apps:
+
 ```bash
 pnpm dev
 ```
 
-- Dashboard: [http://localhost:3000](http://localhost:3000)
-- API Health Check: [http://localhost:3000/api](http://localhost:3000/api)
+Run a single app:
+
+```bash
+pnpm dev:dashboard   # Dashboard + API on http://localhost:4000
+pnpm dev:checkouts   # Checkout widget on http://localhost:4001
+pnpm dev:earn        # Earn app on http://localhost:4002
+pnpm dev:wallet      # Wallet app on http://localhost:4003
+```
+
+- **Dashboard**: [http://localhost:4000](http://localhost:4000)
+- **API Health Check**: [http://localhost:4000/api](http://localhost:4000/api)
 
 ## Architecture
 
@@ -108,85 +137,52 @@ pnpm dev
 - **QStash Worker** (`/api/internal/worker`) - Polls LI.FI for transaction status with exponential backoff
 - **Cron Reconciliation** (`/api/cron/reconcile`) - Marks stale transactions, re-enqueues stuck pending transactions
 
-## Project Structure
+## Project Structure (Dashboard App)
+
+The dashboard app (`apps/dashboard/`) contains the admin UI and API:
 
 ```
-src/
-├── app/
-│   ├── layout.tsx                    # Root layout with auth & sidebar
-│   ├── page.tsx                      # Home (redirects to checkouts)
-│   │
-│   ├── checkouts/                    # Checkout management UI
-│   │   ├── page.tsx                  # Checkouts list
-│   │   ├── new/page.tsx              # Create new checkout
-│   │   └── [id]/
-│   │       ├── layout.tsx            # Tabbed layout with header
-│   │       ├── page.tsx              # Overview tab
-│   │       ├── transactions/page.tsx # Transactions tab
-│   │       ├── users/page.tsx        # Users tab
-│   │       └── settings/page.tsx     # Settings tab (config editor)
-│   │
-│   ├── api/
-│   │   ├── route.ts                  # Health check
-│   │   │
-│   │   ├── checkouts/                # Checkout & Transaction API
-│   │   │   ├── handlers/             # Business logic handlers
-│   │   │   └── [id]/
-│   │   │       ├── transactions/     # Transaction CRUD
-│   │   │       │   └── [txId]/       # Single transaction operations
-│   │   │       │       ├── quote/    # Get transaction quote
-│   │   │       │       ├── submit/   # Submit with txHash
-│   │   │       │       └── status/   # Get/update transaction status
-│   │   │       ├── users/            # List users
-│   │   │       └── stats/            # Checkout statistics
-│   │   │
-│   │   │
-│   │   ├── coinbase/onramp/          # Coinbase onramp API
-│   │   ├── widgets/[id]/             # Legacy widget config (deprecated)
-│   │   │
-│   │   ├── cron/reconcile/           # Vercel cron job
-│   │   └── internal/worker/          # QStash callback endpoint
-│   │
-│   ├── onramp/page.tsx               # Coinbase onramp docs
-│   ├── lifi/page.tsx                 # LI.FI API docs
-│   └── widgets/                      # Legacy widget routes (deprecated)
-│
-├── lib/
-│   ├── services/                     # Service layer (abstraction)
-│   │   ├── types.ts                  # Service interfaces
-│   │   ├── redis/                    # Redis implementations
-│   │   │   ├── checkouts.ts
-│   │   │   ├── transactions.ts
-│   │   │   └── users.ts
-│   │   ├── lifi.ts                   # LI.FI API service
-│   │   └── workflows.ts              # Cross-service operations
-│   │
-│   ├── upstash/
-│   │   └── qstash.ts                 # QStash client & helpers
-│   │
-│   ├── validation/                   # Zod schemas
-│   │   └── schemas/
-│   │       ├── common.ts             # Shared validators
-│   │       ├── checkout.ts           # Checkout schemas
-│   │       └── transaction.ts        # Transaction schemas
-│   │
-│   ├── actions/                      # Server actions
-│   │   ├── checkouts.ts              # Checkout CRUD
-│   │   └── extract-theme.ts          # AI theme extraction
-│   │
-│   ├── auth/                         # Authentication
-│   │   ├── dynamic-jwt.ts            # JWT verification
-│   │   └── session.ts                # Cookie-based session
-│   │
-│   ├── dynamic/dynamic-auth.ts       # API auth middleware (withAuth)
-│   ├── api-response.ts               # Standardized API responses
-│   ├── errors.ts                     # Custom error classes
-│   ├── redis.ts                      # Redis client
-│   └── types/dashboard.ts            # Core types & Status constants
-│
-├── components/ui/                    # Reusable UI components
-└── env.ts                            # Environment configuration (Zod validated)
+apps/dashboard/
+└── src/
+    ├── app/
+    │   ├── layout.tsx                    # Root layout with auth & sidebar
+    │   ├── page.tsx                      # Home (redirects to checkouts)
+    │   │
+    │   ├── checkouts/                    # Checkout management UI
+    │   │   ├── page.tsx                  # Checkouts list
+    │   │   ├── new/page.tsx              # Create new checkout
+    │   │   └── [id]/
+    │   │       ├── layout.tsx            # Tabbed layout with header
+    │   │       ├── page.tsx              # Overview tab
+    │   │       ├── transactions/page.tsx # Transactions tab
+    │   │       ├── users/page.tsx        # Users tab
+    │   │       └── settings/page.tsx     # Settings tab (config editor)
+    │   │
+    │   ├── api/
+    │   │   ├── route.ts                  # Health check
+    │   │   ├── checkouts/                # Checkout & Transaction API
+    │   │   ├── coinbase/onramp/          # Coinbase onramp API
+    │   │   ├── widgets/[id]/             # Legacy widget config (deprecated)
+    │   │   ├── cron/reconcile/           # Vercel cron job
+    │   │   └── internal/worker/          # QStash callback endpoint
+    │   │
+    │   ├── documentation/               # API docs (onramp, checkouts, iron, blindpay)
+    │   ├── brands/                       # Brand management
+    │   ├── earns/                        # Earn config management
+    │   └── wallets/                      # Wallet config management
+    │
+    ├── lib/
+    │   ├── services/                     # Service layer (abstraction)
+    │   ├── upstash/                      # QStash client
+    │   ├── validation/                   # Zod schemas
+    │   ├── actions/                      # Server actions
+    │   ├── auth/                         # Authentication
+    │   └── dynamic/                      # API auth middleware
+    │
+    └── components/                       # UI components
 ```
+
+See [apps/dashboard/README.md](apps/dashboard/README.md) for dashboard-specific documentation.
 
 ## Authentication
 
@@ -291,7 +287,7 @@ The dashboard includes a complete Iron Finance integration providing enterprise-
 
 **Quick Start:**
 1. Sign up at **[Iron Dashboard](https://app.sandbox.iron.xyz/)** (sandbox) or **[Production](https://app.iron.xyz/)**
-2. Get your API key and add to `.example.env`: `IRON_ENVIRONMENT=sandbox` and `IRON_API_KEY=your_key`
+2. Get your API key and add to `.env`: `IRON_ENVIRONMENT=sandbox` and `IRON_API_KEY=your_key`
 3. Review **[Official Iron Docs](https://docs.iron.xyz/)** for complete API reference
 4. Read `IRON_API_DOCUMENTATION.md` for detailed endpoint guides
 5. See `IRON_API_FLOWS.md` for visual flow diagrams
@@ -310,7 +306,7 @@ The dashboard includes a complete Iron Finance integration providing enterprise-
 
 ## Related Projects
 
-- **nextjs-payment-widget** - The checkout widget that consumes this API
+- **apps/checkouts** - The embeddable checkout widget in this monorepo (consumes the dashboard API)
 
 ## Development Scripts
 
