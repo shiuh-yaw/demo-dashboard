@@ -83,7 +83,12 @@ function DynamicLogo({ className, wordmark = true }: DynamicLogoProps) {
       </g>
       <defs>
         <clipPath id="dynamic-logo-clip">
-          <rect transform="translate(0 .5)" width="113.61" height="20" fill="#fff" />
+          <rect
+            transform="translate(0 .5)"
+            width="113.61"
+            height="20"
+            fill="#fff"
+          />
         </clipPath>
       </defs>
     </svg>

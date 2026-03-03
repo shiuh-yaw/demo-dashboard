@@ -1,0 +1,30 @@
+import { PoweredByFooter } from "@dynamic-demos/ui";
+import { ClientOnlySlot } from "@/components/client-only-slot";
+
+interface DashboardLayoutProps {
+  header?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+/** Placeholder matching header height to prevent layout shift during deferred render. */
+const HEADER_PLACEHOLDER = (
+  <div className="h-16 border-b border-(--widget-border) bg-(--widget-bg)/80" />
+);
+
+export function DashboardLayout({ header, children }: DashboardLayoutProps) {
+  return (
+    <div className="h-screen flex flex-col overflow-hidden bg-(--widget-page-bg)">
+      {header && (
+        <div className="shrink-0">
+          <ClientOnlySlot placeholder={HEADER_PLACEHOLDER}>
+            {header}
+          </ClientOnlySlot>
+        </div>
+      )}
+      <main className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {children}
+      </main>
+      <PoweredByFooter className="shrink-0 pb-4" />
+    </div>
+  );
+}

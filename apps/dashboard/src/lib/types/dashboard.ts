@@ -373,6 +373,63 @@ export interface UpdateWalletConfigRequest {
 }
 
 // =============================================================================
+// Remittance Configuration (Theme & Branding)
+// =============================================================================
+
+/**
+ * Remittance theme - minimal (primary + optional secondary)
+ * Matches apps/remittance/lib/remittance-config.ts
+ */
+export interface RemittanceTheme {
+  primaryColor?: string;
+  secondaryColor?: string;
+}
+
+/**
+ * Remittance branding
+ */
+export interface RemittanceBranding {
+  logoUrl?: string;
+}
+
+/**
+ * Full Remittance configuration
+ */
+export interface RemittanceConfig {
+  theme?: RemittanceTheme;
+  branding?: RemittanceBranding;
+}
+
+/**
+ * Default theme for Remittance
+ */
+export const DEFAULT_REMITTANCE_THEME: Required<RemittanceTheme> = {
+  primaryColor: "#1a56db",
+  secondaryColor: "#1e40af",
+};
+
+/**
+ * Default Remittance configuration
+ */
+export const DEFAULT_REMITTANCE_CONFIG: RemittanceConfig = {
+  theme: DEFAULT_REMITTANCE_THEME,
+  branding: {},
+};
+
+/**
+ * Stored Remittance configuration with metadata
+ */
+export interface StoredRemittanceConfig {
+  id: string;
+  name: string;
+  description?: string;
+  config: RemittanceConfig;
+  createdAt: string;
+  updatedAt: string;
+  ownerId?: string;
+}
+
+// =============================================================================
 // Brand Profiles
 // =============================================================================
 
@@ -437,6 +494,8 @@ export interface BrandDemos {
   checkouts?: string;
   /** Wallet demo config ID */
   wallet?: string;
+  /** Remittance demo config ID */
+  remittance?: string;
 }
 
 /**
@@ -506,6 +565,7 @@ export interface CreateBrandProfileRequest {
     earn?: boolean;
     checkouts?: boolean;
     wallet?: boolean;
+    remittance?: boolean;
   };
 }
 

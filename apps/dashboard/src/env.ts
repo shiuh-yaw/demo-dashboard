@@ -132,6 +132,15 @@ export const env = createEnv({
       .string()
       .url()
       .default("http://localhost:3000"),
+    /**
+     * Remittance Project URL for live preview
+     * Points to the running remittance demo project
+     * Defaults to http://localhost:4004
+     */
+    NEXT_PUBLIC_REMITTANCE_PROJECT_URL: z
+      .string()
+      .url()
+      .default("http://localhost:4004"),
   },
   /*
    * Due to how Next.js bundles environment variables on Edge and Client,
@@ -163,5 +172,7 @@ export const env = createEnv({
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
     NEXT_PUBLIC_EARN_PROJECT_URL: process.env.NEXT_PUBLIC_EARN_PROJECT_URL,
     NEXT_PUBLIC_WALLET_PROJECT_URL: process.env.NEXT_PUBLIC_WALLET_PROJECT_URL,
+    NEXT_PUBLIC_REMITTANCE_PROJECT_URL:
+      process.env.NEXT_PUBLIC_REMITTANCE_PROJECT_URL,
   },
 });

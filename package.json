@@ -9,6 +9,7 @@
     "dev:earn": "turbo run dev --filter=@dynamic-demos/earn",
     "dev:checkouts": "turbo run dev --filter=@dynamic-demos/checkouts",
     "dev:wallet": "turbo run dev --filter=@dynamic-demos/wallet",
+    "dev:remittance": "turbo run dev --filter=@dynamic-demos/remittance",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"
   },

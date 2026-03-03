@@ -65,6 +65,27 @@ export {
   type ErrorBannerType,
 } from "./error-banner";
 
+// Login components
+export {
+  LoginForm,
+  OAuthCompletingCard,
+  type LoginFormProps,
+} from "./login-form";
+
+// Card components
+export {
+  StableCoinCard,
+  type StableCoinCardProps,
+  type StableCoinCardVariant,
+} from "./stable-coin-card";
+export {
+  VisaIcon,
+  VisaIconWhite,
+  MastercardIcon,
+  MastercardIconWhite,
+  type CardType,
+} from "./credit-card-icons";
+
 // Branding components
 export { DynamicLogo, type DynamicLogoProps } from "./dynamic-logo";
 export { KrakenLogo, type KrakenLogoProps } from "./kraken-logo";

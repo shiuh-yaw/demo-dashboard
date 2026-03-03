@@ -23,11 +23,13 @@ import type {
   StoredEarnConfig,
   StoredCheckoutConfig,
   StoredWalletConfig,
+  StoredRemittanceConfig,
 } from "@/lib/types/dashboard";
 import {
   DEFAULT_BRAND_SETTINGS,
   DEFAULT_EARN_CONFIG,
   DEFAULT_WALLET_CONFIG,
+  DEFAULT_REMITTANCE_CONFIG,
 } from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG } from "@/lib/widget-config";
 
@@ -44,17 +46,33 @@ async function createBrandDemoConfigs(
   brandName: string,
   brand: BrandSettings,
   ownerId: string,
-  options?: { earn?: boolean; checkouts?: boolean; wallet?: boolean },
-): Promise<{ earn?: string; checkouts?: string; wallet?: string }> {
+  options?: {
+    earn?: boolean;
+    checkouts?: boolean;
+    wallet?: boolean;
+    remittance?: boolean;
+  },
+): Promise<{
+  earn?: string;
+  checkouts?: string;
+  wallet?: string;
+  remittance?: string;
+}> {
   const redis = getRedis();
   const now = new Date().toISOString();
-  const demos: { earn?: string; checkouts?: string; wallet?: string } = {};
+  const demos: {
+    earn?: string;
+    checkouts?: string;
+    wallet?: string;
+    remittance?: string;
+  } = {};
 
   // Create demos only if explicitly requested (or all if no options provided)
   const createAll = !options || Object.keys(options).length === 0;
   const createEarn = createAll || options?.earn === true;
   const createCheckouts = createAll || options?.checkouts === true;
   const createWallet = createAll || options?.wallet === true;
+  const createRemittance = createAll || options?.remittance === true;
 
   // Create Earn config with brand settings
   if (createEarn) {
@@ -208,6 +226,33 @@ async function createBrandDemoConfigs(
     demos.wallet = walletId;
   }
 
+  // Create Remittance config with brand settings
+  if (createRemittance) {
+    const remittanceId = createId();
+    const remittanceConfig: StoredRemittanceConfig = {
+      id: remittanceId,
+      name: `${brandName} - Remittance`,
+      description: `Auto-generated from brand profile: ${brandId}`,
+      config: {
+        theme: {
+          ...DEFAULT_REMITTANCE_CONFIG.theme,
+          primaryColor: brand.primaryColor,
+          secondaryColor: brand.accentColor || brand.primaryColor,
+        },
+        branding: {
+          logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,
+        },
+      },
+      ownerId,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await redis.set(REDIS_KEYS.remittanceConfig(remittanceId), remittanceConfig);
+    await redis.sadd(REDIS_KEYS.remittanceConfigList, remittanceId);
+    demos.remittance = remittanceId;
+  }
+
   return demos;
 }
 
@@ -357,6 +402,33 @@ async function updateBrandDemoConfigs(
       await redis.set(REDIS_KEYS.walletConfig(profile.demos.wallet), updated);
     }
   }
+
+  // Update Remittance config if it exists
+  if (profile.demos.remittance) {
+    const remittanceConfig = await redis.get<StoredRemittanceConfig>(
+      REDIS_KEYS.remittanceConfig(profile.demos.remittance),
+    );
+    if (remittanceConfig) {
+      const updated: StoredRemittanceConfig = {
+        ...remittanceConfig,
+        config: {
+          theme: {
+            ...remittanceConfig.config.theme,
+            primaryColor: brand.primaryColor,
+            secondaryColor: brand.accentColor || brand.primaryColor,
+          },
+          branding: {
+            logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,
+          },
+        },
+        updatedAt: now,
+      };
+      await redis.set(
+        REDIS_KEYS.remittanceConfig(profile.demos.remittance),
+        updated,
+      );
+    }
+  }
 }
 
 /**
@@ -366,6 +438,7 @@ async function deleteBrandDemoConfigs(demos: {
   earn?: string;
   checkouts?: string;
   wallet?: string;
+  remittance?: string;
 }): Promise<void> {
   const redis = getRedis();
 
@@ -382,6 +455,11 @@ async function deleteBrandDemoConfigs(demos: {
   if (demos.wallet) {
     await redis.del(REDIS_KEYS.walletConfig(demos.wallet));
     await redis.srem(REDIS_KEYS.walletConfigList, demos.wallet);
+  }
+
+  if (demos.remittance) {
+    await redis.del(REDIS_KEYS.remittanceConfig(demos.remittance));
+    await redis.srem(REDIS_KEYS.remittanceConfigList, demos.remittance);
   }
 }
 
@@ -642,7 +720,7 @@ export async function getBrandProfilePublic(
  */
 export async function deleteBrandDemo(
   id: string,
-  demoType: "earn" | "checkouts" | "wallet",
+  demoType: "earn" | "checkouts" | "wallet" | "remittance",
 ): Promise<ActionResult<BrandProfile>> {
   const user = await getCurrentUser();
   if (!user) {
@@ -699,7 +777,12 @@ export async function deleteBrandDemo(
  */
 export async function createMissingDemos(
   id: string,
-  demoTypes: { earn?: boolean; checkouts?: boolean; wallet?: boolean },
+  demoTypes: {
+    earn?: boolean;
+    checkouts?: boolean;
+    wallet?: boolean;
+    remittance?: boolean;
+  },
 ): Promise<ActionResult<BrandProfile>> {
   const user = await getCurrentUser();
   if (!user) {
@@ -726,6 +809,7 @@ export async function createMissingDemos(
       earn: demoTypes.earn && !profile.demos.earn,
       checkouts: demoTypes.checkouts && !profile.demos.checkouts,
       wallet: demoTypes.wallet && !profile.demos.wallet,
+      remittance: demoTypes.remittance && !profile.demos.remittance,
     };
 
     // Create the missing demos

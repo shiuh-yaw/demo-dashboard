@@ -22,6 +22,7 @@ import {
   Plus,
   Loader2,
   Settings,
+  Send,
 } from "lucide-react";
 import type { BrandProfile, BrandTheme } from "@/lib/types/dashboard";
 import { updateBrandProfile, createMissingDemos, deleteBrandDemo } from "@/lib/actions/brands";
@@ -37,7 +38,7 @@ import {
 import { env } from "@/env";
 
 // Demo type configuration
-type DemoType = "earn" | "checkouts" | "wallet";
+type DemoType = "earn" | "checkouts" | "wallet" | "remittance";
 
 interface DemoConfig {
   type: DemoType;
@@ -81,6 +82,16 @@ const DEMO_CONFIGS: DemoConfig[] = [
     routePrefix: "w",
     configRoute: "/wallets",
   },
+  {
+    type: "remittance",
+    label: "Remittance Demo",
+    icon: Send,
+    iconBg: "bg-slate-100",
+    iconColor: "text-slate-500",
+    baseUrl: env.NEXT_PUBLIC_REMITTANCE_PROJECT_URL,
+    routePrefix: "r",
+    configRoute: "/remittance",
+  },
 ];
 
 interface BrandEditorProps {
@@ -115,7 +126,7 @@ export function BrandEditor({ profile: initialProfile }: BrandEditorProps) {
   function getDemoUrl(config: DemoConfig): string | null {
     const demoId = profile.demos[config.type];
     if (!demoId) return null;
-    // Wallet uses query param, others use path
+    // Wallet uses query param; Earn, Checkouts, Remittance use path
     if (config.type === "wallet") {
       return `${config.baseUrl}/?id=${demoId}`;
     }
@@ -182,7 +193,9 @@ export function BrandEditor({ profile: initialProfile }: BrandEditorProps) {
     setTimeout(() => setCopiedLink(null), 2000);
   }
 
-  async function handleCreateDemo(type: "earn" | "checkouts" | "wallet") {
+  async function handleCreateDemo(
+    type: "earn" | "checkouts" | "wallet" | "remittance",
+  ) {
     setIsCreatingDemo(type);
     try {
       const result = await createMissingDemos(profile.id, { [type]: true });
@@ -200,7 +213,9 @@ export function BrandEditor({ profile: initialProfile }: BrandEditorProps) {
     }
   }
 
-  async function handleDeleteDemo(type: "earn" | "checkouts" | "wallet") {
+  async function handleDeleteDemo(
+    type: "earn" | "checkouts" | "wallet" | "remittance",
+  ) {
     setIsDeletingDemo(type);
     try {
       const result = await deleteBrandDemo(profile.id, type);

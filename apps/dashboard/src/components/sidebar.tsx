@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpDown, Wallet, Building2, Banknote } from "lucide-react";
+import {
+  ArrowUpDown,
+  Wallet,
+  Building2,
+  Banknote,
+  Send,
+} from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { DynamicLogo } from "@/components/dynamic-logo";
 import { CoinbaseIcon } from "@/components/coinbase-icon";
@@ -38,6 +44,11 @@ const navGroups = [
         href: "/wallets",
         label: "Wallets",
         icon: Wallet,
+      },
+      {
+        href: "/remittance",
+        label: "Remittance",
+        icon: Send,
       },
     ],
   },

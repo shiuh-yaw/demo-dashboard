@@ -49,15 +49,25 @@ export default function NewBrandProfilePage() {
   const [generateEarn, setGenerateEarn] = useState(true);
   const [generateCheckouts, setGenerateCheckouts] = useState(true);
   const [generateWallet, setGenerateWallet] = useState(true);
+  const [generateRemittance, setGenerateRemittance] = useState(true);
 
-  const allSelected = generateEarn && generateCheckouts && generateWallet;
-  const noneSelected = !generateEarn && !generateCheckouts && !generateWallet;
+  const allSelected =
+    generateEarn &&
+    generateCheckouts &&
+    generateWallet &&
+    generateRemittance;
+  const noneSelected =
+    !generateEarn &&
+    !generateCheckouts &&
+    !generateWallet &&
+    !generateRemittance;
 
   function toggleAll() {
     const newValue = !allSelected;
     setGenerateEarn(newValue);
     setGenerateCheckouts(newValue);
     setGenerateWallet(newValue);
+    setGenerateRemittance(newValue);
   }
 
   async function handleCreate() {
@@ -106,6 +116,7 @@ export default function NewBrandProfilePage() {
           earn: generateEarn,
           checkouts: generateCheckouts,
           wallet: generateWallet,
+          remittance: generateRemittance,
         },
       });
 
@@ -198,6 +209,11 @@ export default function NewBrandProfilePage() {
               checked={generateWallet}
               onChange={(e) => setGenerateWallet(e.target.checked)}
               label="Wallet Demo — Embedded wallet with auth and transaction support"
+            />
+            <Checkbox
+              checked={generateRemittance}
+              onChange={(e) => setGenerateRemittance(e.target.checked)}
+              label="Remittance Demo — USDC transfers with Fireblocks custody"
             />
           </div>
         </Section>

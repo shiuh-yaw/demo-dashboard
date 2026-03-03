@@ -241,6 +241,16 @@ export const REDIS_KEYS = {
   walletConfigList: `${DASHBOARD_PREFIX}:wallet:list`,
 
   // ==========================================================================
+  // Remittance configs (theme/branding for Remittance demo)
+  // ==========================================================================
+
+  /** Single Remittance config by ID */
+  remittanceConfig: (id: string) => `${DASHBOARD_PREFIX}:remittance:${id}`,
+
+  /** Set of all Remittance config IDs */
+  remittanceConfigList: `${DASHBOARD_PREFIX}:remittance:list`,
+
+  // ==========================================================================
   // Brand Profiles (unified branding across demo types)
   // ==========================================================================
 
