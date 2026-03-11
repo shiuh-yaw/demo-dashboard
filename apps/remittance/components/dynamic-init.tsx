@@ -12,12 +12,14 @@ import { setDynamicJWT, clearAuthCookie } from "@/lib/auth/session";
 /**
  * Initializes Dynamic SDK auth event listeners and syncs auth state to cookies.
  *
- * Mirrors apps/dashboard DynamicInit pattern:
- * - Listens for tokenChanged → syncs to cookie
- * - Listens for logout → clears cookie
- * - On init: if already signed in, syncs token (returning users)
+ * Auth mutations (useVerifyOTP, useCompleteSocialAuth, useJwtAuth) explicitly
+ * await setDynamicJWT before navigating, so DynamicInit does NOT sync on
+ * tokenChanged — that would trigger RSC cache invalidation mid-navigation,
+ * causing redirect races between router.push and server-side redirect.
  *
- * Enables middleware and server components to verify auth via dynamic_jwt cookie.
+ * DynamicInit handles:
+ * - Returning users: sync existing token to cookie on init
+ * - Logout: clear cookie
  */
 export function DynamicInit() {
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -31,19 +33,6 @@ export function DynamicInit() {
       try {
         await waitForClientInitialized();
 
-        // Listen for token changes — sync to cookie on login/refresh
-        const unsubToken = onEvent({
-          event: "tokenChanged",
-          listener: (args: { token?: string | null }) => {
-            const token = args?.token;
-            if (token) {
-              void setDynamicJWT(token);
-            } else {
-              void clearAuthCookie();
-            }
-          },
-        });
-
         // Listen for logout — clear cookie
         const unsubLogout = onEvent({
           event: "logout",
@@ -53,7 +42,6 @@ export function DynamicInit() {
         });
 
         cleanupRef.current = () => {
-          unsubToken?.();
           unsubLogout?.();
         };
 

@@ -7,17 +7,16 @@ Wraps the official [`@fireblocks/ts-sdk`](https://github.com/fireblocks/ts-sdk) 
 ```ts
 import { createFireblocksClient } from "@dynamic-demos/fireblocks";
 
-// Returns real client when credentials are set, mock client otherwise
+// Real client (requires FIREBLOCKS_API_KEY + FIREBLOCKS_API_SECRET)
 const client = createFireblocksClient();
+
+// Or explicitly use mock for local development
+// const client = createFireblocksClient({ useMock: true });
 
 // Create a vault and get deposit addresses
 const vault = await client.createVaultAccount("My Vault");
 await client.createVaultWallet(vault.id, "BASE_USDC");
 const addresses = await client.getDepositAddresses(vault.id, "BASE_USDC");
-
-// Screen an address for AML/CFT compliance
-const result = await client.screenAddress(addresses[0].address, "BASE_USDC");
-console.log(result.verdict); // "PASSED" | "FLAGGED" | "BLOCKED" | "PENDING"
 
 // Create a transaction
 const tx = await client.createTransaction({
@@ -33,26 +32,26 @@ const tx = await client.createTransaction({
 | Variable | Description |
 |----------|-------------|
 | `FIREBLOCKS_API_KEY` | API key from the Fireblocks console |
-| `FIREBLOCKS_API_SECRET` or `FIREBLOCKS_SECRET_KEY` | PEM-encoded RSA private key |
-| `FIREBLOCKS_API_BASE_URL` or `FIREBLOCKS_BASE_PATH` | API base URL (defaults to `BasePath.Sandbox`) |
+| `FIREBLOCKS_API_SECRET` | PEM-encoded RSA private key |
+| `FIREBLOCKS_API_BASE_URL` | API base URL (defaults to `BasePath.Sandbox`) |
 
-When credentials are absent, `createFireblocksClient()` returns a `MockFireblocksClient` that simulates realistic responses with configurable delays — no Fireblocks account needed for local development.
+Pass `useMock: true` to use `MockFireblocksClient` without credentials (e.g. for local development).
 
 ## Architecture
 
 ```
 src/
+├── config.ts           # Credential resolution from env
 ├── types.ts            # IFireblocksClient interface + all shared types
 ├── client.ts           # Real client wrapping @fireblocks/ts-sdk
 ├── mock-client.ts      # Mock client with simulated delays
 ├── factory.ts          # createFireblocksClient() factory
-└── vault/
-    └── omnibus.ts      # Omnibus vault structure for remittance
+└── vault.ts            # getOrCreateDepositAddress helper
 ```
 
 ### Factory Pattern
 
-`createFireblocksClient(config?)` accepts an optional `FireblocksConfig`. If no config is provided, it reads from environment variables. If neither config nor env vars are available, it falls back to the mock client.
+`createFireblocksClient(config?)` requires credentials (from config or env) unless `useMock: true` is passed. Throws when credentials are missing and mock is not requested.
 
 ### Mock Client
 
@@ -74,36 +73,12 @@ const mock = new MockFireblocksClient({ delayMs: 200 });
 
 | Export | Description |
 |--------|-------------|
-| `createFireblocksClient(config?)` | Factory — returns real or mock client |
+| `createFireblocksClient(config?)` | Factory — returns real client (requires creds) or mock (useMock: true) |
 | `FireblocksClient` | Real client wrapping `@fireblocks/ts-sdk` |
 | `MockFireblocksClient` | Mock client class for development |
 
-### Omnibus Vault
+### Vault Operations
 
 | Export | Description |
 |--------|-------------|
-| `createOmnibusStructure(client, name?, assetId?)` | Set up omnibus vault |
-| `getDepositAddressForUser(client, vaultId, assetId?)` | Get user deposit address |
-| `getOmnibusVaultBalance(client, vaultId)` | Get omnibus vault balance |
-
-### Screening Utilities
-
-| Export | Description |
-|--------|-------------|
-| `isScreeningPassed(result)` | Check if screening verdict is `"PASSED"` |
-| `getScreeningRiskLevel(result)` | Classify risk: `"low"` (<0.3) / `"medium"` (<0.7) / `"high"` |
-
-```ts
-import {
-  createFireblocksClient,
-  isScreeningPassed,
-  getScreeningRiskLevel,
-} from "@dynamic-demos/fireblocks";
-
-const client = createFireblocksClient();
-const result = await client.screenAddress("0xabc...", "BASE_USDC");
-
-if (!isScreeningPassed(result)) {
-  console.log(`Blocked: risk=${getScreeningRiskLevel(result)}`);
-}
-```
+| `getOrCreateDepositAddress(client, name, assetId)` | Get or create deposit address for vault by name |

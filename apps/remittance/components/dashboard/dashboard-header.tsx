@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Copy, Check } from "lucide-react";
 import { Button } from "@dynamic-demos/ui";
-import { AppLogo } from "@/components/app-logo";
+import { AppLogo } from "@/components/ui/app-logo";
 import { useRemittanceConfig } from "@/contexts/remittance-config-context";
 import { useLogout } from "@/hooks/use-mutations";
 import { useCopyFeedback } from "@/hooks/use-copy-feedback";
@@ -62,9 +62,8 @@ export function DashboardHeader({
               const isActive =
                 item.href === "/"
                   ? pathname === "/"
-                  : item.href === "/admin" || item.href.endsWith("/admin")
-                    ? pathname === item.href ||
-                      pathname.startsWith(`${item.href}/`)
+                  : item.href === "/admin"
+                    ? pathname === "/admin"
                     : pathname.startsWith(item.href);
               return (
                 <Link
@@ -104,7 +103,11 @@ export function DashboardHeader({
               variant="outline"
               size="sm"
               danger
-              onClick={() => logoutMutation.mutateAsync()}
+              onClick={() =>
+                logoutMutation.mutateAsync().then(() => {
+                  window.location.href = "/login";
+                })
+              }
               loading={logoutMutation.isPending}
             >
               {!logoutMutation.isPending && <LogOut className="w-3.5 h-3.5" />}

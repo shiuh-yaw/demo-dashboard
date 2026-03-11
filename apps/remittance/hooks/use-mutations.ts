@@ -20,7 +20,8 @@ import {
   type OTPVerification,
   type Chain,
 } from "@/lib/dynamic";
-import { clearAuthCookie, setDynamicJWT } from "@/lib/auth/session";
+import { clearAuthCookie } from "@/lib/auth/session";
+import { syncCookie } from "@/lib/auth/sync-cookie";
 import {
   sendUsdcTransaction,
   type SendUsdcTransactionParams,
@@ -49,7 +50,9 @@ export function useVerifyOTP() {
         otpVerification,
         verificationToken: otp,
       }),
-    onSuccess: () => {
+    onSuccess: async () => {
+      const token = await getAuthToken();
+      if (token) await syncCookie(token);
       queryClient.invalidateQueries({ queryKey: ["walletAccounts"] });
     },
   });
@@ -67,21 +70,26 @@ export function useSocialAuth() {
   });
 }
 
-function hasOAuthParams(): boolean {
-  if (typeof window === "undefined") return false;
-  const params = new URLSearchParams(window.location.search);
-  return (
-    params.has("dynamicOauthCode") ||
-    params.has("dynamicOauthState") ||
-    (params.has("code") && params.has("state"))
-  );
+function cleanOAuthParams() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("dynamicOauthCode");
+  url.searchParams.delete("dynamicOauthState");
+  url.searchParams.delete("code");
+  url.searchParams.delete("state");
+  window.history.replaceState({}, "", url.toString());
 }
 
-async function syncAuthAndReturn(): Promise<boolean> {
-  if (!isSignedIn()) return false;
-  const jwt = await getAuthToken();
-  if (jwt) await setDynamicJWT(jwt);
-  return true;
+/**
+ * Poll until the Dynamic SDK reports the user as signed in (up to ~5s).
+ * Used as a safety net when detectOAuthRedirect fails (e.g. new tab
+ * where sessionStorage is empty).
+ */
+async function waitForSignedIn(): Promise<boolean> {
+  for (let i = 0; i < 10; i++) {
+    if (isSignedIn()) return true;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
 }
 
 export function useCompleteSocialAuth() {
@@ -97,40 +105,25 @@ export function useCompleteSocialAuth() {
         isReturning = await detectOAuthRedirect({ url });
       } catch (err) {
         if (err instanceof MissingRedirectStorageStateError) {
-          // OAuth state lost (e.g. new tab, sessionStorage cleared) - check if already authenticated
-          for (let i = 0; i < 5; i++) {
-            if (await syncAuthAndReturn()) return true;
-            await new Promise((r) => setTimeout(r, 200));
-          }
-          return false;
+          // OAuth state lost (e.g. callback opened in new tab).
+          // Wait for SDK to finish background auth, then sync cookie.
+          if (!(await waitForSignedIn())) return false;
+          const jwt = await getAuthToken();
+          if (jwt) await syncCookie(jwt);
+          cleanOAuthParams();
+          return true;
         }
         throw err;
       }
 
-      if (!isReturning) {
-        if (hasOAuthParams()) {
-          for (let i = 0; i < 5; i++) {
-            if (await syncAuthAndReturn()) return true;
-            await new Promise((r) => setTimeout(r, 200));
-          }
-        }
-        return false;
-      }
+      if (!isReturning) return false;
 
       await completeSocialAuthentication({ url });
 
-      // Sync JWT to cookie before redirect so server sees auth on next request
       const jwt = await getAuthToken();
-      if (jwt) await setDynamicJWT(jwt);
+      if (jwt) await syncCookie(jwt);
 
-      // Clean OAuth params from URL to prevent re-processing on refresh
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete("dynamicOauthCode");
-      cleanUrl.searchParams.delete("dynamicOauthState");
-      cleanUrl.searchParams.delete("code");
-      cleanUrl.searchParams.delete("state");
-      window.history.replaceState({}, "", cleanUrl.toString());
-
+      cleanOAuthParams();
       return true;
     },
     onSuccess: () => {
@@ -146,7 +139,9 @@ export function useJwtAuth() {
 
   return useMutation({
     mutationFn: (jwt: string) => signInWithExternalJwt({ externalJwt: jwt }),
-    onSuccess: () => {
+    onSuccess: async () => {
+      const token = await getAuthToken();
+      if (token) await syncCookie(token);
       queryClient.invalidateQueries({ queryKey: ["walletAccounts"] });
     },
   });

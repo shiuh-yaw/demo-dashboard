@@ -10,10 +10,6 @@ function isPublicRoute(path: string): boolean {
   return false;
 }
 
-function isConfigKycRoute(path: string): boolean {
-  return /^\/r\/[^/]+\/kyc(\/|$)/.test(path);
-}
-
 /**
  * All routes are protected except /login.
  * Redirects unauthenticated users to /login with returnTo.
@@ -35,7 +31,7 @@ export function middleware(request: NextRequest) {
     requestHeaders.set("x-remittance-config-id", resolvedConfigId);
   }
 
-  if (isPublicRoute(path) || isConfigKycRoute(path)) {
+  if (isPublicRoute(path)) {
     // Authenticated user on login? Redirect to returnTo immediately (skip OAuth callback)
     const isLoginRoute =
       path === LOGIN_PATH ||

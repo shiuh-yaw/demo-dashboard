@@ -2,7 +2,9 @@
  * Fetch supported assets from Fireblocks API.
  * Use this to discover the correct asset ID for your workspace.
  */
-import { Fireblocks, BasePath } from "@fireblocks/ts-sdk";
+
+import { Fireblocks } from "@fireblocks/ts-sdk";
+import { resolveFireblocksConfig } from "./config";
 
 export interface SupportedAsset {
   id: string;
@@ -14,28 +16,11 @@ export async function getSupportedAssets(config?: {
   apiSecret?: string;
   baseUrl?: string;
 }): Promise<SupportedAsset[]> {
-  const apiKey = config?.apiKey ?? process.env.FIREBLOCKS_API_KEY;
-  const apiSecret =
-    config?.apiSecret ??
-    process.env.FIREBLOCKS_API_SECRET ??
-    process.env.FIREBLOCKS_SECRET_KEY;
-  const baseUrl =
-    config?.baseUrl ??
-    process.env.FIREBLOCKS_API_BASE_URL ??
-    process.env.FIREBLOCKS_BASE_PATH ??
-    BasePath.Sandbox;
-
-  if (!apiKey || !apiSecret) {
-    throw new Error(
-      "Fireblocks credentials required (FIREBLOCKS_API_KEY, FIREBLOCKS_API_SECRET)",
-    );
-  }
-
-  const normalizedSecret = (apiSecret as string).replace(/\\n/g, "\n");
+  const resolved = resolveFireblocksConfig(config);
   const sdk = new Fireblocks({
-    apiKey,
-    secretKey: normalizedSecret,
-    basePath: baseUrl,
+    apiKey: resolved.apiKey,
+    secretKey: resolved.apiSecret,
+    basePath: resolved.baseUrl,
   });
 
   const res = await sdk.blockchainsAssets.getSupportedAssets();

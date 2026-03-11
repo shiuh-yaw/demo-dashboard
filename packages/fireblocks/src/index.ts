@@ -2,7 +2,7 @@
  * @dynamic-demos/fireblocks
  *
  * Shared Fireblocks integration package.
- * Wraps @fireblocks/ts-sdk with real and mock clients for vault management and address screening.
+ * Wraps @fireblocks/ts-sdk with real and mock clients for vault management.
  */
 
 // Client factory
@@ -27,14 +27,7 @@ export type {
   TransferPeerPath,
   CreateTransactionRequest,
   ListTransactionsParams,
-  ScreeningResult,
-  ScreeningVerdict,
-  ScreeningDetail,
-  OmnibusStructure,
 } from "./types";
-
-// Screening utilities
-export { isScreeningPassed, getScreeningRiskLevel } from "./types";
 
 // Validation schemas
 export {
@@ -46,12 +39,9 @@ export type {
   ValidatedCreateTransactionRequest,
 } from "./validation";
 
-// Omnibus vault operations
-export {
-  createOmnibusStructure,
-  getDepositAddressForUser,
-  getOmnibusVaultBalance,
-} from "./vault/omnibus";
+// Vault operations
+export { getOrCreateDepositAddress, resolveVaultIdByName } from "./vault";
+export type { DepositAddressWithVaultId } from "./vault";
 
 // Supported assets (for discovering correct asset IDs)
 export { getSupportedAssets } from "./supported-assets";

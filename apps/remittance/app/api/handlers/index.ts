@@ -8,7 +8,7 @@ export {
   handleGetBankStatus,
   handleSubmitBankDetails,
 } from "./withdraw";
-export { handleGetKycStatus, handleApproveKyc } from "./kyc";
+export { handleGetKycStatus, handleApproveKyc, handleClearKyc } from "./kyc";
 export { handleGetTransactionHistory } from "./transactions-history";
 export { handleDynamicWebhook } from "./webhooks";
 export {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowDownToLine, CheckCircle, ExternalLink } from "lucide-react";
 import { WidgetCard, Button, Input, Spinner } from "@dynamic-demos/ui";
-import { ErrorMessage } from "@/components/error-message";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useBankStatus } from "@/hooks/use-bank-status";
 import { getAuthToken } from "@/lib/dynamic";

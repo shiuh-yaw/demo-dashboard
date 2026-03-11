@@ -30,15 +30,7 @@ export default async function ConfigLoginPage({
     loginPath,
   });
   if (userData && !isOAuthCallback) {
-    const destination = returnTo?.startsWith("/")
-      ? returnTo
-      : `/${returnTo ?? defaultReturnTo}`.replace(/\/+$/, "") ||
-        defaultReturnTo;
-    redirect(
-      userData.kycApproved
-        ? destination
-        : `/r/${id}/kyc?returnTo=${encodeURIComponent(destination)}`,
-    );
+    redirect(returnTo || defaultReturnTo);
   }
 
   return <LoginPage returnToOverride={returnTo ?? defaultReturnTo} />;

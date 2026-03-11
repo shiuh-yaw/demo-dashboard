@@ -19,7 +19,7 @@ import {
   getCounterpartyDisplayLabel,
   buildAddressToEmailMap,
 } from "@/lib/deposit-addresses";
-import { TxTime } from "@/components/transaction-time";
+import { TxTime } from "@/components/dashboard/transaction-time";
 import type { TxItem } from "@/hooks/use-transaction-history";
 import type { RecipientEntry } from "@/lib/recipients";
 

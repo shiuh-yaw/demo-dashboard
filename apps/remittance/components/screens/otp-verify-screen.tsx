@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { WidgetCard, Button, Input } from "@dynamic-demos/ui";
-import { ErrorMessage } from "@/components/error-message";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { useVerifyOTP } from "@/hooks/use-mutations";
 import type { OTPVerification } from "@/lib/dynamic";
 import type { NavigationReturn } from "@/hooks/use-navigation";

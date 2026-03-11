@@ -1,7 +1,7 @@
 /**
  * Fireblocks TypeScript interfaces
  *
- * Types for vault accounts, wallets, transactions, and screening.
+ * Types for vault accounts, wallets, and transactions.
  * Used by both the real and mock Fireblocks clients.
  */
 
@@ -110,53 +110,6 @@ export interface CreateTransactionRequest {
   customerRefId?: string;
 }
 
-// ─── Screening Types ─────────────────────────────────────────────────────────
-
-export type ScreeningVerdict =
-  | "PASSED"
-  | "FLAGGED"
-  | "BLOCKED"
-  | "PENDING"
-  | "NOT_SUPPORTED";
-
-export interface ScreeningResult {
-  address: string;
-  verdict: ScreeningVerdict;
-  riskScore: number;
-  provider: string;
-  details: ScreeningDetail[];
-  timestamp: number;
-}
-
-export interface ScreeningDetail {
-  category: string;
-  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-  description: string;
-}
-
-// ─── Screening Utilities ────────────────────────────────────────────────────
-
-export function isScreeningPassed(result: ScreeningResult): boolean {
-  return result.verdict === "PASSED";
-}
-
-export function getScreeningRiskLevel(
-  result: ScreeningResult,
-): "low" | "medium" | "high" {
-  if (result.riskScore < 0.3) return "low";
-  if (result.riskScore < 0.7) return "medium";
-  return "high";
-}
-
-// ─── Omnibus Types ───────────────────────────────────────────────────────────
-
-export interface OmnibusStructure {
-  omnibusVaultId: string;
-  omnibusVaultName: string;
-  assetId: string;
-  depositAddresses: Map<string, DepositAddress>;
-}
-
 // ─── Query Params ───────────────────────────────────────────────────────────
 
 export interface ListTransactionsParams {
@@ -206,7 +159,4 @@ export interface IFireblocksClient {
   listTransactions(
     params?: ListTransactionsParams,
   ): Promise<TransactionResponse[]>;
-
-  // Screening
-  screenAddress(address: string, assetId: string): Promise<ScreeningResult>;
 }

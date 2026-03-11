@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { getAdminNavItems } from "@/lib/nav-items";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { getServerUserData } from "@/lib/auth/server-auth";
+import { KycGatePage } from "@/app/(app)/kyc-gate-page";
 
 export const metadata: Metadata = {
   title: "Remittance Admin — Fireblocks + Dynamic",
@@ -28,7 +28,7 @@ export default async function ConfigAdminLayout({
   if (!userData) return null;
 
   if (!userData.kycApproved) {
-    redirect(`/r/${id}/kyc?returnTo=${encodeURIComponent(`${basePath}/admin`)}`);
+    return <KycGatePage />;
   }
 
   return (

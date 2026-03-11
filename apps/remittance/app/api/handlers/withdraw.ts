@@ -3,7 +3,7 @@
  */
 
 import { getFireblocksClient } from "@/lib/fireblocks";
-import { getDepositAddressForUser } from "@dynamic-demos/fireblocks";
+import { getOrCreateDepositAddress } from "@dynamic-demos/fireblocks";
 import { OFFRAMP_VAULT_PREFIX } from "@/lib/fireblocks-vault";
 import {
   getUser,
@@ -31,11 +31,10 @@ export async function handleGetWithdrawAddress(userId: string) {
     );
   }
   const client = getFireblocksClient();
-  const depositAddress = await getDepositAddressForUser(
+  const depositAddress = await getOrCreateDepositAddress(
     client,
-    userId,
+    OFFRAMP_VAULT_PREFIX + userId,
     assetId,
-    OFFRAMP_VAULT_PREFIX,
   );
   return { address: depositAddress.address };
 }

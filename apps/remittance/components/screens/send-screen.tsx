@@ -13,7 +13,7 @@ import {
   getRecipientDisplayName,
   getRecipientInitials,
 } from "@/lib/recipients";
-import { ErrorMessage } from "@/components/error-message";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useGasSponsorship } from "@/hooks/use-gas-sponsorship";

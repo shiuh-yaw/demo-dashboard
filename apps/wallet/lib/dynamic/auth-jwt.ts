@@ -13,12 +13,16 @@
  */
 
 import { signInWithExternalJwt as sdkSignInWithExternalJwt } from "@dynamic-labs-sdk/client";
-import { getClient, createAsyncSafeWrapper } from "./client";
+import { getClient } from "./client";
+import { waitForClientInitialized } from "./init";
 
-/** Sign in with an external JWT token */
-export const signInWithExternalJwt = createAsyncSafeWrapper(
-  sdkSignInWithExternalJwt,
-);
+/** Sign in with an external JWT token. Waits for client init before calling SDK. */
+export async function signInWithExternalJwt(params: {
+  externalJwt: string;
+}): Promise<Awaited<ReturnType<typeof sdkSignInWithExternalJwt>>> {
+  await waitForClientInitialized();
+  return sdkSignInWithExternalJwt({ externalJwt: params.externalJwt });
+}
 
 /**
  * Check if External Authentication (JWT) is enabled in the dashboard.

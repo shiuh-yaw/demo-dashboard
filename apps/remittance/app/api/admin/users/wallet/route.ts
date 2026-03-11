@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { handleCreateUserWallet } from "../../handlers";
 

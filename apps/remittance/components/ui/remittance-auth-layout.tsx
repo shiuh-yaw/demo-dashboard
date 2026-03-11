@@ -1,7 +1,7 @@
 "use client";
 
 import { PoweredByFooter } from "@dynamic-demos/ui";
-import { AppLogo } from "@/components/app-logo";
+import { AppLogo } from "@/components/ui/app-logo";
 import { useRemittanceConfig } from "@/contexts/remittance-config-context";
 
 interface RemittanceAuthLayoutProps {

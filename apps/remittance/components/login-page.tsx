@@ -30,8 +30,8 @@ export function LoginPage({ returnToOverride }: LoginPageProps = {}) {
 
   const goToApp = useCallback(() => {
     const destination = returnTo || "/";
-    // Full page reload ensures server sees the auth cookie (critical for social OAuth)
-    window.location.href = destination.startsWith("/") ? destination : `/${destination}`;
+    const path = destination.startsWith("/") ? destination : `/${destination}`;
+    window.location.href = path;
   }, [returnTo]);
 
   const goToOtpVerify = useCallback(

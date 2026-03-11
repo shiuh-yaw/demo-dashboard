@@ -9,11 +9,26 @@ import {
   CheckCircle2,
   Copy,
   Check,
+  Send,
+  ArrowDownLeft,
+  ChevronRight,
+  Plus,
+  ExternalLink,
+  Trash2,
 } from "lucide-react";
-import { Button } from "@dynamic-demos/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  Spinner,
+} from "@dynamic-demos/ui";
 import { truncateAddress } from "@dynamic-demos/utils";
 import {
   FIREBLOCKS_VAULT_METADATA_KEY,
+  FIREBLOCKS_VAULT_ID_METADATA_KEY,
   KYC_APPROVED_METADATA_KEY,
 } from "@/lib/dynamic-api";
 import {
@@ -21,9 +36,17 @@ import {
   hasMetadataString,
   isMetadataTruthy,
 } from "@/lib/user-metadata";
+import { getExplorerAddressUrl } from "@/lib/constants";
 import { useCopyFeedback } from "@/hooks/use-copy-feedback";
 
 const SEARCH_DEBOUNCE_MS = 300;
+
+function fmt(n: number): string {
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 interface User {
   id: string;
@@ -33,6 +56,9 @@ interface User {
   lastName?: string;
   metadata?: Record<string, unknown>;
   usdcBalance?: number;
+  walletBalance?: number;
+  vaultBalance?: number;
+  vaultId?: string | null;
   wallets?: Array<{
     id: string;
     publicKey: string;
@@ -46,25 +72,59 @@ interface UserListProps {
   error: string | null;
 }
 
+function getUserFlags(user: User) {
+  const hasKyc = isMetadataTruthy(user, KYC_APPROVED_METADATA_KEY);
+  const hasWallet = (user.wallets?.length ?? 0) > 0;
+  const hasVault = hasMetadataString(user, FIREBLOCKS_VAULT_METADATA_KEY);
+  const isFullySetUp = !!(user.email && hasKyc && hasWallet && hasVault);
+  const evmWallet = user.wallets?.find((w) => w.chain === "EVM");
+  const vaultAddress = getMetadataString(user, FIREBLOCKS_VAULT_METADATA_KEY);
+  const vaultId =
+    user.vaultId ?? getMetadataString(user, FIREBLOCKS_VAULT_ID_METADATA_KEY);
+  return {
+    hasKyc,
+    hasWallet,
+    hasVault,
+    isFullySetUp,
+    evmWallet,
+    vaultAddress,
+    vaultId,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ *
+ *  UserList – orchestrator                                                  *
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
 export function UserList({ initialUsers, error }: UserListProps) {
   const [users, setUsers] = useState(initialUsers);
   const [searchQuery, setSearchQuery] = useState("");
   const [createEmail, setCreateEmail] = useState("");
+  const [createVaultToo, setCreateVaultToo] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
   const [isCreatingWallet, setIsCreatingWallet] = useState<string | null>(null);
   const [isCreatingVault, setIsCreatingVault] = useState<string | null>(null);
-  const { lastCopiedText, copy } = useCopyFeedback();
+  const [transferAmounts, setTransferAmounts] = useState<
+    Record<string, string>
+  >({});
+  const [isTransferring, setIsTransferring] = useState<string | null>(null);
+  const [isSweeping, setIsSweeping] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeletingVault, setIsDeletingVault] = useState(false);
   const [result, setResult] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isInitialMount = useRef(true);
 
   const refreshUsers = useCallback(async (search?: string) => {
     const params = search ? `?q=${encodeURIComponent(search)}` : "";
@@ -73,12 +133,10 @@ export function UserList({ initialUsers, error }: UserListProps) {
     setUsers(data.users ?? []);
   }, []);
 
+  const prevSearchRef = useRef(searchQuery);
   useEffect(() => {
-    if (isInitialMount.current && searchQuery === "") {
-      isInitialMount.current = false;
-      return;
-    }
-    isInitialMount.current = false;
+    if (prevSearchRef.current === searchQuery) return;
+    prevSearchRef.current = searchQuery;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       debounceRef.current = null;
@@ -106,15 +164,19 @@ export function UserList({ initialUsers, error }: UserListProps) {
       const res = await fetch("/api/admin/users/wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userId ? { userId } : { email }),
+        body: JSON.stringify({
+          ...(userId ? { userId } : { email }),
+          createVault: false,
+        }),
       });
       const data = await res.json();
       if (data.address) {
         setResult({
           type: "success",
-          message: `Wallet created: ${data.address}. The user can refresh their session to see it.`,
+          message: `Wallet created: ${data.address}`,
         });
         setCreateEmail("");
+        setShowCreateModal(false);
         await refreshUsers(searchQuery.trim() || undefined);
       } else {
         setResult({
@@ -124,6 +186,41 @@ export function UserList({ initialUsers, error }: UserListProps) {
       }
     } catch {
       setResult({ type: "error", message: "Failed to create wallet" });
+    }
+    setIsCreatingWallet(null);
+  };
+
+  const createUserWithOptions = async () => {
+    const email = createEmail.trim();
+    if (!email.includes("@")) return;
+
+    setIsCreatingWallet("new");
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/users/wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, createVault: createVaultToo }),
+      });
+      const data = await res.json();
+      if (!data.address) {
+        setResult({
+          type: "error",
+          message: data.error ?? "Failed to create wallet",
+        });
+        setIsCreatingWallet(null);
+        return;
+      }
+
+      setResult({
+        type: "success",
+        message: `Wallet created: ${truncateAddress(data.address, 10, 8)}${createVaultToo ? " + vault" : ""}`,
+      });
+      setCreateEmail("");
+      setShowCreateModal(false);
+      await refreshUsers(searchQuery.trim() || undefined);
+    } catch {
+      setResult({ type: "error", message: "Failed to create user" });
     }
     setIsCreatingWallet(null);
   };
@@ -141,7 +238,7 @@ export function UserList({ initialUsers, error }: UserListProps) {
       if (data.address) {
         setResult({
           type: "success",
-          message: `Fireblocks vault: ${truncateAddress(data.address, 10, 8)}`,
+          message: `Vault created: ${truncateAddress(data.address, 10, 8)}`,
         });
         await refreshUsers(searchQuery.trim() || undefined);
       } else {
@@ -156,29 +253,171 @@ export function UserList({ initialUsers, error }: UserListProps) {
     setIsCreatingVault(null);
   };
 
+  const transferToWallet = async (user: User) => {
+    const amount = transferAmounts[user.id]?.trim();
+    if (!amount) return;
+    const walletAddress = user.wallets?.find(
+      (w) => w.chain === "EVM",
+    )?.publicKey;
+    if (!walletAddress) return;
+
+    setIsTransferring(user.id);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/transfer-to-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress, amount }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult({
+          type: "success",
+          message: `Transfer initiated (tx: ${data.id ?? "pending"})`,
+        });
+        setTransferAmounts((prev) => ({ ...prev, [user.id]: "" }));
+        await refreshUsers(searchQuery.trim() || undefined);
+      } else {
+        setResult({
+          type: "error",
+          message: data.error ?? "Transfer failed",
+        });
+      }
+    } catch {
+      setResult({ type: "error", message: "Transfer failed" });
+    }
+    setIsTransferring(null);
+  };
+
+  const sweepVault = async (user: User) => {
+    const vaultId =
+      user.vaultId ?? getMetadataString(user, FIREBLOCKS_VAULT_ID_METADATA_KEY);
+    if (!vaultId || !user.vaultBalance) return;
+
+    setIsSweeping(user.id);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/sweep", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vaultId,
+          amount: String(user.vaultBalance),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult({
+          type: "success",
+          message: `Sweep initiated (tx: ${data.id ?? "pending"})`,
+        });
+        await refreshUsers(searchQuery.trim() || undefined);
+      } else {
+        setResult({
+          type: "error",
+          message: data.error ?? "Sweep failed",
+        });
+      }
+    } catch {
+      setResult({ type: "error", message: "Sweep failed" });
+    }
+    setIsSweeping(null);
+  };
+
+  const deleteUserAction = async (userId: string) => {
+    setIsDeleting(true);
+    setResult(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult({
+          type: "success",
+          message: `User deleted${data.vaultHidden ? " (vault hidden)" : ""}`,
+        });
+        setSelectedUserId(null);
+        setConfirmDelete(false);
+        await refreshUsers(searchQuery.trim() || undefined);
+      } else {
+        setResult({
+          type: "error",
+          message: data.error ?? "Failed to delete user",
+        });
+      }
+    } catch {
+      setResult({ type: "error", message: "Failed to delete user" });
+    }
+    setIsDeleting(false);
+  };
+
+  const deleteVaultAction = async (userId: string, vaultId: string) => {
+    setIsDeletingVault(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/users/vault", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, vaultId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult({ type: "success", message: "Vault removed" });
+        await refreshUsers(searchQuery.trim() || undefined);
+      } else {
+        setResult({
+          type: "error",
+          message: data.error ?? "Failed to remove vault",
+        });
+      }
+    } catch {
+      setResult({ type: "error", message: "Failed to remove vault" });
+    }
+    setIsDeletingVault(false);
+  };
+
+  const selectedUser = users.find((u) => u.id === selectedUserId) ?? null;
+
   if (error) {
     return (
-      <Card title="Users">
+      <div>
+        <PageHeader title="Users" />
         <p className="text-sm text-(--widget-error) text-center py-8">
           {error}
         </p>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card title="Users" description="Dynamic wallets and Fireblocks vaults">
-      <div className="space-y-4 mb-4">
-        {isMounted ? (
-          <>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--widget-muted) pointer-events-none" />
+    <>
+      <div>
+        <PageHeader
+          title="Users"
+          count={users.length}
+          description="Manage wallets, vaults, and balances for all users."
+          action={
+            isMounted ? (
+              <Button size="sm" onClick={() => setShowCreateModal(true)}>
+                <Plus className="w-3.5 h-3.5" />
+                New User
+              </Button>
+            ) : null
+          }
+        />
+
+        {/* Search */}
+        <div className="mb-4">
+          {isMounted ? (
+            <div className="relative max-w-sm">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--widget-muted) pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search users..."
-                className="w-full pl-9 pr-8 py-2 text-sm rounded-(--widget-radius) border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                placeholder="Search by email..."
+                className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
               />
               {searchQuery && (
                 <button
@@ -189,277 +428,697 @@ export function UserList({ initialUsers, error }: UserListProps) {
                 </button>
               )}
             </div>
-            <div className="flex gap-2 items-center">
+          ) : (
+            <div className="h-10 w-80 rounded-lg bg-(--widget-row-bg) animate-pulse" />
+          )}
+        </div>
+
+        {/* Table + Drawer side-by-side */}
+        <div className="flex gap-4 items-start">
+          <div className="flex-1 min-w-0">
+            {/* Error toast */}
+            {result?.type === "error" && (
+              <div className="mb-4 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between bg-red-50 border border-red-200 text-red-700">
+                <span className="font-mono text-xs">{result.message}</span>
+                <button
+                  onClick={() => setResult(null)}
+                  className="ml-3 cursor-pointer shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            <UserTable
+              users={users}
+              isSearching={isSearching}
+              searchQuery={searchQuery}
+              selectedUserId={selectedUserId}
+              onSelectUser={(id) => {
+                setSelectedUserId(id === selectedUserId ? null : id);
+                setConfirmDelete(false);
+              }}
+            />
+          </div>
+
+          <UserDrawer
+            user={selectedUser}
+            open={!!selectedUser}
+            onClose={() => setSelectedUserId(null)}
+            transferAmount={
+              selectedUser ? (transferAmounts[selectedUser.id] ?? "") : ""
+            }
+            onTransferAmountChange={(val) => {
+              if (!selectedUser) return;
+              setTransferAmounts((prev) => ({
+                ...prev,
+                [selectedUser.id]: val,
+              }));
+            }}
+            onTransfer={() => selectedUser && transferToWallet(selectedUser)}
+            isTransferring={isTransferring === selectedUser?.id}
+            onSweep={() => selectedUser && sweepVault(selectedUser)}
+            isSweeping={isSweeping === selectedUser?.id}
+            onCreateWallet={() => {
+              if (!selectedUser?.email) return;
+              createWallet(
+                selectedUser.email,
+                selectedUser.id,
+                selectedUser.id,
+              );
+            }}
+            isCreatingWallet={isCreatingWallet === selectedUser?.id}
+            onCreateVault={() => {
+              if (!selectedUser) return;
+              createVault(selectedUser.id, `vault-${selectedUser.id}`);
+            }}
+            isCreatingVault={isCreatingVault === `vault-${selectedUser?.id}`}
+            onDeleteVault={() => {
+              if (!selectedUser) return;
+              const flags = getUserFlags(selectedUser);
+              if (flags.vaultId)
+                deleteVaultAction(selectedUser.id, flags.vaultId);
+            }}
+            isDeletingVault={isDeletingVault}
+            confirmDelete={confirmDelete}
+            onConfirmDeleteChange={setConfirmDelete}
+            onDelete={() => selectedUser && deleteUserAction(selectedUser.id)}
+            isDeleting={isDeleting}
+          />
+        </div>
+      </div>
+
+      {/* Create User Modal */}
+      <Dialog
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          setShowCreateModal(open);
+          if (!open) setCreateEmail("");
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New User</DialogTitle>
+            <DialogDescription>
+              Provision a Dynamic wallet for a new or existing user by email
+              address.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Email address
+              </label>
               <input
                 type="text"
                 inputMode="email"
                 autoComplete="off"
                 value={createEmail}
                 onChange={(e) => setCreateEmail(e.target.value)}
-                placeholder="Email to create wallet for..."
-                className="flex-1 px-3 py-2 text-sm rounded-(--widget-radius) border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                placeholder="user@example.com"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && createEmail.includes("@")) {
+                    createUserWithOptions();
+                  }
+                }}
               />
-              <Button
-                onClick={() => createWallet(createEmail.trim(), "new")}
-                loading={isCreatingWallet === "new"}
-                disabled={!createEmail.includes("@")}
-              >
-                <Wallet className="w-4 h-4" />
-                Create Wallet
-              </Button>
             </div>
-          </>
-        ) : (
-          <div className="space-y-4">
-            <div className="h-10 rounded-(--widget-radius) bg-(--widget-row-bg) animate-pulse" />
-            <div className="h-10 rounded-(--widget-radius) bg-(--widget-row-bg) animate-pulse" />
-          </div>
-        )}
-      </div>
 
-      {result && (
-        <div
-          className={`mb-4 p-3 rounded text-sm flex items-center justify-between ${
-            result.type === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : "bg-red-50 border border-red-200 text-red-700"
-          }`}
-        >
-          <span className="font-mono text-xs">{result.message}</span>
-          <button
-            onClick={() => setResult(null)}
-            className="ml-2 cursor-pointer"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {isSearching ? (
-        <div className="text-center py-8">
-          <p className="text-sm text-(--widget-muted)">Searching...</p>
-        </div>
-      ) : users.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-sm text-(--widget-muted)">
-            {searchQuery
-              ? `No users found for "${searchQuery}"`
-              : "No users yet"}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {users.map((user) => {
-            const isClaimed =
-              user.email &&
-              isMetadataTruthy(user, KYC_APPROVED_METADATA_KEY) &&
-              (user.wallets?.length ?? 0) > 0 &&
-              hasMetadataString(user, FIREBLOCKS_VAULT_METADATA_KEY);
-            const hasEmbedded = (user.wallets?.length ?? 0) > 0;
-            const hasVault = hasMetadataString(
-              user,
-              FIREBLOCKS_VAULT_METADATA_KEY,
-            );
-
-            return (
-              <div
-                key={user.id}
-                className="rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-row-bg) overflow-hidden"
-              >
-                {/* Top row: identity + balance + status */}
-                <div className="p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-medium truncate">
-                        {user.email ?? user.phoneNumber ?? user.id}
-                      </p>
-                      {isClaimed && (
-                        <span
-                          className="inline-flex items-center gap-1 text-xs font-medium text-(--widget-success) shrink-0"
-                          title="Account fully set up and claimed"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Claimed
-                        </span>
-                      )}
-                    </div>
-                    {(user.firstName || user.lastName) && (
-                      <p className="text-xs text-(--widget-muted) mt-0.5">
-                        {[user.firstName, user.lastName]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col sm:items-end gap-3 shrink-0">
-                    {typeof user.usdcBalance === "number" && (
-                      <div className="text-right">
-                        <p className="text-xs text-(--widget-muted) uppercase tracking-wide">
-                          USDC Balance
-                        </p>
-                        <p className="text-lg font-semibold tabular-nums">
-                          {user.usdcBalance.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 justify-end">
-                      <StatusBadge
-                        label="KYC"
-                        ok={isMetadataTruthy(user, KYC_APPROVED_METADATA_KEY)}
-                      />
-                      {!hasEmbedded && user.email ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            createWallet(user.email!, user.id, user.id)
-                          }
-                          loading={isCreatingWallet === user.id}
-                        >
-                          <Wallet className="w-3.5 h-3.5" />
-                          Create Embedded
-                        </Button>
-                      ) : (
-                        <StatusBadge label="Embedded" ok={hasEmbedded} />
-                      )}
-                      {user.email &&
-                        (hasVault ? (
-                          <StatusBadge label="Vault" ok />
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              createVault(user.id, `vault-${user.id}`)
-                            }
-                            loading={isCreatingVault === `vault-${user.id}`}
-                          >
-                            <Shield className="w-3.5 h-3.5" />
-                            Create Vault
-                          </Button>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Addresses section */}
-                {((user.wallets?.length ?? 0) > 0 ||
-                  getMetadataString(user, FIREBLOCKS_VAULT_METADATA_KEY)) && (
-                  <div className="px-4 py-3 border-t border-(--widget-border) bg-white/50">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      {user.wallets?.map((w) => (
-                        <AddressRow
-                          key={w.id}
-                          label={w.chain}
-                          address={w.publicKey}
-                          justCopied={lastCopiedText === w.publicKey}
-                          onCopy={copy}
-                        />
-                      ))}
-                      {getMetadataString(
-                        user,
-                        FIREBLOCKS_VAULT_METADATA_KEY,
-                      ) && (
-                        <AddressRow
-                          label="Vault"
-                          address={
-                            getMetadataString(
-                              user,
-                              FIREBLOCKS_VAULT_METADATA_KEY,
-                            )!
-                          }
-                          justCopied={
-                            lastCopiedText ===
-                            getMetadataString(
-                              user,
-                              FIREBLOCKS_VAULT_METADATA_KEY,
-                            )
-                          }
-                          onCopy={copy}
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={createVaultToo}
+                onChange={(e) => setCreateVaultToo(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-(--widget-primary) focus:ring-(--widget-primary)/20 cursor-pointer"
+              />
+              <div>
+                <span className="text-sm font-medium">
+                  Also create Fireblocks vault
+                </span>
+                <p className="text-xs text-(--widget-muted)">
+                  Provisions a deposit address for receiving funds
+                </p>
               </div>
-            );
-          })}
-        </div>
-      )}
-    </Card>
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setShowCreateModal(false);
+                setCreateEmail("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={createUserWithOptions}
+              loading={isCreatingWallet === "new"}
+              disabled={!createEmail.includes("@")}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Create User
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
-function AddressRow({
-  label,
-  address,
-  justCopied,
-  onCopy,
+/* ═══════════════════════════════════════════════════════════════════════════ *
+ *  UserTable                                                                *
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function UserTable({
+  users,
+  isSearching,
+  searchQuery,
+  selectedUserId,
+  onSelectUser,
 }: {
-  label: string;
-  address: string;
-  justCopied: boolean;
-  onCopy: (text: string, e?: React.MouseEvent) => void;
+  users: User[];
+  isSearching: boolean;
+  searchQuery: string;
+  selectedUserId: string | null;
+  onSelectUser: (id: string) => void;
 }) {
+  if (isSearching) {
+    return (
+      <p className="text-sm text-(--widget-muted) text-center py-12">
+        Searching...
+      </p>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <p className="text-sm text-(--widget-muted) text-center py-12">
+        {searchQuery ? `No users found for "${searchQuery}"` : "No users yet"}
+      </p>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <span className="px-1.5 py-0.5 rounded bg-(--widget-row-hover) font-mono shrink-0">
-        {label}
-      </span>
-      <span className="font-mono text-(--widget-muted) truncate flex-1 min-w-0">
-        {truncateAddress(address)}
-      </span>
-      <button
-        type="button"
-        onClick={(e) => onCopy(address, e)}
-        className="p-1 rounded text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) cursor-pointer shrink-0 transition-colors"
-        aria-label={`Copy ${label} address`}
-        title="Copy address"
-      >
-        {justCopied ? (
-          <Check className="w-3.5 h-3.5 text-(--widget-success)" />
-        ) : (
-          <Copy className="w-3.5 h-3.5" />
-        )}
-      </button>
+    <div className="border border-(--widget-border) rounded-xl overflow-hidden">
+      <div className="grid grid-cols-[1fr_auto_100px_28px] gap-x-3 bg-(--widget-row-bg) px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-(--widget-muted) border-b border-(--widget-border)">
+        <span>User</span>
+        <span>Status</span>
+        <span className="text-right">Balance</span>
+        <span />
+      </div>
+
+      {users.map((user, i) => {
+        const { hasKyc, hasWallet, hasVault, isFullySetUp } =
+          getUserFlags(user);
+        const isSelected = user.id === selectedUserId;
+        const isLast = i === users.length - 1;
+        const walletBal = user.walletBalance ?? 0;
+        const vaultBal = user.vaultBalance ?? 0;
+
+        return (
+          <button
+            key={user.id}
+            type="button"
+            onClick={() => onSelectUser(user.id)}
+            className={`w-full grid grid-cols-[1fr_auto_100px_28px] gap-x-3 items-center px-4 py-3 text-left transition-colors cursor-pointer ${
+              isSelected
+                ? "bg-(--widget-primary)/5 border-l-2 border-l-(--widget-primary)"
+                : "bg-white hover:bg-slate-50/80 border-l-2 border-l-transparent"
+            } ${!isLast ? "border-b border-(--widget-border)" : ""}`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm font-medium truncate">
+                {user.email ?? user.phoneNumber ?? user.id}
+              </span>
+              {isFullySetUp && (
+                <span title="Claimed">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-(--widget-success) shrink-0" />
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <Badge active={hasKyc}>KYC</Badge>
+              {!hasWallet && <Badge active={false}>No Wallet</Badge>}
+              {!hasVault && <Badge active={false}>No Vault</Badge>}
+            </div>
+
+            <div className="text-right">
+              <div className="text-sm font-semibold tabular-nums">
+                {fmt(walletBal)}
+              </div>
+              {vaultBal > 0 && (
+                <div className="text-[11px] tabular-nums text-(--widget-muted)">
+                  +{fmt(vaultBal)} vault
+                </div>
+              )}
+            </div>
+
+            <ChevronRight
+              className={`w-4 h-4 ${
+                isSelected ? "text-(--widget-primary)" : "text-(--widget-muted)"
+              }`}
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function StatusBadge({ label, ok }: { label: string; ok: boolean }) {
+/* ═══════════════════════════════════════════════════════════════════════════ *
+ *  UserDrawer                                                               *
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function UserDrawer({
+  user,
+  open,
+  onClose,
+  transferAmount,
+  onTransferAmountChange,
+  onTransfer,
+  isTransferring,
+  onSweep,
+  isSweeping,
+  onCreateWallet,
+  isCreatingWallet,
+  onCreateVault,
+  isCreatingVault,
+  onDeleteVault,
+  isDeletingVault,
+  confirmDelete,
+  onConfirmDeleteChange,
+  onDelete,
+  isDeleting,
+}: {
+  user: User | null;
+  open: boolean;
+  onClose: () => void;
+  transferAmount: string;
+  onTransferAmountChange: (val: string) => void;
+  onTransfer: () => void;
+  isTransferring: boolean;
+  onSweep: () => void;
+  isSweeping: boolean;
+  onCreateWallet: () => void;
+  isCreatingWallet: boolean;
+  onCreateVault: () => void;
+  isCreatingVault: boolean;
+  onDeleteVault: () => void;
+  isDeletingVault: boolean;
+  confirmDelete: boolean;
+  onConfirmDeleteChange: (open: boolean) => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
+  const { lastCopiedText, copy } = useCopyFeedback();
+
+  const flags = user ? getUserFlags(user) : null;
+  const walletBal = user?.walletBalance ?? 0;
+  const vaultBal = user?.vaultBalance ?? 0;
+
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium shrink-0 bg-(--widget-row-hover) ${
-        ok ? "text-(--widget-success)" : "text-(--widget-muted)"
+    <div
+      className={`shrink-0 overflow-hidden transition-[width,opacity] duration-250 ease-out sticky top-4 self-start ${
+        open ? "w-[380px] opacity-100" : "w-0 opacity-0"
       }`}
     >
-      {ok ? "✓" : "○"} {label}
+      {user && flags && (
+        <div className="w-[380px] border border-(--widget-border) rounded-xl bg-white overflow-hidden">
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-(--widget-border) bg-(--widget-row-bg)/60">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold truncate">
+                  {user.email ?? user.phoneNumber ?? "Unknown"}
+                </h3>
+                <p className="text-[11px] text-(--widget-muted) font-mono mt-0.5 truncate">
+                  {user.id}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-slate-100 cursor-pointer transition-colors shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5 mt-3">
+              <Badge active={flags.hasKyc}>KYC</Badge>
+              <Badge active={flags.hasWallet}>Wallet</Badge>
+              <Badge active={flags.hasVault}>Vault</Badge>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-5 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+            {/* Total balance */}
+            <div className="flex items-baseline justify-between">
+              <span className="text-xs font-medium text-(--widget-muted) uppercase tracking-wider">
+                Total Balance
+              </span>
+              <div className="text-right">
+                <span className="text-lg font-semibold tabular-nums">
+                  {typeof user.usdcBalance === "number"
+                    ? fmt(user.usdcBalance)
+                    : "—"}
+                </span>
+                <span className="text-xs text-(--widget-muted) ml-1.5">
+                  USDC
+                </span>
+              </div>
+            </div>
+
+            <hr className="border-(--widget-border)" />
+
+            {/* Wallet section */}
+            <DrawerCard title="Wallet" icon={<Wallet className="w-4 h-4" />}>
+              {flags.hasWallet && flags.evmWallet ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <a
+                        href={getExplorerAddressUrl(flags.evmWallet.publicKey)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs text-(--widget-muted) hover:text-(--widget-primary) truncate transition-colors"
+                        title={flags.evmWallet.publicKey}
+                      >
+                        {truncateAddress(flags.evmWallet.publicKey, 8, 6)}
+                      </a>
+                      <CopyBtn
+                        text={flags.evmWallet.publicKey}
+                        copied={lastCopiedText === flags.evmWallet.publicKey}
+                        onCopy={copy}
+                      />
+                      <a
+                        href={getExplorerAddressUrl(flags.evmWallet.publicKey)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-(--widget-muted) hover:text-(--widget-primary) transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
+                      {fmt(walletBal)}{" "}
+                      <span className="text-[10px] font-normal text-(--widget-muted)">
+                        USDC
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Send form */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={transferAmount}
+                      onChange={(e) => onTransferAmountChange(e.target.value)}
+                      placeholder="Amount"
+                      className="flex-1 px-3 py-2 text-sm font-mono rounded-lg border border-(--widget-border) bg-(--widget-row-bg) focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={onTransfer}
+                      loading={isTransferring}
+                      disabled={!transferAmount.trim()}
+                      className="h-[38px]"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              ) : user.email ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-(--widget-muted)">
+                    No wallet provisioned
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onCreateWallet}
+                    loading={isCreatingWallet}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Create Wallet
+                  </Button>
+                </div>
+              ) : (
+                <span className="text-sm text-(--widget-muted)">
+                  No email on account
+                </span>
+              )}
+            </DrawerCard>
+
+            {/* Vault section */}
+            <DrawerCard
+              title="Vault"
+              icon={<Shield className="w-4 h-4" />}
+              action={
+                flags.hasVault && flags.vaultId && vaultBal === 0 ? (
+                  <button
+                    type="button"
+                    onClick={onDeleteVault}
+                    disabled={isDeletingVault}
+                    className="p-1 rounded text-(--widget-muted) hover:text-red-500 hover:bg-red-50 cursor-pointer transition-colors disabled:opacity-50"
+                    title="Remove vault"
+                  >
+                    {isDeletingVault ? (
+                      <Spinner size="sm" className="w-3.5 h-3.5" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                ) : undefined
+              }
+            >
+              {flags.hasVault && flags.vaultAddress ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <a
+                        href={getExplorerAddressUrl(flags.vaultAddress)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs text-(--widget-muted) hover:text-(--widget-primary) truncate transition-colors"
+                        title={flags.vaultAddress}
+                      >
+                        {truncateAddress(flags.vaultAddress, 8, 6)}
+                      </a>
+                      <CopyBtn
+                        text={flags.vaultAddress}
+                        copied={lastCopiedText === flags.vaultAddress}
+                        onCopy={copy}
+                      />
+                      <a
+                        href={getExplorerAddressUrl(flags.vaultAddress)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-(--widget-muted) hover:text-(--widget-primary) transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
+                      {fmt(vaultBal)}{" "}
+                      <span className="text-[10px] font-normal text-(--widget-muted)">
+                        USDC
+                      </span>
+                    </span>
+                  </div>
+
+                  {flags.vaultId && vaultBal > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={onSweep}
+                      loading={isSweeping}
+                      className="w-full"
+                    >
+                      <ArrowDownLeft className="w-3.5 h-3.5" />
+                      Sweep to Omnibus
+                    </Button>
+                  )}
+                </div>
+              ) : user.email ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-(--widget-muted)">
+                    No vault provisioned
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onCreateVault}
+                    loading={isCreatingVault}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Create Vault
+                  </Button>
+                </div>
+              ) : (
+                <span className="text-sm text-(--widget-muted)">
+                  No email on account
+                </span>
+              )}
+            </DrawerCard>
+
+            {/* Delete section */}
+            <div>
+              {!confirmDelete ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  danger
+                  onClick={() => onConfirmDeleteChange(true)}
+                  className="w-full"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete User
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-sm text-red-700 mb-3">
+                    This will permanently delete the user from Dynamic
+                    {flags.vaultId ? " and hide their Fireblocks vault" : ""}.
+                    This cannot be undone.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onConfirmDeleteChange(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={onDelete}
+                      loading={isDeleting}
+                    >
+                      Confirm Delete
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ *
+ *  Shared Components                                                        *
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function DrawerCard({
+  title,
+  icon,
+  action,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-(--widget-border) bg-(--widget-row-bg)/40 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-(--widget-muted)">{icon}</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-(--widget-muted)">
+            {title}
+          </span>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function CopyBtn({
+  text,
+  copied,
+  onCopy,
+}: {
+  text: string;
+  copied: boolean;
+  onCopy: (text: string, e?: React.MouseEvent) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => onCopy(text, e)}
+      className="p-0.5 rounded text-(--widget-muted) hover:text-(--widget-fg) cursor-pointer transition-colors shrink-0"
+      title="Copy address"
+    >
+      {copied ? (
+        <Check className="w-3.5 h-3.5 text-(--widget-success)" />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
+    </button>
+  );
+}
+
+function Badge({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+        active ? "bg-green-100 text-green-700" : "bg-amber-50 text-amber-600"
+      }`}
+    >
+      {children}
     </span>
   );
 }
 
-function Card({
+function PageHeader({
   title,
+  count,
   description,
-  children,
+  action,
 }: {
   title: string;
+  count?: number;
   description?: string;
-  children: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-(--widget-radius-lg) border border-(--widget-border) p-6">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">{title}</h2>
+    <div className="flex items-start justify-between gap-4 mb-5">
+      <div>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-xl font-semibold">{title}</h1>
+          {typeof count === "number" && (
+            <span className="text-xs font-medium tabular-nums px-2 py-0.5 rounded-full bg-(--widget-row-bg) text-(--widget-muted) border border-(--widget-border)">
+              {count}
+            </span>
+          )}
+        </div>
         {description && (
           <p className="text-sm text-(--widget-muted) mt-1">{description}</p>
         )}
       </div>
-      {children}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }

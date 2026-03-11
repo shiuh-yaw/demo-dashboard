@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/components/layouts/app-shell";
 import { getServerUserData } from "@/lib/auth/server-auth";
+import { KycGatePage } from "./kyc-gate-page";
 
 export default async function AppLayout({
   children,
@@ -11,13 +10,9 @@ export default async function AppLayout({
   const data = await getServerUserData();
   // getServerUserData() redirects to /login when unauthenticated
   if (!data) return null;
+
   if (!data.kycApproved) {
-    const headersList = await headers();
-    const pathname = headersList.get("x-pathname") ?? "/";
-    const returnTo = encodeURIComponent(
-      pathname.startsWith("/") ? pathname : `/${pathname}`,
-    );
-    redirect(`/kyc?returnTo=${returnTo}`);
+    return <KycGatePage />;
   }
 
   return (

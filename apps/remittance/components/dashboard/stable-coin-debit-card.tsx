@@ -2,7 +2,7 @@
 
 import { Plus, CreditCard } from "lucide-react";
 import { Card, CardContent, Button, StableCoinCard } from "@dynamic-demos/ui";
-import { AppLogo } from "@/components/app-logo";
+import { AppLogo } from "@/components/ui/app-logo";
 import { useRemittanceConfig } from "@/contexts/remittance-config-context";
 
 interface StableCoinDebitCardProps {

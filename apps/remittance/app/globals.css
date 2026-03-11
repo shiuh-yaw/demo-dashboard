@@ -29,6 +29,10 @@
   * {
     @apply border-(--widget-border);
   }
+  html,
+  body {
+    @apply overflow-hidden h-full;
+  }
   body {
     @apply bg-(--widget-page-bg) text-(--widget-fg);
     font-family:

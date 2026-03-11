@@ -405,7 +405,17 @@ export function LoginForm({
   jwtError,
   className,
 }: LoginFormProps) {
-  const [isCompletingOAuth, setIsCompletingOAuth] = useState(false);
+  const [isCompletingOAuth, setIsCompletingOAuth] = useState(() => {
+    // Detect OAuth params synchronously so we show the spinner on first render
+    // instead of flashing the login form while the async handler runs.
+    if (typeof window === "undefined" || !onHandleOAuthRedirect) return false;
+    const params = new URLSearchParams(window.location.search);
+    return (
+      params.has("dynamicOauthCode") ||
+      params.has("dynamicOauthState") ||
+      (params.has("code") && params.has("state"))
+    );
+  });
   const [oauthError, setOauthError] = useState<Error | null>(null);
   const oauthHandled = useRef(false);
 
@@ -417,12 +427,13 @@ export function LoginForm({
     const handle = async () => {
       try {
         const isRedirect = await onHandleOAuthRedirect();
-        if (isRedirect) {
-          setIsCompletingOAuth(true);
+        if (!isRedirect) {
+          // No redirect detected — show login form
+          setIsCompletingOAuth(false);
         }
+        // On success, keep spinner visible until navigation completes
       } catch (error) {
         setOauthError(error as Error);
-      } finally {
         setIsCompletingOAuth(false);
       }
     };
@@ -431,7 +442,14 @@ export function LoginForm({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isCompletingOAuth) {
-    return <OAuthCompletingCard />;
+    return (
+      <div className="flex flex-col items-center gap-2 py-8">
+        <Spinner size="lg" />
+        <p className="text-sm text-(--widget-muted)">
+          Completing authentication...
+        </p>
+      </div>
+    );
   }
 
   const hasEmail = emailEnabled && onSendEmailOTP;

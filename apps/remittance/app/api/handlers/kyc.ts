@@ -23,3 +23,10 @@ export async function handleApproveKyc(userId: string) {
   });
   return { success: true };
 }
+
+export async function handleClearKyc(userId: string) {
+  await updateUserMetadata(userId, {
+    [KYC_APPROVED_METADATA_KEY]: "false",
+  });
+  return { success: true };
+}

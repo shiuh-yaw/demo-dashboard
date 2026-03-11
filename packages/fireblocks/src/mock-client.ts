@@ -14,7 +14,6 @@ import type {
   TransactionResponse,
   CreateTransactionRequest,
   ListTransactionsParams,
-  ScreeningResult,
   VaultAsset,
   TransactionStatus,
 } from "./types";
@@ -38,9 +37,9 @@ const MOCK_VAULT_ASSET: VaultAsset = {
   blockHash: "4vJ3..mock",
 };
 
-const MOCK_OMNIBUS_VAULT: VaultAccount = {
+const MOCK_TREASURY_VAULT: VaultAccount = {
   id: "vault-0",
-  name: "Omnibus - Remittance",
+  name: "Treasury - Remittance",
   hiddenOnUI: false,
   autoFuel: true,
   assets: [MOCK_VAULT_ASSET],
@@ -48,7 +47,7 @@ const MOCK_OMNIBUS_VAULT: VaultAccount = {
 
 export class MockFireblocksClient implements IFireblocksClient {
   private vaults: Map<string, VaultAccount> = new Map([
-    ["vault-0", MOCK_OMNIBUS_VAULT],
+    ["vault-0", MOCK_TREASURY_VAULT],
   ]);
   private transactions: Map<string, TransactionResponse> = new Map();
   private delayMs: number;
@@ -77,7 +76,7 @@ export class MockFireblocksClient implements IFireblocksClient {
     await delay(this.delayMs * 0.5);
     const vault = this.vaults.get(vaultId);
     if (!vault) {
-      return { ...MOCK_OMNIBUS_VAULT, id: vaultId };
+      return { ...MOCK_TREASURY_VAULT, id: vaultId };
     }
     return vault;
   }
@@ -94,7 +93,7 @@ export class MockFireblocksClient implements IFireblocksClient {
 
   async createVaultWallet(
     vaultId: string,
-    assetId: string
+    assetId: string,
   ): Promise<VaultWallet> {
     await delay(this.delayMs);
     return {
@@ -109,13 +108,13 @@ export class MockFireblocksClient implements IFireblocksClient {
 
   async getDepositAddresses(
     _vaultId: string,
-    _assetId: string
+    _assetId: string,
   ): Promise<DepositAddress[]> {
     await delay(this.delayMs * 0.5);
     return [
       {
         address: "0x1234567890abcdef1234567890abcdef1234dead",
-        description: "Omnibus deposit address",
+        description: "Treasury deposit address",
         tag: "",
         type: "DEPOSIT",
       },
@@ -123,7 +122,7 @@ export class MockFireblocksClient implements IFireblocksClient {
   }
 
   async createTransaction(
-    request: CreateTransactionRequest
+    request: CreateTransactionRequest,
   ): Promise<TransactionResponse> {
     await delay(this.delayMs);
     const tx: TransactionResponse = {
@@ -169,7 +168,7 @@ export class MockFireblocksClient implements IFireblocksClient {
   async createDepositAddress(
     vaultId: string,
     assetId: string,
-    opts?: { description?: string; customerRefId?: string }
+    opts?: { description?: string; customerRefId?: string },
   ): Promise<DepositAddress> {
     await delay(this.delayMs);
     return {
@@ -183,7 +182,7 @@ export class MockFireblocksClient implements IFireblocksClient {
 
   async getVaultAssetBalance(
     _vaultId: string,
-    assetId: string
+    assetId: string,
   ): Promise<VaultAsset> {
     await delay(this.delayMs * 0.5);
     return {
@@ -193,25 +192,10 @@ export class MockFireblocksClient implements IFireblocksClient {
   }
 
   async listTransactions(
-    _params?: ListTransactionsParams
+    _params?: ListTransactionsParams,
   ): Promise<TransactionResponse[]> {
     await delay(this.delayMs);
     return Array.from(this.transactions.values());
-  }
-
-  async screenAddress(
-    address: string,
-    _assetId: string
-  ): Promise<ScreeningResult> {
-    await delay(this.delayMs * 1.5);
-    return {
-      address,
-      verdict: "PASSED",
-      riskScore: 0.02,
-      provider: "Chainalysis",
-      details: [],
-      timestamp: Date.now(),
-    };
   }
 
   private simulateTransactionProgress(txId: string): void {

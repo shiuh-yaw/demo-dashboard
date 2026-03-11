@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Button } from "@dynamic-demos/ui";
 import { Input } from "@dynamic-demos/ui";
-import { ErrorMessage } from "@/components/error-message";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { useSendEmailOTP } from "@/hooks/use-mutations";
 import { isEmailAuthEnabled } from "@/lib/dynamic";
 import type { NavigationReturn } from "@/hooks/use-navigation";

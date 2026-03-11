@@ -15,7 +15,6 @@ import type {
   TransactionResponse,
   CreateTransactionRequest,
   ListTransactionsParams,
-  ScreeningResult,
   TransferPeerPath,
 } from "./types";
 
@@ -185,21 +184,6 @@ export class FireblocksClient implements IFireblocksClient {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (res.data ?? []).map((tx: any) => this.mapTransaction(tx));
-  }
-
-  async screenAddress(
-    _address: string,
-    _assetId: string,
-  ): Promise<ScreeningResult> {
-    // Screening is not natively supported by the SDK — return NOT_SUPPORTED
-    return {
-      address: _address,
-      verdict: "NOT_SUPPORTED",
-      riskScore: 0,
-      provider: "NOT_SUPPORTED",
-      details: [],
-      timestamp: Date.now(),
-    };
   }
 
   // ─── Private mappers ───────────────────────────────────────────────────────

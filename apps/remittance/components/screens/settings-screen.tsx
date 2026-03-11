@@ -32,7 +32,7 @@ import { useCopyFeedback } from "@/hooks/use-copy-feedback";
 import { useClearRecipients } from "@/hooks/use-recipients";
 import { getAuthToken } from "@/lib/dynamic";
 import type { RecipientEntry } from "@/lib/recipients";
-import { ErrorMessage } from "@/components/error-message";
+import { ErrorMessage } from "@/components/ui/error-message";
 
 interface SettingsScreenProps {
   walletAddress: string;
@@ -81,6 +81,8 @@ export function SettingsScreen({
   );
   const [isResettingSave, setIsResettingSave] = useState(false);
   const [saveResetError, setSaveResetError] = useState<string | null>(null);
+  const [isClearingKyc, setIsClearingKyc] = useState(false);
+  const [clearKycError, setClearKycError] = useState<string | null>(null);
 
   const canExport =
     baseWallet &&
@@ -536,6 +538,71 @@ export function SettingsScreen({
               <ErrorMessage
                 error={saveResetError}
                 defaultMessage="Failed to reset save balance"
+              />
+            )}
+          </div>
+
+          <div className="border-t border-(--widget-border) pt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-(--widget-muted)" />
+              <span className="text-sm font-medium text-(--widget-fg)">
+                KYC Verification
+              </span>
+            </div>
+            <p className="text-sm text-(--widget-muted)">
+              Reset your KYC verification status. This will require you to
+              complete identity verification again.
+            </p>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm text-(--widget-fg)">
+                {kycApproved ? "Verified" : "Not verified"}
+              </span>
+              <Button
+                variant="outline"
+                size="default"
+                onClick={async () => {
+                  setIsClearingKyc(true);
+                  setClearKycError(null);
+                  try {
+                    const token = await getAuthToken();
+                    if (!token) throw new Error("Not authenticated");
+                    const res = await fetch("/api/kyc/clear", {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => ({}));
+                      throw new Error(
+                        err.error ?? "Failed to clear KYC",
+                      );
+                    }
+                    router.refresh();
+                  } catch (err) {
+                    setClearKycError(
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to clear KYC",
+                    );
+                  } finally {
+                    setIsClearingKyc(false);
+                  }
+                }}
+                disabled={!kycApproved || isClearingKyc}
+              >
+                {isClearingKyc ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <RotateCcw className="w-4 h-4" />
+                )}
+                <span>{isClearingKyc ? "Clearing…" : "Reset KYC"}</span>
+              </Button>
+            </div>
+            {clearKycError && (
+              <ErrorMessage
+                error={clearKycError}
+                defaultMessage="Failed to clear KYC"
               />
             )}
           </div>

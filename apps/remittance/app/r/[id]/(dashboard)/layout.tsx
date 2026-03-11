@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/components/layouts/app-shell";
 import { getServerUserData } from "@/lib/auth/server-auth";
+import { KycGatePage } from "@/app/(app)/kyc-gate-page";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -22,12 +21,7 @@ export default async function ConfigDashboardLayout({
   if (!data) return null;
 
   if (!data.kycApproved) {
-    const headersList = await headers();
-    const pathname = headersList.get("x-pathname") ?? `/r/${id}/dashboard`;
-    const returnTo = encodeURIComponent(
-      pathname.startsWith("/") ? pathname : `/${pathname}`,
-    );
-    redirect(`/r/${id}/kyc?returnTo=${returnTo}`);
+    return <KycGatePage />;
   }
 
   return (

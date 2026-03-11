@@ -10,14 +10,7 @@ export default async function LoginRoute({
   const userData = await getServerUserData({ redirectToLogin: false });
   if (userData) {
     const { returnTo } = await searchParams;
-    const destination = returnTo?.startsWith("/")
-      ? returnTo
-      : `/${returnTo ?? ""}`.replace(/\/+$/, "") || "/";
-    redirect(
-      userData.kycApproved
-        ? destination
-        : `/kyc?returnTo=${encodeURIComponent(destination)}`,
-    );
+    redirect(returnTo || "/");
   }
   return <LoginPage />;
 }

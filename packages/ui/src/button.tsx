@@ -36,12 +36,10 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
     "bg-[var(--widget-primary,#335cff)] text-white shadow-sm hover:opacity-90",
   default:
     "bg-[var(--widget-primary,#335cff)] text-white shadow-sm hover:opacity-90",
-  secondary:
-    "bg-slate-100 text-slate-900 hover:bg-slate-200",
+  secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
   outline:
     "border border-[var(--widget-border,#e1e4ea)] bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900",
-  ghost:
-    "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
+  ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
   destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
   link: "text-[var(--widget-primary,#335cff)] underline-offset-4 hover:underline",
 };
@@ -69,7 +67,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <button
@@ -84,11 +82,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           danger &&
             "hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 hover:border-red-200",
           loading && "animate-pulse",
-          className
+          className,
         )}
         {...props}
       >
-        {loading && (
+        {loading ? (
           <Spinner
             size="sm"
             className={
@@ -99,11 +97,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 : undefined
             }
           />
+        ) : null}
+        {loading ? (
+          <span className="[&>svg]:hidden">{children}</span>
+        ) : (
+          children
         )}
-        {children}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";

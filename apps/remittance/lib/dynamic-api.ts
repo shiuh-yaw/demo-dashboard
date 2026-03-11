@@ -31,6 +31,7 @@ export interface DynamicUser {
   alias?: string;
   firstName?: string;
   lastName?: string;
+  createdAt?: string;
   metadata?: Record<string, unknown>;
   wallets?: Array<{
     id: string;
@@ -148,8 +149,27 @@ export async function getUser(userId: string): Promise<DynamicUser | null> {
   return data.user ?? null;
 }
 
+/**
+ * Delete a user by ID.
+ * @see https://docs.dynamic.xyz/api-reference/users/delete-user
+ */
+export async function deleteUser(userId: string): Promise<void> {
+  const envId = getEnvironmentId();
+  const res = await fetch(
+    `${DYNAMIC_API_BASE}/environments/${envId}/users/${userId}`,
+    { method: "DELETE", headers: getHeaders() },
+  );
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text();
+    throw new Error(`Dynamic API delete user error: ${res.status} ${text}`);
+  }
+}
+
 /** Metadata key for the Fireblocks vault address. */
 export const FIREBLOCKS_VAULT_METADATA_KEY = "fireblocks_vault_address";
+
+/** Metadata key for the Fireblocks vault ID. */
+export const FIREBLOCKS_VAULT_ID_METADATA_KEY = "fireblocks_vault_id";
 
 /** Metadata key for KYC approval status (no PII - status only). */
 export const KYC_APPROVED_METADATA_KEY = "kyc_approved";

@@ -17,7 +17,7 @@ import {
   getCounterpartyDisplayLabel,
   buildAddressToEmailMap,
 } from "@/lib/deposit-addresses";
-import { TxTime, parseTxDate } from "@/components/transaction-time";
+import { TxTime, parseTxDate } from "@/components/dashboard/transaction-time";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 import type { RecipientEntry } from "@/lib/recipients";
 

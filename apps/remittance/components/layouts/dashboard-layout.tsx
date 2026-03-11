@@ -1,5 +1,5 @@
 import { PoweredByFooter } from "@dynamic-demos/ui";
-import { ClientOnlySlot } from "@/components/client-only-slot";
+import { ClientOnlySlot } from "@/components/ui/client-only-slot";
 
 interface DashboardLayoutProps {
   header?: React.ReactNode;
@@ -21,9 +21,11 @@ export function DashboardLayout({ header, children }: DashboardLayoutProps) {
           </ClientOnlySlot>
         </div>
       )}
-      <main className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {children}
-      </main>
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {children}
+        </main>
+      </div>
       <PoweredByFooter className="shrink-0 pb-4" />
     </div>
   );

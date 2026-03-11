@@ -4,7 +4,8 @@
 
 export { handleListUsers, listUsersWithBalances } from "./users";
 export { handleCreateUserWallet } from "./user-wallet";
-export { handleCreateUserVault } from "./user-vault";
+export { handleCreateUserVault, handleDeleteUserVault } from "./user-vault";
+export { handleDeleteUser } from "./user-delete";
 export { handleListAssets } from "./assets";
 export {
   handleGetOmnibusVault,
@@ -13,4 +14,9 @@ export {
   handleCreateVaultAddress,
 } from "./vaults";
 export { handleGetTransaction } from "./transactions";
-export { handleFundTransfer, handleReleaseTransfer } from "./transfers";
+export {
+  handleFundTransfer,
+  handleReleaseTransfer,
+  handleSweepTransfer,
+  handleTransferToWallet,
+} from "./transfers";

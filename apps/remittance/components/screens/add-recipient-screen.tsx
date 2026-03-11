@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { WidgetCard, Button, Input } from "@dynamic-demos/ui";
-import { ErrorMessage } from "@/components/error-message";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { useAddRecipient } from "@/hooks/use-recipients";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 

@@ -10,7 +10,7 @@ import {
   FIREBLOCKS_VAULT_METADATA_KEY,
 } from "@/lib/dynamic-api";
 import { getFireblocksClient } from "@/lib/fireblocks";
-import { getDepositAddressForUser } from "@dynamic-demos/fireblocks";
+import { getOrCreateDepositAddress } from "@dynamic-demos/fireblocks";
 import { OFFRAMP_VAULT_PREFIX } from "@/lib/fireblocks-vault";
 import { env } from "@/lib/env";
 
@@ -28,11 +28,10 @@ export async function handleDynamicWebhook(body: Record<string, unknown>) {
     if (userId && assetId) {
       try {
         const client = getFireblocksClient();
-        const deposit = await getDepositAddressForUser(
+        const deposit = await getOrCreateDepositAddress(
           client,
-          String(userId),
+          OFFRAMP_VAULT_PREFIX + String(userId),
           assetId,
-          OFFRAMP_VAULT_PREFIX,
         );
         console.log(
           `[dynamic-webhook] Created Fireblocks vault for user ${userId}`,

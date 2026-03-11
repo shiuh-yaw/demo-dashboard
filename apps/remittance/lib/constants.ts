@@ -18,3 +18,11 @@ export function parseNetworkId(networkId: string | undefined): number {
   const match = networkId.match(/evm-(\d+)/);
   return match?.[1] ? parseInt(match[1], 10) : BASE_SEPOLIA_CHAIN_ID;
 }
+
+/** Base Sepolia block explorer */
+export const BASE_SEPOLIA_EXPLORER_URL = "https://sepolia.basescan.org";
+
+/** Get block explorer URL for an address */
+export function getExplorerAddressUrl(address: string): string {
+  return `${BASE_SEPOLIA_EXPLORER_URL}/address/${address}`;
+}

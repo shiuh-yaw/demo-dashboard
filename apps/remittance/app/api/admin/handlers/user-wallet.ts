@@ -8,7 +8,7 @@ import {
   FIREBLOCKS_VAULT_METADATA_KEY,
 } from "@/lib/dynamic-api";
 import { getFireblocksClient } from "@/lib/fireblocks";
-import { getDepositAddressForUser } from "@dynamic-demos/fireblocks";
+import { getOrCreateDepositAddress } from "@dynamic-demos/fireblocks";
 import { OFFRAMP_VAULT_PREFIX } from "@/lib/fireblocks-vault";
 import { env } from "@/lib/env";
 import { optionalString } from "./helpers";
@@ -17,6 +17,7 @@ import { ValidationError } from "@/lib/errors";
 export async function handleCreateUserWallet(body: Record<string, unknown>) {
   const userId = optionalString(body, "userId");
   const email = optionalString(body, "email");
+  const createVault = body.createVault !== false;
 
   if (!userId && !email) {
     throw new ValidationError("email or userId is required");
@@ -31,14 +32,13 @@ export async function handleCreateUserWallet(body: Record<string, unknown>) {
   const assetId = env.FIREBLOCKS_DEFAULT_ASSET_ID;
   const dynamicUserId = wallet.userId ?? userId;
 
-  if (dynamicUserId && assetId) {
+  if (createVault && dynamicUserId && assetId) {
     try {
       const client = getFireblocksClient();
-      const deposit = await getDepositAddressForUser(
+      const deposit = await getOrCreateDepositAddress(
         client,
-        dynamicUserId,
+        OFFRAMP_VAULT_PREFIX + dynamicUserId,
         assetId,
-        OFFRAMP_VAULT_PREFIX,
       );
       if (deposit.address && dynamicUserId) {
         await updateUserMetadata(dynamicUserId, {
@@ -53,5 +53,5 @@ export async function handleCreateUserWallet(body: Record<string, unknown>) {
     }
   }
 
-  return { address: wallet.address, id: wallet.id };
+  return { address: wallet.address, id: wallet.id, userId: dynamicUserId };
 }
