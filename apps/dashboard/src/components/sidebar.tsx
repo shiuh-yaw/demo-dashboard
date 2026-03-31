@@ -8,6 +8,7 @@ import {
   Building2,
   Banknote,
   Send,
+  LineChart,
 } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { DynamicLogo } from "@/components/dynamic-logo";
@@ -49,6 +50,11 @@ const navGroups = [
         href: "/remittance",
         label: "Remittance",
         icon: Send,
+      },
+      {
+        href: "/trade",
+        label: "Trade",
+        icon: LineChart,
       },
     ],
   },

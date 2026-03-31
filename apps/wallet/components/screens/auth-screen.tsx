@@ -1,44 +1,83 @@
 "use client";
 
 /**
- * Authentication screen — orchestrates available sign-in methods
- *
- * Each auth method is a self-contained section that checks its own
- * dashboard configuration and returns null if not enabled.
+ * Authentication screen — uses shared LoginForm with email, social, and JWT.
  *
  * @see https://www.dynamic.xyz/docs/javascript/authentication-methods/email
  * @see https://www.dynamic.xyz/docs/javascript/authentication-methods/social
  * @see https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-usage
  */
 
-import { useState } from "react";
-import { WidgetCard } from "@dynamic-demos/ui";
-import { EmailOtpSection } from "@/components/auth/email-otp-section";
+import { useCallback } from "react";
+import type { SocialProvider } from "@dynamic-labs-sdk/client";
+import { WidgetCard, LoginForm } from "@dynamic-demos/ui";
 import {
-  SocialProvidersSection,
-  SocialAuthCompletingCard,
-} from "@/components/auth/social-providers-section";
-import { JwtAuthSection } from "@/components/auth/jwt-auth-section";
+  isEmailAuthEnabled,
+  getEnabledSocialProviders,
+  isExternalAuthEnabled,
+} from "@/lib/dynamic";
+import {
+  useSendEmailOTP,
+  useSocialAuth,
+  useCompleteSocialAuth,
+  useJwtAuth,
+} from "@/hooks/use-mutations";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
 interface AuthScreenProps {
   navigation: NavigationReturn;
 }
 
-/**
- * Authentication screen with conditional email OTP, social OAuth, and external JWT options
- */
 export function AuthScreen({ navigation }: AuthScreenProps) {
-  const [isCompletingOAuth, setIsCompletingOAuth] = useState(false);
+  const sendOTP = useSendEmailOTP();
+  const socialAuth = useSocialAuth();
+  const completeSocial = useCompleteSocialAuth();
+  const jwtAuth = useJwtAuth();
 
-  if (isCompletingOAuth) return <SocialAuthCompletingCard />;
+  const handleSendEmailOTP = useCallback(
+    async (email: string) => {
+      const otpVerification = await sendOTP.mutateAsync(email);
+      navigation.goToOtpVerify(email, otpVerification);
+    },
+    [sendOTP, navigation],
+  );
+
+  const handleSocialSignIn = useCallback(
+    async (provider: string) => {
+      await socialAuth.mutateAsync(provider as SocialProvider);
+    },
+    [socialAuth],
+  );
+
+  const handleOAuthRedirect = useCallback(async () => {
+    const result = await completeSocial.mutateAsync();
+    return result ?? false;
+  }, [completeSocial]);
+
+  const handleJwtAuth = useCallback(
+    async (jwt: string) => {
+      await jwtAuth.mutateAsync(jwt);
+    },
+    [jwtAuth],
+  );
 
   return (
-    <WidgetCard title="Sign In" subtitle="Choose how to authenticate">
-      <div className="space-y-4">
-        <EmailOtpSection navigation={navigation} />
-        <SocialProvidersSection onCompletingOAuth={setIsCompletingOAuth} />
-        <JwtAuthSection />
+    <WidgetCard>
+      <div className="p-4">
+        <LoginForm
+          emailEnabled={isEmailAuthEnabled()}
+          onSendEmailOTP={handleSendEmailOTP}
+          isSendingOTP={sendOTP.isPending}
+          sendOTPError={sendOTP.error}
+          socialProviders={getEnabledSocialProviders()}
+          onSocialSignIn={handleSocialSignIn}
+          socialAuthError={socialAuth.error}
+          onHandleOAuthRedirect={handleOAuthRedirect}
+          jwtEnabled={isExternalAuthEnabled()}
+          onJwtAuth={handleJwtAuth}
+          isJwtPending={jwtAuth.isPending}
+          jwtError={jwtAuth.error}
+        />
       </div>
     </WidgetCard>
   );

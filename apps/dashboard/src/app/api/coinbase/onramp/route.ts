@@ -28,7 +28,7 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
       partnerUserRef: validatedBody.isSandbox
         ? `sandbox-${user.sub}`
         : user.sub,
-      email: user.email,
+      email: user.email ?? "",
       phoneNumber,
       phoneNumberVerifiedAt,
     });

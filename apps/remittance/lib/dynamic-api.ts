@@ -7,21 +7,27 @@
 
 const DYNAMIC_API_BASE = "https://app.dynamicauth.com/api/v0";
 
-function getHeaders(): HeadersInit {
-  const apiKey = process.env.DYNAMIC_API_KEY;
+function getEnvironmentId(): string {
+  const envId = process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID?.trim();
+  if (!envId) {
+    throw new Error(
+      "NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID is required (must match createDynamicClient environmentId).",
+    );
+  }
+  return envId;
+}
+
+function getAdminHeaders(): HeadersInit {
+  const apiKey = process.env.DYNAMIC_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error("DYNAMIC_API_KEY is required for admin operations");
+    throw new Error(
+      "DYNAMIC_API_KEY is required for Dynamic admin API calls. Create an API token in the Dynamic dashboard for the same project as NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID.",
+    );
   }
   return {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };
-}
-
-function getEnvironmentId(): string {
-  const envId = process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID;
-  if (!envId) throw new Error("NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID is required");
-  return envId;
 }
 
 export interface DynamicUser {
@@ -51,7 +57,7 @@ export async function listUsers(query?: string): Promise<DynamicUser[]> {
   if (query) params.set("filter.email", query);
   const res = await fetch(
     `${DYNAMIC_API_BASE}/environments/${envId}/users?${params.toString()}`,
-    { headers: getHeaders() },
+    { headers: getAdminHeaders() },
   );
 
   if (!res.ok) {
@@ -83,7 +89,7 @@ export async function createPregenWallet(params: {
     `${DYNAMIC_API_BASE}/environments/${envId}/waas/create`,
     {
       method: "POST",
-      headers: getHeaders(),
+      headers: getAdminHeaders(),
       body: JSON.stringify({
         identifier,
         type,
@@ -138,7 +144,7 @@ export async function getUser(userId: string): Promise<DynamicUser | null> {
   const envId = getEnvironmentId();
   const res = await fetch(
     `${DYNAMIC_API_BASE}/environments/${envId}/users/${userId}`,
-    { headers: getHeaders() },
+    { headers: getAdminHeaders() },
   );
   if (res.status === 404) return null;
   if (!res.ok) {
@@ -157,7 +163,7 @@ export async function deleteUser(userId: string): Promise<void> {
   const envId = getEnvironmentId();
   const res = await fetch(
     `${DYNAMIC_API_BASE}/environments/${envId}/users/${userId}`,
-    { method: "DELETE", headers: getHeaders() },
+    { method: "DELETE", headers: getAdminHeaders() },
   );
   if (!res.ok && res.status !== 404) {
     const text = await res.text();
@@ -207,7 +213,7 @@ export async function updateUserMetadata(
     `${DYNAMIC_API_BASE}/environments/${envId}/users/${userId}`,
     {
       method: "PUT",
-      headers: getHeaders(),
+      headers: getAdminHeaders(),
       body: JSON.stringify({ metadata: merged }),
     },
   );
@@ -235,7 +241,7 @@ export async function removeUserMetadataKey(
     `${DYNAMIC_API_BASE}/environments/${envId}/users/${userId}`,
     {
       method: "PUT",
-      headers: getHeaders(),
+      headers: getAdminHeaders(),
       body: JSON.stringify({ metadata: merged }),
     },
   );

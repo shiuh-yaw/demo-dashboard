@@ -144,6 +144,9 @@ importers:
       '@coinbase/cdp-sdk':
         specifier: 1.38.6
         version: 1.38.6(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
       '@dynamic-demos/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -180,9 +183,6 @@ importers:
       jsonwebtoken:
         specifier: 9.0.2
         version: 9.0.2
-      jwks-rsa:
-        specifier: 3.2.0
-        version: 3.2.0
       lucide-react:
         specifier: 0.511.0
         version: 0.511.0(react@19.1.4)
@@ -245,8 +245,87 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/deposit:
+    dependencies:
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
+      '@dynamic-demos/fireblocks':
+        specifier: workspace:*
+        version: link:../../packages/fireblocks
+      '@dynamic-demos/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@dynamic-demos/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@dynamic-labs-sdk/client':
+        specifier: 0.12.1
+        version: 0.12.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/evm':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@t3-oss/env-nextjs':
+        specifier: 0.13.8
+        version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
+      '@tanstack/react-query':
+        specifier: 5.90.16
+        version: 5.90.16(react@19.1.4)
+      lucide-react:
+        specifier: 0.541.0
+        version: 0.541.0(react@19.1.4)
+      next:
+        specifier: 15.5.9
+        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      react:
+        specifier: 19.1.4
+        version: 19.1.4
+      react-dom:
+        specifier: 19.1.4
+        version: 19.1.4(react@19.1.4)
+      viem:
+        specifier: 2.42.1
+        version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@eslint/eslintrc':
+        specifier: 3.3.1
+        version: 3.3.1
+      '@tailwindcss/postcss':
+        specifier: 4.1.17
+        version: 4.1.17
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      '@types/react':
+        specifier: 19.2.5
+        version: 19.2.5
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.5)
+      eslint:
+        specifier: 9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      eslint-config-next:
+        specifier: 15.5.4
+        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.1.17
+        version: 4.1.17
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   apps/earn:
     dependencies:
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
       '@dynamic-demos/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -289,9 +368,6 @@ importers:
       jsonwebtoken:
         specifier: 9.0.2
         version: 9.0.2
-      jwks-rsa:
-        specifier: 3.2.0
-        version: 3.2.0
       lucide-react:
         specifier: 0.542.0
         version: 0.542.0(react@19.1.4)
@@ -365,6 +441,9 @@ importers:
       '@dynamic-demos/alchemy':
         specifier: workspace:*
         version: link:../../packages/alchemy
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
       '@dynamic-demos/fireblocks':
         specifier: workspace:*
         version: link:../../packages/fireblocks
@@ -404,9 +483,6 @@ importers:
       jsonwebtoken:
         specifier: 9.0.2
         version: 9.0.2
-      jwks-rsa:
-        specifier: 3.2.0
-        version: 3.2.0
       lucide-react:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
@@ -466,8 +542,129 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/trade:
+    dependencies:
+      '@dynamic-demos/alchemy':
+        specifier: workspace:*
+        version: link:../../packages/alchemy
+      '@dynamic-demos/coingecko':
+        specifier: workspace:*
+        version: link:../../packages/coingecko
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
+      '@dynamic-demos/fireblocks':
+        specifier: workspace:*
+        version: link:../../packages/fireblocks
+      '@dynamic-demos/polymarket':
+        specifier: workspace:*
+        version: link:../../packages/polymarket
+      '@dynamic-demos/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
+      '@dynamic-demos/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@dynamic-demos/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@dynamic-demos/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@dynamic-labs-sdk/client':
+        specifier: 0.12.1
+        version: 0.12.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/evm':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@dynamic-labs-sdk/solana':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@dynamic-labs/iconic':
+        specifier: 4.61.1
+        version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      '@t3-oss/env-nextjs':
+        specifier: 0.13.8
+        version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
+      '@tanstack/react-query':
+        specifier: 5.90.16
+        version: 5.90.16(react@19.1.4)
+      clsx:
+        specifier: 2.1.1
+        version: 2.1.1
+      jsonwebtoken:
+        specifier: 9.0.2
+        version: 9.0.2
+      jwks-rsa:
+        specifier: 3.2.0
+        version: 3.2.0
+      lightweight-charts:
+        specifier: ^4.2.0
+        version: 4.2.3
+      lucide-react:
+        specifier: 0.541.0
+        version: 0.541.0(react@19.1.4)
+      next:
+        specifier: 15.5.9
+        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      react:
+        specifier: 19.1.4
+        version: 19.1.4
+      react-dom:
+        specifier: 19.1.4
+        version: 19.1.4(react@19.1.4)
+      tailwind-merge:
+        specifier: 3.4.0
+        version: 3.4.0
+      viem:
+        specifier: 2.42.1
+        version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@eslint/eslintrc':
+        specifier: 3.3.1
+        version: 3.3.1
+      '@tailwindcss/postcss':
+        specifier: 4.1.17
+        version: 4.1.17
+      '@types/jsonwebtoken':
+        specifier: 9.0.10
+        version: 9.0.10
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      '@types/react':
+        specifier: 19.2.5
+        version: 19.2.5
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.5)
+      eslint:
+        specifier: 9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      eslint-config-next:
+        specifier: 15.5.4
+        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.1.17
+        version: 4.1.17
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   apps/wallet:
     dependencies:
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
       '@dynamic-demos/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -581,11 +778,79 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/coingecko:
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/dynamic:
+    dependencies:
+      '@dynamic-demos/ui':
+        specifier: workspace:*
+        version: link:../ui
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.2
+      jwks-rsa:
+        specifier: ^3.1.0
+        version: 3.2.0
+      react:
+        specifier: '>=18.0.0'
+        version: 19.1.4
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.1.4(react@19.1.4)
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.10
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.5
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.5)
+      next:
+        specifier: 15.5.9
+        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   packages/fireblocks:
     dependencies:
       '@fireblocks/ts-sdk':
+        specifier: ^14.1.0
+        version: 14.1.0
+      jose:
         specifier: ^6.0.0
-        version: 6.0.0
+        version: 6.1.3
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/polymarket:
+    dependencies:
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -629,6 +894,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@dynamic-demos/theme':
+        specifier: workspace:*
+        version: link:../theme
       '@dynamic-demos/utils':
         specifier: workspace:*
         version: link:../utils
@@ -728,29 +996,29 @@ packages:
     resolution: {integrity: sha512-l9gGGZqhCryuD3nfqB4Y+i8kfBtsnPJoKB5jxx5lKgXhVJw7/BPhgscKkVhP81115Srq3bFegD1IBwUkJ0JFMw==}
 
   '@dynamic-labs-sdk/assert-package-version@0.12.1':
-    resolution: {integrity: sha512-DtDKn9rusMw5CvM2lt5u+bZ0W08R2YaaJcM9w4Zt3XI9pdAlshOBKhd1tIRXDne2Y8a04GFTpyvRhPkxXcJVHw==}
+    resolution: {integrity: sha512-DtDKn9rusMw5CvM2lt5u+bZ0W08R2YaaJcM9w4Zt3XI9pdAlshOBKhd1tIRXDne2Y8a04GFTpyvRhPkxXcJVHw==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-sdk/assert-package-version/-/@dynamic-labs-sdk/assert-package-version-0.12.1.tgz}
 
   '@dynamic-labs-sdk/client@0.12.1':
-    resolution: {integrity: sha512-izUZgefwRGGB3eeIDgZesfiy144GnFsC6BX0+nGAKyF7AuTDIE2joJK3KhNdIbH5jJozHa34IbFqJ1ly/aZPhA==}
+    resolution: {integrity: sha512-izUZgefwRGGB3eeIDgZesfiy144GnFsC6BX0+nGAKyF7AuTDIE2joJK3KhNdIbH5jJozHa34IbFqJ1ly/aZPhA==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-sdk/client/-/@dynamic-labs-sdk/client-0.12.1.tgz}
 
   '@dynamic-labs-sdk/evm@0.12.1':
-    resolution: {integrity: sha512-4zm1uLplCANmiJTfk+cEuCjeFtq6CtYbYvVyxvSYzp3zuhlzQvugQc7x9BUpoCeNbArCXxV0ghGufsrnChgPig==}
+    resolution: {integrity: sha512-qv2JztPY8iCBYyghcJ+l9GA5/uaP973/xcBfClUy4/3Tg7CHEHMQTMLnYRDflzYvwbHUR3e9Th419OOoq5l+9A==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-sdk/evm/-/@dynamic-labs-sdk/evm-0.12.1.tgz}
     peerDependencies:
       viem: ^2.28.4
 
   '@dynamic-labs-sdk/solana@0.12.1':
-    resolution: {integrity: sha512-Cgde0HIMciMrx3Tp8jUbwnNX1qvoSXHkBqI3v81eBfVN0vDGTBkRH83LSGSlE1cl1SP/AUKZpcCbWZDuewHJtA==}
+    resolution: {integrity: sha512-yTnUkS7/6GNyaVve/LQ39SNUG4sz3OCdlQrKX8fyCc3EsHy6zX5uSKHaPdKCiXin475YX40eomJFPLcD5z7MNQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-sdk/solana/-/@dynamic-labs-sdk/solana-0.12.1.tgz}
 
   '@dynamic-labs-sdk/wallet-connect@0.12.1':
-    resolution: {integrity: sha512-Im6wifsUzwWw07wwXledrx+nV7b4FTmHHzEtLLnt6H+8tCLXn3bDXuQBzknKFCa8P7XL0qAH+WUadFEV/JQAMQ==}
+    resolution: {integrity: sha512-2BQFpe+XbOlSoj96/nLhh8gKQMdz7w5J/zo28/74UtmVmrxGelyB5XYjRKirokp5h5p/J10JC1MY0TditbWDtQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-sdk/wallet-connect/-/@dynamic-labs-sdk/wallet-connect-0.12.1.tgz}
 
   '@dynamic-labs-sdk/zerodev@0.12.1':
-    resolution: {integrity: sha512-2DOSh0YfhiF1WK8Asdv7tYOLNKutgoNJ2PX/pBRSZnTBkgDRBer3aahth8XkGVGi+6RVPoi+qaQGiCAOr53N9g==}
+    resolution: {integrity: sha512-bqfUpOOaxeH8s5jdeBBGi8kykj2EQ8yqiEwHOlIPyAShFVocfseGpUkLK5s4rnDjGbRcBXFYIn+2jIllzsZOPQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-sdk/zerodev/-/@dynamic-labs-sdk/zerodev-0.12.1.tgz}
     peerDependencies:
       viem: ^2.28.4
 
   '@dynamic-labs-wallet/browser-wallet-client@0.0.261':
-    resolution: {integrity: sha512-brVdQrzlG7n6rFxZVnzyOoE6Y8gJ6Z+FmdHNhc6hOuN4zsj+V4WMXWYKQwaKRMwC1j4tv8jSR1EcBVznV9qLzQ==}
+    resolution: {integrity: sha512-brVdQrzlG7n6rFxZVnzyOoE6Y8gJ6Z+FmdHNhc6hOuN4zsj+V4WMXWYKQwaKRMwC1j4tv8jSR1EcBVznV9qLzQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-wallet/browser-wallet-client/-/@dynamic-labs-wallet/browser-wallet-client-0.0.261.tgz}
 
   '@dynamic-labs-wallet/browser@0.0.167':
     resolution: {integrity: sha512-HDmUetnJ1iz6kGd5PB1kJzeLI7ZJmwxlJ1QGtUqSQHDdBkhLwaDPlccB2IviC5iPfU5PR/IQ1BYEqpoTWx2sBA==}
@@ -765,7 +1033,7 @@ packages:
     resolution: {integrity: sha512-1ykOANTDCPPaIpajpKqRxfISGYrmiMs7WMZQzdzRkTLftpnatgycYjdZrX9adhE1kY9BMrPdhfYaaE5B9wbFbQ==}
 
   '@dynamic-labs-wallet/core@0.0.261':
-    resolution: {integrity: sha512-JDdnymoR2fcMZEXf35NACGZMtDjCY5RSuZc9X915csnRXBCOR79hbcekrtI5ltQWWTlqu7zP3jMmqnHU369vLw==}
+    resolution: {integrity: sha512-JDdnymoR2fcMZEXf35NACGZMtDjCY5RSuZc9X915csnRXBCOR79hbcekrtI5ltQWWTlqu7zP3jMmqnHU369vLw==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs-wallet/core/-/@dynamic-labs-wallet/core-0.0.261.tgz}
 
   '@dynamic-labs-wallet/forward-mpc-client@0.1.3':
     resolution: {integrity: sha512-riZesfU41fMvetaxJ3bO48/9P8ikRPgoVJgWh8m8i0oRyYN7uUz+Iesp+52U12DCtcvSTXljxrKtrV3yqNAYRw==}
@@ -780,25 +1048,25 @@ packages:
     resolution: {integrity: sha512-2I8NoCBVT9/09o4+M78S2wyY9jVXAb6RKt5Bnh1fhvikuB11NBeswtfZLns3wAFQxayApe31Jhamd4D2GR+mtw==}
 
   '@dynamic-labs/assert-package-version@4.61.1':
-    resolution: {integrity: sha512-xSFxc0yZW8D4GOMBpMz4pn6FjFRAXLs/qnw3FNQ8xCsNDKCzcRmcsoxkR7yR2r30qxWkagXq5wvOvyu/ArY9eQ==}
+    resolution: {integrity: sha512-xSFxc0yZW8D4GOMBpMz4pn6FjFRAXLs/qnw3FNQ8xCsNDKCzcRmcsoxkR7yR2r30qxWkagXq5wvOvyu/ArY9eQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/assert-package-version/-/@dynamic-labs/assert-package-version-4.61.1.tgz}
 
   '@dynamic-labs/assert-package-version@4.65.0':
-    resolution: {integrity: sha512-nSm2vF3xlHpZ+c9u6nYSiiXVDPUkFZD90gbCmXljyW6tzyNM462NDkKYNmRXgUrXDT7urmIx/WgC7rKlBduKzQ==}
+    resolution: {integrity: sha512-nSm2vF3xlHpZ+c9u6nYSiiXVDPUkFZD90gbCmXljyW6tzyNM462NDkKYNmRXgUrXDT7urmIx/WgC7rKlBduKzQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/assert-package-version/-/@dynamic-labs/assert-package-version-4.65.0.tgz}
 
   '@dynamic-labs/iconic@4.61.1':
-    resolution: {integrity: sha512-rBeT0UDp35UG1cIEQ3Xdjg4cXBkxZR6fxsQfz83OkAhHgZAprSHjXrz+A/gZ3HKaKU7MA60CpaZy8iAGxuYKfA==}
+    resolution: {integrity: sha512-rBeT0UDp35UG1cIEQ3Xdjg4cXBkxZR6fxsQfz83OkAhHgZAprSHjXrz+A/gZ3HKaKU7MA60CpaZy8iAGxuYKfA==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/iconic/-/@dynamic-labs/iconic-4.61.1.tgz}
     peerDependencies:
       react: '>=18.0.0 <20.0.0'
       react-dom: '>=18.0.0 <20.0.0'
 
   '@dynamic-labs/logger@4.61.1':
-    resolution: {integrity: sha512-6th5nTIy/3ce6mOwyrmCM1NjojxH/5efzjzakmd79fvrHFZp/XY/VQB1iLlQfdolBR54yOW5Sjr6e003fazIww==}
+    resolution: {integrity: sha512-6th5nTIy/3ce6mOwyrmCM1NjojxH/5efzjzakmd79fvrHFZp/XY/VQB1iLlQfdolBR54yOW5Sjr6e003fazIww==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/logger/-/@dynamic-labs/logger-4.61.1.tgz}
 
   '@dynamic-labs/logger@4.65.0':
-    resolution: {integrity: sha512-P5qRPGYwN2MG1y29e7BPM2bvybDuZfNgaJ8nAaBj/O7BjBxxWBZoVsouU5uqQczqhPnb6zHIs6LRvatZnO1vhQ==}
+    resolution: {integrity: sha512-P5qRPGYwN2MG1y29e7BPM2bvybDuZfNgaJ8nAaBj/O7BjBxxWBZoVsouU5uqQczqhPnb6zHIs6LRvatZnO1vhQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/logger/-/@dynamic-labs/logger-4.65.0.tgz}
 
   '@dynamic-labs/message-transport@4.65.0':
-    resolution: {integrity: sha512-EuLEskIdPrrjfZssSMn+Efl3F/BTdy+7PswvgnEeRcW2q3D643t+5PgAEY1U45DDM7aytD0lET+6sWZeD1LfyQ==}
+    resolution: {integrity: sha512-EuLEskIdPrrjfZssSMn+Efl3F/BTdy+7PswvgnEeRcW2q3D643t+5PgAEY1U45DDM7aytD0lET+6sWZeD1LfyQ==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/message-transport/-/@dynamic-labs/message-transport-4.65.0.tgz}
 
   '@dynamic-labs/sdk-api-core@0.0.764':
     resolution: {integrity: sha512-79JptJTTClLc9qhioThtwMuzTHJ+mrj8sTEglb7Mcx3lJub9YbXqNdzS9mLRxZsr2et3aqqpzymXdUBzSEaMng==}
@@ -810,13 +1078,13 @@ packages:
     resolution: {integrity: sha512-XChDKxbbJtZgFsJ1g9N35ALE2O/CCmT+tB50LpbnbXWkt1gRjYoPNB+UVzNQeDXD4skwJUy6i849WmTUPRNReg==}
 
   '@dynamic-labs/sdk-api-core@0.0.875':
-    resolution: {integrity: sha512-lLMJ5RwFn48UKTZnqT5g4VXVD68uSy87UpEf3Up21YDH4/2uaeEIrJZDUM9gvvCsU/8f2Q9K72i9+JoyZWWzzw==}
+    resolution: {integrity: sha512-lLMJ5RwFn48UKTZnqT5g4VXVD68uSy87UpEf3Up21YDH4/2uaeEIrJZDUM9gvvCsU/8f2Q9K72i9+JoyZWWzzw==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/sdk-api-core/-/@dynamic-labs/sdk-api-core-0.0.875.tgz}
 
   '@dynamic-labs/types@4.65.0':
-    resolution: {integrity: sha512-IQrFAizmx2LGE//SvN/jzTTPswyPKrgHkNqhXChpftrEsxfiY3GXj2dFMKESCAYKmiRxcU0MjE1/J+l2M9ehAg==}
+    resolution: {integrity: sha512-IQrFAizmx2LGE//SvN/jzTTPswyPKrgHkNqhXChpftrEsxfiY3GXj2dFMKESCAYKmiRxcU0MjE1/J+l2M9ehAg==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/types/-/@dynamic-labs/types-4.65.0.tgz}
 
   '@dynamic-labs/utils@4.65.0':
-    resolution: {integrity: sha512-Wz76jutjWR3dxE+SnEkQfhlV7rT+qUdn94ZWGljpsf5WABCBCXfAfekG3x7IvCZ+AWE2iHQQOSW9pH0QDWBLcA==}
+    resolution: {integrity: sha512-Wz76jutjWR3dxE+SnEkQfhlV7rT+qUdn94ZWGljpsf5WABCBCXfAfekG3x7IvCZ+AWE2iHQQOSW9pH0QDWBLcA==, tarball: https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/@dynamic-labs/utils/-/@dynamic-labs/utils-4.65.0.tgz}
 
   '@emnapi/core@1.8.1':
     resolution: {integrity: sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg==}
@@ -881,8 +1149,8 @@ packages:
     resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
-  '@fireblocks/ts-sdk@6.0.0':
-    resolution: {integrity: sha512-LB4XKc5B7Lr3wjQG9VKjWj2BW5tmIwA83xG2fI7breawNcrWOP8ck60OfESA0ePaSlBXk342ZE/tHX57leJC2g==}
+  '@fireblocks/ts-sdk@14.1.0':
+    resolution: {integrity: sha512-MShxAv9anlsthT1FVR2TyQ57+N1iOSEUm4vefNIEQYA1/PMOB/NbUIa1a+gLl4/xU3wVxMnVWAwM8GaPcExNJg==}
 
   '@floating-ui/core@1.7.4':
     resolution: {integrity: sha512-C3HlIdsBxszvm5McXlB8PeOEWfBhcGBTZGkGlWc2U0KFY5IwG5OQEuQ8rq52DZmcHDlPLd+YFBK+cZcytwIFWg==}
@@ -3377,6 +3645,9 @@ packages:
     resolution: {integrity: sha512-GipyPsXO1anza0AOZdy69Im7hGFCNB7Y/NGjDlZGJ3GJJLtwNSb2vrzYrTYJRrRloVx7pl+bhUaTB8yiccPvFQ==}
     engines: {node: '> 0.1.90'}
 
+  fancy-canvas@2.1.0:
+    resolution: {integrity: sha512-nifxXJ95JNLFR2NgRV4/MxVP45G9909wJTEKz5fg/TZS20JJZA6hfgRVh/bC9bwl2zBtBNcYPjiBE4njQHVBwQ==}
+
   fast-copy@3.0.2:
     resolution: {integrity: sha512-dl0O9Vhju8IrcLndv2eU4ldt1ftXMqqfgN4H1cpmGV7P6jeB9FwpN9a2c8DPGE1Ys88rNUJVYDHq73CGAGOPfQ==}
 
@@ -3797,10 +4068,6 @@ packages:
     resolution: {integrity: sha512-g1MWMLBiz8FKi1e4w0UyVL3w+iJceWAFBAaBnnGKOpNa5f8TLktkbre1+s6oICydWAm+HRUGTmI+//xv2hvXYA==}
     hasBin: true
 
-  jsonwebtoken@8.5.1:
-    resolution: {integrity: sha512-XjwVfRS6jTMsqYs0EsuJ4LGxXV14zQybNd4L2r0UvbVnSF9Af8x7p5MzbJ90Ioz/9TI41/hTCvznF/loiSzn8w==}
-    engines: {node: '>=4', npm: '>=1.4.28'}
-
   jsonwebtoken@9.0.2:
     resolution: {integrity: sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ==}
     engines: {node: '>=12', npm: '>=6'}
@@ -3905,6 +4172,9 @@ packages:
   lightningcss@1.30.2:
     resolution: {integrity: sha512-utfs7Pr5uJyyvDETitgsaqSyjCb2qNRAtuqUeWIAKztsOYdcACf2KtARYXg2pSvhkt+9NfoaNY7fxjl6nuMjIQ==}
     engines: {node: '>= 12.0.0'}
+
+  lightweight-charts@4.2.3:
+    resolution: {integrity: sha512-5kS/2hY3wNYNzhnS8Gb+GAS07DX8GPF2YVDnd2NMC85gJVQ6RLU6YrXNgNJ6eg0AnWPwCnvaGtYmGky3HiLQEw==}
 
   limiter@1.1.5:
     resolution: {integrity: sha512-FWWMIEOxz3GwUI4Ts/IvgVy6LPvoMPgjMdQ185nN6psJyBJ4yOpzqm695/h5umdLJg2vW3GR5iG11MAkR2AzJA==}
@@ -4416,10 +4686,6 @@ packages:
 
   secure-json-parse@4.1.0:
     resolution: {integrity: sha512-l4KnYfEyqYJxDwlNVyRfO2E4NTHfMKAWdUuA8J0yve2Dz/E/PdBepY03RvyJpssIpRFwJoCD55wA+mEDs6ByWA==}
-
-  semver@5.7.2:
-    resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
-    hasBin: true
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -5655,10 +5921,10 @@ snapshots:
 
   '@faker-js/faker@9.9.0': {}
 
-  '@fireblocks/ts-sdk@6.0.0':
+  '@fireblocks/ts-sdk@14.1.0':
     dependencies:
       axios: 1.13.6
-      jsonwebtoken: 8.5.1
+      jsonwebtoken: 9.0.2
       platform: 1.3.6
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -8759,6 +9025,8 @@ snapshots:
 
   eyes@0.1.8: {}
 
+  fancy-canvas@2.1.0: {}
+
   fast-copy@3.0.2: {}
 
   fast-deep-equal@3.1.3: {}
@@ -9196,19 +9464,6 @@ snapshots:
     dependencies:
       minimist: 1.2.8
 
-  jsonwebtoken@8.5.1:
-    dependencies:
-      jws: 3.2.3
-      lodash.includes: 4.3.0
-      lodash.isboolean: 3.0.3
-      lodash.isinteger: 4.0.4
-      lodash.isnumber: 3.0.3
-      lodash.isplainobject: 4.0.6
-      lodash.isstring: 4.0.1
-      lodash.once: 4.1.1
-      ms: 2.1.3
-      semver: 5.7.2
-
   jsonwebtoken@9.0.2:
     dependencies:
       jws: 3.2.3
@@ -9316,6 +9571,10 @@ snapshots:
       lightningcss-linux-x64-musl: 1.30.2
       lightningcss-win32-arm64-msvc: 1.30.2
       lightningcss-win32-x64-msvc: 1.30.2
+
+  lightweight-charts@4.2.3:
+    dependencies:
+      fancy-canvas: 2.1.0
 
   limiter@1.1.5: {}
 
@@ -9906,8 +10165,6 @@ snapshots:
   scheduler@0.26.0: {}
 
   secure-json-parse@4.1.0: {}
-
-  semver@5.7.2: {}
 
   semver@6.3.1: {}
 

@@ -1,79 +1,64 @@
 "use client";
 
 import { forwardRef, type ReactNode, type HTMLAttributes } from "react";
+import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 
-/** Close icon SVG (avoids lucide-react dependency) */
-function CloseIcon({ className }: { className?: string }) {
+const surfaceClass =
+  "bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#000000)] rounded-[var(--widget-radius-lg,22px)] overflow-hidden border border-[var(--widget-border,#e7e8ed)] shadow-[0px_8px_8px_-4px_rgba(10,13,18,0.03),0px_3px_3px_-1.5px_rgba(10,13,18,0.04)]";
+
+const headerRuleClass = "border-b border-[var(--widget-border,#e7e8ed)]";
+
+const headerIconBtnClass =
+  "flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all hover:bg-[var(--widget-row-hover,#eef1f1)]";
+
+const mutedIconClass = "h-4 w-4 text-[var(--widget-muted,#9a9a9a)]";
+
+function HeaderTitle({
+  title,
+  subtitle,
+}: {
+  title?: string;
+  subtitle?: ReactNode;
+}) {
+  if (!title && !subtitle) return null;
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
+    <>
+      {title ? (
+        <h2 className="text-sm font-medium leading-5 text-[var(--widget-fg,#000000)]">
+          {title}
+        </h2>
+      ) : null}
+      {subtitle ? (
+        <p className="text-xs leading-5 text-[var(--widget-muted,#9a9a9a)]">
+          {subtitle}
+        </p>
+      ) : null}
+    </>
   );
 }
 
-/** Back arrow icon SVG */
-function BackIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="m12 19-7-7 7-7" />
-      <path d="M19 12H5" />
-    </svg>
-  );
+function endHeaderSpacerVisible(
+  trailing: ReactNode | undefined,
+  onClose: (() => void) | undefined,
+) {
+  return !trailing && !onClose;
 }
 
 export interface WidgetCardProps extends HTMLAttributes<HTMLDivElement> {
-  /** Icon to display in header (enables icon-style header layout) */
   icon?: ReactNode;
-  /** Card title */
   title?: string;
-  /** Subtitle - can be string or ReactNode for custom content */
   subtitle?: ReactNode;
-  /** Back button click handler */
   onBack?: () => void;
-  /** Close button click handler */
   onClose?: () => void;
-  /** Whether the card is transitioning (reduces opacity) */
+  trailing?: ReactNode;
   isTransitioning?: boolean;
-  /** Optional footer content (e.g., "Powered by Dynamic") */
   footer?: ReactNode;
-  /** Content padding - set to false for full-width content */
   contentPadding?: boolean;
 }
 
-/**
- * Universal widget card container with flexible header layouts.
- * Uses CSS variables for theming (--widget-*).
- *
- * Header layouts:
- * - With icon: [back?] [icon] [title/subtitle] ... [close?]
- * - Without icon: [back?] ... [title/subtitle centered] ... [close?]
- */
 const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
-  (
+  function WidgetCard(
     {
       children,
       icon,
@@ -81,124 +66,125 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
       subtitle,
       onBack,
       onClose,
+      trailing,
       isTransitioning,
       footer,
       contentPadding = true,
       className,
       ...props
     },
-    ref
-  ) => {
-    const showHeader = title || subtitle || onBack || onClose || icon;
+    ref,
+  ) {
+    const showHeader = Boolean(
+      title || subtitle || onBack || onClose || icon || trailing,
+    );
+    const rightActions = Boolean(trailing || onClose);
 
     return (
       <div
         ref={ref}
         className={cn(
-          "bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#000000)]",
-          "rounded-[var(--widget-radius-lg,22px)] overflow-hidden",
-          "border border-[var(--widget-border,#e7e8ed)]",
-          "shadow-[0px_8px_8px_-4px_rgba(10,13,18,0.03),0px_3px_3px_-1.5px_rgba(10,13,18,0.04)]",
+          surfaceClass,
           "transition-opacity duration-150",
           isTransitioning && "opacity-50",
-          className
+          className,
         )}
         {...props}
       >
-        {showHeader && (
-          <div
-            className={cn(
-              "flex items-start justify-between p-3 border-b border-[var(--widget-border,#e7e8ed)]",
-              !icon && "items-center"
-            )}
-          >
-            {/* Left side: back button and/or icon with title */}
-            <div className="flex items-center gap-2">
-              {/* Back Button */}
-              {onBack && (
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="w-6 h-6 flex items-center justify-center shrink-0 cursor-pointer rounded-full hover:bg-[var(--widget-row-hover,#eef1f1)] transition-all"
-                  aria-label="Go back"
-                >
-                  <BackIcon className="w-4 h-4 text-[var(--widget-muted,#9a9a9a)]" />
-                </button>
+        {showHeader ? (
+          <div className={cn("relative px-3 py-2.5", headerRuleClass)}>
+            <div
+              className={cn(
+                "flex w-full items-start",
+                !icon && "min-h-9 items-center",
               )}
+            >
+              <div className="flex shrink-0 items-center gap-2">
+                {onBack ? (
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className={headerIconBtnClass}
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft
+                      className={mutedIconClass}
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                  </button>
+                ) : null}
 
-              {/* Icon-style header: icon box + title */}
-              {icon ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-[38px] h-[38px] min-w-[38px] flex items-center justify-center rounded-[9px] bg-[var(--widget-row-bg,#f6f8f8)] border border-[var(--widget-border,#e7e8ed)] shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)]">
-                    {icon}
-                  </div>
-                  <div className="flex flex-col">
-                    {title && (
-                      <h2 className="text-sm font-medium text-[var(--widget-fg,#000000)] tracking-[-0.14px] leading-5">
-                        {title}
-                      </h2>
+                {icon ? (
+                  <div
+                    className={cn(
+                      "flex min-w-0 items-center gap-3",
+                      rightActions && "pr-10",
                     )}
-                    {subtitle && (
-                      <p className="text-xs text-[var(--widget-muted,#9a9a9a)] tracking-[-0.12px] leading-5">
-                        {subtitle}
-                      </p>
-                    )}
+                  >
+                    <div className="flex h-[38px] w-[38px] min-w-[38px] items-center justify-center rounded-[9px] border border-[var(--widget-border,#e7e8ed)] bg-[var(--widget-row-bg,#f6f8f8)] shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)]">
+                      {icon}
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <HeaderTitle title={title} subtitle={subtitle} />
+                    </div>
                   </div>
+                ) : !onBack ? (
+                  <div className="w-6 shrink-0" aria-hidden />
+                ) : null}
+              </div>
+
+              {!icon && (title || subtitle) ? (
+                <div
+                  className={cn(
+                    "flex min-w-0 flex-1 flex-col items-center justify-center px-2",
+                    rightActions && "pr-10",
+                  )}
+                >
+                  <HeaderTitle title={title} subtitle={subtitle} />
                 </div>
-              ) : (
-                /* Spacer for centering when no icon and no back button */
-                !onBack && <div className="w-6" />
-              )}
+              ) : null}
+
+              {!icon && endHeaderSpacerVisible(trailing, onClose) ? (
+                <div className="w-6 shrink-0" aria-hidden />
+              ) : null}
             </div>
 
-            {/* Centered title when no icon */}
-            {!icon && (title || subtitle) && (
-              <div className="flex flex-col items-center justify-center flex-1 min-w-0 px-2">
-                {title && (
-                  <h2 className="text-sm font-medium text-[var(--widget-fg,#000000)] tracking-[-0.14px] leading-5">
-                    {title}
-                  </h2>
-                )}
-                {subtitle && (
-                  <p className="text-xs text-[var(--widget-muted,#9a9a9a)] tracking-[-0.12px] leading-5">
-                    {subtitle}
-                  </p>
-                )}
+            {rightActions ? (
+              <div className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5">
+                {trailing}
+                {onClose ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className={headerIconBtnClass}
+                    aria-label="Close"
+                  >
+                    <X className={mutedIconClass} strokeWidth={2} aria-hidden />
+                  </button>
+                ) : null}
               </div>
-            )}
-
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={!onClose}
-              className={cn(
-                "w-6 h-6 flex items-center justify-center shrink-0 transition-all rounded-full",
-                onClose
-                  ? "opacity-100 cursor-pointer hover:bg-[var(--widget-row-hover,#eef1f1)]"
-                  : "opacity-0 pointer-events-none"
-              )}
-              aria-label="Close"
-            >
-              <CloseIcon className="w-4 h-4 text-[var(--widget-muted,#9a9a9a)]" />
-            </button>
+            ) : null}
           </div>
-        )}
+        ) : null}
 
-        <div className={showHeader && contentPadding ? "p-3" : ""}>
+        <div className={showHeader && contentPadding ? "p-3" : undefined}>
           {children}
         </div>
 
-        {footer && (
+        {footer ? (
           <div className="border-t border-[var(--widget-border,#e7e8ed)]">
             {footer}
           </div>
-        )}
+        ) : null}
       </div>
     );
-  }
+  },
 );
 
 WidgetCard.displayName = "WidgetCard";
+
+export const widgetHeaderTrailingIconButtonClassName =
+  "shrink-0 flex h-8 w-8 items-center justify-center rounded-[max(0.375rem,calc(var(--widget-radius-lg,22px)-0.5rem))] text-[var(--widget-muted,#9a9a9a)] transition-colors hover:bg-[var(--widget-row-hover,#eef1f1)] hover:text-[var(--widget-fg,#000000)] cursor-pointer";
 
 export { WidgetCard };

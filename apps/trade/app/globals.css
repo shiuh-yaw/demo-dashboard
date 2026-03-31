@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* Include shared packages for Tailwind class scanning */
+@source "../../../packages/ui/src/**/*.tsx";
+@source "../../../packages/ui/src/**/*.ts";
+
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Register CSS variables with Tailwind for theme() and arbitrary values */
+@theme {
+  --color-trade-bg: var(--trade-bg);
+  --color-trade-surface: var(--trade-surface);
+  --color-trade-surface-elevated: var(--trade-surface-elevated);
+  --color-trade-surface-blue: var(--trade-surface-blue);
+  --color-trade-border: var(--trade-border);
+  --color-trade-text-primary: var(--trade-text-primary);
+  --color-trade-text-secondary: var(--trade-text-secondary);
+  --color-trade-text-muted: var(--trade-text-muted);
+  --color-trade-accent: var(--trade-accent);
+  --color-trade-accent-hover: var(--trade-accent-hover);
+  --color-trade-accent-muted: var(--trade-accent-muted);
+  --color-trade-success: var(--trade-success);
+  --color-trade-error: var(--trade-error);
+  --color-trade-warning: var(--trade-warning);
+}
+
+/* ===== LIGHT THEME (default) ===== */
+:root {
+  /* Widget theme (auth screen, login form) - matches trade palette */
+  --widget-page-bg: #f6f8fa;
+  --widget-bg: #ffffff;
+  --widget-fg: #151618;
+  --widget-muted: #9CA3AF;
+  --widget-border: #E5E7EB;
+  --widget-primary: #4779FF;
+  --widget-row-bg: #f6f8f8;
+  --widget-row-hover: #eef1f1;
+  --widget-radius: 12px;
+  --widget-radius-lg: 22px;
+
+  /* Backgrounds */
+  --trade-bg: #F7F8FA;
+  --trade-surface: #FFFFFF;
+  --trade-surface-elevated: #FFFFFF;
+  --trade-surface-blue: #eaf5ff;
+  --trade-border: #E5E7EB;
+
+  /* Text */
+  --trade-text-primary: #151618;
+  --trade-text-secondary: rgba(73, 91, 150, 0.6);
+  --trade-text-muted: #9CA3AF;
+
+  /* Accent -- Dynamic brand blue (overridden by config) */
+  --trade-accent: #4779FF;
+  --trade-accent-hover: #3563E0;
+  --trade-accent-muted: rgba(71, 121, 255, 0.12);
+
+  /* Secondary */
+  --trade-secondary: #3563E0;
+
+  /* Semantic */
+  --trade-success: #33c26c;
+  --trade-error: #EF4444;
+  --trade-warning: #F59E0B;
+
+  /* Layout */
+  --trade-radius: 12px;
+  --trade-radius-lg: 16px;
+  --trade-radius-xl: 20px;
+
+  /* Balance gradient */
+  --trade-balance-gradient-start: rgba(241, 251, 255, 0.5);
+  --trade-balance-gradient-end: rgba(213, 236, 255, 0.5);
+}
+
+/* ===== DARK THEME ===== */
+.dark {
+  /* Widget theme (auth screen, login form) */
+  --widget-page-bg: #0A0A0A;
+  --widget-bg: #161618;
+  --widget-fg: #ffffff;
+  --widget-muted: #636366;
+  --widget-border: #2C2C30;
+  --widget-primary: #6B93FF;
+  --widget-row-bg: #1C1C1E;
+  --widget-row-hover: #2C2C30;
+  --widget-radius: 12px;
+  --widget-radius-lg: 22px;
+
+  --trade-bg: #0A0A0A;
+  --trade-surface: #161618;
+  --trade-surface-elevated: #1C1C1E;
+  --trade-surface-blue: #1E1E22;
+  --trade-border: #2C2C30;
+
+  --trade-text-primary: #FFFFFF;
+  --trade-text-secondary: #8E8E93;
+  --trade-text-muted: #636366;
+
+  --trade-accent: #4779FF;
+  --trade-accent-hover: #6B93FF;
+  --trade-accent-muted: rgba(71, 121, 255, 0.15);
+
+  --trade-secondary: #6B93FF;
+
+  --trade-success: #4ADE80;
+  --trade-error: #F87171;
+  --trade-warning: #FBBF24;
+
+  --trade-balance-gradient-start: rgba(241, 251, 255, 0.06);
+  --trade-balance-gradient-end: rgba(29, 29, 29, 0.9);
+}
+
+@layer base {
+  * {
+    border-color: var(--trade-border);
+  }
+  html,
+  body {
+    @apply overflow-hidden h-full;
+  }
+  body {
+    background-color: var(--trade-bg);
+    color: var(--trade-text-primary);
+  }
+}
+
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--trade-border) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--trade-border);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--trade-text-muted);
+}

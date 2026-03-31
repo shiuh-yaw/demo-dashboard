@@ -41,13 +41,6 @@ export default async function LoginPage({
   return (
     <>
       <LoginCleanup />
-      {!isOAuthCallback && (
-        <div className="text-center mb-6">
-          <p className="text-sm text-earn-text-secondary">
-            Sign in to access your Earn dashboard
-          </p>
-        </div>
-      )}
       <LoginContent
         isOAuthCallback={isOAuthCallback}
         redirectTo={`/e/${id}/earn`}

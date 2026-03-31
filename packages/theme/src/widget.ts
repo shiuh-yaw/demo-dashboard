@@ -39,7 +39,7 @@ export interface WidgetBranding extends BaseBranding {
 }
 
 /**
- * Default widget theme values
+ * Default widget theme values (light mode)
  */
 export const DEFAULT_WIDGET_THEME: Required<WidgetTheme> = {
   ...DEFAULT_BASE_THEME,
@@ -58,6 +58,25 @@ export const DEFAULT_WIDGET_THEME: Required<WidgetTheme> = {
 };
 
 /**
+ * Default dark mode widget theme values (used when isDark=true in widgetThemeToCssVars)
+ */
+const DARK_WIDGET_THEME_DEFAULTS: Required<WidgetTheme> = {
+  ...DEFAULT_BASE_THEME,
+  primaryColor: "#ffffff",
+  primaryHoverColor: "#e5e5e5",
+  accentColor: "#6B93FF",
+  pageBackground: "#0A0A0A",
+  background: "#161618",
+  foregroundColor: "#ffffff",
+  rowBackground: "#1C1C1E",
+  rowHoverBackground: "#2C2C30",
+  mutedTextColor: "#636366",
+  borderColor: "#2C2C30",
+  gradientFrom: "rgba(71, 121, 255, 0.15)",
+  gradientTo: "rgba(71, 121, 255, 0.05)",
+};
+
+/**
  * Default widget branding values
  */
 export const DEFAULT_WIDGET_BRANDING: Required<WidgetBranding> = {
@@ -66,20 +85,24 @@ export const DEFAULT_WIDGET_BRANDING: Required<WidgetBranding> = {
 };
 
 /**
- * Convert widget theme to CSS custom properties
+ * Convert widget theme to CSS custom properties.
+ * @param theme - Partial theme overrides
+ * @param isDark - When true, uses dark mode base theme
  */
 export function widgetThemeToCssVars(
-  theme: Partial<WidgetTheme>
+  theme: Partial<WidgetTheme>,
+  isDark = false
 ): Record<string, string> {
-  const merged = { ...DEFAULT_WIDGET_THEME, ...theme };
+  const base = isDark ? DARK_WIDGET_THEME_DEFAULTS : DEFAULT_WIDGET_THEME;
+  const merged = { ...base, ...theme };
   const radiusScale = BORDER_RADIUS_SCALE[merged.borderRadius];
 
   return {
     "--widget-page-bg": merged.pageBackground,
     "--widget-bg": merged.background,
     "--widget-fg": merged.foregroundColor,
-    "--widget-primary": merged.primaryColor,
-    "--widget-primary-hover": merged.primaryHoverColor,
+    "--widget-primary": merged.accentColor,
+    "--widget-primary-hover": merged.accentColor,
     "--widget-accent": merged.accentColor,
     "--widget-row-bg": merged.rowBackground,
     "--widget-row-hover": merged.rowHoverBackground,

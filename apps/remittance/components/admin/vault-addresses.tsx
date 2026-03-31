@@ -8,7 +8,7 @@ import { useCopyFeedback } from "@/hooks/use-copy-feedback";
 
 interface DepositAddress {
   address: string;
-  description: string;
+  description?: string;
   tag?: string;
   type?: string;
   customerRefId?: string;
@@ -41,9 +41,8 @@ export function VaultAddresses({
         }),
       });
       if (res.ok) {
-        const addrRes = await fetch(`/api/admin/vaults/${vaultId}/addresses`);
-        const data = await addrRes.json();
-        setAddresses(data.addresses ?? []);
+        const created = (await res.json()) as DepositAddress;
+        setAddresses((prev) => [...prev, created]);
       }
     } catch {
       // Error handled

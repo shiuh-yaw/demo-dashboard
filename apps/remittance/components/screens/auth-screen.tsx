@@ -48,21 +48,23 @@ export function AuthScreen({ navigation, onLoginSuccess }: AuthScreenProps) {
   };
 
   return (
-    <WidgetCard title="Send Money Globally" subtitle="Sign in to get started">
-      <LoginForm
-        emailEnabled={isEmailAuthEnabled()}
-        onSendEmailOTP={handleSendEmailOTP}
-        isSendingOTP={sendOTP.isPending}
-        sendOTPError={sendOTP.error}
-        socialProviders={getEnabledSocialProviders()}
-        onSocialSignIn={handleSocialSignIn}
-        socialAuthError={socialAuth.error}
-        onHandleOAuthRedirect={handleOAuthRedirect}
-        jwtEnabled={isExternalAuthEnabled()}
-        onJwtAuth={handleJwtAuth}
-        isJwtPending={jwtAuth.isPending}
-        jwtError={jwtAuth.error}
-      />
+    <WidgetCard>
+      <div className="p-4">
+        <LoginForm
+          emailEnabled={isEmailAuthEnabled()}
+          onSendEmailOTP={handleSendEmailOTP}
+          isSendingOTP={sendOTP.isPending}
+          sendOTPError={sendOTP.error}
+          socialProviders={getEnabledSocialProviders()}
+          onSocialSignIn={handleSocialSignIn}
+          socialAuthError={socialAuth.error}
+          onHandleOAuthRedirect={handleOAuthRedirect}
+          jwtEnabled={isExternalAuthEnabled()}
+          onJwtAuth={handleJwtAuth}
+          isJwtPending={jwtAuth.isPending}
+          jwtError={jwtAuth.error}
+        />
+      </div>
     </WidgetCard>
   );
 }

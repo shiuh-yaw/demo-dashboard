@@ -10,9 +10,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { SocialIcon } from "@dynamic-labs/iconic";
+import { ChevronDown, Key, Mail } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { Button } from "./button";
-import { Input } from "./input";
 import { Spinner } from "./spinner";
 import { WidgetCard } from "./widget-card";
 import { ErrorBanner } from "./error-banner";
@@ -61,91 +61,6 @@ export interface LoginFormProps {
   className?: string;
 }
 
-// =============================================================================
-// ICONS (inline SVGs to avoid external deps for the shared package)
-// =============================================================================
-
-function MailIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect width="20" height="16" x="2" y="4" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-    </svg>
-  );
-}
-
-function KeyIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4" />
-      <path d="m21 2-9.6 9.6" />
-      <circle cx="7.5" cy="15.5" r="5.5" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
-
-function AlertCircleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" x2="12" y1="8" y2="12" />
-      <line x1="12" x2="12.01" y1="16" y2="16" />
-    </svg>
-  );
-}
-
 // SocialIcon is imported from @dynamic-labs/iconic (supports all providers)
 
 // =============================================================================
@@ -187,23 +102,41 @@ function EmailOtpSection({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <Input
-        label="Email"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        disabled={isSendingOTP}
-      />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label
+          htmlFor="login-email"
+          className="block text-xs font-medium text-[var(--widget-fg,#252731)]"
+        >
+          Email address
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--widget-muted,#9a9a9a)] pointer-events-none" />
+          <input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            disabled={isSendingOTP}
+            className={cn(
+              "flex h-10 w-full rounded-lg border pl-10 pr-3 py-2 text-sm",
+              "bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#252731)]",
+              "border-[var(--widget-border,#e1e4ea)]",
+              "outline-none placeholder:text-[var(--widget-muted,#9a9a9a)]",
+              "focus:border-[var(--widget-primary,#335cff)] focus:ring-1 focus:ring-[var(--widget-primary,#335cff)]",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+          />
+        </div>
+      </div>
       <Button
         type="submit"
-        className="w-full"
+        className="w-full h-10"
         loading={isSendingOTP}
         disabled={!email.trim()}
       >
-        <MailIcon className="w-4 h-4" />
-        Continue with Email
+        Continue →
       </Button>
       <InlineError error={sendOTPError} />
     </form>
@@ -240,23 +173,25 @@ function SocialProvidersSection({
     <>
       {showDivider && (
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-(--widget-border)" />
-          <span className="text-xs text-(--widget-muted)">or</span>
-          <div className="flex-1 h-px bg-(--widget-border)" />
+          <div className="flex-1 h-px bg-[var(--widget-border,#e1e4ea)]" />
+          <span className="text-xs text-[var(--widget-muted,#9a9a9a)]">
+            or sign in with
+          </span>
+          <div className="flex-1 h-px bg-[var(--widget-border,#e1e4ea)]" />
         </div>
       )}
 
       {providers.map((provider) => (
         <Button
           key={provider}
-          variant="secondary"
-          className="w-full"
+          variant="outline"
+          className="w-full h-10 bg-[var(--widget-bg,#ffffff)] border-[var(--widget-border,#e1e4ea)] hover:bg-[var(--widget-row-hover,#eef1f1)]"
           onClick={() => handleSignIn(provider)}
           disabled={loadingProvider !== null}
           loading={loadingProvider === provider}
         >
           <SocialIcon name={provider} className="w-4 h-4" />
-          Continue with {capitalize(provider)}
+          Sign in with {capitalize(provider)}
         </Button>
       ))}
 
@@ -288,18 +223,18 @@ function JwtAuthSection({
   };
 
   return (
-    <div className="border border-(--widget-border) rounded-(--widget-radius) overflow-hidden">
+    <div className="rounded-lg border border-[var(--widget-border,#e1e4ea)] bg-[var(--widget-bg,#ffffff)] overflow-hidden">
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors cursor-pointer"
+        className="w-full h-10 flex items-center justify-between px-4 hover:bg-[var(--widget-row-hover,#eef1f1)] text-sm font-medium text-[var(--widget-fg,#252731)] transition-colors cursor-pointer"
       >
-        <span className="flex items-center gap-1.5">
-          <KeyIcon className="w-3.5 h-3.5" />
+        <span className="flex items-center gap-2">
+          <Key className="w-4 h-4 text-[var(--widget-muted,#9a9a9a)]" />
           Sign in with JWT
         </span>
-        <ChevronDownIcon
-          className={`w-3.5 h-3.5 transition-transform duration-200 ${
+        <ChevronDown
+          className={`w-4 h-4 text-[var(--widget-muted,#9a9a9a)] transition-transform duration-200 ${
             isExpanded ? "rotate-180" : ""
           }`}
         />
@@ -311,11 +246,14 @@ function JwtAuthSection({
         }`}
       >
         <div className="overflow-hidden">
-          <form onSubmit={handleSubmit} className="px-3 pb-3 pt-1 space-y-3">
-            <div className="flex flex-col gap-1.5">
+          <form
+            onSubmit={handleSubmit}
+            className="px-4 pb-4 pt-1 space-y-4 border-t border-[var(--widget-border,#e1e4ea)]"
+          >
+            <div className="space-y-1.5 pt-2">
               <label
                 htmlFor="login-jwt-token"
-                className="text-xs font-medium text-(--widget-muted) tracking-[-0.12px]"
+                className="block text-xs font-normal text-[var(--widget-muted,#9a9a9a)]"
               >
                 JWT Token
               </label>
@@ -326,17 +264,17 @@ function JwtAuthSection({
                 placeholder="Paste your JWT token here..."
                 rows={3}
                 disabled={isJwtPending}
-                className="w-full px-3 py-2 text-sm bg-(--widget-bg) text-(--widget-fg) border border-(--widget-border) rounded-(--widget-radius) placeholder:text-(--widget-muted) focus:outline-none focus:ring-2 focus:ring-(--widget-accent) focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none font-mono text-[11px] leading-relaxed"
+                className="w-full px-3 py-2 text-sm bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#252731)] border border-[var(--widget-border,#e1e4ea)] rounded-lg placeholder:text-[var(--widget-muted,#9a9a9a)] focus:outline-none focus:ring-1 focus:ring-[var(--widget-primary,#335cff)] focus:border-[var(--widget-primary,#335cff)] disabled:opacity-50 disabled:cursor-not-allowed resize-none font-mono text-[11px] leading-relaxed"
               />
             </div>
             <Button
               type="submit"
-              variant="secondary"
-              className="w-full"
+              variant="outline"
+              className="w-full h-10 bg-[var(--widget-bg,#ffffff)] border-[var(--widget-border,#e1e4ea)] hover:bg-[var(--widget-row-hover,#eef1f1)]"
               loading={isJwtPending}
               disabled={!jwt.trim()}
             >
-              <KeyIcon className="w-4 h-4" />
+              <Key className="w-4 h-4" />
               Authenticate
             </Button>
             <InlineError error={jwtError} />
@@ -356,8 +294,8 @@ function JwtAuthSection({
  */
 export function OAuthCompletingCard() {
   return (
-    <WidgetCard title="Signing In" subtitle="Completing authentication...">
-      <div className="flex items-center justify-center py-8">
+    <WidgetCard>
+      <div className="flex items-center justify-center px-4 py-8">
         <Spinner size="lg" />
       </div>
     </WidgetCard>
@@ -445,7 +383,7 @@ export function LoginForm({
     return (
       <div className="flex flex-col items-center gap-2 py-8">
         <Spinner size="lg" />
-        <p className="text-sm text-(--widget-muted)">
+        <p className="text-sm text-[var(--widget-muted,#9a9a9a)]">
           Completing authentication...
         </p>
       </div>

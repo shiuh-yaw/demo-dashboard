@@ -11,7 +11,13 @@
  * @see https://developers.fireblocks.com/reference/createvaultaccountasset
  */
 
-import type { IFireblocksClient, DepositAddress } from "./types";
+import type {
+  IFireblocksClient,
+  DepositAddress,
+  VaultAccount,
+  VaultAccountTag,
+  VaultAccountsTagAttachmentOperationsResponse,
+} from "./types";
 
 const VAULT_LIST_LIMIT = 200;
 
@@ -20,39 +26,94 @@ export interface DepositAddressWithVaultId extends DepositAddress {
 }
 
 /**
+ * Fetch a single vault by id. Returns `null` if the account does not exist (HTTP 404).
+ */
+export async function tryGetVaultAccount(
+  client: IFireblocksClient,
+  vaultAccountId: string,
+): Promise<VaultAccount | null> {
+  try {
+    return await client.getVaultAccount(vaultAccountId);
+  } catch (err) {
+    const status =
+      err !== null &&
+      typeof err === "object" &&
+      "response" in err &&
+      typeof (err as { response?: { status?: unknown } }).response?.status ===
+        "number"
+        ? (err as { response: { status: number } }).response.status
+        : undefined;
+    if (status === 404) return null;
+    throw err;
+  }
+}
+
+/**
+ * Look up a vault account by name, or create it if missing.
+ *
+ * @param name - Vault account name (caller defines naming, e.g. prefix + userId).
+ * @param opts.visibleInConsole - When `false`, vault is hidden in the Fireblocks console (`hiddenOnUI`). Default `true` (visible).
+ */
+export async function getOrCreateVaultByName(
+  client: IFireblocksClient,
+  name: string,
+  opts?: { visibleInConsole?: boolean; customerRefId?: string },
+): Promise<{ vaultId: string; tags: VaultAccountTag[] }> {
+  const vaults = await client.listVaultAccounts(VAULT_LIST_LIMIT);
+  const existing = vaults.find((v) => v.name === name);
+  if (existing) {
+    return { vaultId: existing.id, tags: existing.tags };
+  }
+  const hiddenOnUI = opts?.visibleInConsole === false;
+  const vault = await client.createVaultAccount(name, {
+    hiddenOnUI,
+    ...(opts?.customerRefId ? { customerRefId: opts.customerRefId } : {}),
+  });
+  return { vaultId: vault.id, tags: vault.tags };
+}
+
+/**
+ * Ensure a deposit address exists for a given vault + asset (wallet is created if missing).
+ */
+export async function getOrCreateDepositAddressForVault(
+  client: IFireblocksClient,
+  vaultId: string,
+  assetId: string,
+): Promise<DepositAddressWithVaultId> {
+  let addresses = await client.getDepositAddresses(vaultId, assetId);
+  if (!addresses[0]) {
+    const wallet = await client.createVaultWallet(vaultId, assetId);
+    addresses = await client.getDepositAddresses(vaultId, assetId);
+
+    const addr = addresses[0];
+    if (addr) return { ...addr, vaultId };
+
+    return {
+      address: wallet.address,
+      tag: wallet.tag,
+      type: wallet.type,
+      customerRefId: wallet.customerRefId,
+      vaultId,
+    };
+  }
+  return { ...addresses[0]!, vaultId };
+}
+
+/**
  * Get or create a deposit address for a vault by name.
  * Looks up existing vault by name, or creates vault + asset wallet if not found.
  *
  * @param name - Vault account name (caller defines naming, e.g. prefix + userId).
+ * @param opts.visibleInConsole - When `false`, vault is hidden in the Fireblocks console (`hiddenOnUI`). Default `true` (visible).
  */
 export async function getOrCreateDepositAddress(
   client: IFireblocksClient,
   name: string,
   assetId: string,
+  opts?: { visibleInConsole?: boolean; customerRefId?: string },
 ): Promise<DepositAddressWithVaultId> {
-  const vaults = await client.listVaultAccounts(VAULT_LIST_LIMIT);
-  const existing = vaults.find((v) => v.name === name);
-
-  if (existing) {
-    const addresses = await client.getDepositAddresses(existing.id, assetId);
-    const addr = addresses[0];
-    if (!addr) {
-      throw new Error(
-        `Vault ${existing.id} has no address for asset ${assetId}. Add the asset to the vault first.`,
-      );
-    }
-    return { ...addr, vaultId: existing.id };
-  }
-
-  const vault = await client.createVaultAccount(name);
-  const wallet = await client.createVaultWallet(vault.id, assetId);
-
-  return {
-    address: wallet.address,
-    description: `Deposit for ${name}`,
-    customerRefId: name,
-    vaultId: vault.id,
-  };
+  const { vaultId } = await getOrCreateVaultByName(client, name, opts);
+  return getOrCreateDepositAddressForVault(client, vaultId, assetId);
 }
 
 /**
@@ -66,4 +127,21 @@ export async function resolveVaultIdByName(
   const vaults = await client.listVaultAccounts(VAULT_LIST_LIMIT);
   const existing = vaults.find((v) => v.name === name);
   return existing?.id ?? null;
+}
+
+/**
+ * Attach workspace tags to one or more vault accounts.
+ *
+ * @see https://developers.fireblocks.com/reference/attachordetachtagsfromvaultaccounts
+ */
+export async function attachTagsToVaultAccounts(
+  client: IFireblocksClient,
+  vaultAccountIds: string[],
+  tagIdsToAttach: string[],
+  opts?: { idempotencyKey?: string },
+): Promise<VaultAccountsTagAttachmentOperationsResponse> {
+  return client.attachOrDetachTagsFromVaultAccounts(
+    { vaultAccountIds, tagIdsToAttach },
+    opts,
+  );
 }

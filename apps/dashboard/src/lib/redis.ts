@@ -251,6 +251,16 @@ export const REDIS_KEYS = {
   remittanceConfigList: `${DASHBOARD_PREFIX}:remittance:list`,
 
   // ==========================================================================
+  // Trade configs (theme/branding for Trade demo)
+  // ==========================================================================
+
+  /** Single Trade config by ID */
+  tradeConfig: (id: string) => `${DASHBOARD_PREFIX}:trade:${id}`,
+
+  /** Set of all Trade config IDs */
+  tradeConfigList: `${DASHBOARD_PREFIX}:trade:list`,
+
+  // ==========================================================================
   // Brand Profiles (unified branding across demo types)
   // ==========================================================================
 

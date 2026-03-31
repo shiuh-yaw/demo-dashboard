@@ -430,6 +430,66 @@ export interface StoredRemittanceConfig {
 }
 
 // =============================================================================
+// Trade Configuration (Theme & Branding)
+// =============================================================================
+
+/**
+ * Trade theme - primary + secondary colors
+ * Matches apps/trade/lib/trade-config.ts TradeTheme
+ */
+export interface TradeTheme {
+  primaryColor?: string;
+  secondaryColor?: string;
+}
+
+/**
+ * Trade branding
+ * Matches apps/trade/lib/trade-config.ts TradeBranding
+ */
+export interface TradeBranding {
+  logoUrl?: string;
+  appName?: string;
+}
+
+/**
+ * Full Trade configuration
+ * Matches apps/trade/lib/trade-config.ts TradeConfig
+ */
+export interface TradeConfig {
+  theme?: TradeTheme;
+  branding?: TradeBranding;
+}
+
+/**
+ * Default theme for Trade
+ */
+export const DEFAULT_TRADE_THEME: Required<TradeTheme> = {
+  primaryColor: "#4779FF",
+  secondaryColor: "#3563E0",
+};
+
+/**
+ * Default Trade configuration
+ */
+export const DEFAULT_TRADE_CONFIG: TradeConfig = {
+  theme: DEFAULT_TRADE_THEME,
+  branding: {},
+};
+
+/**
+ * Stored Trade configuration with metadata
+ */
+export interface StoredTradeConfig {
+  id: string;
+  name: string;
+  description?: string;
+  config: TradeConfig;
+  createdAt: string;
+  updatedAt: string;
+  ownerId?: string;
+}
+
+// =============================================================================
 // Brand Profiles
 // =============================================================================
 

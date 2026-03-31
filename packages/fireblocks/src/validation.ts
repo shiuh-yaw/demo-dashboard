@@ -24,10 +24,17 @@ const externalWalletPeerPath = z.object({
   name: z.string().optional(),
 });
 
+const internalWalletPeerPath = z.object({
+  type: z.literal("INTERNAL_WALLET"),
+  id: z.string().min(1, "Internal wallet ID is required"),
+  name: z.string().optional(),
+});
+
 export const transferPeerPathSchema = z.discriminatedUnion("type", [
   vaultAccountPeerPath,
   oneTimeAddressPeerPath,
   externalWalletPeerPath,
+  internalWalletPeerPath,
 ]);
 
 export const createTransactionRequestSchema = z.object({
@@ -37,10 +44,17 @@ export const createTransactionRequestSchema = z.object({
   amount: z
     .string()
     .min(1, "Amount is required")
-    .refine((v) => !isNaN(Number(v)) && Number(v) > 0, "Amount must be a positive number"),
+    .refine(
+      (v) => !isNaN(Number(v)) && Number(v) > 0,
+      "Amount must be a positive number",
+    ),
+  externalTxId: z.string().optional(),
   note: z.string().optional(),
   customerRefId: z.string().optional(),
+  useGasless: z.boolean().optional(),
 });
 
 export type ValidatedTransferPeerPath = z.infer<typeof transferPeerPathSchema>;
-export type ValidatedCreateTransactionRequest = z.infer<typeof createTransactionRequestSchema>;
+export type ValidatedCreateTransactionRequest = z.infer<
+  typeof createTransactionRequestSchema
+>;

@@ -28,7 +28,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="mb-1.5 block text-sm font-medium text-slate-900"
+            className="mb-1.5 block text-sm font-medium text-[var(--widget-fg,#1e293b)]"
           >
             {label}
           </label>
@@ -53,7 +53,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         />
         {error && <p className="mt-1.5 text-sm text-red-500">{error}</p>}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-slate-500">{helperText}</p>
+          <p className="mt-1.5 text-sm text-[var(--widget-muted,#64748b)]">
+            {helperText}
+          </p>
         )}
       </div>
     );

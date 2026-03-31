@@ -1,0 +1,33 @@
+{
+  "name": "@dynamic-demos/dynamic",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./metadata": "./src/metadata.ts",
+    "./jwt": "./src/jwt.ts",
+    "./redirect": "./src/redirect.ts",
+    "./middleware": "./src/middleware.ts",
+    "./client": "./src/client.ts"
+  },
+  "dependencies": {
+    "@dynamic-demos/ui": "workspace:*",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@dynamic-demos/tsconfig": "workspace:*",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "next": "15.5.9",
+    "typescript": "5.9.3"
+  }
+}

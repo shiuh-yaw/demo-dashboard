@@ -19,6 +19,8 @@ import {
   sendEmailOTP,
   verifyOTP,
   authenticateWithSocial,
+  detectOAuthRedirect,
+  completeSocialAuthentication,
   signInWithExternalJwt,
   logout,
   type OTPVerification,
@@ -90,15 +92,7 @@ export function useVerifyOTP() {
  * Initiate social OAuth flow for a given provider
  * Redirects user to the provider, then back to the app
  *
- * Note: OAuth completion is handled in SocialProvidersSection via completeSocialAuthentication
- *
  * @see https://www.dynamic.xyz/docs/javascript/authentication-methods/social
- *
- * @example
- * ```tsx
- * const socialAuth = useSocialAuth();
- * await socialAuth.mutateAsync("google");
- * ```
  */
 export function useSocialAuth() {
   return useMutation({
@@ -107,6 +101,27 @@ export function useSocialAuth() {
         provider,
         redirectUrl: window.location.href,
       }),
+  });
+}
+
+/**
+ * Complete OAuth flow when user returns from social provider.
+ * Call on mount; returns true if redirect was detected and completed.
+ */
+export function useCompleteSocialAuth() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const url = new URL(window.location.href);
+      const isReturning = await detectOAuthRedirect({ url });
+      if (!isReturning) return false;
+      await completeSocialAuthentication({ url });
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["walletAccounts"] });
+    },
   });
 }
 

@@ -43,7 +43,11 @@ export {
 } from "./dialog";
 
 // Widget components (for embedded widget UIs)
-export { WidgetCard, type WidgetCardProps } from "./widget-card";
+export {
+  WidgetCard,
+  type WidgetCardProps,
+  widgetHeaderTrailingIconButtonClassName,
+} from "./widget-card";
 export { ListRow, type ListRowProps } from "./list-row";
 export {
   ScrollableWithFade,
@@ -71,6 +75,12 @@ export {
   OAuthCompletingCard,
   type LoginFormProps,
 } from "./login-form";
+export { KycGate, type KycGateProps } from "./kyc-gate";
+export {
+  WalletSelectionScreen,
+  type WalletSelectionScreenProps,
+  type WalletOption,
+} from "./wallet-selection-screen";
 
 // Card components
 export {
@@ -86,9 +96,17 @@ export {
   type CardType,
 } from "./credit-card-icons";
 
+// Layout components
+export { AuthLayout, type AuthLayoutProps } from "./auth-layout";
+
 // Branding components
 export { DynamicLogo, type DynamicLogoProps } from "./dynamic-logo";
 export { KrakenLogo, type KrakenLogoProps } from "./kraken-logo";
+export {
+  FireblocksLogomark,
+  type FireblocksLogomarkProps,
+  type FireblocksLogomarkVariant,
+} from "./fireblocks-logomark";
 export {
   PoweredByFooter,
   type PoweredByFooterProps,

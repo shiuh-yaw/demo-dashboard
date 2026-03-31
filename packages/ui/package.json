@@ -18,6 +18,7 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
+    "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
     "@dynamic-labs/iconic": "4.61.1",
     "@radix-ui/react-dialog": "^1.1.6",

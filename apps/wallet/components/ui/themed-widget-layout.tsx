@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { PoweredByFooter } from "@dynamic-demos/ui";
+import { DynamicLogo, PoweredByFooter } from "@dynamic-demos/ui";
 import {
   type WidgetConfig,
   widgetThemeToCssVars,
@@ -29,28 +29,42 @@ export function ThemedWidgetLayout({
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-6 gap-4"
-      style={{
-        backgroundColor: config.theme?.pageBackground || DEFAULT_WIDGET_THEME.pageBackground,
-        ...themeStyles,
-      } as React.CSSProperties}
+      className="min-h-screen flex flex-col items-center p-6"
+      style={
+        {
+          backgroundColor:
+            config.theme?.pageBackground || DEFAULT_WIDGET_THEME.pageBackground,
+          ...themeStyles,
+        } as React.CSSProperties
+      }
     >
-      {/* Brand Logo */}
-      {branding?.logo && (
-        <img
-          src={branding.logo}
-          alt="Brand logo"
-          className="h-12 object-contain mb-2"
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="w-full max-w-[400px]" style={themeStyles as React.CSSProperties}>
-        {children}
+      {/* Centered content area */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 w-full">
+        <div className="shrink-0 mb-2">
+          {branding?.logo ? (
+            <img
+              src={branding.logo}
+              alt="Brand logo"
+              className="h-12 object-contain"
+            />
+          ) : (
+            <DynamicLogo wordmark className="h-10 w-auto" />
+          )}
+        </div>
+        <div
+          className="w-full max-w-[400px]"
+          style={themeStyles as React.CSSProperties}
+        >
+          {children}
+        </div>
       </div>
 
-      {/* Powered by Dynamic */}
-      {showPoweredBy && <PoweredByFooter />}
+      {/* Powered by Dynamic — fixed to bottom */}
+      {showPoweredBy && (
+        <div className="shrink-0 mt-auto">
+          <PoweredByFooter />
+        </div>
+      )}
     </div>
   );
 }

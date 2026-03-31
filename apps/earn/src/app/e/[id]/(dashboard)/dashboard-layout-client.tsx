@@ -10,7 +10,7 @@
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { useEarnConfig } from "@/contexts/earn-config-context";
-import type { DynamicJwtPayload } from "@/lib/auth/dynamic-jwt";
+import type { DynamicJwtPayload } from "@dynamic-demos/dynamic";
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode;

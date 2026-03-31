@@ -24,6 +24,10 @@ import {
   DialogTitle,
   DialogDescription,
   Spinner,
+  ErrorBanner,
+  Tooltip,
+  Skeleton,
+  Input,
 } from "@dynamic-demos/ui";
 import { truncateAddress } from "@dynamic-demos/utils";
 import {
@@ -125,6 +129,13 @@ export function UserList({ initialUsers, error }: UserListProps) {
     message: string;
   } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-dismiss success banners after 4s
+  useEffect(() => {
+    if (result?.type !== "success") return;
+    const timer = setTimeout(() => setResult(null), 4000);
+    return () => clearTimeout(timer);
+  }, [result]);
 
   const refreshUsers = useCallback(async (search?: string) => {
     const params = search ? `?q=${encodeURIComponent(search)}` : "";
@@ -397,6 +408,30 @@ export function UserList({ initialUsers, error }: UserListProps) {
           title="Users"
           count={users.length}
           description="Manage wallets, vaults, and balances for all users."
+          search={
+            isMounted ? (
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--widget-muted) pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by email..."
+                  className="w-full pl-9 pr-8 py-1.5 text-sm rounded-lg border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--widget-muted) hover:text-(--widget-fg) cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="h-8 w-64 rounded-lg bg-(--widget-row-bg) animate-pulse" />
+            )
+          }
           action={
             isMounted ? (
               <Button size="sm" onClick={() => setShowCreateModal(true)}>
@@ -407,59 +442,30 @@ export function UserList({ initialUsers, error }: UserListProps) {
           }
         />
 
-        {/* Search */}
-        <div className="mb-4">
-          {isMounted ? (
-            <div className="relative max-w-sm">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--widget-muted) pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by email..."
-                className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--widget-muted) hover:text-(--widget-fg) cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="h-10 w-80 rounded-lg bg-(--widget-row-bg) animate-pulse" />
-          )}
-        </div>
-
-        {/* Table + Drawer side-by-side */}
-        <div className="flex gap-4 items-start">
-          <div className="flex-1 min-w-0">
-            {/* Error toast */}
-            {result?.type === "error" && (
-              <div className="mb-4 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between bg-red-50 border border-red-200 text-red-700">
-                <span className="font-mono text-xs">{result.message}</span>
-                <button
-                  onClick={() => setResult(null)}
-                  className="ml-3 cursor-pointer shrink-0"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            <UserTable
-              users={users}
-              isSearching={isSearching}
-              searchQuery={searchQuery}
-              selectedUserId={selectedUserId}
-              onSelectUser={(id) => {
-                setSelectedUserId(id === selectedUserId ? null : id);
-                setConfirmDelete(false);
-              }}
+        {/* Feedback banner */}
+        {result && (
+          <div className="mb-4">
+            <ErrorBanner
+              message={result.message}
+              type={result.type === "success" ? "info" : "error"}
+              onDismiss={() => setResult(null)}
             />
           </div>
+        )}
+
+        {/* Table + Overlay Drawer */}
+        <div className="relative">
+          <UserTable
+            users={users}
+            isSearching={isSearching}
+            searchQuery={searchQuery}
+            selectedUserId={selectedUserId}
+            onSelectUser={(id) => {
+              setSelectedUserId(id === selectedUserId ? null : id);
+              setConfirmDelete(false);
+            }}
+            onCreateUser={() => setShowCreateModal(true)}
+          />
 
           <UserDrawer
             user={selectedUser}
@@ -526,25 +532,20 @@ export function UserList({ initialUsers, error }: UserListProps) {
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Email address
-              </label>
-              <input
-                type="text"
-                inputMode="email"
-                autoComplete="off"
-                value={createEmail}
-                onChange={(e) => setCreateEmail(e.target.value)}
-                placeholder="user@example.com"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && createEmail.includes("@")) {
-                    createUserWithOptions();
-                  }
-                }}
-              />
-            </div>
+            <Input
+              label="Email address"
+              type="text"
+              inputMode="email"
+              autoComplete="off"
+              value={createEmail}
+              onChange={(e) => setCreateEmail(e.target.value)}
+              placeholder="user@example.com"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && createEmail.includes("@")) {
+                  createUserWithOptions();
+                }
+              }}
+            />
 
             <label className="flex items-center gap-2.5 cursor-pointer">
               <input
@@ -601,93 +602,134 @@ function UserTable({
   searchQuery,
   selectedUserId,
   onSelectUser,
+  onCreateUser,
 }: {
   users: User[];
   isSearching: boolean;
   searchQuery: string;
   selectedUserId: string | null;
   onSelectUser: (id: string) => void;
+  onCreateUser: () => void;
 }) {
-  if (isSearching) {
-    return (
-      <p className="text-sm text-(--widget-muted) text-center py-12">
-        Searching...
-      </p>
-    );
-  }
-
-  if (users.length === 0) {
-    return (
-      <p className="text-sm text-(--widget-muted) text-center py-12">
-        {searchQuery ? `No users found for "${searchQuery}"` : "No users yet"}
-      </p>
-    );
-  }
-
   return (
     <div className="border border-(--widget-border) rounded-xl overflow-hidden">
-      <div className="grid grid-cols-[1fr_auto_100px_28px] gap-x-3 bg-(--widget-row-bg) px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-(--widget-muted) border-b border-(--widget-border)">
+      <div className="grid grid-cols-[1fr_140px_80px_80px_28px] gap-x-3 bg-(--widget-row-bg) px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-(--widget-muted) border-b border-(--widget-border)">
         <span>User</span>
         <span>Status</span>
-        <span className="text-right">Balance</span>
+        <span className="text-right">Wallet</span>
+        <span className="text-right">Vault</span>
         <span />
       </div>
 
-      {users.map((user, i) => {
-        const { hasKyc, hasWallet, hasVault, isFullySetUp } =
-          getUserFlags(user);
-        const isSelected = user.id === selectedUserId;
-        const isLast = i === users.length - 1;
-        const walletBal = user.walletBalance ?? 0;
-        const vaultBal = user.vaultBalance ?? 0;
+      {isSearching ? (
+        <div className="divide-y divide-(--widget-border)">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-[1fr_140px_80px_80px_28px] gap-x-3 items-center px-4 py-2.5"
+            >
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-14 ml-auto" />
+              <Skeleton className="h-4 w-14 ml-auto" />
+              <Skeleton className="h-4 w-4 ml-auto" />
+            </div>
+          ))}
+        </div>
+      ) : users.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-(--widget-muted)">
+            {searchQuery
+              ? `No users found for "${searchQuery}"`
+              : "No users yet"}
+          </p>
+          {!searchQuery && (
+            <button
+              onClick={onCreateUser}
+              className="mt-2 text-sm text-(--widget-primary) hover:underline cursor-pointer"
+            >
+              Create your first user
+            </button>
+          )}
+        </div>
+      ) : (
+        users.map((user, i) => {
+          const { hasKyc, hasWallet, hasVault, isFullySetUp } =
+            getUserFlags(user);
+          const isSelected = user.id === selectedUserId;
+          const isLast = i === users.length - 1;
+          const walletBal = user.walletBalance ?? 0;
+          const vaultBal = user.vaultBalance ?? 0;
 
-        return (
-          <button
-            key={user.id}
-            type="button"
-            onClick={() => onSelectUser(user.id)}
-            className={`w-full grid grid-cols-[1fr_auto_100px_28px] gap-x-3 items-center px-4 py-3 text-left transition-colors cursor-pointer ${
-              isSelected
-                ? "bg-(--widget-primary)/5 border-l-2 border-l-(--widget-primary)"
-                : "bg-white hover:bg-slate-50/80 border-l-2 border-l-transparent"
-            } ${!isLast ? "border-b border-(--widget-border)" : ""}`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-medium truncate">
-                {user.email ?? user.phoneNumber ?? user.id}
-              </span>
-              {isFullySetUp && (
-                <span title="Claimed">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-(--widget-success) shrink-0" />
+          const missing: string[] = [];
+          if (!hasKyc) missing.push("KYC");
+          if (!hasWallet) missing.push("Wallet");
+          if (!hasVault) missing.push("Vault");
+
+          return (
+            <button
+              key={user.id}
+              type="button"
+              onClick={() => onSelectUser(user.id)}
+              className={`w-full grid grid-cols-[1fr_140px_80px_80px_28px] gap-x-3 items-center px-4 py-2.5 text-left transition-colors cursor-pointer ${
+                isSelected
+                  ? "bg-(--widget-primary)/5 border-l-2 border-l-(--widget-primary)"
+                  : "bg-white hover:bg-slate-50/80 border-l-2 border-l-transparent"
+              } ${!isLast ? "border-b border-(--widget-border)" : ""}`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-medium truncate">
+                  {user.email ?? user.phoneNumber ?? user.id}
                 </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Badge active={hasKyc}>KYC</Badge>
-              {!hasWallet && <Badge active={false}>No Wallet</Badge>}
-              {!hasVault && <Badge active={false}>No Vault</Badge>}
-            </div>
-
-            <div className="text-right">
-              <div className="text-sm font-semibold tabular-nums">
-                {fmt(walletBal)}
               </div>
-              {vaultBal > 0 && (
-                <div className="text-[11px] tabular-nums text-(--widget-muted)">
-                  +{fmt(vaultBal)} vault
-                </div>
-              )}
-            </div>
 
-            <ChevronRight
-              className={`w-4 h-4 ${
-                isSelected ? "text-(--widget-primary)" : "text-(--widget-muted)"
-              }`}
-            />
-          </button>
-        );
-      })}
+              <div>
+                {isFullySetUp ? (
+                  <Tooltip content="KYC, Wallet, Vault">
+                    <span className="inline-flex items-center gap-1 text-xs text-(--widget-success)">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="font-medium">Ready</span>
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip content={`Missing: ${missing.join(", ")}`}>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-(--widget-muted)">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                      <span className="truncate">{missing.join(", ")}</span>
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+
+              <span
+                className={`text-sm tabular-nums text-right ${
+                  walletBal > 0
+                    ? "font-semibold"
+                    : "text-(--widget-muted)"
+                }`}
+              >
+                {walletBal > 0 ? fmt(walletBal) : "—"}
+              </span>
+
+              <span
+                className={`text-sm tabular-nums text-right ${
+                  vaultBal > 0
+                    ? "font-semibold"
+                    : "text-(--widget-muted)"
+                }`}
+              >
+                {vaultBal > 0 ? fmt(vaultBal) : "—"}
+              </span>
+
+              <ChevronRight
+                className={`w-4 h-4 ${
+                  isSelected ? "text-(--widget-primary)" : "text-(--widget-muted)"
+                }`}
+              />
+            </button>
+          );
+        })
+      )}
     </div>
   );
 }
@@ -742,15 +784,21 @@ function UserDrawer({
   const flags = user ? getUserFlags(user) : null;
   const walletBal = user?.walletBalance ?? 0;
   const vaultBal = user?.vaultBalance ?? 0;
+  const totalBal =
+    typeof user?.usdcBalance === "number"
+      ? user.usdcBalance
+      : walletBal + vaultBal;
 
   return (
     <div
-      className={`shrink-0 overflow-hidden transition-[width,opacity] duration-250 ease-out sticky top-4 self-start ${
-        open ? "w-[380px] opacity-100" : "w-0 opacity-0"
+      className={`absolute top-0 right-0 z-10 w-[380px] transition-all duration-250 ease-out ${
+        open
+          ? "translate-x-0 opacity-100"
+          : "translate-x-4 opacity-0 pointer-events-none"
       }`}
     >
       {user && flags && (
-        <div className="w-[380px] border border-(--widget-border) rounded-xl bg-white overflow-hidden">
+        <div className="w-[380px] border border-(--widget-border) rounded-xl bg-white overflow-hidden shadow-lg">
           {/* Header */}
           <div className="px-5 py-4 border-b border-(--widget-border) bg-(--widget-row-bg)/60">
             <div className="flex items-start justify-between gap-3">
@@ -778,19 +826,33 @@ function UserDrawer({
 
           {/* Content */}
           <div className="p-5 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-            {/* Total balance */}
-            <div className="flex items-baseline justify-between">
+            {/* Balance breakdown */}
+            <div>
               <span className="text-xs font-medium text-(--widget-muted) uppercase tracking-wider">
-                Total Balance
+                Balance
               </span>
-              <div className="text-right">
-                <span className="text-lg font-semibold tabular-nums">
-                  {typeof user.usdcBalance === "number"
-                    ? fmt(user.usdcBalance)
-                    : "—"}
+              <div className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                <span className="text-(--widget-muted)">Wallet</span>
+                <span className="text-right tabular-nums font-medium">
+                  {walletBal > 0 ? fmt(walletBal) : "—"}{" "}
+                  <span className="text-[10px] font-normal text-(--widget-muted)">
+                    USDC
+                  </span>
                 </span>
-                <span className="text-xs text-(--widget-muted) ml-1.5">
-                  USDC
+                <span className="text-(--widget-muted)">Vault</span>
+                <span className="text-right tabular-nums font-medium">
+                  {vaultBal > 0 ? fmt(vaultBal) : "—"}{" "}
+                  <span className="text-[10px] font-normal text-(--widget-muted)">
+                    USDC
+                  </span>
+                </span>
+                <hr className="col-span-2 border-(--widget-border) my-1" />
+                <span className="font-semibold">Total</span>
+                <span className="text-right tabular-nums font-semibold">
+                  {fmt(totalBal)}{" "}
+                  <span className="text-[10px] font-normal text-(--widget-muted)">
+                    USDC
+                  </span>
                 </span>
               </div>
             </div>
@@ -836,13 +898,14 @@ function UserDrawer({
 
                   {/* Send form */}
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       type="text"
                       inputMode="decimal"
                       value={transferAmount}
                       onChange={(e) => onTransferAmountChange(e.target.value)}
                       placeholder="Amount"
-                      className="flex-1 px-3 py-2 text-sm font-mono rounded-lg border border-(--widget-border) bg-(--widget-row-bg) focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                      mono
+                      className="flex-1"
                     />
                     <Button
                       size="sm"
@@ -1096,16 +1159,18 @@ function PageHeader({
   title,
   count,
   description,
+  search,
   action,
 }: {
   title: string;
   count?: number;
   description?: string;
+  search?: React.ReactNode;
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-5">
-      <div>
+    <div className="mb-5">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <h1 className="text-xl font-semibold">{title}</h1>
           {typeof count === "number" && (
@@ -1114,11 +1179,14 @@ function PageHeader({
             </span>
           )}
         </div>
-        {description && (
-          <p className="text-sm text-(--widget-muted) mt-1">{description}</p>
-        )}
+        <div className="flex items-center gap-3">
+          {search}
+          {action && <div className="shrink-0">{action}</div>}
+        </div>
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {description && (
+        <p className="text-sm text-(--widget-muted) mt-1">{description}</p>
+      )}
     </div>
   );
 }

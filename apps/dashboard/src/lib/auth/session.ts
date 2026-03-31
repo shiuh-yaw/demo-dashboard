@@ -13,9 +13,9 @@ import { env } from "@/env";
 import jwt from "jsonwebtoken";
 import {
   verifyDynamicJWT,
+  getJWTFromCookies,
   type DynamicJwtPayload,
-  TokenExpiredError,
-} from "./dynamic-jwt";
+} from "@dynamic-demos/dynamic";
 
 const DYNAMIC_JWT_COOKIE_NAME = "dynamic_jwt";
 const DEFAULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days fallback
@@ -95,21 +95,9 @@ export async function clearDashboardAuth(): Promise<void> {
  */
 export async function getCurrentUser(): Promise<DynamicJwtPayload | null> {
   const cookieStore = await cookies();
-  const jwtCookie = cookieStore.get(DYNAMIC_JWT_COOKIE_NAME);
-
-  if (!jwtCookie?.value) return null;
-
-  try {
-    // Returns null if verification fails (e.g., invalid signature)
-    return await verifyDynamicJWT(jwtCookie.value);
-  } catch (error) {
-    if (error instanceof TokenExpiredError) {
-      // Token is expired - return null, login form will replace cookie
-      return null;
-    }
-    // For other errors, return null (already logged in verifyDynamicJWT)
-    return null;
-  }
+  const token = getJWTFromCookies(cookieStore);
+  if (!token) return null;
+  return verifyDynamicJWT(token);
 }
 
 /**

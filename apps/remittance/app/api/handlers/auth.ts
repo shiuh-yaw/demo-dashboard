@@ -2,7 +2,7 @@
  * Auth helpers for API handlers
  */
 
-import { getAuthenticatedUser } from "@/lib/auth/dynamic-jwt";
+import { getAuthenticatedUser } from "@dynamic-demos/dynamic";
 import { UnauthorizedError } from "@/lib/errors";
 
 /**

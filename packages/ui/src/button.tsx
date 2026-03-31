@@ -1,6 +1,12 @@
 "use client";
 
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import {
+  forwardRef,
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ButtonHTMLAttributes,
+} from "react";
 import { cn } from "@dynamic-demos/utils";
 import { Spinner } from "./spinner";
 
@@ -21,6 +27,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   /** Show red/danger hover state (for destructive actions like logout) */
   danger?: boolean;
+  /** Render as child element (e.g. Link) instead of button, merging props */
+  asChild?: boolean;
 }
 
 const BUTTON_BASE =
@@ -38,7 +46,7 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
     "bg-[var(--widget-primary,#335cff)] text-white shadow-sm hover:opacity-90",
   secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
   outline:
-    "border border-[var(--widget-border,#e1e4ea)] bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+    "border border-[var(--widget-border,#e1e4ea)] bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#252731)] hover:bg-[var(--widget-row-hover,#eef1f1)] hover:text-[var(--widget-fg,#252731)]",
   ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
   destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
   link: "text-[var(--widget-primary,#335cff)] underline-offset-4 hover:underline",
@@ -64,26 +72,39 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       danger = false,
       disabled,
+      asChild = false,
       children,
       ...props
     },
     ref,
   ) => {
+    const buttonClassName = cn(
+      BUTTON_BASE,
+      BUTTON_VARIANTS[variant],
+      BUTTON_SIZES[size],
+      danger &&
+        "hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 hover:border-red-200",
+      loading && "animate-pulse",
+      className,
+    );
+
+    if (asChild && isValidElement(children)) {
+      return cloneElement(children as ReactElement<{ className?: string; ref?: React.Ref<unknown> }>, {
+        className: cn(
+          (children as ReactElement<{ className?: string }>).props.className,
+          buttonClassName,
+        ),
+        ref,
+        ...(disabled !== undefined && { "aria-disabled": disabled }),
+      });
+    }
+
     return (
       <button
         ref={ref}
         type="button"
         disabled={disabled || loading}
-        className={cn(
-          BUTTON_BASE,
-          BUTTON_VARIANTS[variant],
-          BUTTON_SIZES[size],
-          // Danger hover state (for destructive actions)
-          danger &&
-            "hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 hover:border-red-200",
-          loading && "animate-pulse",
-          className,
-        )}
+        className={buttonClassName}
         {...props}
       >
         {loading ? (
@@ -97,9 +118,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 : undefined
             }
           />
-        ) : null}
-        {loading ? (
-          <span className="[&>svg]:hidden">{children}</span>
         ) : (
           children
         )}

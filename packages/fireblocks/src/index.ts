@@ -18,15 +18,26 @@ export type {
   FireblocksConfig,
   IFireblocksClient,
   VaultAccount,
+  VaultAccountTag,
   VaultAsset,
   VaultWallet,
   DepositAddress,
+  AmlScreeningSummary,
+  TravelRuleScreeningSummary,
   TransactionResponse,
   TransactionStatus,
   TransactionOperation,
   TransferPeerPath,
   CreateTransactionRequest,
   ListTransactionsParams,
+  InternalWalletSummary,
+  VaultAccountsTagAttachmentOperationsRequest,
+  VaultAccountsTagAttachmentOperationsResponse,
+  TagAttachmentOperationAction,
+  VaultAccountTagAttachmentOperation,
+  VaultAccountTagAttachmentPendingOperation,
+  VaultAccountTagAttachmentRejectedOperation,
+  VaultTagAttachmentRejectedReason,
 } from "./types";
 
 // Validation schemas
@@ -40,9 +51,37 @@ export type {
 } from "./validation";
 
 // Vault operations
-export { getOrCreateDepositAddress, resolveVaultIdByName } from "./vault";
+export {
+  tryGetVaultAccount,
+  getOrCreateVaultByName,
+  getOrCreateDepositAddressForVault,
+  getOrCreateDepositAddress,
+  resolveVaultIdByName,
+  attachTagsToVaultAccounts,
+} from "./vault";
 export type { DepositAddressWithVaultId } from "./vault";
 
 // Supported assets (for discovering correct asset IDs)
 export { getSupportedAssets } from "./supported-assets";
 export type { SupportedAsset } from "./supported-assets";
+
+// Incoming webhooks (JWKS + optional legacy RSA)
+export { verifyIncomingFireblocksWebhook } from "./webhook/verify-incoming";
+export type { VerifyIncomingFireblocksWebhookOptions } from "./webhook/verify-incoming";
+export {
+  resolveFireblocksWebhookJwksUrl,
+  defaultFireblocksWebhookJwksUrl,
+} from "./webhook/default-jwks-url";
+export { verifyFireblocksWebhookJwksSignature } from "./webhook/verify-jwks-signature";
+export { verifyFireblocksWebhookLegacySignature } from "./webhook/verify-legacy-signature";
+
+export {
+  fireblocksWebhookNotificationSchema,
+  fireblocksWebhookTransferPeerSchema,
+  fireblocksTransactionWebhookDataSchema,
+  normalizeFireblocksEventType,
+} from "./webhook/notification-schemas";
+export type {
+  FireblocksWebhookNotification,
+  FireblocksTransactionWebhookData,
+} from "./webhook/notification-schemas";

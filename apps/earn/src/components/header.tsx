@@ -3,7 +3,7 @@
 import { AppLogo } from "./icons";
 import { UserMenu } from "./user-menu";
 import { useEarnConfig } from "@/contexts/earn-config-context";
-import type { DynamicJwtPayload } from "@/lib/auth/dynamic-jwt";
+import type { DynamicJwtPayload } from "@dynamic-demos/dynamic";
 
 interface HeaderProps {
   user: DynamicJwtPayload | null;

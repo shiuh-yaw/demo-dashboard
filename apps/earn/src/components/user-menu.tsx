@@ -8,7 +8,7 @@ import { usePayoutDemoOptional } from "@/contexts/payout-demo-context";
 import { useBlindPayKYC } from "@/hooks/use-blindpay-kyc";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { UserAvatar } from "@/components/user-avatar";
-import type { DynamicJwtPayload } from "@/lib/auth/dynamic-jwt";
+import type { DynamicJwtPayload } from "@dynamic-demos/dynamic";
 
 interface UserMenuProps {
   user: DynamicJwtPayload | null;

@@ -41,7 +41,7 @@ function PoweredByFooter({
         className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
       >
         <span className={cn("text-[11px]", colorClass)}>Powered by</span>
-        <DynamicLogo className={colorClass} />
+        <DynamicLogo muted className={colorClass} />
       </a>
     </div>
   );

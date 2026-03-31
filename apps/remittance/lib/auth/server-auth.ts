@@ -6,7 +6,7 @@
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthenticatedUserFromCookies } from "./dynamic-jwt";
+import { getAuthenticatedUserFromCookies } from "@dynamic-demos/dynamic";
 import {
   getUser,
   KYC_APPROVED_METADATA_KEY,

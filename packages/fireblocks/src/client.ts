@@ -8,6 +8,7 @@ import { Fireblocks, type BasePath } from "@fireblocks/ts-sdk";
 import type {
   FireblocksConfig,
   IFireblocksClient,
+  InternalWalletSummary,
   VaultAccount,
   VaultAsset,
   VaultWallet,
@@ -16,6 +17,8 @@ import type {
   CreateTransactionRequest,
   ListTransactionsParams,
   TransferPeerPath,
+  VaultAccountsTagAttachmentOperationsRequest,
+  VaultAccountsTagAttachmentOperationsResponse,
 } from "./types";
 
 export class FireblocksClient implements IFireblocksClient {
@@ -31,13 +34,14 @@ export class FireblocksClient implements IFireblocksClient {
 
   async createVaultAccount(
     name: string,
-    opts?: { hiddenOnUI?: boolean },
+    opts?: { hiddenOnUI?: boolean; customerRefId?: string; autoFuel?: boolean },
   ): Promise<VaultAccount> {
     const res = await this.sdk.vaults.createVaultAccount({
       createVaultAccountRequest: {
         name,
         hiddenOnUI: opts?.hiddenOnUI ?? false,
-        autoFuel: false,
+        autoFuel: opts?.autoFuel ?? false,
+        ...(opts?.customerRefId ? { customerRefId: opts.customerRefId } : {}),
       },
     });
     return this.mapVaultAccount(res.data);
@@ -58,6 +62,89 @@ export class FireblocksClient implements IFireblocksClient {
 
   async hideVaultAccount(vaultId: string): Promise<void> {
     await this.sdk.vaults.hideVaultAccount({ vaultAccountId: vaultId });
+  }
+
+  async setVaultAccountCustomerRefId(
+    vaultId: string,
+    customerRefId: string,
+  ): Promise<void> {
+    await this.sdk.vaults.setVaultAccountCustomerRefId({
+      vaultAccountId: vaultId,
+      setCustomerRefIdRequest: { customerRefId },
+    });
+  }
+
+  async attachOrDetachTagsFromVaultAccounts(
+    request: VaultAccountsTagAttachmentOperationsRequest,
+    opts?: { idempotencyKey?: string },
+  ): Promise<VaultAccountsTagAttachmentOperationsResponse> {
+    const res = await this.sdk.vaults.attachOrDetachTagsFromVaultAccounts({
+      vaultAccountsTagAttachmentOperationsRequest: {
+        vaultAccountIds: request.vaultAccountIds,
+        tagIdsToAttach: request.tagIdsToAttach,
+        tagIdsToDetach: request.tagIdsToDetach,
+      },
+      idempotencyKey: opts?.idempotencyKey,
+    });
+    return res.data as VaultAccountsTagAttachmentOperationsResponse;
+  }
+
+  async listInternalWallets(): Promise<InternalWalletSummary[]> {
+    const res = await this.sdk.internalWallets.getInternalWallets();
+    const list = Array.isArray(res.data) ? res.data : [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return list.map((w: any) => ({
+      id: String(w.id ?? ""),
+      name: String(w.name ?? ""),
+      customerRefId:
+        w.customerRefId != null ? String(w.customerRefId) : undefined,
+    }));
+  }
+
+  async createInternalWallet(
+    name: string,
+    opts?: { customerRefId?: string },
+  ): Promise<{ id: string }> {
+    const res = await this.sdk.internalWallets.createInternalWallet({
+      createWalletRequest: {
+        name,
+        customerRefId: opts?.customerRefId,
+      },
+    });
+    return { id: String(res.data.id ?? "") };
+  }
+
+  async getInternalWallet(walletId: string): Promise<{
+    id: string;
+    assets: { id: string; address?: string }[];
+  }> {
+    const res = await this.sdk.internalWallets.getInternalWallet({
+      walletId,
+    });
+    const d = res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const assets = (d.assets ?? []).map((a: any) => {
+      const id = String(a.id ?? "");
+      const raw = a.address ?? a.baseAssetAddress;
+      const address =
+        raw != null && String(raw).trim() !== ""
+          ? String(raw).trim()
+          : undefined;
+      return { id, address };
+    });
+    return { id: String(d.id ?? ""), assets };
+  }
+
+  async createInternalWalletAsset(
+    walletId: string,
+    assetId: string,
+    address: string,
+  ): Promise<void> {
+    await this.sdk.internalWallets.createInternalWalletAsset({
+      walletId,
+      assetId,
+      createInternalWalletAssetRequest: { address },
+    });
   }
 
   async createVaultWallet(
@@ -101,8 +188,12 @@ export class FireblocksClient implements IFireblocksClient {
         amount: request.amount,
         source: this.mapPeerPathToSdk(request.source),
         destination: this.mapPeerPathToSdk(request.destination),
+        externalTxId: request.externalTxId,
         note: request.note,
         customerRefId: request.customerRefId,
+        ...(request.useGasless !== undefined
+          ? { useGasless: request.useGasless }
+          : {}),
       },
     });
     // createTransaction returns a minimal response (id + status).
@@ -114,6 +205,20 @@ export class FireblocksClient implements IFireblocksClient {
   async getTransaction(txId: string): Promise<TransactionResponse> {
     const res = await this.sdk.transactions.getTransaction({ txId });
     return this.mapTransaction(res.data);
+  }
+
+  async getTransactionByExternalTxId(
+    externalTxId: string,
+  ): Promise<TransactionResponse | null> {
+    try {
+      const res = await this.sdk.transactions.getTransactionByExternalId({
+        externalTxId,
+      });
+      return this.mapTransaction(res.data);
+    } catch (err: unknown) {
+      if (FireblocksClient.isNotFoundError(err)) return null;
+      throw err;
+    }
   }
 
   async createDepositAddress(
@@ -186,16 +291,35 @@ export class FireblocksClient implements IFireblocksClient {
     return (res.data ?? []).map((tx: any) => this.mapTransaction(tx));
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static isNotFoundError(err: unknown): boolean {
+    if (err === null || typeof err !== "object") return false;
+    const resp = (
+      err as { response?: { status?: unknown; statusCode?: unknown } }
+    ).response;
+    return resp?.statusCode === 404 || resp?.status === 404;
+  }
+
   // ─── Private mappers ───────────────────────────────────────────────────────
   // SDK response types are complex; we normalize to our simplified types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapVaultAccount(raw: any): VaultAccount {
     const assets = Array.isArray(raw.assets) ? raw.assets : [];
+    const tagList = Array.isArray(raw.tags) ? raw.tags : [];
     return {
       id: String(raw.id ?? ""),
       name: String(raw.name ?? ""),
       hiddenOnUI: Boolean(raw.hiddenOnUI),
       autoFuel: Boolean(raw.autoFuel),
+      customerRefId:
+        raw.customerRefId != null && raw.customerRefId !== ""
+          ? String(raw.customerRefId)
+          : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tags: tagList.map((t: any) => ({
+        id: String(t.id ?? ""),
+        isProtected: Boolean(t.isProtected),
+      })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       assets: assets.map((a: any) => ({
         id: String(a.id ?? ""),
@@ -227,6 +351,7 @@ export class FireblocksClient implements IFireblocksClient {
   private mapTransaction(raw: any): TransactionResponse {
     return {
       id: String(raw.id ?? ""),
+      externalTxId: raw.externalTxId as string | undefined,
       status: String(
         raw.status ?? "SUBMITTED",
       ) as TransactionResponse["status"],
@@ -244,26 +369,102 @@ export class FireblocksClient implements IFireblocksClient {
       note: raw.note as string | undefined,
       createdAt: Number(raw.createdAt ?? 0),
       lastUpdated: Number(raw.lastUpdated ?? 0),
+      amlScreening: FireblocksClient.mapAmlScreening(raw),
+      travelRuleScreening: FireblocksClient.mapTravelRuleScreening(raw),
     };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static mapAmlScreening(
+    raw: any,
+  ): TransactionResponse["amlScreening"] {
+    const aml =
+      raw?.amlScreeningResult ??
+      raw?.complianceResults?.aml ??
+      (Array.isArray(raw?.complianceResults?.amlList) &&
+      raw.complianceResults.amlList.length > 0
+        ? raw.complianceResults.amlList[0]
+        : undefined);
+    if (!aml || typeof aml !== "object") return undefined;
+    const provider =
+      aml.provider != null && String(aml.provider).trim() !== ""
+        ? String(aml.provider)
+        : "";
+    const screeningStatus =
+      aml.screeningStatus != null && String(aml.screeningStatus).trim() !== ""
+        ? String(aml.screeningStatus)
+        : "";
+    if (!provider && !screeningStatus) return undefined;
+    return {
+      provider: provider || "—",
+      screeningStatus: screeningStatus || "—",
+      verdict:
+        aml.verdict != null && String(aml.verdict).trim() !== ""
+          ? String(aml.verdict)
+          : undefined,
+      bypassReason:
+        aml.bypassReason != null && String(aml.bypassReason).trim() !== ""
+          ? String(aml.bypassReason)
+          : undefined,
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static mapTravelRuleScreening(
+    raw: any,
+  ): TransactionResponse["travelRuleScreening"] {
+    const tr = raw?.complianceResults?.tr;
+    if (!tr || typeof tr !== "object") return undefined;
+    const provider =
+      tr.provider != null && String(tr.provider).trim() !== ""
+        ? String(tr.provider)
+        : "";
+    const status =
+      tr.status != null && String(tr.status).trim() !== ""
+        ? String(tr.status)
+        : "";
+    if (!provider && !status) return undefined;
+    return {
+      provider: provider || "—",
+      status: status || "—",
+      verdict:
+        tr.verdict != null && String(tr.verdict).trim() !== ""
+          ? String(tr.verdict)
+          : undefined,
+      bypassReason:
+        tr.bypassReason != null && String(tr.bypassReason).trim() !== ""
+          ? String(tr.bypassReason)
+          : undefined,
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  /** Fireblocks peers may put the chain address in `address` or only in `oneTimeAddress.address`. */
   private mapPeerPath(raw: any): TransferPeerPath {
+    const a =
+      (typeof raw?.address === "string" ? raw.address.trim() : "") ||
+      (typeof raw?.oneTimeAddress?.address === "string"
+        ? raw.oneTimeAddress.address.trim()
+        : "");
     return {
       type: String(raw.type ?? "VAULT_ACCOUNT") as TransferPeerPath["type"],
       id: raw.id as string | undefined,
       name: raw.name as string | undefined,
-      address: raw.address as string | undefined,
+      address: a || undefined,
     };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapPeerPathToSdk(peer: TransferPeerPath): any {
-    return {
+    const out: Record<string, unknown> = {
       type: peer.type,
       id: peer.id,
       name: peer.name,
       oneTimeAddress: peer.address ? { address: peer.address } : undefined,
     };
+    if (peer.type === "INTERNAL_WALLET" && peer.id) {
+      out.walletId = peer.id;
+    }
+    return out;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { RemittanceAuthLayout } from "@/components/ui/remittance-auth-layout";
 import { KycGateScreen } from "@/components/screens/kyc-gate-screen";
 import { useLogout } from "@/hooks/use-mutations";
 
@@ -14,8 +15,8 @@ export function KycGatePage() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-3">
+    <RemittanceAuthLayout>
+      <div className="w-full space-y-3">
         <KycGateScreen navigation={navigation} />
         <button
           onClick={() =>
@@ -31,6 +32,6 @@ export function KycGatePage() {
           {logoutMutation.isPending ? "Logging out…" : "Log out"}
         </button>
       </div>
-    </div>
+    </RemittanceAuthLayout>
   );
 }
