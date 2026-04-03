@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { SendModal } from "@/components/send/send-modal";
 import { useMarketCoins } from "@/hooks/use-market-coins";
 import { useMockMode } from "@/contexts/mock-mode-context";
 import { useMockMetadata } from "@/hooks/use-mock-metadata";
@@ -135,11 +136,15 @@ const ACTIONS: {
 }[] = [
   { icon: IconDeposit, label: "Deposit" },
   { icon: IconSend, label: "Send" },
-  { icon: IconConvert, label: "Convert" },
+  { icon: IconConvert, label: "Convert", href: "/trade" },
   { icon: IconEarn, label: "Earn", href: "/earn" },
 ];
 
-function ActionButtons() {
+function ActionButtons({
+  onAction,
+}: {
+  onAction?: (label: string) => void;
+}) {
   return (
     <div className="grid grid-cols-4 gap-2 lg:gap-3">
       {ACTIONS.map((action) => {
@@ -162,7 +167,11 @@ function ActionButtons() {
             {content}
           </Link>
         ) : (
-          <button key={action.label} className={className}>
+          <button
+            key={action.label}
+            className={className}
+            onClick={() => onAction?.(action.label)}
+          >
             {content}
           </button>
         );
@@ -567,6 +576,11 @@ function AssetList({
 
 export default function PortfolioPage() {
   const [totalUsd, setTotalUsd] = useState(0);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
+
+  const handleAction = (label: string) => {
+    if (label === "Send") setSendModalOpen(true);
+  };
 
   return (
     <>
@@ -575,7 +589,7 @@ export default function PortfolioPage() {
         {/* Left: Balance + Actions */}
         <div className="lg:col-span-3 flex flex-col gap-3">
           <BalanceHero totalUsd={totalUsd} />
-          <ActionButtons />
+          <ActionButtons onAction={handleAction} />
         </div>
 
         {/* Right: Feature cards + Virtual Cards */}
@@ -588,6 +602,8 @@ export default function PortfolioPage() {
       <div className="mt-4 lg:mt-6">
         <AssetList onTotalChange={setTotalUsd} />
       </div>
+
+      <SendModal open={sendModalOpen} onOpenChange={setSendModalOpen} />
     </>
   );
 }

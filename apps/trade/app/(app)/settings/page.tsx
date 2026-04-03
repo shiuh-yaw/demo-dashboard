@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RotateCcw, Trash2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
 import { getAuthToken } from "@/lib/dynamic";
 import { MOCK_METADATA_STORAGE_KEY } from "@/lib/mock-metadata";
@@ -37,9 +38,11 @@ function formatValue(value: unknown, key?: string): string {
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const { setTheme } = useTheme();
   const { metadata, wallets, userId, isLoading, error } = useUserMetadata();
   const [resettingKey, setResettingKey] = useState<string | null>(null);
   const [clearingAll, setClearingAll] = useState(false);
+  const [resettingAppearance, setResettingAppearance] = useState(false);
 
   const handleReset = async (key: string) => {
     setResettingKey(key);
@@ -107,6 +110,22 @@ export default function SettingsPage() {
     }
   };
 
+  const handleResetAppearance = async () => {
+    setResettingAppearance(true);
+    try {
+      if (typeof window !== "undefined") {
+        // Remove config-scoped branding and return to default trade experience.
+        document.cookie =
+          "trade_config_id=; Max-Age=0; path=/; SameSite=Lax";
+        localStorage.removeItem("theme");
+      }
+      setTheme("system");
+      window.location.href = "/portfolio";
+    } finally {
+      setResettingAppearance(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="py-12 text-center text-trade-text-secondary">
@@ -135,6 +154,35 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-trade-text-secondary">
           Dynamic user metadata for the current account
         </p>
+      </div>
+
+      <div className="rounded-xl border border-trade-border bg-trade-surface overflow-hidden">
+        <div className="px-4 py-2 bg-trade-surface-blue/30 dark:bg-trade-surface/60">
+          <p className="text-xs font-medium text-trade-text-muted uppercase tracking-wider">
+            Appearance
+          </p>
+        </div>
+        <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p className="text-sm text-trade-text-secondary">
+            Reset branding and theme back to trade defaults.
+          </p>
+          <button
+            type="button"
+            onClick={handleResetAppearance}
+            disabled={resettingAppearance}
+            className={cn(
+              "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium",
+              "text-trade-text-muted hover:text-trade-text-primary hover:bg-trade-accent-muted",
+              "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            <RotateCcw
+              size={14}
+              className={resettingAppearance ? "animate-spin" : ""}
+            />
+            Reset Theme & Branding
+          </button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-trade-border bg-trade-surface overflow-hidden">

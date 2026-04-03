@@ -41,15 +41,25 @@ const OPTIONS: {
   },
   {
     id: "embedded",
-    iconNode: <DynamicLogo wordmark={false} className="w-5 h-5" />,
-    title: "Embedded wallet",
-    explainer: "Create a wallet managed by us — no seed phrase to store",
+    iconNode: (
+      <>
+        <DynamicLogo wordmark={false} className="w-5 h-5 dark:hidden" />
+        <DynamicLogo wordmark={false} muted className="w-5 h-5 text-white hidden dark:block" />
+      </>
+    ),
+    title: "Non-custodial",
+    explainer: "Embedded wallet only — user signs and submits transactions onchain directly",
   },
   {
     id: "fireblocks",
-    iconNode: <FireblocksLogomark className="w-5 h-5" />,
-    title: "Fireblocks vault",
-    explainer: "Institutional-grade custody with policy controls",
+    iconNode: (
+      <>
+        <FireblocksLogomark className="w-5 h-5 dark:hidden" variant="navy" />
+        <FireblocksLogomark className="w-5 h-5 hidden dark:block" variant="white" />
+      </>
+    ),
+    title: "Custodial",
+    explainer: "Fireblocks vault + embedded wallet — user signed intents, vault-executed transactions with funds routed through the user wallet for compliance",
   },
 ];
 
@@ -59,8 +69,8 @@ export function WalletSelectionScreen({
 }: WalletSelectionScreenProps) {
   return (
     <WidgetCard
-      title="Choose your wallet"
-      subtitle="Select how you'd like to manage your assets"
+      title="Choose your experience"
+      subtitle="Centralized custody or fully decentralized"
     >
       <div className="space-y-3">
         {OPTIONS.filter((opt) => enabledOptions.includes(opt.id)).map((opt) => {

@@ -182,7 +182,7 @@ export function ProbabilityTimeChart({
         visible: true,
         timeVisible: false,
         secondsVisible: false,
-        tickMarkFormatter: (time) => {
+        tickMarkFormatter: (time: UTCTimestamp) => {
           const d =
             typeof time === "number"
               ? new Date(time * 1000)

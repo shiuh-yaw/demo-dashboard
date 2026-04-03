@@ -14,6 +14,7 @@ import { Sun, Moon } from "lucide-react";
 import { AppLogo } from "@/components/ui/app-logo";
 import { ConnectButton } from "@/components/ui/connect-button";
 import { NetworkSwitcher } from "@/components/ui/network-switcher";
+import { useTradeConfig } from "@/contexts/trade-config-context";
 import { NavBar } from "./nav-bar";
 
 interface AppShellProps {
@@ -43,6 +44,8 @@ function ThemeToggle() {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const { branding } = useTradeConfig();
+
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-trade-bg">
       {/* Top header - overflow-visible so logo is fully shown (matches remittance), z-20 so dropdowns render above main content */}
@@ -52,9 +55,9 @@ export function AppShell({ children }: AppShellProps) {
           <Link
             href="/"
             className="flex items-center overflow-visible min-h-8 hover:opacity-80 transition-opacity"
-            aria-label="Go to home"
+            aria-label={`Go to ${branding.appName ?? "Trade"} home`}
           >
-            <AppLogo size={40} />
+            <AppLogo size={40} logoUrl={branding.logoUrl} />
           </Link>
 
           {/* Right: Theme toggle + network switcher + wallet button */}

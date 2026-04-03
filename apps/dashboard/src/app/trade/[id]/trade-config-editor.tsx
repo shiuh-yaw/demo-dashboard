@@ -3,11 +3,10 @@
 /**
  * Trade Config Editor Component
  *
- * Client component for editing Trade configurations.
+ * Client component for editing Trade branding configurations.
  */
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { updateTradeConfig } from "@/lib/actions/trade";
@@ -29,17 +28,10 @@ interface TradeConfigEditorProps {
 export function TradeConfigEditor({
   config: initialConfig,
 }: TradeConfigEditorProps) {
-  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState(initialConfig.name);
-  const [primaryColor, setPrimaryColor] = useState(
-    initialConfig.config.theme?.primaryColor ?? "#00FF88"
-  );
-  const [secondaryColor, setSecondaryColor] = useState(
-    initialConfig.config.theme?.secondaryColor ?? "#00CC6A"
-  );
   const [logoUrl, setLogoUrl] = useState(
     initialConfig.config.branding?.logoUrl ?? ""
   );
@@ -59,10 +51,6 @@ export function TradeConfigEditor({
 
     try {
       const config: Partial<TradeConfig> = {
-        theme: {
-          primaryColor: primaryColor || undefined,
-          secondaryColor: secondaryColor || undefined,
-        },
         branding: {
           logoUrl: logoUrl.trim() || undefined,
           appName: appName.trim() || undefined,
@@ -130,39 +118,6 @@ export function TradeConfigEditor({
           </Field>
         </Section>
 
-        <Section title="Theme">
-          <Field label="Primary Color">
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
-              />
-              <Input
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                placeholder="#00FF88"
-              />
-            </div>
-          </Field>
-          <Field label="Secondary Color">
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                value={secondaryColor}
-                onChange={(e) => setSecondaryColor(e.target.value)}
-                className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
-              />
-              <Input
-                value={secondaryColor}
-                onChange={(e) => setSecondaryColor(e.target.value)}
-                placeholder="#00CC6A"
-              />
-            </div>
-          </Field>
-        </Section>
-
         <Section title="Branding">
           <Field label="Logo URL">
             <Input
@@ -180,23 +135,6 @@ export function TradeConfigEditor({
           </Field>
         </Section>
 
-        {/* Live color preview */}
-        <Section title="Preview">
-          <div className="flex gap-3 items-center">
-            <div
-              className="w-16 h-16 rounded-lg border border-slate-200"
-              style={{ backgroundColor: primaryColor }}
-            />
-            <div
-              className="w-16 h-16 rounded-lg border border-slate-200"
-              style={{ backgroundColor: secondaryColor }}
-            />
-            <div className="text-xs text-slate-500">
-              <p>Primary: {primaryColor}</p>
-              <p>Secondary: {secondaryColor}</p>
-            </div>
-          </div>
-        </Section>
       </div>
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

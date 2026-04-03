@@ -12,16 +12,18 @@ import { AuthLayout } from "@dynamic-demos/ui";
 import { WalletSelectionScreen } from "@/components/screens/wallet-selection-screen";
 import { useLogout } from "@/hooks/use-mutations";
 import { AppLogo } from "@/components/ui/app-logo";
+import { useTradeConfig } from "@/contexts/trade-config-context";
 
 export function WalletSelectionPage() {
   const logoutMutation = useLogout();
+  const { branding } = useTradeConfig();
 
   const handleComplete = useCallback(() => {
     window.location.href = "/portfolio";
   }, []);
 
   return (
-    <AuthLayout logo={<AppLogo size={40} />}>
+    <AuthLayout logo={<AppLogo size={40} logoUrl={branding.logoUrl} />}>
       <div className="w-full space-y-3">
         <WalletSelectionScreen onComplete={handleComplete} />
         <button

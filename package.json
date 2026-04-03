@@ -20,7 +20,9 @@
   "packageManager": "pnpm@9.15.4",
   "pnpm": {
     "overrides": {
-      "ufo": "1.6.2"
+      "ufo": "1.6.2",
+      "axios": "1.13.6",
+      "axios": "1.13.6"
     }
   }
 }

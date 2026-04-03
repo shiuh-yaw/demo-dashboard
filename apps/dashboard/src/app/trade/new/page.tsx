@@ -1,7 +1,7 @@
 /**
  * New Trade Config Page
  *
- * Form for creating a new Trade configuration with theme and branding.
+ * Form for creating a new Trade branding configuration.
  */
 
 "use client";
@@ -22,8 +22,6 @@ export default function NewTradeConfigPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#00FF88");
-  const [secondaryColor, setSecondaryColor] = useState("#00CC6A");
   const [logoUrl, setLogoUrl] = useState("");
   const [appName, setAppName] = useState("NovaX");
 
@@ -37,10 +35,6 @@ export default function NewTradeConfigPage() {
 
     try {
       const config: Partial<TradeConfig> = {
-        theme: {
-          primaryColor: primaryColor || undefined,
-          secondaryColor: secondaryColor || undefined,
-        },
         branding: {
           logoUrl: logoUrl.trim() || undefined,
           appName: appName.trim() || undefined,
@@ -99,39 +93,6 @@ export default function NewTradeConfigPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="My Trade Config"
             />
-          </Field>
-        </Section>
-
-        <Section title="Theme">
-          <Field label="Primary Color">
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
-              />
-              <Input
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                placeholder="#00FF88"
-              />
-            </div>
-          </Field>
-          <Field label="Secondary Color">
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                value={secondaryColor}
-                onChange={(e) => setSecondaryColor(e.target.value)}
-                className="w-10 h-10 rounded border border-slate-200 cursor-pointer"
-              />
-              <Input
-                value={secondaryColor}
-                onChange={(e) => setSecondaryColor(e.target.value)}
-                placeholder="#00CC6A"
-              />
-            </div>
           </Field>
         </Section>
 

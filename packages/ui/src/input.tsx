@@ -37,11 +37,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           type={type}
           id={inputId}
           className={cn(
-            "flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900",
+            "flex h-10 w-full rounded-lg border px-3 py-2 text-sm",
+            "bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#1e293b)]",
             "border-[var(--widget-border,#e1e4ea)]",
             "outline-none",
             "file:border-0 file:bg-transparent file:text-sm file:font-medium",
-            "placeholder:text-slate-400",
+            "placeholder:text-[var(--widget-muted,#9ca3af)]",
             "focus:border-[var(--widget-primary,#335cff)]",
             "disabled:cursor-not-allowed disabled:opacity-50",
             error && "border-red-500 focus:border-red-500",

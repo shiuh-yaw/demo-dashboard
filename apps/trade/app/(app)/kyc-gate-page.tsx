@@ -12,9 +12,11 @@ import { AuthLayout } from "@dynamic-demos/ui";
 import { KycGateScreen } from "@/components/screens/kyc-gate-screen";
 import { useLogout } from "@/hooks/use-mutations";
 import { AppLogo } from "@/components/ui/app-logo";
+import { useTradeConfig } from "@/contexts/trade-config-context";
 
 export function KycGatePage() {
   const logoutMutation = useLogout();
+  const { branding } = useTradeConfig();
 
   const handleComplete = useCallback(() => {
     // Full navigation to force fresh server render with updated KYC status
@@ -22,7 +24,7 @@ export function KycGatePage() {
   }, []);
 
   return (
-    <AuthLayout logo={<AppLogo size={40} />}>
+    <AuthLayout logo={<AppLogo size={40} logoUrl={branding.logoUrl} />}>
       <div className="w-full space-y-3">
         <KycGateScreen onComplete={handleComplete} />
         <button

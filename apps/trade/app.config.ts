@@ -4,7 +4,7 @@ export const appConfig: AppAuthConfig = {
   auth: {
     emailOtp: true,
     socialProviders: ["google"],
-    externalJwt: true,
+    externalJwt: false,
   },
   kyc: "required",
   walletSelection: true,

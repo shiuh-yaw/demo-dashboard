@@ -143,6 +143,9 @@ export function OrderCard({ prices, selectedSymbol }: OrderCardProps) {
   useEffect(() => {
     if (activeTab === "sell" && payAsset === "USDC") {
       setPayAsset(receiveAsset);
+      setReceiveAsset("USDC");
+    } else if (activeTab === "swap" && payAsset === receiveAsset) {
+      setPayAsset("USDC");
     }
   }, [activeTab, payAsset, receiveAsset]);
 

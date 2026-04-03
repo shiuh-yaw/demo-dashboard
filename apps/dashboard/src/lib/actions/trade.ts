@@ -6,7 +6,7 @@
  * Server-side actions for Trade config CRUD operations.
  * Authenticates via Dynamic JWT cookie.
  *
- * Trade configs store theme and branding for the Trade demo app.
+ * Trade configs store branding for the Trade demo app.
  */
 
 import { revalidatePath } from "next/cache";
@@ -41,10 +41,6 @@ export async function createTradeConfig(
     const now = new Date().toISOString();
 
     const mergedConfig: TradeConfig = {
-      theme: {
-        ...DEFAULT_TRADE_CONFIG.theme,
-        ...config?.theme,
-      },
       branding: {
         ...DEFAULT_TRADE_CONFIG.branding,
         ...config?.branding,
@@ -136,7 +132,6 @@ export async function updateTradeConfig(
     }
 
     const mergedConfig: TradeConfig = {
-      theme: { ...existing.config.theme, ...updates.config?.theme },
       branding: { ...existing.config.branding, ...updates.config?.branding },
     };
 

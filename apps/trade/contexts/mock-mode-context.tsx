@@ -19,10 +19,13 @@ interface MockModeContextValue {
 const MockModeContext = createContext<MockModeContextValue | null>(null);
 
 export function MockModeProvider({ children }: { children: React.ReactNode }) {
-  const [isMockMode, setMockModeState] = useState(false);
+  const [isMockMode, setMockModeState] = useState(true);
 
   useEffect(() => {
-    setMockModeState(localStorage.getItem(MOCK_MODE_KEY) === "true");
+    const stored = localStorage.getItem(MOCK_MODE_KEY);
+    if (stored !== null) {
+      setMockModeState(stored === "true");
+    }
   }, []);
 
   const setMockMode = useCallback((value: boolean) => {

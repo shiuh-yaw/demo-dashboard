@@ -14,7 +14,6 @@ import { WidgetCard, LoginForm } from "@dynamic-demos/ui";
 import {
   isEmailAuthEnabled,
   getEnabledSocialProviders,
-  isExternalAuthEnabled,
 } from "@/lib/dynamic";
 import {
   useSendEmailOTP,
@@ -78,7 +77,7 @@ export function AuthScreen({ navigation, onLoginSuccess }: AuthScreenProps) {
           onSocialSignIn={handleSocialSignIn}
           socialAuthError={socialAuth.error}
           onHandleOAuthRedirect={handleOAuthRedirect}
-          jwtEnabled={isExternalAuthEnabled()}
+          jwtEnabled={false}
           onJwtAuth={handleJwtAuth}
           isJwtPending={jwtAuth.isPending}
           jwtError={jwtAuth.error}
