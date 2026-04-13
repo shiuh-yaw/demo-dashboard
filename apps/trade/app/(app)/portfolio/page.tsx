@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { SendModal } from "@/components/send/send-modal";
+import { DepositModal } from "@/components/deposit/deposit-modal";
 import { useMarketCoins } from "@/hooks/use-market-coins";
 import { useMockMode } from "@/contexts/mock-mode-context";
 import { useMockMetadata } from "@/hooks/use-mock-metadata";
@@ -140,11 +141,7 @@ const ACTIONS: {
   { icon: IconEarn, label: "Earn", href: "/earn" },
 ];
 
-function ActionButtons({
-  onAction,
-}: {
-  onAction?: (label: string) => void;
-}) {
+function ActionButtons({ onAction }: { onAction?: (label: string) => void }) {
   return (
     <div className="grid grid-cols-4 gap-2 lg:gap-3">
       {ACTIONS.map((action) => {
@@ -159,11 +156,7 @@ function ActionButtons({
         const className =
           "group flex flex-col items-center justify-center gap-2.5 rounded-xl bg-trade-surface-blue py-4 lg:py-5 cursor-pointer transition-all active:scale-[0.97]";
         return action.href ? (
-          <Link
-            key={action.label}
-            href={action.href}
-            className={className}
-          >
+          <Link key={action.label} href={action.href} className={className}>
             {content}
           </Link>
         ) : (
@@ -274,7 +267,7 @@ function FeatureCardsGrid() {
           href="/predictions"
         />
       </div>
-      <VirtualCardsBanner />
+      <EarnBanner />
     </div>
   );
 }
@@ -283,30 +276,30 @@ function FeatureCardsGrid() {
 // Virtual Cards Banner
 // =============================================================================
 
-function VirtualCardsBanner() {
+function EarnBanner() {
   return (
     <div className="group relative min-h-[140px] cursor-pointer overflow-hidden rounded-xl bg-[#eaf5ff] p-3.5 transition-colors active:scale-[0.99]">
       <div className="relative z-10 max-w-[45%]">
         <h3 className="text-lg font-semibold tracking-tight text-[#273662]">
-          Virtual Cards
+          Earn
         </h3>
         <p className="mt-0.5 text-sm leading-snug text-[#495b96]/60">
-          Spend your crypto instantly online
+          Start earning yield on your assets
         </p>
 
         {/* CTA */}
         <div className="mt-8 flex items-center gap-1 text-sm font-medium text-[#273662] transition-transform group-hover:translate-x-1">
-          <span>Open Now</span>
+          <span>Start Earning Now</span>
           <ChevronRight size={18} strokeWidth={3} />
         </div>
       </div>
 
       <Image
-        src="/images/features/virtual-cards.png"
-        alt="Virtual credit cards"
+        src="/images/features/earn-chart.png"
+        alt="Earn chart"
         width={261}
         height={200}
-        className="pointer-events-none absolute right-[-20px] top-[-7px] h-[160px] w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+        className="pointer-events-none absolute bottom-[-10px] right-[12px] h-[150px] w-auto object-contain object-bottom-right transition-transform duration-300 group-hover:scale-105"
       />
     </div>
   );
@@ -356,12 +349,18 @@ function AssetList({
   const { isMockMode } = useMockMode();
   const { getBalance } = useMockBalances();
   const { metadata } = useMockMetadata();
-  const earnDeposits = (metadata[MOCK_METADATA_KEYS.EARN] as
-    | { deposits?: MockVaultPosition[] }
-    | undefined)?.deposits ?? [];
-  const predictPositions = (metadata[MOCK_METADATA_KEYS.PREDICT] as
-    | { positions?: MockPredictPosition[] }
-    | undefined)?.positions ?? [];
+  const earnDeposits =
+    (
+      metadata[MOCK_METADATA_KEYS.EARN] as
+        | { deposits?: MockVaultPosition[] }
+        | undefined
+    )?.deposits ?? [];
+  const predictPositions =
+    (
+      metadata[MOCK_METADATA_KEYS.PREDICT] as
+        | { positions?: MockPredictPosition[] }
+        | undefined
+    )?.positions ?? [];
   const hasPositions = earnDeposits.length > 0 || predictPositions.length > 0;
 
   const assets = useMemo((): PortfolioAsset[] => {
@@ -465,106 +464,106 @@ function AssetList({
             ))
           )
         ) : isMockMode && hasPositions ? (
-            <>
-              {earnDeposits.map((pos, i) => (
-                <Link
-                  key={pos.id}
-                  href="/earn"
-                  className={`group flex items-center justify-between px-2 py-3.5 cursor-pointer rounded-lg transition-colors hover:bg-trade-surface-elevated ${
-                    i < earnDeposits.length - 1 || predictPositions.length > 0
-                      ? "border-b border-trade-border/40"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-trade-bg flex items-center justify-center">
-                      {pos.assetLogoURI ? (
-                        <Image
-                          src={pos.assetLogoURI}
-                          alt={pos.assetName}
-                          width={40}
-                          height={40}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium text-trade-text-muted">
-                          {pos.assetSymbol.slice(0, 2)}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[15px] font-semibold text-trade-text-primary">
-                          {pos.vaultName}
-                        </p>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-trade-accent/20 text-trade-accent border border-trade-accent/30">
-                          Earn
-                        </span>
-                      </div>
-                      <p className="text-[13px] font-medium text-trade-text-secondary">
-                        {pos.amount} {pos.assetSymbol} · {formatApy(pos.apy)} APY
-                      </p>
-                    </div>
+          <>
+            {earnDeposits.map((pos, i) => (
+              <Link
+                key={pos.id}
+                href="/earn"
+                className={`group flex items-center justify-between px-2 py-3.5 cursor-pointer rounded-lg transition-colors hover:bg-trade-surface-elevated ${
+                  i < earnDeposits.length - 1 || predictPositions.length > 0
+                    ? "border-b border-trade-border/40"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-trade-bg flex items-center justify-center">
+                    {pos.assetLogoURI ? (
+                      <Image
+                        src={pos.assetLogoURI}
+                        alt={pos.assetName}
+                        width={40}
+                        height={40}
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium text-trade-text-muted">
+                        {pos.assetSymbol.slice(0, 2)}
+                      </span>
+                    )}
                   </div>
-                  <ChevronRight
-                    size={18}
-                    className="text-trade-text-muted group-hover:text-trade-text-primary transition-colors"
-                  />
-                </Link>
-              ))}
-              {predictPositions.map((pos, i) => (
-                <Link
-                  key={pos.id}
-                  href={`/predictions/${encodeURIComponent(pos.eventSlug)}`}
-                  className={`group flex items-center justify-between px-2 py-3.5 cursor-pointer rounded-lg transition-colors hover:bg-trade-surface-elevated ${
-                    i < predictPositions.length - 1
-                      ? "border-b border-trade-border/40"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-trade-bg flex items-center justify-center">
-                      {pos.imageUrl ? (
-                        <Image
-                          src={pos.imageUrl}
-                          alt=""
-                          width={40}
-                          height={40}
-                          className="object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <span className="text-sm font-medium text-trade-text-muted">
-                          ?
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[15px] font-semibold text-trade-text-primary line-clamp-1">
-                          {pos.marketQuestion}
-                        </p>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
-                          Predict
-                        </span>
-                      </div>
-                      <p className="text-[13px] font-medium text-trade-text-secondary">
-                        {pos.side === "yes" ? "Yes" : "No"} · ${pos.amount}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[15px] font-semibold text-trade-text-primary">
+                        {pos.vaultName}
                       </p>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-trade-accent/20 text-trade-accent border border-trade-accent/30">
+                        Earn
+                      </span>
                     </div>
+                    <p className="text-[13px] font-medium text-trade-text-secondary">
+                      {pos.amount} {pos.assetSymbol} · {formatApy(pos.apy)} APY
+                    </p>
                   </div>
-                  <ChevronRight
-                    size={18}
-                    className="text-trade-text-muted group-hover:text-trade-text-primary transition-colors"
-                  />
-                </Link>
-              ))}
-            </>
-          ) : (
-            <div className="py-12 text-center text-trade-text-muted text-sm">
-              No open positions
-            </div>
-          )}
+                </div>
+                <ChevronRight
+                  size={18}
+                  className="text-trade-text-muted group-hover:text-trade-text-primary transition-colors"
+                />
+              </Link>
+            ))}
+            {predictPositions.map((pos, i) => (
+              <Link
+                key={pos.id}
+                href={`/predictions/${encodeURIComponent(pos.eventSlug)}`}
+                className={`group flex items-center justify-between px-2 py-3.5 cursor-pointer rounded-lg transition-colors hover:bg-trade-surface-elevated ${
+                  i < predictPositions.length - 1
+                    ? "border-b border-trade-border/40"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-trade-bg flex items-center justify-center">
+                    {pos.imageUrl ? (
+                      <Image
+                        src={pos.imageUrl}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-sm font-medium text-trade-text-muted">
+                        ?
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[15px] font-semibold text-trade-text-primary line-clamp-1">
+                        {pos.marketQuestion}
+                      </p>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                        Predict
+                      </span>
+                    </div>
+                    <p className="text-[13px] font-medium text-trade-text-secondary">
+                      {pos.side === "yes" ? "Yes" : "No"} · ${pos.amount}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight
+                  size={18}
+                  className="text-trade-text-muted group-hover:text-trade-text-primary transition-colors"
+                />
+              </Link>
+            ))}
+          </>
+        ) : (
+          <div className="py-12 text-center text-trade-text-muted text-sm">
+            No open positions
+          </div>
+        )}
       </div>
     </div>
   );
@@ -577,9 +576,11 @@ function AssetList({
 export default function PortfolioPage() {
   const [totalUsd, setTotalUsd] = useState(0);
   const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
 
   const handleAction = (label: string) => {
     if (label === "Send") setSendModalOpen(true);
+    if (label === "Deposit") setDepositModalOpen(true);
   };
 
   return (
@@ -604,6 +605,10 @@ export default function PortfolioPage() {
       </div>
 
       <SendModal open={sendModalOpen} onOpenChange={setSendModalOpen} />
+      <DepositModal
+        open={depositModalOpen}
+        onOpenChange={setDepositModalOpen}
+      />
     </>
   );
 }

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2, Wallet } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
+import { useMockBalances } from "@/hooks/use-mock-balances";
 import { getAuthToken } from "@/lib/dynamic";
 import { MOCK_METADATA_STORAGE_KEY } from "@/lib/mock-metadata";
 import { METADATA_KEYS } from "@dynamic-demos/dynamic";
@@ -40,9 +41,11 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { setTheme } = useTheme();
   const { metadata, wallets, userId, isLoading, error } = useUserMetadata();
+  const { seedBalances, isInitialized } = useMockBalances();
   const [resettingKey, setResettingKey] = useState<string | null>(null);
   const [clearingAll, setClearingAll] = useState(false);
   const [resettingAppearance, setResettingAppearance] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const handleReset = async (key: string) => {
     setResettingKey(key);
@@ -107,6 +110,15 @@ export default function SettingsPage() {
       }
     } finally {
       setClearingAll(false);
+    }
+  };
+
+  const handleSeedWallet = async () => {
+    setSeeding(true);
+    try {
+      await seedBalances();
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -181,6 +193,37 @@ export default function SettingsPage() {
               className={resettingAppearance ? "animate-spin" : ""}
             />
             Reset Theme & Branding
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-trade-border bg-trade-surface overflow-hidden">
+        <div className="px-4 py-2 bg-trade-surface-blue/30 dark:bg-trade-surface/60">
+          <p className="text-xs font-medium text-trade-text-muted uppercase tracking-wider">
+            Mock Wallet
+          </p>
+        </div>
+        <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p className="text-sm text-trade-text-secondary">
+            {isInitialized
+              ? "Overwrite current balances with seeded demo amounts."
+              : "Populate wallet with seeded demo balances for all tokens."}
+          </p>
+          <button
+            type="button"
+            onClick={handleSeedWallet}
+            disabled={seeding}
+            className={cn(
+              "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium",
+              "text-trade-text-muted hover:text-trade-text-primary hover:bg-trade-accent-muted",
+              "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            <Wallet
+              size={14}
+              className={seeding ? "animate-pulse" : ""}
+            />
+            Seed Wallet
           </button>
         </div>
       </div>

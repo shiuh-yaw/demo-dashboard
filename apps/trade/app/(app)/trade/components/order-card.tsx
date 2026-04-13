@@ -2,14 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowDownUp, ChevronRight } from "lucide-react";
+import { ArrowDownUp } from "lucide-react";
 import type { TradePrice } from "@/hooks/use-trade-prices";
 import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import { useMarketCoins } from "@/hooks/use-market-coins";
 import { useMockMode } from "@/contexts/mock-mode-context";
 import { useMockBalances } from "@/hooks/use-mock-balances";
-
-type OrderTab = "swap" | "buy" | "sell";
 
 type TokenSymbol = "USDC" | "ETH" | "BTC" | "SOL" | "MATIC" | "ARB";
 
@@ -21,19 +19,13 @@ interface OrderCardProps {
 
 function TokenButton({
   symbol,
-  onClick,
 }: {
   symbol: string;
-  onClick?: () => void;
 }) {
   const { data: metadata } = useTokenMetadata(symbol);
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-trade-surface border border-trade-border/50 text-trade-text-primary text-sm font-medium hover:bg-trade-surface-elevated transition-colors shrink-0"
-    >
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-trade-surface border border-trade-border/50 text-trade-text-primary text-sm font-medium shrink-0">
       {metadata?.logo ? (
         <Image
           src={metadata.logo}
@@ -48,41 +40,7 @@ function TokenButton({
         </span>
       )}
       <span>{symbol}</span>
-    </button>
-  );
-}
-
-function AssetSelectorRow({
-  symbol,
-  onClick,
-}: {
-  symbol: string;
-  onClick?: () => void;
-}) {
-  const { data: metadata } = useTokenMetadata(symbol);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl bg-trade-bg/50 border border-trade-border/50 hover:bg-trade-surface transition-colors text-left"
-    >
-      {metadata?.logo ? (
-        <Image
-          src={metadata.logo}
-          alt={symbol}
-          width={28}
-          height={28}
-          className="rounded-full object-cover shrink-0"
-        />
-      ) : (
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-trade-surface text-sm font-medium text-trade-text-secondary">
-          {symbol.slice(0, 1)}
-        </div>
-      )}
-      <span className="font-medium text-trade-text-primary">{symbol}</span>
-      <ChevronRight size={18} className="ml-auto text-trade-text-muted" />
-    </button>
+    </div>
   );
 }
 
@@ -96,27 +54,26 @@ const SUPPORTED_SYMBOLS: TokenSymbol[] = [
 ];
 
 export function OrderCard({ prices, selectedSymbol }: OrderCardProps) {
-  const [activeTab, setActiveTab] = useState<OrderTab>("swap");
-  const defaultReceive = SUPPORTED_SYMBOLS.includes(
-    selectedSymbol as TokenSymbol,
-  )
-    ? (selectedSymbol as TokenSymbol)
-    : "ETH";
-  const [payAsset, setPayAsset] = useState<TokenSymbol>("USDC");
-  const [receiveAsset, setReceiveAsset] = useState<TokenSymbol>(defaultReceive);
+  const defaultReceive = selectedSymbol?.toUpperCase() || "ETH";
+  const [payAsset, setPayAsset] = useState<string>("USDC");
+  const [receiveAsset, setReceiveAsset] = useState<string>(defaultReceive);
   const [payAmount, setPayAmount] = useState("");
   const [receiveAmount, setReceiveAmount] = useState("");
-  const [buySellAmount, setBuySellAmount] = useState("");
   const [swapPending, setSwapPending] = useState(false);
 
   const { isMockMode } = useMockMode();
   const { getBalance, deductBalance, addBalance } = useMockBalances();
   const { data: marketCoins } = useMarketCoins({ perPage: 25 });
 
-  /** Effective prices: Alchemy first, CoinGecko fallback for mock mode when Alchemy missing */
+  /** Effective prices: Alchemy first, CoinGecko fallback for any symbol */
   const effectivePrices = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const sym of SUPPORTED_SYMBOLS) {
+    const allSymbols = new Set([
+      ...SUPPORTED_SYMBOLS,
+      payAsset,
+      receiveAsset,
+    ]);
+    for (const sym of allSymbols) {
       const fromAlchemy = prices?.[sym]?.usd;
       const fromMarket =
         marketCoins?.find((c) => c.symbol.toUpperCase() === sym)
@@ -127,27 +84,13 @@ export function OrderCard({ prices, selectedSymbol }: OrderCardProps) {
         (sym === "USDC" ? 1 : 0);
     }
     return map;
-  }, [prices, marketCoins]);
+  }, [prices, marketCoins, payAsset, receiveAsset]);
 
   useEffect(() => {
-    if (
-      selectedSymbol &&
-      SUPPORTED_SYMBOLS.includes(selectedSymbol as TokenSymbol)
-    ) {
-      const sym = selectedSymbol as TokenSymbol;
-      if (activeTab === "swap") setReceiveAsset(sym);
-      if (activeTab === "sell") setPayAsset(sym);
+    if (selectedSymbol) {
+      setReceiveAsset(selectedSymbol.toUpperCase());
     }
-  }, [selectedSymbol, activeTab]);
-
-  useEffect(() => {
-    if (activeTab === "sell" && payAsset === "USDC") {
-      setPayAsset(receiveAsset);
-      setReceiveAsset("USDC");
-    } else if (activeTab === "swap" && payAsset === receiveAsset) {
-      setPayAsset("USDC");
-    }
-  }, [activeTab, payAsset, receiveAsset]);
+  }, [selectedSymbol]);
 
   const handleFlip = () => {
     setPayAsset(receiveAsset);
@@ -215,34 +158,11 @@ export function OrderCard({ prices, selectedSymbol }: OrderCardProps) {
     }
   };
 
-  const quickAmounts = [100, 300, 1000];
-  const percentAmounts = [25, 50, 75, 100];
-
   return (
     <div className="rounded-2xl p-4 bg-trade-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-1 rounded-full bg-trade-bg/60 p-1 flex-1">
-          {(["swap", "buy", "sell"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`
-              flex-1 px-3 py-1.5 rounded-full text-sm font-medium transition-all capitalize
-              ${
-                activeTab === tab
-                  ? "bg-trade-accent text-white shadow-sm"
-                  : "text-trade-text-secondary hover:text-trade-text-primary"
-              }
-            `}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {activeTab === "swap" && (
-        <>
+      <p className="text-sm font-medium text-trade-text-secondary uppercase tracking-wider mb-4">
+        Swap
+      </p>
           <div className="rounded-xl p-3.5 mb-3 bg-trade-bg/50 border border-trade-border/50">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs uppercase tracking-wider text-trade-text-secondary">
@@ -353,97 +273,6 @@ export function OrderCard({ prices, selectedSymbol }: OrderCardProps) {
                 ? "Swap"
                 : "Select a token"}
           </button>
-        </>
-      )}
-
-      {(activeTab === "buy" || activeTab === "sell") && (
-        <>
-          <div className="rounded-xl p-3.5 mb-3 bg-trade-bg/50 border border-trade-border/50">
-            <p className="text-xs uppercase tracking-wider mb-3 text-trade-text-secondary">
-              {activeTab === "buy" ? "You're buying" : "You're selling"}
-            </p>
-            <div className="flex items-baseline justify-between gap-2 mb-2">
-              <div className="flex items-baseline gap-0.5 min-w-0 flex-1">
-                <span className="text-3xl font-bold text-trade-text-primary">
-                  $
-                </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  value={buySellAmount}
-                  onChange={(e) =>
-                    setBuySellAmount(e.target.value.replace(/[^0-9.]/g, ""))
-                  }
-                  className="flex-1 min-w-0 text-3xl font-bold text-trade-text-primary tabular-nums bg-transparent border-none outline-none placeholder:text-trade-text-muted"
-                />
-              </div>
-              <span className="text-sm text-trade-text-muted shrink-0">
-                USD
-              </span>
-            </div>
-            <div className="flex gap-2">
-              {activeTab === "buy"
-                ? quickAmounts.map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setBuySellAmount(String(amt))}
-                      className="flex-1 px-3 py-1.5 rounded-full text-sm font-medium border border-trade-border/50 text-trade-text-secondary hover:border-trade-accent/50 hover:text-trade-accent transition-colors"
-                    >
-                      ${amt}
-                    </button>
-                  ))
-                : percentAmounts.map((pct) => (
-                    <button
-                      key={pct}
-                      type="button"
-                      onClick={() => setBuySellAmount("")}
-                      className="flex-1 px-2 py-1.5 rounded-full text-sm font-medium border border-trade-border/50 text-trade-text-secondary hover:border-trade-accent/50 hover:text-trade-accent transition-colors"
-                    >
-                      {pct === 100 ? "Max" : `${pct}%`}
-                    </button>
-                  ))}
-            </div>
-          </div>
-
-          <div className="space-y-2 mb-4">
-            <AssetSelectorRow
-              symbol={activeTab === "buy" ? receiveAsset : payAsset}
-            />
-            <div className="flex items-center justify-center">
-              <div className="h-4 w-px bg-trade-border/50" />
-            </div>
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl bg-trade-bg/50 border border-trade-border/50 hover:bg-trade-surface transition-colors text-left"
-            >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-trade-surface text-sm font-medium text-trade-text-secondary">
-                $
-              </div>
-              <span className="font-medium text-trade-text-primary">
-                {activeTab === "buy" ? "From" : "To"} USD Wallet
-              </span>
-              <ChevronRight
-                size={18}
-                className="ml-auto text-trade-text-muted"
-              />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-              buySellAmount
-                ? "bg-trade-accent text-white hover:bg-trade-accent-hover cursor-pointer"
-                : "bg-trade-surface border border-trade-border/50 text-trade-text-muted cursor-not-allowed"
-            }`}
-            disabled={!buySellAmount}
-          >
-            {buySellAmount ? "Review order" : "Enter an amount"}
-          </button>
-        </>
-      )}
     </div>
   );
 }

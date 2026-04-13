@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useMarketCoins } from "@/hooks/use-market-coins";
-import { useMockMode } from "@/contexts/mock-mode-context";
 import { useMockMetadata } from "@/hooks/use-mock-metadata";
 import {
   MOCK_METADATA_KEYS,
   type MockBalancesMetadata,
-  type MockTokenBalance,
 } from "@/lib/mock-metadata";
 
 const STABLECOINS = new Set([
@@ -20,7 +18,6 @@ const STABLECOINS = new Set([
   "FRAX",
 ]);
 
-/** Fixed seed for deterministic mock balances across sessions */
 const MOCK_BALANCE_SEED = 46281;
 
 function seededRandom(seed: number, index: number): number {
@@ -36,9 +33,7 @@ function generateMockAmount(
   const r = seededRandom(MOCK_BALANCE_SEED, index);
   const sym = symbol.toUpperCase();
 
-  if (STABLECOINS.has(sym)) {
-    return 50 + r * 4950;
-  }
+  if (STABLECOINS.has(sym)) return 50 + r * 4950;
 
   const priceSafe = price && price > 0 ? price : 1;
 
@@ -65,45 +60,16 @@ function generateMockAmount(
 
 /**
  * Single source of truth for mock balances.
- * - Initializes once when mock mode is on and balances are empty (using market coins + deterministic seed).
+ * - Starts empty — users deposit funds via the Deposit modal.
  * - Trade, swap, predict, earn all read from and update these balances.
+ * - `seedBalances()` populates deterministic demo amounts (called from Settings).
  */
 export function useMockBalances() {
-  const { isMockMode } = useMockMode();
   const { metadata, updateMetadata } = useMockMetadata();
   const { data: coins } = useMarketCoins({ perPage: 15 });
 
   const balances = (metadata[MOCK_METADATA_KEYS.BALANCES] ??
     {}) as MockBalancesMetadata;
-
-  // Initialize balances once when mock mode is on, we have coins, and balances are empty
-  useEffect(() => {
-    if (
-      !isMockMode ||
-      !coins?.length ||
-      Object.keys(balances).length > 0
-    ) {
-      return;
-    }
-
-    const initial: MockBalancesMetadata = {};
-    coins
-      .filter((c) => c.current_price != null && c.current_price > 0)
-      .forEach((coin, i) => {
-        const amount = generateMockAmount(
-          coin.symbol,
-          coin.current_price,
-          i,
-        );
-        initial[coin.symbol.toUpperCase()] = { amount };
-      });
-
-    if (Object.keys(initial).length > 0) {
-      updateMetadata.mutate({
-        [MOCK_METADATA_KEYS.BALANCES]: initial,
-      });
-    }
-  }, [isMockMode, coins, balances, updateMetadata]);
 
   const getBalance = (symbol: string): number => {
     const b = balances[symbol.toUpperCase()];
@@ -149,11 +115,29 @@ export function useMockBalances() {
     });
   };
 
+  const seedBalances = async (): Promise<void> => {
+    if (!coins?.length) return;
+    const seeded: MockBalancesMetadata = {};
+    coins
+      .filter((c) => c.current_price != null && c.current_price > 0)
+      .forEach((coin, i) => {
+        seeded[coin.symbol.toUpperCase()] = {
+          amount: generateMockAmount(coin.symbol, coin.current_price, i),
+        };
+      });
+    if (Object.keys(seeded).length > 0) {
+      await updateMetadata.mutateAsync({
+        [MOCK_METADATA_KEYS.BALANCES]: seeded,
+      });
+    }
+  };
+
   return {
     balances,
     getBalance,
     deductBalance,
     addBalance,
+    seedBalances,
     totalUsd,
     isInitialized: Object.keys(balances).length > 0,
   };
