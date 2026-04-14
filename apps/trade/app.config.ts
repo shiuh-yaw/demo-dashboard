@@ -7,7 +7,7 @@ export const appConfig: AppAuthConfig = {
     externalJwt: false,
   },
   kyc: "required",
-  walletSelection: true,
+  walletSelection: false,
   defaultReturnPath: "/portfolio",
   routePattern: "flat",
 };
