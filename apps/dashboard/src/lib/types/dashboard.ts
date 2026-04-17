@@ -471,6 +471,63 @@ export interface StoredTradeConfig {
 }
 
 // =============================================================================
+// Visa Direct Configuration (Branding + Theme)
+// =============================================================================
+
+/**
+ * Visa Direct branding
+ * Matches apps/visa-direct/lib/visa-direct-config.ts VisaDirectBranding
+ */
+export interface VisaDirectBranding {
+  /** URL to a hosted logo. When provided, uses custom logo; otherwise Dynamic wordmark. */
+  logoUrl?: string;
+  /** Top demo banner text. When empty, the banner is hidden. */
+  bannerText?: string;
+}
+
+/**
+ * Visa Direct theme — maps 1:1 to --widget-* CSS custom properties.
+ * Matches apps/visa-direct/lib/visa-direct-config.ts VisaDirectTheme
+ */
+export interface VisaDirectTheme {
+  primaryColor: string;
+}
+
+/**
+ * Full Visa Direct configuration
+ */
+export interface VisaDirectConfig {
+  branding: VisaDirectBranding;
+  theme: VisaDirectTheme;
+}
+
+/**
+ * Default Visa Direct configuration.
+ * Dynamic-branded, neutral slate palette — so an unbranded demo = Dynamic.
+ */
+export const DEFAULT_VISA_DIRECT_CONFIG: VisaDirectConfig = {
+  branding: {
+    bannerText: "Demo environment — Visa Direct × Fireblocks",
+  },
+  theme: {
+    primaryColor: "#4779FF",
+  },
+};
+
+/**
+ * Stored Visa Direct configuration with metadata
+ */
+export interface StoredVisaDirectConfig {
+  id: string;
+  name: string;
+  description?: string;
+  config: VisaDirectConfig;
+  createdAt: string;
+  updatedAt: string;
+  ownerId?: string;
+}
+
+// =============================================================================
 // Brand Profiles
 // =============================================================================
 

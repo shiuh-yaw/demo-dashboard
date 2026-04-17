@@ -261,6 +261,16 @@ export const REDIS_KEYS = {
   tradeConfigList: `${DASHBOARD_PREFIX}:trade:list`,
 
   // ==========================================================================
+  // Visa Direct configs (theme/branding for Visa Direct demo)
+  // ==========================================================================
+
+  /** Single Visa Direct config by ID */
+  visaDirectConfig: (id: string) => `${DASHBOARD_PREFIX}:visa-direct:${id}`,
+
+  /** Set of all Visa Direct config IDs */
+  visaDirectConfigList: `${DASHBOARD_PREFIX}:visa-direct:list`,
+
+  // ==========================================================================
   // Brand Profiles (unified branding across demo types)
   // ==========================================================================
 

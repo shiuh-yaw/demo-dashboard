@@ -137,6 +137,70 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/cross-border-ap-ar:
+    dependencies:
+      '@t3-oss/env-nextjs':
+        specifier: 0.13.8
+        version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
+      clsx:
+        specifier: 2.1.1
+        version: 2.1.1
+      jsonwebtoken:
+        specifier: 9.0.2
+        version: 9.0.2
+      lucide-react:
+        specifier: 0.541.0
+        version: 0.541.0(react@19.1.4)
+      next:
+        specifier: 15.5.9
+        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      react:
+        specifier: 19.1.4
+        version: 19.1.4
+      react-dom:
+        specifier: 19.1.4
+        version: 19.1.4(react@19.1.4)
+      tailwind-merge:
+        specifier: 3.4.0
+        version: 3.4.0
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@eslint/eslintrc':
+        specifier: 3.3.1
+        version: 3.3.1
+      '@tailwindcss/postcss':
+        specifier: 4.1.17
+        version: 4.1.17
+      '@types/jsonwebtoken':
+        specifier: 9.0.10
+        version: 9.0.10
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      '@types/react':
+        specifier: 19.2.5
+        version: 19.2.5
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.5)
+      eslint:
+        specifier: 9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      eslint-config-next:
+        specifier: 15.5.4
+        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.1.17
+        version: 4.1.17
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   apps/dashboard:
     dependencies:
       '@anthropic-ai/sdk':
@@ -437,6 +501,97 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/field:
+    dependencies:
+      '@dynamic-demos/alchemy':
+        specifier: workspace:*
+        version: link:../../packages/alchemy
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
+      '@dynamic-demos/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@dynamic-demos/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@dynamic-labs-sdk/client':
+        specifier: 0.12.1
+        version: 0.12.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/evm':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@dynamic-labs-sdk/zerodev':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@t3-oss/env-nextjs':
+        specifier: 0.13.8
+        version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
+      '@tanstack/react-query':
+        specifier: 5.90.16
+        version: 5.90.16(react@19.1.4)
+      clsx:
+        specifier: 2.1.1
+        version: 2.1.1
+      jsonwebtoken:
+        specifier: 9.0.2
+        version: 9.0.2
+      lucide-react:
+        specifier: 0.541.0
+        version: 0.541.0(react@19.1.4)
+      next:
+        specifier: 15.5.9
+        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      react:
+        specifier: 19.1.4
+        version: 19.1.4
+      react-dom:
+        specifier: 19.1.4
+        version: 19.1.4(react@19.1.4)
+      tailwind-merge:
+        specifier: 3.4.0
+        version: 3.4.0
+      viem:
+        specifier: 2.42.1
+        version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@eslint/eslintrc':
+        specifier: 3.3.1
+        version: 3.3.1
+      '@tailwindcss/postcss':
+        specifier: 4.1.17
+        version: 4.1.17
+      '@types/jsonwebtoken':
+        specifier: 9.0.10
+        version: 9.0.10
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      '@types/react':
+        specifier: 19.2.5
+        version: 19.2.5
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.5)
+      eslint:
+        specifier: 9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      eslint-config-next:
+        specifier: 15.5.4
+        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.1.17
+        version: 4.1.17
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   apps/remittance:
     dependencies:
       '@dynamic-demos/alchemy':
@@ -702,6 +857,97 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      react:
+        specifier: 19.1.4
+        version: 19.1.4
+      react-dom:
+        specifier: 19.1.4
+        version: 19.1.4(react@19.1.4)
+      tailwind-merge:
+        specifier: 3.4.0
+        version: 3.4.0
+      viem:
+        specifier: 2.42.1
+        version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@eslint/eslintrc':
+        specifier: 3.3.1
+        version: 3.3.1
+      '@tailwindcss/postcss':
+        specifier: 4.1.17
+        version: 4.1.17
+      '@types/jsonwebtoken':
+        specifier: 9.0.10
+        version: 9.0.10
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      '@types/react':
+        specifier: 19.2.5
+        version: 19.2.5
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.5)
+      eslint:
+        specifier: 9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      eslint-config-next:
+        specifier: 15.5.4
+        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+      tailwindcss:
+        specifier: 4.1.17
+        version: 4.1.17
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  apps/visa-direct:
+    dependencies:
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
+      '@dynamic-demos/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@dynamic-demos/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@dynamic-labs-sdk/client':
+        specifier: 0.12.1
+        version: 0.12.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/evm':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@dynamic-labs-sdk/zerodev':
+        specifier: 0.12.1
+        version: 0.12.1(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@dynamic-labs/iconic':
+        specifier: 4.61.1
+        version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      '@t3-oss/env-nextjs':
+        specifier: 0.13.8
+        version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
+      '@tanstack/react-query':
+        specifier: 5.90.16
+        version: 5.90.16(react@19.1.4)
+      clsx:
+        specifier: 2.1.1
+        version: 2.1.1
+      jsonwebtoken:
+        specifier: 9.0.2
+        version: 9.0.2
+      lucide-react:
+        specifier: 0.541.0
+        version: 0.541.0(react@19.1.4)
+      next:
+        specifier: 15.5.9
+        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
         specifier: 19.1.4
         version: 19.1.4

@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/* Include shared packages for Tailwind class scanning */
+@source "../../../packages/ui/src/**/*.tsx";
+@source "../../../packages/ui/src/**/*.ts";
+
+/*
+ * Visa Direct is light-mode only (no theme toggle). Override Tailwind v4's
+ * default `dark:` variant — which triggers on `prefers-color-scheme: dark` —
+ * so it only applies inside an explicit `.dark` class (which we never set).
+ * This keeps shared components like `DynamicLogo` rendering in their
+ * light-mode treatment even when the OS is in dark mode.
+ */
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  /*
+   * Visa Direct defaults.
+   *
+   * Only `--widget-primary` is configurable per brand (see VisaDirectTheme
+   * and themeToCssVars in lib/visa-direct-config.ts). The root layout
+   * injects an inline <style> block that overrides `--widget-primary`
+   * when a config is loaded; everything else stays neutral across brands.
+   */
+  --widget-primary: #4779ff;
+  /* Accent follows the primary color — used only by the OTP "Resend" link. */
+  --widget-accent: var(--widget-primary);
+  --widget-page-bg: #f8fafc;
+  --widget-bg: #ffffff;
+  --widget-fg: #0f172a;
+  --widget-row-bg: #f8fafc;
+  --widget-row-hover: #f1f5f9;
+  --widget-muted: #64748b;
+  --widget-border: #e2e8f0;
+  --widget-success: #008a05;
+  --widget-error: #c13515;
+
+  /* Status badge variants (per CLAUDE.md spec) */
+  --widget-status-completed-bg: #d1fae5;
+  --widget-status-completed-fg: #059669;
+  --widget-status-pending-bg: #fef3c7;
+  --widget-status-pending-fg: #92600a;
+  --widget-status-failed-bg: #fee2e2;
+  --widget-status-failed-fg: #c13515;
+  --widget-status-rejected-bg: #ffedd5;
+  --widget-status-rejected-fg: #c2410c;
+  --widget-status-neutral-bg: #f3f4f6;
+  --widget-status-neutral-fg: #6b7280;
+  --widget-status-info-bg: #dbeafe;
+  --widget-status-info-fg: #1d4ed8;
+
+  /* Panel accent backgrounds (payload drawer) */
+  --widget-panel-blue-bg: #eff6ff;
+  --widget-panel-orange-bg: #fff7ed;
+
+  --widget-radius-sm: 8px;
+  --widget-radius: 12px;
+  --widget-radius-lg: 24px;
+}
+
+@layer base {
+  * {
+    @apply border-(--widget-border);
+  }
+  html,
+  body {
+    @apply overflow-hidden h-full;
+  }
+  body {
+    @apply bg-(--widget-page-bg) text-(--widget-fg);
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+  }
+
+  /*
+   * Tailwind v4 ships with `cursor: default` on buttons and role=button
+   * elements. We want the classic pointer for every interactive control,
+   * with the disabled state overriding back to not-allowed.
+   */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  summary,
+  a[href],
+  label[for],
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="button"]:not(:disabled),
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  [role="tab"][aria-disabled="true"],
+  [role="option"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--widget-border) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--widget-border);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--widget-muted);
+}

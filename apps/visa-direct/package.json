@@ -1,0 +1,46 @@
+{
+  "name": "@dynamic-demos/visa-direct",
+  "version": "0.1.0",
+  "description": "Visa Direct stablecoin payout demo — Airbnb host portal",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4006",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@t3-oss/env-nextjs": "0.13.8",
+    "@dynamic-demos/dynamic": "workspace:*",
+    "@dynamic-demos/ui": "workspace:*",
+    "@dynamic-demos/utils": "workspace:*",
+    "@dynamic-labs-sdk/client": "0.12.1",
+    "@dynamic-labs-sdk/evm": "0.12.1",
+    "@dynamic-labs-sdk/zerodev": "0.12.1",
+    "@dynamic-labs/iconic": "4.61.1",
+    "@tanstack/react-query": "5.90.16",
+    "clsx": "2.1.1",
+    "jsonwebtoken": "9.0.2",
+    "lucide-react": "0.541.0",
+    "next": "15.5.9",
+    "react": "19.1.4",
+    "react-dom": "19.1.4",
+    "tailwind-merge": "3.4.0",
+    "viem": "2.42.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@dynamic-demos/tsconfig": "workspace:*",
+    "@eslint/eslintrc": "3.3.1",
+    "@tailwindcss/postcss": "4.1.17",
+    "eslint": "9.39.1",
+    "eslint-config-next": "15.5.4",
+    "@types/jsonwebtoken": "9.0.10",
+    "@types/node": "20.19.25",
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
+    "tailwindcss": "4.1.17",
+    "typescript": "5.9.3"
+  }
+}

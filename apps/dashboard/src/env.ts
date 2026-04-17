@@ -150,6 +150,15 @@ export const env = createEnv({
       .string()
       .url()
       .default("http://localhost:4005"),
+    /**
+     * Visa Direct Project URL for live preview
+     * Points to the running visa-direct demo project
+     * Defaults to http://localhost:4006
+     */
+    NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL: z
+      .string()
+      .url()
+      .default("http://localhost:4006"),
   },
   /*
    * Due to how Next.js bundles environment variables on Edge and Client,
@@ -185,5 +194,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_REMITTANCE_PROJECT_URL,
     NEXT_PUBLIC_TRADE_PROJECT_URL:
       process.env.NEXT_PUBLIC_TRADE_PROJECT_URL,
+    NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL:
+      process.env.NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL,
   },
 });

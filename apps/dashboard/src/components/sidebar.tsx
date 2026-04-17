@@ -9,6 +9,7 @@ import {
   Banknote,
   Send,
   LineChart,
+  CreditCard,
 } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { DynamicLogo } from "@/components/dynamic-logo";
@@ -55,6 +56,11 @@ const navGroups = [
         href: "/trade",
         label: "Trade",
         icon: LineChart,
+      },
+      {
+        href: "/visa-direct",
+        label: "Visa Direct",
+        icon: CreditCard,
       },
     ],
   },

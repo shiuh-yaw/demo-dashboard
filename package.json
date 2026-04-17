@@ -11,6 +11,7 @@
     "dev:wallet": "turbo run dev --filter=@dynamic-demos/wallet",
     "dev:remittance": "turbo run dev --filter=@dynamic-demos/remittance",
     "dev:deposit": "turbo run dev --filter=@dynamic-demos/deposit",
+    "dev:field": "turbo run dev --filter=@dynamic-demos/field",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"
   },
