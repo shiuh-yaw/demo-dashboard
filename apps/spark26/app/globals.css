@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+@theme {
+  /* Spark26 Brand Guidelines — pp. 15-17 */
+  --color-navy: #212647;
+  --color-navy-800: #1b2040;
+  --color-navy-900: #13162e;
+  --color-navy-tint: #262b52;
+  --color-navy-line: #2f356a;
+  --color-blue: #678BFF;
+  --color-blue-400: #4467F3;
+  --color-blue-100: #E8EBFF;
+  --color-gold: #FFC64E;
+  --color-gold-400: #FB9F01;
+  --color-gold-100: #FFF9EB;
+  --color-pink: #FF648B;
+  --color-pink-400: #F24878;
+  --color-pink-100: #FFE1EA;
+  --color-grey: #F9FAFC;
+
+  --font-display: var(--font-ufficio), "Ufficio Fireblocks", "Figtree", system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-figtree), "Figtree", system-ui, -apple-system, sans-serif;
+
+  --leading-tight: 1.1;
+  --radius-card: 24px;
+  --radius-surface: 16px;
+
+  --ease-brand: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-navy-900);
+  color: var(--color-grey);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-feature-settings: "liga" 0, "calt" 0;
+  line-height: var(--leading-tight);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.015em;
+}
+
+/* Label — tracked caps, architectural-signage tone per brand */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-blue-100) 45%, transparent);
+}
+
+/* Display numeric — currency symbol rendered lighter than digits so the
+   number dominates. Matches Fireblocks-style editorial typographic hierarchy. */
+.display-amount {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.display-amount-sm {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.display-currency {
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, var(--color-blue-100) 65%, transparent);
+  margin-right: 4px;
+}
+
+/* Card — flat navy-tint surface, precise hairline border, no gradient,
+   no inset glow, no shimmer. Confidence through restraint. */
+.card {
+  position: relative;
+  border-radius: var(--radius-card);
+  background: var(--color-navy-tint);
+  border: 1px solid var(--color-navy-line);
+  padding: 20px 22px;
+}
+
+@media (min-width: 480px) {
+  .card {
+    padding: 24px 28px;
+  }
+}
+
+/* Surface — nested quiet block inside card */
+.surface {
+  border-radius: var(--radius-surface);
+  background: color-mix(in srgb, var(--color-navy-900) 55%, transparent);
+  border: 1px solid var(--color-navy-line);
+}
+
+/* Row — interactive list item, flat and crisp */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--color-navy-900) 35%, transparent);
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-brand),
+    background 160ms var(--ease-brand);
+}
+
+.row:hover {
+  border-color: color-mix(in srgb, var(--color-blue) 45%, transparent);
+  background: color-mix(in srgb, var(--color-blue) 6%, transparent);
+}
+
+/* Spark bolt pulse — used as the checkout loader glyph. The bolt "strikes"
+   gently rather than spinning; a brand-expressive alternative to a ring. */
+@keyframes spark-bolt-pulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.spark-bolt-pulse {
+  animation: spark-bolt-pulse 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark-bolt-pulse {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* Entrance — single restrained fade, no stagger, no translate cascade */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fade-in 280ms var(--ease-brand) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: none;
+  }
+}
+
+/* Focus — tonal, confident, never browser-default */
+:where(button, a, select, [role="button"]):focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Pointer cursor on every interactive affordance; `:not(:disabled)` keeps
+   disabled buttons showing the default/forbidden cursor. */
+:where(button, [role="button"]):not(:disabled) {
+  cursor: pointer;
+}

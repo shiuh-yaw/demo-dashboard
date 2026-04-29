@@ -27,6 +27,11 @@ export interface AuthLayoutProps {
    * Applied as inline style for apps that need runtime overrides.
    */
   themeOverrides?: Record<string, string>;
+  /**
+   * Show the light/dark theme toggle in the top-right corner.
+   * Set to false for apps that are single-theme only. Default: true.
+   */
+  showThemeToggle?: boolean;
 }
 
 function ThemeToggle() {
@@ -54,16 +59,18 @@ export function AuthLayout({
   logo,
   maxWidth = "400px",
   themeOverrides,
+  showThemeToggle = true,
 }: AuthLayoutProps) {
   return (
     <div
       className="relative min-h-dvh flex flex-col items-center p-6 w-full bg-[var(--widget-page-bg)]"
       style={themeOverrides as React.CSSProperties}
     >
-      {/* Theme toggle - top right */}
-      <div className="absolute top-4 right-4 z-10">
-        <ThemeToggle />
-      </div>
+      {showThemeToggle && (
+        <div className="absolute top-4 right-4 z-10">
+          <ThemeToggle />
+        </div>
+      )}
 
       {/* Centered content area */}
       <div className="flex-1 flex flex-col items-center justify-center gap-4 w-full min-h-0">

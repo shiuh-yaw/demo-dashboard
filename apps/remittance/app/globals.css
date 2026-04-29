@@ -4,6 +4,17 @@
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/ui/src/**/*.ts";
 
+/*
+ * Remittance is light-mode only (no theme toggle is actually wired up — the
+ * AuthLayout toggle is inert without a next-themes ThemeProvider). Override
+ * Tailwind v4's default `dark:` variant — which triggers on
+ * `prefers-color-scheme: dark` — so it only applies inside an explicit
+ * `.dark` class (which we never set). This keeps shared components like
+ * `DynamicLogo` rendering in their light-mode treatment even when the
+ * user's OS is in dark mode.
+ */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Remittance Theme Variables */
   --widget-page-bg: #f0f4f8;

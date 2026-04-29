@@ -26,6 +26,7 @@ export function RemittanceAuthLayout({ children }: RemittanceAuthLayoutProps) {
         />
       }
       themeOverrides={themeToCssVars(theme)}
+      showThemeToggle={false}
     >
       {children}
     </AuthLayout>

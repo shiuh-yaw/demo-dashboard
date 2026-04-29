@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/internal/reconcile",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "installCommand": "pnpm install --frozen-lockfile"
+}
