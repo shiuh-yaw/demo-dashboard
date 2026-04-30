@@ -1,0 +1,31 @@
+name: spark26 protection
+
+on:
+  pull_request:
+    branches: [main]
+
+# D-006: apps/spark26/ is production. Zero-touch unless the PR opts in
+# explicitly via "[spark26]" in the title. This workflow enforces that.
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  enforce:
+    name: Enforce spark26 opt-in
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Block accidental spark26 changes
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD")
+          ./.github/scripts/check-spark26-protection.sh "${CHANGED}" "${PR_TITLE}"

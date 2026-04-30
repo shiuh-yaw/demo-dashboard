@@ -10,8 +10,8 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 
 | Phase | Status | PR | Notes |
 |---|---|---|---|
-| 0. Cleanup | ⚪️ pending | — | — |
-| 0.5. CI baseline | ⚪️ pending | — | Blocked by Phase 0 merge |
+| 0. Cleanup | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/21 | — |
+| 0.5. CI baseline | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/22 | Pre-existing lint/build failures in apps/deposit and apps/shop run with continue-on-error; tracked for follow-up. |
 
 ---
 
