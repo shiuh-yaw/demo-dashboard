@@ -713,17 +713,17 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.22.1
-        version: 0.22.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        specifier: 0.24.1
+        version: 0.24.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.22.1
-        version: 0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
+        specifier: 0.24.1
+        version: 0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@dynamic-labs-sdk/solana':
-        specifier: 0.22.1
-        version: 0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        specifier: 0.24.1
+        version: 0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/wallet-connect':
-        specifier: 0.22.1
-        version: 0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        specifier: 0.24.1
+        version: 0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@t3-oss/env-nextjs':
         specifier: 0.11.1
         version: 0.11.1(typescript@5.9.3)(zod@3.24.3)
@@ -1525,8 +1525,8 @@ packages:
   '@dynamic-labs-sdk/assert-package-version@0.12.1':
     resolution: {integrity: sha512-DtDKn9rusMw5CvM2lt5u+bZ0W08R2YaaJcM9w4Zt3XI9pdAlshOBKhd1tIRXDne2Y8a04GFTpyvRhPkxXcJVHw==}
 
-  '@dynamic-labs-sdk/assert-package-version@0.22.1':
-    resolution: {integrity: sha512-9wPFTGYuVG8idXITldnxYl74StyxsjAv+DgCBuXfvEN0oDe9bANBBcG2IM+ayRtugZ0jyVePD45sspvLNsUH/A==}
+  '@dynamic-labs-sdk/assert-package-version@0.24.1':
+    resolution: {integrity: sha512-pCOWQrIzYYDtsbCZhfOuPrsHeUURF8GR1FqSsqebzEUR3hb99qcqRutKV66RUdX8qQ4nJP004leAHJ4S/e7yhQ==}
 
   '@dynamic-labs-sdk/assert-package-version@0.25.0':
     resolution: {integrity: sha512-Uu1H+CWLD2OctfXz80mND5rQho8tlaOOnUkZu/xmBDtcce6mAxq0DHdh3Z4joxOqG7d0Te3FGOHrJ4CGx3DO6Q==}
@@ -1537,8 +1537,8 @@ packages:
   '@dynamic-labs-sdk/client@0.12.1':
     resolution: {integrity: sha512-izUZgefwRGGB3eeIDgZesfiy144GnFsC6BX0+nGAKyF7AuTDIE2joJK3KhNdIbH5jJozHa34IbFqJ1ly/aZPhA==}
 
-  '@dynamic-labs-sdk/client@0.22.1':
-    resolution: {integrity: sha512-eCMvHtfB1OwhsHyw81MpicmUCsNACrJVJV3oah9sBcfAPCVolqIVaQp+7xPjMkPDZ2ld6l2MCJVqpk5k/QGI0w==}
+  '@dynamic-labs-sdk/client@0.24.1':
+    resolution: {integrity: sha512-V4XHFBRH6uHmrZnxCVet1/nc5pDBQfm0ml1nsVA+mzI7JCO/APm+w3cHxdXTX5fEHlGm0vzM+AHWzq0NvtqA+Q==}
 
   '@dynamic-labs-sdk/client@0.25.0':
     resolution: {integrity: sha512-HcjG3yyqn0Fg/npias3Sv23Wel9w+aHomi18MUd/rWAfQUOS1ZpJBOCw3XKFtWVzm3PAC9gBoeSGlrUsOg/hSQ==}
@@ -1548,8 +1548,8 @@ packages:
     peerDependencies:
       viem: ^2.28.4
 
-  '@dynamic-labs-sdk/evm@0.22.1':
-    resolution: {integrity: sha512-faWovfzAa80Hxy/RIQF5mUN/HRUaZ0G5LVU6S9KYBiWwn4i9zbOeS436pwbd3kT36mB12DMBtgc1bwXGbrNQ/w==}
+  '@dynamic-labs-sdk/evm@0.24.1':
+    resolution: {integrity: sha512-Sf7gKxMkN5FdqrEJ/ijmJfaK5Xz0pgoi8jAcvR0HiWQQL659zI+TBAEkSfM81JAD9poetNL+/nPdLvmwJKI85w==}
     peerDependencies:
       viem: ^2.28.4
 
@@ -1561,8 +1561,8 @@ packages:
   '@dynamic-labs-sdk/solana@0.12.1':
     resolution: {integrity: sha512-Cgde0HIMciMrx3Tp8jUbwnNX1qvoSXHkBqI3v81eBfVN0vDGTBkRH83LSGSlE1cl1SP/AUKZpcCbWZDuewHJtA==}
 
-  '@dynamic-labs-sdk/solana@0.22.1':
-    resolution: {integrity: sha512-WainBkrYJS7MjFngF7enQh5GkU7TafbYoEgoV4dSlPdXg0mPLv305zzxXgXQCukFg/4WEdVc0lIrVVo7fsJy4Q==}
+  '@dynamic-labs-sdk/solana@0.24.1':
+    resolution: {integrity: sha512-tQy4jQCIQG8eslQFA+G0vJGY/FCU6w1aDFAy0/Uq2ajtcWm2j+Yt8Sr0wmbcf/qFTz9MlYHB9kUnWP1lEV3yeA==}
 
   '@dynamic-labs-sdk/solana@0.25.0':
     resolution: {integrity: sha512-tVG7DO0DDrUwbX/+BtB2JkMqmxGYGvvw0gOzw+60s1A4Q150e59Gy2ziZaDQBaM9GTXdU81792EEv+TwnjJOsQ==}
@@ -1570,8 +1570,8 @@ packages:
   '@dynamic-labs-sdk/wallet-connect@0.12.1':
     resolution: {integrity: sha512-Im6wifsUzwWw07wwXledrx+nV7b4FTmHHzEtLLnt6H+8tCLXn3bDXuQBzknKFCa8P7XL0qAH+WUadFEV/JQAMQ==}
 
-  '@dynamic-labs-sdk/wallet-connect@0.22.1':
-    resolution: {integrity: sha512-JnOXqnf9OCxb13otbsZJpzTFS+paMO9CQXN6lqUl2EALdS1DRV9HJlSK+o+6xSs6CPeVm7tphX2PtQsB2Klygw==}
+  '@dynamic-labs-sdk/wallet-connect@0.24.1':
+    resolution: {integrity: sha512-VO5oqbm+NTkHVytd8rsaGfkBo5la3gaY4oGh8S/Ty7Z6/UjxqkG3tLPPw7lOeIQCZecXxj7wOw1g74WFoM9GQA==}
 
   '@dynamic-labs-sdk/wallet-connect@0.25.0':
     resolution: {integrity: sha512-mdIHJUFrGYlZ5emv0MSYFqihv8Vjl1Zcy9w4XoVvz/hgJlF3EeYrPWHJmSZ55SETKevrbJwMLMJZlBwMJNyJ7Q==}
@@ -1673,8 +1673,8 @@ packages:
   '@dynamic-labs/sdk-api-core@0.0.900':
     resolution: {integrity: sha512-4kb6IY75fFbTLwW24hN8ziVuxEeGAtsQpvXlKXA/XYrPKFFtJU6VQnuiKrKAerekIltdfMXEIqBJpcdPsmbszg==}
 
-  '@dynamic-labs/sdk-api-core@0.0.921':
-    resolution: {integrity: sha512-UvO5FWz/nxeE4vs3F/YoTaa3qG5EJ4sz1CbTwopvHup10GTOnqRzo2vu9pHwqfqMXDnbgB/lgxfAUrLDOl1dZA==}
+  '@dynamic-labs/sdk-api-core@0.0.927':
+    resolution: {integrity: sha512-jL0XRN9GzKeN2wcppD8Ixt2Q7VtkNSbBv6up6el8vutsiQ8ZxA/eX/Wb1ysw8TXiIcDUl2p0afyWwkSxIj+8rw==}
 
   '@dynamic-labs/sdk-api-core@0.0.941':
     resolution: {integrity: sha512-PaYmiLH8UjERGXbrZq/SHJHg5xR+NPHYUwfQhGQIZPQyh/6atmYkBo4cqTTohn0WkUjW/+P/XFaSKSsZWxsiIg==}
@@ -7301,7 +7301,7 @@ snapshots:
 
   '@dynamic-labs-sdk/assert-package-version@0.12.1': {}
 
-  '@dynamic-labs-sdk/assert-package-version@0.22.1': {}
+  '@dynamic-labs-sdk/assert-package-version@0.24.1': {}
 
   '@dynamic-labs-sdk/assert-package-version@0.25.0': {}
 
@@ -7340,11 +7340,11 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@dynamic-labs-sdk/client@0.22.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/client@0.24.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
-      '@dynamic-labs-sdk/assert-package-version': 0.22.1
+      '@dynamic-labs-sdk/assert-package-version': 0.24.1
       '@dynamic-labs-wallet/browser-wallet-client': 0.0.286(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@dynamic-labs/sdk-api-core': 0.0.921
+      '@dynamic-labs/sdk-api-core': 0.0.927
       '@simplewebauthn/browser': 13.1.0
       ably: 2.17.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       buffer: 6.0.3
@@ -7481,12 +7481,12 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/evm@0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
+  '@dynamic-labs-sdk/evm@0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
     dependencies:
-      '@dynamic-labs-sdk/assert-package-version': 0.22.1
-      '@dynamic-labs-sdk/client': 0.22.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@dynamic-labs/sdk-api-core': 0.0.921
+      '@dynamic-labs-sdk/assert-package-version': 0.24.1
+      '@dynamic-labs-sdk/client': 0.24.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs/sdk-api-core': 0.0.927
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.8)(ioredis@5.6.1)
       '@walletconnect/utils': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3)
       viem: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3)
@@ -7638,12 +7638,12 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/solana@0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/solana@0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
-      '@dynamic-labs-sdk/assert-package-version': 0.22.1
-      '@dynamic-labs-sdk/client': 0.22.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@dynamic-labs/sdk-api-core': 0.0.921
+      '@dynamic-labs-sdk/assert-package-version': 0.24.1
+      '@dynamic-labs-sdk/client': 0.24.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs/sdk-api-core': 0.0.927
       '@solana/spl-token': 0.4.14(@solana/web3.js@1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@wallet-standard/app': 1.0.1
@@ -7765,11 +7765,11 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@dynamic-labs-sdk/wallet-connect@0.22.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/wallet-connect@0.24.1(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
-      '@dynamic-labs-sdk/assert-package-version': 0.22.1
-      '@dynamic-labs-sdk/client': 0.22.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@dynamic-labs/sdk-api-core': 0.0.921
+      '@dynamic-labs-sdk/assert-package-version': 0.24.1
+      '@dynamic-labs-sdk/client': 0.24.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs/sdk-api-core': 0.0.927
       '@walletconnect/sign-client': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.5)
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.8)(ioredis@5.6.1)
       '@walletconnect/utils': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.5)
@@ -8192,7 +8192,7 @@ snapshots:
 
   '@dynamic-labs/sdk-api-core@0.0.900': {}
 
-  '@dynamic-labs/sdk-api-core@0.0.921': {}
+  '@dynamic-labs/sdk-api-core@0.0.927': {}
 
   '@dynamic-labs/sdk-api-core@0.0.941': {}
 
@@ -9439,7 +9439,7 @@ snapshots:
   '@scure/bip32@1.6.2':
     dependencies:
       '@noble/curves': 1.8.2
-      '@noble/hashes': 1.7.2
+      '@noble/hashes': 1.7.1
       '@scure/base': 1.2.6
 
   '@scure/bip32@1.7.0':
@@ -9460,7 +9460,7 @@ snapshots:
 
   '@scure/bip39@1.5.4':
     dependencies:
-      '@noble/hashes': 1.7.2
+      '@noble/hashes': 1.7.1
       '@scure/base': 1.2.6
 
   '@scure/bip39@1.6.0':
@@ -9471,7 +9471,7 @@ snapshots:
   '@scure/btc-signer@1.6.0':
     dependencies:
       '@noble/curves': 1.8.2
-      '@noble/hashes': 1.7.2
+      '@noble/hashes': 1.7.1
       '@scure/base': 1.2.6
       micro-packed: 0.7.3
 

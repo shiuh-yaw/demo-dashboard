@@ -39,6 +39,10 @@ import {
 } from "@dynamic-labs-sdk/client";
 import {
   getDefaultClient,
+  onEvent as sdkOnEvent,
+  offEvent as sdkOffEvent,
+  type OnEventParams,
+  type OffEventParams,
 } from "@dynamic-labs-sdk/client";
 
 // Re-export types
@@ -50,7 +54,16 @@ export type {
   CheckoutTransactionCreateResponse,
   CheckoutExecutionState,
   CheckoutSettlementState,
+  OnEventParams,
+  OffEventParams,
 };
+
+// =============================================================================
+// EVENTS
+// =============================================================================
+
+export const onEvent: typeof sdkOnEvent = (params) => sdkOnEvent(params);
+export const offEvent: typeof sdkOffEvent = (params) => sdkOffEvent(params);
 
 // =============================================================================
 // AUTH
@@ -124,6 +137,7 @@ export const getBalances = async (params: {
   walletAccount: WalletAccount;
   includeNative?: boolean;
   includePrices?: boolean;
+  filterSpamTokens?: boolean;
 }) => {
   if (typeof window === "undefined") return [];
   return sdkGetBalances(params);

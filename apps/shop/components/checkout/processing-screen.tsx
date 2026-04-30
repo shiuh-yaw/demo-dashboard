@@ -197,7 +197,7 @@ export function ProcessingScreen() {
   return (
     <div className="flex flex-col gap-5">
       {/* Status label — only show during polling phase (not initial signing) */}
-      {executionState && executionState !== "created" && executionState !== "signing" && (
+      {executionState && executionState !== "initiated" && executionState !== "signing" && (
         <p className="text-sm text-muted-foreground text-center">
           {getStatusLabel(executionState, settlementState)}
         </p>

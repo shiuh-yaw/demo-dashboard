@@ -9,6 +9,8 @@ import {
   getNetworksData,
   getActiveNetworkData,
   switchActiveNetwork,
+  onEvent,
+  offEvent,
 } from "@/lib/checkout-sdk";
 import { useCheckout, type TokenBalance } from "@/lib/checkout-context";
 import { useCart } from "@/lib/cart-context";
@@ -20,6 +22,11 @@ interface NetworkOption {
   iconUrl: string;
 }
 
+const KNOWN_TOKENS = new Set([
+  "ETH", "WETH", "USDC", "USDT", "DAI", "WBTC", "LINK", "UNI", "AAVE", "ARB",
+  "OP", "MATIC", "SOL", "BNB", "AVAX", "DOT", "ATOM", "NEAR", "FTM", "CRV",
+]);
+
 export function TokenSelectScreen() {
   const { selectToken } = useCheckout();
   const { totalPrice } = useCart();
@@ -29,6 +36,12 @@ export function TokenSelectScreen() {
   const [networks, setNetworks] = useState<NetworkOption[]>([]);
   const [activeNetworkId, setActiveNetworkId] = useState<string>("");
   const [networkMenuOpen, setNetworkMenuOpen] = useState(false);
+  const [connectedAddress, setConnectedAddress] = useState<string>("");
+
+  const refreshWalletAddress = useCallback(() => {
+    const wallet = getPrimaryWalletAccount();
+    setConnectedAddress(wallet?.address ?? "");
+  }, []);
 
   const fetchBalances = useCallback(async () => {
     setLoading(true);
@@ -46,10 +59,13 @@ export function TokenSelectScreen() {
         walletAccount: wallet,
         includeNative: true,
         includePrices: true,
+        filterSpamTokens: false,
       });
 
-      // Filter out tokens worth less than $0.01
-      const filtered = balances.filter((t) => (t.marketValue ?? 0) >= 0.01);
+      // Only show known tokens with a balance
+      const filtered = balances.filter(
+        (t) => t.balance > 0 && KNOWN_TOKENS.has(t.symbol.toUpperCase()),
+      );
       filtered.sort((a, b) => (b.marketValue ?? 0) - (a.marketValue ?? 0));
       setTokens(filtered);
     } catch (err: unknown) {
@@ -83,8 +99,19 @@ export function TokenSelectScreen() {
       });
     }
 
+    refreshWalletAddress();
     fetchBalances();
-  }, [fetchBalances]);
+
+    // Re-fetch when external wallet changes account
+    const listener = () => {
+      refreshWalletAddress();
+      fetchBalances();
+    };
+    onEvent({ event: "walletAccountsChanged", listener });
+    return () => {
+      offEvent({ event: "walletAccountsChanged", listener });
+    };
+  }, [fetchBalances, refreshWalletAddress]);
 
   const handleNetworkSwitch = async (networkId: string) => {
     setNetworkMenuOpen(false);
@@ -108,14 +135,15 @@ export function TokenSelectScreen() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Pay{" "}
-          <span className="font-semibold text-foreground">
-            {formatCurrency(totalPrice)}
-          </span>{" "}
-          — select a token
-        </p>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Pay{" "}
+            <span className="font-semibold text-foreground">
+              {formatCurrency(totalPrice)}
+            </span>{" "}
+            — select a token
+          </p>
 
         {/* Network selector */}
         {networks.length > 1 && (
@@ -168,6 +196,12 @@ export function TokenSelectScreen() {
               </>
             )}
           </div>
+        )}
+        </div>
+        {connectedAddress && (
+          <p className="text-xs text-muted-foreground font-mono truncate">
+            {connectedAddress.slice(0, 6)}...{connectedAddress.slice(-4)}
+          </p>
         )}
       </div>
 
