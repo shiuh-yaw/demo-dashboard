@@ -50,5 +50,6 @@ Thumbs.db
 *.key
 *.csr
 .env*.local
-.planning
-docs
+
+# Personal/session-scoped working notes (kept out of repo)
+docs/superpowers

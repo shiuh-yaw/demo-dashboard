@@ -247,7 +247,7 @@ Complete customer lifecycle management with KYC, wallets, banks, and payment ope
 | POST | `/api/iron/third-party-payments` | **Business pays for user** - Create a payment where a business pays on behalf of a user (B2B2C model). Useful for platforms that want to cover user transaction fees or provide rewards. | Platform subsidizes user fees |
 | POST | `/api/iron/customers/[id]/kyc` | **Start identity verification** - Initiate KYC (Know Your Customer) verification. Returns a URL to redirect the user to Iron's KYC partner for identity verification. Required before first transaction. | Verify user identity |
 
-**Documentation:** See [Iron Official Docs](https://docs.iron.xyz/), `IRON_API_DOCUMENTATION.md`, `IRON_API_FLOWS.md`, and `API_CREATION_GUIDE.md`
+**Documentation:** See [Iron Official Docs](https://docs.iron.xyz/), `IRON_API_DOCUMENTATION.md`, `IRON_API_FLOWS.md`, and `docs/contributing/api-patterns.md`
 
 #### Other APIs
 
@@ -302,7 +302,7 @@ The dashboard includes a complete Iron Finance integration providing enterprise-
 - **[Official Documentation](https://docs.iron.xyz/)** - Complete API reference
 - `IRON_API_DOCUMENTATION.md` - Detailed endpoint descriptions and code examples
 - `IRON_API_FLOWS.md` - Visual diagrams of user journeys
-- `API_CREATION_GUIDE.md` - How to build new API routes
+- `docs/contributing/api-patterns.md` - How to build new API routes
 
 ## Related Projects
 

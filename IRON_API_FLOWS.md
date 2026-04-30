@@ -770,4 +770,4 @@ Quotes expire quickly (typically 30 seconds) because cryptocurrency prices chang
 For more details, see:
 - **[Official Iron Documentation](https://docs.iron.xyz/)** - Complete API reference and guides
 - **Full Documentation**: `IRON_API_DOCUMENTATION.md` - Detailed endpoint descriptions
-- **API Creation Guide**: `API_CREATION_GUIDE.md` - How to build API routes
+- **API Creation Guide**: `docs/contributing/api-patterns.md` - How to build API routes
