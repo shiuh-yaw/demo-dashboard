@@ -85,3 +85,30 @@ export type {
   FireblocksWebhookNotification,
   FireblocksTransactionWebhookData,
 } from "./webhook/notification-schemas";
+
+// Trading orders (Fireblocks DVP / Network listings)
+export {
+  listOrders,
+  getOrder,
+  createOrder,
+  FireblocksOrdersError,
+} from "./orders";
+export type {
+  FireblocksOrder,
+  FireblocksOrdersClient,
+  OrderSide,
+  OrderSettlementType,
+  OrderBeneficiary,
+  CreateOrderParams,
+  CreateOrderResult,
+  ListOrdersOptions,
+  ProviderAccountRef,
+  ProviderEnvironment,
+} from "./orders";
+
+// Fireblocks-Network-listing provider wrappers. Namespaced because each
+// provider re-exports its own `mapStatus` — flat exports would collide.
+// Direct REST integrations (e.g. the `alfredpay` direct path) live in
+// their own packages per D-009.
+export * as Mtlco from "./providers/mtlco";
+export * as Alfredpay from "./providers/alfredpay";

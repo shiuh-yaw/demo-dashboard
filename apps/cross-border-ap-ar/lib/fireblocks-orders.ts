@@ -1,26 +1,44 @@
 /**
- * Fireblocks Orders API client (server-only)
+ * Cross-border AP/AR Fireblocks orchestration (server-only).
  *
- * Uses /v1/trading/orders with RS256 JWT auth (mirrors visa-direct pattern).
+ * The shared `/v1/trading/orders` client and the MTLco / alfredPay
+ * Fireblocks-Network-listing wrappers live in
+ * `@dynamic-demos/fireblocks` (Phase 1A). Everything in this file is
+ * cross-border-ap-ar-specific glue:
+ *
+ *   - The alfredPay off-ramp **stub** that runs while alfredPay is not
+ *     yet connected in this Fireblocks workspace.
+ *   - The hidden `transferUsdcToDepositAddress` "tweak" transfer that
+ *     simulates MTLco's PREFUNDED settlement during the demo using a
+ *     separate Fireblocks workspace's API key.
  *
  * ─── Demo tweak (temporary) ──────────────────────────────────────────────────
  * AlfredPay is not yet connected in this workspace. Until it is:
- *   - createOfframpOrder() is STUBBED — marked with ⚠️ STUB in console logs
+ *   - createOfframpOrder() falls back to a STUB — marked with ⚠️ STUB in logs.
  *   - After MTLco on-ramp order succeeds, a separate USDC vault transfer is
  *     fired (POST /v1/transactions, fire-and-forget) to the deposit address.
- *     This transfer is hidden from the UI but will trigger AlfredPay's
- *     off-ramp settlement once alfredPay is connected.
+ *     Hidden from the UI but will trigger AlfredPay's off-ramp settlement
+ *     once alfredPay is connected.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import jwt from "jsonwebtoken";
 import { createHash, randomUUID } from "crypto";
+import {
+  Alfredpay,
+  Mtlco,
+  type FireblocksOrdersClient,
+  type ProviderEnvironment,
+} from "@dynamic-demos/fireblocks";
 import { env } from "./env";
 
 const FIREBLOCKS_BASE = "https://api.fireblocks.io";
-const ORDERS_PATH = "/v1/trading/orders";
 const TRANSACTIONS_PATH = "/v1/transactions";
 
-// ─── Auth helpers (mirrored from visa-direct/lib/api/fireblocks.ts) ───────────
+// ─── Auth helpers (server-only) ───────────────────────────────────────────────
+//
+// Used only by the hidden `transferUsdcToDepositAddress` tweak below
+// (which talks to `/v1/transactions`, not the Orders API). The Orders
+// auth lives in `@dynamic-demos/fireblocks`.
 
 function decodePem(raw: string): string {
   if (raw.trimStart().startsWith("-----BEGIN")) return raw;
@@ -50,51 +68,29 @@ function buildAuthJwt(
   );
 }
 
-function getCredentials(): { apiKey: string; privateKey: string } {
-  const apiKey = env.FIREBLOCKS_API_KEY;
-  const apiSecretRaw = env.FIREBLOCKS_API_SECRET;
-  if (!apiKey || !apiSecretRaw) {
+// ─── Orders client builder ────────────────────────────────────────────────────
+
+/**
+ * Sandbox-by-default per D-005. Until cross-border-ap-ar wires an
+ * explicit `FIREBLOCKS_ENVIRONMENT` env var, fall back to NODE_ENV so
+ * production deploys still hit `api.fireblocks.io`.
+ */
+function resolveEnvironment(): ProviderEnvironment {
+  return process.env.NODE_ENV === "production" ? "production" : "sandbox";
+}
+
+function getOrdersClient(): FireblocksOrdersClient {
+  if (!env.FIREBLOCKS_API_KEY || !env.FIREBLOCKS_API_SECRET) {
     throw new Error(
       "FIREBLOCKS_API_KEY and FIREBLOCKS_API_SECRET must be set in .env.local",
     );
   }
-  return { apiKey, privateKey: decodePem(apiSecretRaw) };
-}
-
-async function fbPost<T>(path: string, body: unknown): Promise<T> {
-  const { apiKey, privateKey } = getCredentials();
-  const token = buildAuthJwt(apiKey, privateKey, path, body);
-
-  console.log(`[Fireblocks] POST ${path}`, JSON.stringify(body, null, 2));
-
-  const res = await fetch(`${FIREBLOCKS_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": apiKey,
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    data = { raw: await res.text() };
-  }
-
-  console.log(
-    `[Fireblocks] Response ${res.status}`,
-    JSON.stringify(data, null, 2),
-  );
-
-  if (!res.ok) {
-    throw new Error(`Fireblocks ${res.status}: ${JSON.stringify(data)}`);
-  }
-
-  return data as T;
+  return {
+    apiKey: env.FIREBLOCKS_API_KEY,
+    apiSecretPem: env.FIREBLOCKS_API_SECRET,
+    env: resolveEnvironment(),
+    baseUrl: FIREBLOCKS_BASE,
+  };
 }
 
 // ─── Public result types ─────────────────────────────────────────────────────
@@ -113,10 +109,7 @@ export interface OnrampOrderResult {
   status: string;
 }
 
-// ─── Step 1 — AlfredPay DVP off-ramp (⚠️ STUBBED) ──────────────────────────
-//
-// Replace this stub with a real /v1/trading/orders call once alfredPay is
-// connected in the Fireblocks console and FIREBLOCKS_ALFRED_ACCOUNT_ID is set.
+// ─── Step 1 — AlfredPay DVP off-ramp (stub fallback preserved) ────────────────
 
 interface Beneficiary {
   accountName: string;
@@ -140,34 +133,22 @@ export async function createOfframpOrder(
 ): Promise<OfframpOrderResult> {
   if (env.FIREBLOCKS_ALFRED_ACCOUNT_ID) {
     // ── Real path — alfredPay is connected ────────────────────────────────
-    interface TradingOrderResponse {
-      id: string;
-      status: string;
-      depositAddress?: string;
-      deliveryAddress?: string;
-      destination?: { address?: string };
-      rate?: number;
-      expiresAt?: string;
-    }
-
-    const body = {
-      via: {
-        type: "PROVIDER_ACCOUNT",
-        providerId: env.FIREBLOCKS_ALFRED_PROVIDER_ID,
-        accountId: env.FIREBLOCKS_ALFRED_ACCOUNT_ID,
-      },
-      executionRequestDetails: {
-        type: "MARKET",
-        side: "SELL",
-        baseAmount: String(params.amountUSDC),
+    const result = await Alfredpay.createAlfredpayOfframpOrder(
+      getOrdersClient(),
+      {
+        amountUsdc: params.amountUSDC,
         baseAssetId: env.FIREBLOCKS_OFFRAMP_ASSET_ID,
         quoteAssetId: "MXN",
-        settlementType: "DVP",
+        beneficiary: params.beneficiary,
+        config: {
+          providerId: env.FIREBLOCKS_ALFRED_PROVIDER_ID,
+          accountId: env.FIREBLOCKS_ALFRED_ACCOUNT_ID,
+        },
+        env: resolveEnvironment(),
       },
-      beneficiary: params.beneficiary,
-    };
+    );
 
-    const raw = await fbPost<TradingOrderResponse>(ORDERS_PATH, body);
+    const raw = result.raw;
     const depositAddress =
       raw.depositAddress ??
       raw.deliveryAddress ??
@@ -175,7 +156,7 @@ export async function createOfframpOrder(
       "";
 
     return {
-      orderId: raw.id,
+      orderId: result.orderId,
       depositAddress,
       blockchain: "Ethereum",
       rate: raw.rate ?? STUB_RATE,
@@ -186,6 +167,8 @@ export async function createOfframpOrder(
   }
 
   // ── Stub path — alfredPay not yet connected ────────────────────────────────
+  // Kept in the app (not the package): the stub is a demo-coverage hack,
+  // not a contract of the alfredPay-Fireblocks wrapper.
   const orderId = `STUB-ALFRED-${Date.now()}-${stubOrderCounter++}`;
   console.log(
     `⚠️  [STUB] AlfredPay off-ramp — alfredPay not connected, returning placeholder data`,
@@ -224,43 +207,31 @@ export async function createOnrampOrder(
     throw new Error("FIREBLOCKS_MTLCO_ACCOUNT_ID is not set in .env.local");
   }
 
-  interface TradingOrderResponse {
-    id: string;
-    status: string;
-  }
-
-  const body = {
-    via: {
-      type: "PROVIDER_ACCOUNT",
+  const result = await Mtlco.createMtlcoOnrampOrder(getOrdersClient(), {
+    amountUsd: params.amountUSDC,
+    destinationAddress: params.depositAddress,
+    quoteAssetId: env.FIREBLOCKS_OFFRAMP_ASSET_ID,
+    config: {
       providerId: env.FIREBLOCKS_MTLCO_PROVIDER_ID,
       accountId: env.FIREBLOCKS_MTLCO_ACCOUNT_ID,
     },
-    executionRequestDetails: {
-      type: "MARKET",
-      side: "SELL",
-      baseAmount: String(params.amountUSDC),
-      baseAssetId: "USD",
-      quoteAssetId: env.FIREBLOCKS_OFFRAMP_ASSET_ID,
-    },
-    settlement: {
-      type: "PREFUNDED",
-      destinationAccount: {
-        type: "ONE_TIME_ADDRESS",
-        address: params.depositAddress,
-      },
-    },
-  };
+    env: resolveEnvironment(),
+  });
 
-  const raw = await fbPost<TradingOrderResponse>(ORDERS_PATH, body);
-  return { orderId: raw.id, status: raw.status };
+  return { orderId: result.orderId, status: result.status };
 }
 
 // ─── Hidden tweak — vault USDC → deposit address (fire-and-forget) ─────────
 //
-// Sends USDC from the Treasury vault directly to the alfredPay deposit address.
-// This simulates what MTLco would do in production (PREFUNDED settlement).
-// Hidden from UI. Logged with [TWEAK] prefix so it's easy to identify.
-// Safe to ignore errors — this is supplementary to the MTLco order.
+// Sends USDC from the Treasury vault directly to the alfredPay deposit
+// address. Simulates what MTLco would do in production (PREFUNDED
+// settlement). Hidden from UI. Logged with [TWEAK] prefix so it's easy
+// to identify. Safe to ignore errors — supplementary to the MTLco order.
+//
+// Note: this calls `/v1/transactions`, not Orders — it stays raw here
+// rather than moving into `@dynamic-demos/fireblocks`, which already
+// exposes a richer `FireblocksClient.createTransaction` for the same
+// thing if we ever need it.
 
 interface FireblocksTransaction {
   id: string;

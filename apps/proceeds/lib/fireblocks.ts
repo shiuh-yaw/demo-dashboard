@@ -1,42 +1,28 @@
 /**
- * Fireblocks Orders API client (server-only)
- * Mirrors the cross-border-ap-ar / visa-direct pattern.
+ * Proceeds-specific Fireblocks Orders integration.
+ *
+ * The shared `/v1/trading/orders` client lives in
+ * `@dynamic-demos/fireblocks` (Phase 1A). Everything in this file is
+ * proceeds-specific glue: per-chain provider lookup, mock-mode
+ * fallback for testnets without a Fireblocks provider account, and
+ * the `createPayoutOrder` / `getOrderStatus` shapes the route handlers
+ * already speak.
  */
-import jwt from "jsonwebtoken";
-import { createHash, randomUUID } from "crypto";
+import {
+  createOrder,
+  FireblocksOrdersError,
+  getOrder,
+  listOrders as packageListOrders,
+  type FireblocksOrder,
+  type FireblocksOrdersClient,
+  type ProviderEnvironment,
+} from "@dynamic-demos/fireblocks";
 import { env } from "./env";
 import { getFireblocksConfig } from "./fireblocks-network";
 
-const FIREBLOCKS_BASE = "https://api.fireblocks.io";
-const ORDERS_PATH = "/v1/trading/orders";
-
-function decodePem(raw: string): string {
-  if (raw.trimStart().startsWith("-----BEGIN")) return raw;
-  return Buffer.from(raw, "base64").toString("utf-8");
-}
-
-function buildAuthJwt(
-  apiKey: string,
-  privateKey: string,
-  path: string,
-  body: unknown,
-): string {
-  const bodyStr = body != null ? JSON.stringify(body) : "";
-  const bodyHash = createHash("sha256").update(bodyStr).digest("hex");
-  const now = Math.floor(Date.now() / 1000);
-  return jwt.sign(
-    {
-      uri: path,
-      nonce: randomUUID(),
-      iat: now,
-      exp: now + 30,
-      sub: apiKey,
-      bodyHash,
-    },
-    privateKey,
-    { algorithm: "RS256" },
-  );
-}
+// Re-export the canonical type so existing call sites
+// (`fireblocks-pending.ts`) keep working without churn.
+export type { FireblocksOrder } from "@dynamic-demos/fireblocks";
 
 export interface PayoutOrderResult {
   orderId: string;
@@ -45,68 +31,44 @@ export interface PayoutOrderResult {
 }
 
 /**
- * Single trading order returned by Fireblocks `GET /v1/trading/orders`.
- * Shape mirrors the public Fireblocks Orders API — only the fields we
- * use today are typed, but the object is accepted as a read-only record
- * for callers that need extra metadata.
+ * Sandbox-by-default per D-005. Proceeds runs production payouts on
+ * Polygon mainnet today; once a `FIREBLOCKS_ENVIRONMENT=production`
+ * env var lands (Phase 1B/1E follow-up), prefer it over `NODE_ENV`.
+ * Until then we keep the original behaviour by routing through
+ * `api.fireblocks.io` regardless of the resolved env.
  */
-export interface FireblocksOrder {
-  id: string;
-  status: string;
-  side?: string;
-  baseAmount?: string;
-  baseAssetId?: string;
-  quoteAssetId?: string;
-  quoteAmount?: string | null;
-  createdAt: string;
-  updatedAt?: string;
-  customerInternalReferenceId?: string;
-  note?: string;
-  destination?: {
-    type: string;
-    /** Present when type === "ONE_TIME_ADDRESS" */
-    address?: string;
-    accountId?: string;
-  };
-  source?: {
-    type: string;
-    accountId?: string;
+function resolveEnvironment(): ProviderEnvironment {
+  return process.env.NODE_ENV === "production" ? "production" : "sandbox";
+}
+
+/**
+ * Build a `FireblocksOrdersClient` from app env. Returns `null` when
+ * credentials are missing — callers treat the absence as "demo mode"
+ * and short-circuit to mock data.
+ */
+function getOrdersClient(): FireblocksOrdersClient | null {
+  if (!env.FIREBLOCKS_API_KEY || !env.FIREBLOCKS_API_SECRET) return null;
+  return {
+    apiKey: env.FIREBLOCKS_API_KEY,
+    apiSecretPem: env.FIREBLOCKS_API_SECRET,
+    env: resolveEnvironment(),
+    // Proceeds' previous client always pointed at `api.fireblocks.io`.
+    // Override the package's sandbox default until we wire an explicit
+    // `FIREBLOCKS_ENVIRONMENT` env var alongside the credentials.
+    baseUrl: "https://api.fireblocks.io",
   };
 }
 
 /**
- * Lists Fireblocks trading orders (GET /v1/trading/orders). Returns up
- * to `pageSize` most-recent orders. Returns an empty array (rather than
- * throwing) when credentials are missing — callers can treat the absence
- * of credentials as "demo mode" without special-casing.
+ * Lists Fireblocks trading orders for the proceeds wallet view. Returns
+ * an empty array (rather than throwing) when credentials are missing —
+ * callers can treat the absence as "demo mode" without special-casing.
  */
 export async function listOrders(pageSize = 50): Promise<FireblocksOrder[]> {
-  const apiKey = env.FIREBLOCKS_API_KEY;
-  const apiSecretRaw = env.FIREBLOCKS_API_SECRET;
-  if (!apiKey || !apiSecretRaw) return [];
+  const client = getOrdersClient();
+  if (!client) return [];
 
-  const privateKey = decodePem(apiSecretRaw);
-  const path = `${ORDERS_PATH}?pageSize=${pageSize}`;
-  const token = buildAuthJwt(apiKey, privateKey, path, null);
-
-  const res = await fetch(`${FIREBLOCKS_BASE}${path}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": apiKey,
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`[Fireblocks] GET ${path} ${res.status}:`, text);
-    throw new Error(`Fireblocks request failed (${res.status})`);
-  }
-
-  const json = (await res.json()) as { data?: FireblocksOrder[] };
-  return json.data ?? [];
+  return packageListOrders(client, { pageSize });
 }
 
 export async function createPayoutOrder(params: {
@@ -115,15 +77,14 @@ export async function createPayoutOrder(params: {
   monthKey: string;
   chainId: number;
 }): Promise<PayoutOrderResult> {
-  const apiKey = env.FIREBLOCKS_API_KEY;
-  const apiSecretRaw = env.FIREBLOCKS_API_SECRET;
+  const client = getOrdersClient();
   const networkCfg = getFireblocksConfig(params.chainId);
 
   // Fall through to mock when Fireblocks credentials are missing OR when the
   // selected chain has no Fireblocks provider account configured (e.g. demo
   // testnets like Polygon Amoy / Base Sepolia). The UI still shows the full
   // payout flow with a "Demo (simulated)" badge.
-  if (!apiKey || !apiSecretRaw || !networkCfg) {
+  if (!client || !networkCfg) {
     const reason = !networkCfg
       ? `no Fireblocks config for chainId=${params.chainId}`
       : "Fireblocks credentials missing";
@@ -134,76 +95,39 @@ export async function createPayoutOrder(params: {
     return { orderId: mockId, status: "SUBMITTED", mock: true };
   }
 
-  const privateKey = decodePem(apiSecretRaw);
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev) {
+    console.log(
+      `[Fireblocks] POST /v1/trading/orders for ${params.amountUsdc} USDC → ${params.walletAddress} (chain ${params.chainId})`,
+    );
+  }
 
-  const body = {
-    via: {
-      type: "PROVIDER_ACCOUNT",
-      providerId: networkCfg.providerId,
-      accountId: networkCfg.accountId,
-    },
-    executionRequestDetails: {
-      type: "MARKET",
+  try {
+    const result = await createOrder(client, {
       side: "SELL",
       baseAmount: String(params.amountUsdc),
       baseAssetId: "USD",
       quoteAssetId: networkCfg.assetId,
-    },
-    settlement: {
-      type: "PREFUNDED",
-      destinationAccount: {
-        type: "ONE_TIME_ADDRESS",
-        address: params.walletAddress,
+      settlementType: "PREFUNDED",
+      via: {
+        providerId: networkCfg.providerId,
+        accountId: networkCfg.accountId,
       },
-    },
-    customerInternalReferenceId: `proceeds-${params.monthKey}`,
-    note: `Proceeds payout — ${params.monthKey}`,
-  };
+      destinationAddress: params.walletAddress,
+      customerInternalReferenceId: `proceeds-${params.monthKey}`,
+      note: `Proceeds payout — ${params.monthKey}`,
+    });
 
-  const token = buildAuthJwt(apiKey, privateKey, ORDERS_PATH, body);
-
-  const isDev = process.env.NODE_ENV !== "production";
-  if (isDev) {
-    console.log(
-      `[Fireblocks] POST ${ORDERS_PATH}`,
-      JSON.stringify(body, null, 2),
-    );
+    return { orderId: result.orderId, status: result.status, mock: false };
+  } catch (err) {
+    if (err instanceof FireblocksOrdersError) {
+      // Log full error server-side; surface a generic message upstream so
+      // callers don't echo Fireblocks internals back to the client.
+      console.error(`[Fireblocks] ${err.status}`, err.body);
+      throw new Error(`Fireblocks request failed (${err.status})`);
+    }
+    throw err;
   }
-
-  const res = await fetch(`${FIREBLOCKS_BASE}${ORDERS_PATH}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": apiKey,
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    data = { raw: await res.text() };
-  }
-
-  if (isDev) {
-    console.log(
-      `[Fireblocks] Response ${res.status}`,
-      JSON.stringify(data, null, 2),
-    );
-  }
-
-  if (!res.ok) {
-    // Log full error server-side; surface a generic message upstream so
-    // callers don't echo Fireblocks internals back to the client.
-    console.error(`[Fireblocks] ${res.status}`, data);
-    throw new Error(`Fireblocks request failed (${res.status})`);
-  }
-
-  const result = data as { id: string; status: string };
-  return { orderId: result.id, status: result.status, mock: false };
 }
 
 export async function getOrderStatus(
@@ -213,33 +137,22 @@ export async function getOrderStatus(
     return { orderId, status: "FILLED", mock: true };
   }
 
-  const apiKey = env.FIREBLOCKS_API_KEY;
-  const apiSecretRaw = env.FIREBLOCKS_API_SECRET;
-
-  if (!apiKey || !apiSecretRaw) {
+  const client = getOrdersClient();
+  if (!client) {
     return { orderId, status: "FILLED", mock: true };
   }
 
-  const path = `${ORDERS_PATH}/${orderId}`;
-  const privateKey = decodePem(apiSecretRaw);
-  const token = buildAuthJwt(apiKey, privateKey, path, null);
-
-  const res = await fetch(`${FIREBLOCKS_BASE}${path}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": apiKey,
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`[Fireblocks] GET ${path} ${res.status}:`, text);
-    throw new Error(`Fireblocks request failed (${res.status})`);
+  try {
+    const result = await getOrder(client, orderId);
+    return { orderId: result.id, status: result.status, mock: false };
+  } catch (err) {
+    if (err instanceof FireblocksOrdersError) {
+      console.error(
+        `[Fireblocks] GET /v1/trading/orders/${orderId} ${err.status}:`,
+        err.body,
+      );
+      throw new Error(`Fireblocks request failed (${err.status})`);
+    }
+    throw err;
   }
-
-  const result = (await res.json()) as { id: string; status: string };
-  return { orderId: result.id, status: result.status, mock: false };
 }

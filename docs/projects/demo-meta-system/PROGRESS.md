@@ -19,7 +19,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 
 | Phase | Status | PR | Notes |
 |---|---|---|---|
-| 1A. Fireblocks Orders + provider sub-modules | ⚪️ pending | — | — |
+| 1A. Fireblocks Orders + provider sub-modules | 🟢 done | [#27](https://github.com/dynamic-labs/demo-dashboard/pull/27) | — |
 | 1B-alfredpay (direct REST) | ⚪️ pending | — | — |
 | 1B-blindpay | ⚪️ pending | — | — |
 | 1B-iron | ⚪️ pending | — | — |
