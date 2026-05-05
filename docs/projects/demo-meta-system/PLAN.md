@@ -49,6 +49,7 @@ Wave 2  ─→  [Phase 1A: Fireblocks Orders]      ┐
             [Phase 1B-lifi]                     │
             [Phase 1E: Transactions package]   ─┘
             [Phase 1D: Dynamic consolidation]  (separately, after others — touches many apps)
+            [Phase 1F: pnpm catalog]  (sequenced after 1D — locks consolidated versions)
             [Phase 2 scaffold: Prisma + Supabase setup]  (in parallel, independent)
 
 Wave 3  ─→  [Phase 2 migrations: brands, then per demo type]  (mostly serial)
@@ -99,6 +100,7 @@ The dispatcher's role:
 | `phases/01b-providers.md` | 1B. Independent provider packages (alfredpay, blindpay, iron, coinbase-onramp, lifi) — five sub-prompts | 5–7 days (parallel) | Phase 0.5 |
 | `phases/01d-dynamic-consolidation.md` | 1D. Dynamic SDK consolidation | 2–3 days | Phase 0.5; sequence after 1A/1B/1E to minimize conflicts |
 | `phases/01e-transactions-package.md` | 1E. Transaction state machine package | 2 days | Phase 0.5 |
+| `phases/01f-pnpm-catalog.md` | 1F. pnpm catalog for shared dependencies | 0.5 day | Phase 1D (locks consolidated versions) |
 | `phases/02-prisma-supabase.md` | 2. Prisma + Supabase + brand FK + per-type migrations | 5–7 days | Phase 1 (mostly) |
 | `phases/03-agents-md.md` | 3. AGENTS.md authoring + demo-registry generator | 2–3 days | Phase 1; parallelizable per package/app |
 | `phases/04-theming.md` | 4. Default theme + visa-direct cookie pattern + per-app migration | 4–6 days | Phase 1D + Phase 3; parallel per app |
