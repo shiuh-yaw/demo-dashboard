@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dynamic-demos/lifi": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/types": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",

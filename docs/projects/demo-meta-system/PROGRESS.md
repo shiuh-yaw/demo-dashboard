@@ -24,8 +24,8 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 1B-blindpay | 🟢 done | [#29](https://github.com/dynamic-labs/demo-dashboard/pull/29) | Package + Svix webhook verifier; state-mapping placeholder swaps to `@dynamic-demos/transactions` after Phase 1E. |
 | 1B-iron | ⚪️ pending | — | — |
 | 1B-coinbase-onramp | 🟢 done | [#28](https://github.com/dynamic-labs/demo-dashboard/pull/28) | — |
-| 1B-lifi | ⚪️ pending | — | — |
-| 1E. Transactions package | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/24 | Canonical state machine in `@dynamic-demos/transactions`; dashboard consumes via back-compat re-exports. |
+| 1B-lifi | 🟢 done | [#31](https://github.com/dynamic-labs/demo-dashboard/pull/31) | Extracts LI.FI bridge/swap into `@dynamic-demos/lifi`. Dashboard service + checkouts SDK config now consume the package. |
+| 1E. Transactions package | 🟢 done | [#24](https://github.com/dynamic-labs/demo-dashboard/pull/24) | Canonical state machine in `@dynamic-demos/transactions`; dashboard consumes via back-compat re-exports. |
 | 1D. Dynamic SDK consolidation | ⚪️ pending | — | Sequence after others — touches many apps |
 | 2-scaffold. Prisma + Supabase setup | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/25 | Independent of provider work |
 
