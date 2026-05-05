@@ -209,6 +209,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 0.71.2
         version: 0.71.2(zod@3.25.76)
+      '@dynamic-demos/blindpay':
+        specifier: workspace:*
+        version: link:../../packages/blindpay
       '@dynamic-demos/coinbase-onramp':
         specifier: workspace:*
         version: link:../../packages/coinbase-onramp
@@ -1248,6 +1251,25 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+
+  packages/blindpay:
+    dependencies:
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@dynamic-demos/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: 20.19.25
+        version: 20.19.25
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/coinbase-onramp:
     dependencies:

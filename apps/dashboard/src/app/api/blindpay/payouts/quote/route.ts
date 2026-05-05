@@ -10,10 +10,11 @@
  */
 
 import { NextRequest } from "next/server";
+import type { PayoutQuoteRequest } from "@dynamic-demos/blindpay";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { blindpayClient, type PayoutQuoteRequest } from "@/lib/services/blindpay";
+import { getBlindpayClient } from "@/lib/blindpay/client";
 import { ValidationError } from "@/lib/errors";
 import { z } from "zod";
 
@@ -78,7 +79,7 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
       token: validated.token,
     };
 
-    const quote = await blindpayClient.createPayoutQuote(quoteRequest);
+    const quote = await getBlindpayClient().createPayoutQuote(quoteRequest);
 
     return createResponse({
       quote_id: quote.id || quote.quote_id,

@@ -13,7 +13,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { blindpayClient, type RatesRequest } from "@/lib/services/blindpay";
+import type { RatesRequest } from "@dynamic-demos/blindpay";
+import { getBlindpayClient } from "@/lib/blindpay/client";
 import { ValidationError } from "@/lib/errors";
 import { z } from "zod";
 
@@ -76,7 +77,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       cover_fees: validated.cover_fees,
     };
 
-    const rates = await blindpayClient.getRates(ratesRequest);
+    const rates = await getBlindpayClient().getRates(ratesRequest);
 
     return createResponse(rates);
   } catch (error) {

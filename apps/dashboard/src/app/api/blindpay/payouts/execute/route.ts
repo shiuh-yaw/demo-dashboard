@@ -10,10 +10,11 @@
  */
 
 import { NextRequest } from "next/server";
+import type { PayoutExecuteRequest } from "@dynamic-demos/blindpay";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { blindpayClient, type PayoutExecuteRequest } from "@/lib/services/blindpay";
+import { getBlindpayClient } from "@/lib/blindpay/client";
 import { ValidationError } from "@/lib/errors";
 import { z } from "zod";
 
@@ -57,7 +58,7 @@ export const POST = withAuth(async (req: NextRequest, { user }) => {
       sender_wallet_address: walletAddress,
     };
 
-    const payout = await blindpayClient.executePayout(executeRequest);
+    const payout = await getBlindpayClient().executePayout(executeRequest);
 
     return createResponse({
       payout_id: payout.id,

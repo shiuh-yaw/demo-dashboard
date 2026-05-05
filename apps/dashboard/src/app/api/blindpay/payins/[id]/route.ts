@@ -12,7 +12,7 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { blindpayClient } from "@/lib/services/blindpay";
+import { getBlindpayClient } from "@/lib/blindpay/client";
 import { NotFoundError } from "@/lib/errors";
 
 export const OPTIONS = corsOptions;
@@ -34,7 +34,7 @@ export const GET = withAuth(
         throw new NotFoundError("Payin ID is required");
       }
 
-      const payin = await blindpayClient.getPayinStatus(id);
+      const payin = await getBlindpayClient().getPayinStatus(id);
 
       return createResponse({
         payin_id: payin.id,

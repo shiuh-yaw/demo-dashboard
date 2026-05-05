@@ -13,10 +13,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import {
-  blindpayClient,
-  type PayinExecuteRequest,
-} from "@/lib/services/blindpay";
+import type { PayinExecuteRequest } from "@dynamic-demos/blindpay";
+import { getBlindpayClient } from "@/lib/blindpay/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -40,7 +38,7 @@ export const POST = withAuth(async (req: NextRequest) => {
       payin_quote_id: validated.payin_quote_id,
     };
 
-    const payin = await blindpayClient.executePayin(executeRequest);
+    const payin = await getBlindpayClient().executePayin(executeRequest);
 
     return createResponse({
       payin_id: payin.id,
