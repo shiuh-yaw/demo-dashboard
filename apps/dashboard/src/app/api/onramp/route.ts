@@ -16,7 +16,7 @@ import {
   ironClient,
   type OnrampQuoteRequest,
   type CreateOnrampRequest,
-} from "@/lib/services/iron";
+} from "@dynamic-demos/iron";
 import { z } from "zod";
 
 const quoteSchema = z.object({

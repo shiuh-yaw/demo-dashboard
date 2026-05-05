@@ -4,7 +4,7 @@ import {
   getOfframpQuote,
   createOfframp,
   chainIdToBlockchain,
-} from "@/lib/iron";
+} from "@dynamic-demos/iron";
 import { getServerUserData } from "@/lib/auth/server-auth";
 
 const quoteSchema = z.object({

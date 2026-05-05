@@ -7,7 +7,7 @@
  */
 
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@/lib/services/iron";
+import { ironClient } from "@dynamic-demos/iron";
 
 /**
  * GET /api/iron/fiatcurrencies

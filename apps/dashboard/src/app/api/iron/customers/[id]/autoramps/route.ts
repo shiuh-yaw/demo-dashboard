@@ -8,7 +8,7 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient, IronAutorampResponse } from "@/lib/services/iron";
+import { ironClient, IronAutorampResponse } from "@dynamic-demos/iron";
 
 /**
  * GET /api/iron/customers/[id]/autoramps

@@ -13,7 +13,7 @@ import { withAuth } from "@/lib/dynamic/dynamic-auth";
 import {
   ironClient,
   type SimpleBankAccountRequest,
-} from "@/lib/services/iron";
+} from "@dynamic-demos/iron";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;

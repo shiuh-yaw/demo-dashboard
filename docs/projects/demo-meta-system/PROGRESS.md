@@ -22,7 +22,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 1A. Fireblocks Orders + provider sub-modules | 🟢 done | [#27](https://github.com/dynamic-labs/demo-dashboard/pull/27) | — |
 | 1B-alfredpay (direct REST) | 🟢 done | [#26](https://github.com/dynamic-labs/demo-dashboard/pull/26) | Green-field package authored against https://alfredpay.readme.io |
 | 1B-blindpay | 🟢 done | [#29](https://github.com/dynamic-labs/demo-dashboard/pull/29) | Package + Svix webhook verifier; state-mapping placeholder swaps to `@dynamic-demos/transactions` after Phase 1E. |
-| 1B-iron | ⚪️ pending | — | — |
+| 1B-iron | 🟢 done | [#30](https://github.com/dynamic-labs/demo-dashboard/pull/30) | Extracted Iron client + types + webhooks + state-mapping into `packages/iron/`. Iron docs moved into `packages/iron/docs/`. |
 | 1B-coinbase-onramp | 🟢 done | [#28](https://github.com/dynamic-labs/demo-dashboard/pull/28) | — |
 | 1B-lifi | 🟢 done | [#31](https://github.com/dynamic-labs/demo-dashboard/pull/31) | Extracts LI.FI bridge/swap into `@dynamic-demos/lifi`. Dashboard service + checkouts SDK config now consume the package. |
 | 1E. Transactions package | 🟢 done | [#24](https://github.com/dynamic-labs/demo-dashboard/pull/24) | Canonical state machine in `@dynamic-demos/transactions`; dashboard consumes via back-compat re-exports. |

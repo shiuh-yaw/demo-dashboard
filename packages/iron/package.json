@@ -1,0 +1,21 @@
+{
+  "name": "@dynamic-demos/iron",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@dynamic-demos/tsconfig": "workspace:*",
+    "@types/node": "20.19.25",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9"
+  }
+}

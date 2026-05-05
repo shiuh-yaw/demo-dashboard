@@ -10,7 +10,7 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@/lib/services/iron";
+import { ironClient } from "@dynamic-demos/iron";
 import { z } from "zod";
 
 type IdentificationParams = Promise<{ id: string }>;

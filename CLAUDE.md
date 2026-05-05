@@ -25,10 +25,6 @@ Every package and app in this monorepo has an `AGENTS.md` (template: `docs/templ
 4. Sandbox by default for every provider; production opt-in requires explicit env var + `[prod-creds]` PR title.
 5. AGENTS.md is updated in the same PR that changes a package's behavior.
 
-## Open archives
-
-Iron API documentation (`IRON_API_DOCUMENTATION.md`, `IRON_API_FLOWS.md`) currently sits at root. These move into `packages/iron/docs/` when Phase 1B extracts the Iron client.
-
 ## Commands
 
 - `pnpm install` — install workspace deps.
