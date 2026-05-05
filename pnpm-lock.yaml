@@ -403,6 +403,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/earn:
     dependencies:
@@ -518,6 +521,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/proceeds:
     dependencies:
@@ -618,6 +624,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/remittance:
     dependencies:
@@ -724,6 +733,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/shop:
     dependencies:
@@ -1054,6 +1066,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/visa-direct:
     dependencies:
@@ -1145,6 +1160,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 2.1.9
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/wallet:
     dependencies:
