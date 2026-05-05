@@ -1,13 +1,16 @@
-import { z } from "zod";
-import {
-  createOnrampOrderValidationSchema,
+/**
+ * Shared types for Coinbase Onramp orders.
+ *
+ * Extracted from apps/dashboard/src/lib/coinbase/types.ts.
+ */
+
+import type { z } from "zod";
+import type {
   createOnrampOrderApiSchema,
+  createOnrampOrderValidationSchema,
 } from "./schemas";
 
-/**
- * Interface for Coinbase API token request parameters
- * Used for making authenticated requests to Coinbase APIs
- */
+/** Authenticated request descriptor for the internal HTTP helper. */
 export interface CoinbaseTokenRequest<T = unknown> {
   requestMethod: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   requestHost: string;
@@ -15,22 +18,17 @@ export interface CoinbaseTokenRequest<T = unknown> {
   requestBody?: T;
 }
 
-/**
- * TypeScript type inferred from the Zod schema
- * This ensures type safety while maintaining single source of truth
- */
+/** Server-side validated parameters used to call Coinbase. */
 export type CreateOnrampOrderParams = z.infer<
   typeof createOnrampOrderValidationSchema
 >;
 
-/**
- * TypeScript type for API parameters sent to Coinbase
- * Includes fields from API schema that are sent to Coinbase API
- */
+/** API surface that callers POST against the dashboard route. */
 export type CreateOnrampOrderApiParams = z.infer<
   typeof createOnrampOrderApiSchema
 >;
 
+/** Shape returned by Coinbase's create-order endpoint. */
 export interface CoinbaseOrderResponse {
   order: CoinbaseOrder;
   paymentLink: CoinbasePaymentLink;
@@ -62,6 +60,7 @@ export interface CoinbaseOrder {
   updatedAt: string;
 }
 
+/** Normalized response surfaced to dashboard callers. */
 export interface OnrampOrderResponse {
   id: string;
   paymentUrl: string;

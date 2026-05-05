@@ -1,0 +1,16 @@
+{
+  "id": "evt_01J0FAKEEVENTID000000000000",
+  "type": "onramp.order.completed",
+  "createdAt": "2025-04-29T12:00:00.000Z",
+  "data": {
+    "orderId": "ord_01J0FAKEORDERID00000000000",
+    "status": "completed",
+    "destinationAddress": "0x0000000000000000000000000000000000000000",
+    "destinationNetwork": "base",
+    "purchaseCurrency": "USDC",
+    "purchaseAmount": "100.00",
+    "paymentCurrency": "USD",
+    "paymentTotal": "100.10",
+    "paymentMethod": "GUEST_CHECKOUT_APPLE_PAY"
+  }
+}

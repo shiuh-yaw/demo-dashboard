@@ -1,9 +1,18 @@
+/**
+ * Zod schemas for Coinbase Onramp order creation.
+ *
+ * Two schema flavors:
+ *   - `createOnrampOrderApiSchema` — fields that are sent on the request
+ *     body to Coinbase. This is what API routes validate against.
+ *   - `createOnrampOrderValidationSchema` — superset including app-side
+ *     compliance fields (email, phone, partnerUserRef) that the server
+ *     attaches before calling Coinbase.
+ *
+ * Extracted from apps/dashboard/src/lib/coinbase/schemas.ts.
+ */
+
 import { z } from "zod";
 
-/**
- * Base schema for onramp order creation
- * Contains common fields shared between validation and API schemas
- */
 const createOnrampOrderBaseSchema = z.object({
   agreementAcceptedAt: z.string().min(1, "agreementAcceptedAt is required"),
   destinationAddress: z.string().min(1, "destinationAddress is required"),
@@ -16,13 +25,11 @@ const createOnrampOrderBaseSchema = z.object({
 });
 
 /**
- * Full validation schema for onramp order creation requests
- * Includes all fields required for business logic and compliance validation
- * Extends base schema with server-side validation fields
+ * Full validation schema for onramp order creation (compliance fields
+ * supplied by the calling server, not by the end-user request body).
  */
 export const createOnrampOrderValidationSchema =
   createOnrampOrderBaseSchema.extend({
-    // Fields needed for validation/compliance but from the app
     email: z.string().email("Invalid email format"),
     partnerUserRef: z.string().min(1, "partnerUserRef is required"),
     phoneNumber: z.string().min(1, "phoneNumber is required"),
@@ -32,9 +39,10 @@ export const createOnrampOrderValidationSchema =
   });
 
 /**
- * API schema for Coinbase onramp order creation
- * Only includes fields that are actually sent to the Coinbase API
- * Extends base schema with API-specific fields
+ * Schema for the request body that arrives at the dashboard route. The
+ * `isSandbox` field allows callers to override the default environment
+ * for a single request (e.g. dev tooling exercising a sandbox flow even
+ * when the package is configured for production).
  */
 export const createOnrampOrderApiSchema = createOnrampOrderBaseSchema.extend({
   isSandbox: z.boolean(),

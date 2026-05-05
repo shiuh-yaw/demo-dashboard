@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.71.2",
-    "@coinbase/cdp-sdk": "1.38.6",
+    "@dynamic-demos/coinbase-onramp": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/types": "workspace:*",

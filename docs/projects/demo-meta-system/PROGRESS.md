@@ -23,7 +23,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 1B-alfredpay (direct REST) | ⚪️ pending | — | — |
 | 1B-blindpay | ⚪️ pending | — | — |
 | 1B-iron | ⚪️ pending | — | — |
-| 1B-coinbase-onramp | ⚪️ pending | — | — |
+| 1B-coinbase-onramp | 🟢 done | [#28](https://github.com/dynamic-labs/demo-dashboard/pull/28) | — |
 | 1B-lifi | ⚪️ pending | — | — |
 | 1E. Transactions package | ⚪️ pending | — | — |
 | 1D. Dynamic SDK consolidation | ⚪️ pending | — | Sequence after others — touches many apps |
