@@ -65,6 +65,8 @@ Wave 5  ─→  [Phase 6A: Skill]
             [Phase 6C: Engineer runbooks]
 
 Wave 6  ─→  [Phase 7: Implicit context capture]
+
+Wave 7  ─→  [Phase 8: Chat UI / hosted demo creation]   (post-MILESTONE-1; does NOT block v1)
 ```
 
 ### Dispatch rules
@@ -109,8 +111,9 @@ The dispatcher's role:
 | `phases/05c-dashboard-scaffolding.md` | 5C. Dashboard scaffolding templates + demo-spec wiring + mock-data package | 2–3 days | Phase 2, Phase 5A |
 | `phases/06-skill.md` | 6. Skill + Vercel deploy script + engineer runbooks (3 sub-prompts) | 4.5–5.5 days | Phases 3–5 |
 | `phases/07-implicit-context.md` | 7. Implicit context capture (demo-spec wiring + skill prefill) | 1–2 days | Phase 6 |
+| `phases/08-chat-ui.md` | 8. Chat UI / hosted demo creation (v0-style; 2–3 sub-PRs) | 5–8 days | Phases 5C, 6, 7 — does NOT block v1 milestone |
 
-**Total: 43–66 agent-days.** Wall-clock significantly less due to parallelization within waves.
+**Total: 43–66 agent-days for v1 (Phases 0–7); +5–8 agent-days for Phase 8 (post-v1).** Wall-clock significantly less due to parallelization within waves.
 
 ---
 

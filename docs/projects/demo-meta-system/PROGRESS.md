@@ -78,6 +78,16 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 
 ---
 
+## Wave 7 — chat UI / hosted demo creation (post-v1)
+
+| Phase | Status | PR | Notes |
+|---|---|---|---|
+| 8a. Chat-orchestration backend | ⚪️ pending | — | v0-style; depends on 5C/6/7. Does NOT block v1. |
+| 8b. Chat UI surface | ⚪️ pending | — | `/create` page in dashboard |
+| 8c. Vercel preview integration | ⚪️ pending | — | Optional — only if existing per-PR pipeline insufficient |
+
+---
+
 ## Blockers / decisions needed
 
 - None currently. All dispatch decisions locked in DECISIONS.md.
