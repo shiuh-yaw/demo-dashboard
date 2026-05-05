@@ -20,8 +20,8 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | Phase | Status | PR | Notes |
 |---|---|---|---|
 | 1A. Fireblocks Orders + provider sub-modules | 🟢 done | [#27](https://github.com/dynamic-labs/demo-dashboard/pull/27) | — |
-| 1B-alfredpay (direct REST) | ⚪️ pending | — | — |
-| 1B-blindpay | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/29 | Package + Svix webhook verifier; state-mapping placeholder swaps to `@dynamic-demos/transactions` after Phase 1E. |
+| 1B-alfredpay (direct REST) | 🟢 done | [#26](https://github.com/dynamic-labs/demo-dashboard/pull/26) | Green-field package authored against https://alfredpay.readme.io |
+| 1B-blindpay | 🟢 done | [#29](https://github.com/dynamic-labs/demo-dashboard/pull/29) | Package + Svix webhook verifier; state-mapping placeholder swaps to `@dynamic-demos/transactions` after Phase 1E. |
 | 1B-iron | ⚪️ pending | — | — |
 | 1B-coinbase-onramp | 🟢 done | [#28](https://github.com/dynamic-labs/demo-dashboard/pull/28) | — |
 | 1B-lifi | ⚪️ pending | — | — |

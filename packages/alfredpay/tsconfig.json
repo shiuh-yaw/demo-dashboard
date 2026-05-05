@@ -1,0 +1,9 @@
+{
+  "extends": "@dynamic-demos/tsconfig/library.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

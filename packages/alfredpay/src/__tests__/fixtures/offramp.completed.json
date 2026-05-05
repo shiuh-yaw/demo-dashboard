@@ -1,0 +1,21 @@
+{
+  "id": "evt_01HZQ8E5K8K9V0Z9XYZ12345",
+  "type": "offramp.completed",
+  "createdAt": "2026-04-29T12:34:56.000Z",
+  "data": {
+    "id": "off_01HZQ8E5K8K9V0Z9ABC67890",
+    "status": "completed",
+    "amount": "100.00",
+    "currency": "USDC",
+    "destination_currency": "BRL",
+    "country": "BR",
+    "rail": "pix",
+    "reference": "demo-ref-scrubbed",
+    "metadata": {
+      "demo_instance_id": "demo_scrubbed",
+      "brand_id": "brand_scrubbed"
+    },
+    "created_at": "2026-04-29T12:30:00.000Z",
+    "updated_at": "2026-04-29T12:34:55.000Z"
+  }
+}
