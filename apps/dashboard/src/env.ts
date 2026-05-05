@@ -92,6 +92,21 @@ export const env = createEnv({
      * Get from https://app.iron.xyz or https://app.sandbox.iron.xyz
      */
     IRON_API_KEY: z.string().optional(),
+    /**
+     * Postgres pooled connection URL (Supabase pooler, port 6543).
+     * Used at runtime by `@dynamic-demos/db`'s Prisma singleton (D-013).
+     * Optional during Phase 2 scaffold — required once the first model
+     * lands in PR 2-brands.
+     */
+    DATABASE_URL: z.string().url().optional(),
+    /**
+     * Postgres direct connection URL (Supabase direct, port 5432).
+     * Used by `prisma migrate` only; never by runtime code (D-013). The
+     * pooler does not support DDL transactions.
+     * Optional during Phase 2 scaffold — required once the first model
+     * lands in PR 2-brands.
+     */
+    DIRECT_URL: z.string().url().optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -185,6 +200,8 @@ export const env = createEnv({
     BLINDPAY_API_KEY: process.env.BLINDPAY_API_KEY,
     IRON_ENVIRONMENT: process.env.IRON_ENVIRONMENT,
     IRON_API_KEY: process.env.IRON_API_KEY,
+    DATABASE_URL: process.env.DATABASE_URL,
+    DIRECT_URL: process.env.DIRECT_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

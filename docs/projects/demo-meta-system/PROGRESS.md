@@ -27,7 +27,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 1B-lifi | ⚪️ pending | — | — |
 | 1E. Transactions package | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/24 | Canonical state machine in `@dynamic-demos/transactions`; dashboard consumes via back-compat re-exports. |
 | 1D. Dynamic SDK consolidation | ⚪️ pending | — | Sequence after others — touches many apps |
-| 2-scaffold. Prisma + Supabase setup | ⚪️ pending | — | Independent of provider work |
+| 2-scaffold. Prisma + Supabase setup | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/25 | Independent of provider work |
 
 ---
 

@@ -1,0 +1,34 @@
+/**
+ * Serverless-safe Prisma client singleton.
+ *
+ * Why a singleton:
+ *   In serverless / Next.js dev (with hot reload), each module reload would
+ *   otherwise instantiate a new PrismaClient, exhausting the database
+ *   connection pool. We cache the instance on `globalThis` for non-production
+ *   environments. In production, each cold start gets exactly one instance
+ *   per worker and no caching is needed.
+ *
+ * D-013: DATABASE_URL points at the Supabase pooler (port 6543) for runtime.
+ *        DIRECT_URL is reserved for migrations and never touched here.
+ *
+ * D-015: Consumed only by apps/dashboard. Demo apps must fetch via the
+ *        dashboard API; importing this client from any other app is a bug.
+ */
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
+
+export const prisma: PrismaClient =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}

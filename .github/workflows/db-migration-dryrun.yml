@@ -1,0 +1,138 @@
+name: DB migration dry-run
+
+# Phase 2 (D-013) — apply pending Prisma migrations against a fresh Postgres
+# container to prove they're valid before merge. Triggers only when the
+# Prisma schema or any migration file changes.
+#
+# `prisma migrate deploy` is the canonical "apply migrations to a real DB"
+# command (D-013 forbids `prisma db push` in production). Running it against
+# an ephemeral Postgres container exercises the same code path.
+#
+# This workflow is a no-op until PR 2-brands generates the first migration.
+# It still runs on schema-only changes so schema-validation regressions are
+# caught at the same gate.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/db/prisma/schema.prisma"
+      - "packages/db/prisma/migrations/**"
+      - ".github/workflows/db-migration-dryrun.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/db/prisma/schema.prisma"
+      - "packages/db/prisma/migrations/**"
+      - ".github/workflows/db-migration-dryrun.yml"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: db-migration-dryrun-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dryrun:
+    name: prisma migrate deploy (ephemeral Postgres)
+    runs-on: ubuntu-latest
+
+    services:
+      # Ephemeral Postgres for the migration dry-run only. Credentials are
+      # local-to-the-runner and never leave this job; they're not real
+      # secrets and never connect to anything outside the runner network.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: prisma_ci
+          POSTGRES_PASSWORD: prisma_ci_local_only
+          POSTGRES_DB: prisma_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U prisma_ci -d prisma_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Both URLs point at the in-runner Postgres. There is no pooler in CI;
+      # using the direct port for both is fine because we're not exercising
+      # connection-pool semantics here, only migration correctness.
+      DATABASE_URL: postgresql://prisma_ci:prisma_ci_local_only@localhost:5432/prisma_ci
+      DIRECT_URL: postgresql://prisma_ci:prisma_ci_local_only@localhost:5432/prisma_ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema
+        # Cheap sanity check — fails fast on schema syntax errors before
+        # we spin up Postgres-backed migration validation below.
+        run: pnpm --filter @dynamic-demos/db prisma:validate
+
+      - name: Wait for Postgres
+        run: |
+          set -euo pipefail
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U prisma_ci >/dev/null 2>&1; then
+              echo "postgres ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "postgres did not become ready in time" >&2
+          exit 1
+
+      - name: Detect migrations
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d packages/db/prisma/migrations ] && \
+             find packages/db/prisma/migrations -mindepth 1 -maxdepth 1 -type d \
+                  -not -name 'migration_lock.toml*' | grep -q .; then
+            echo "have_migrations=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "have_migrations=false" >> "$GITHUB_OUTPUT"
+            echo "No migrations present yet — phase 2 scaffold ships before any model."
+          fi
+
+      - name: Apply migrations to fresh Postgres (dry-run gate)
+        if: steps.detect.outputs.have_migrations == 'true'
+        run: pnpm --filter @dynamic-demos/db prisma:migrate:deploy
+
+      - name: No migrations to apply (scaffold-only)
+        if: steps.detect.outputs.have_migrations != 'true'
+        run: |
+          echo "Schema validates and Postgres is reachable, but no migrations"
+          echo "exist yet (phase 2 scaffold). Gate is a no-op until PR 2-brands."

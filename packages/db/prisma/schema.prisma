@@ -1,0 +1,41 @@
+// Prisma schema for @dynamic-demos/db
+//
+// Phase 2 scaffold — no real models yet. Subsequent PRs (2-brands,
+// 2-remittance, 2-others, 2-transactions) introduce the actual data model.
+//
+// Decisions referenced:
+//   - D-013: Postgres = Prisma + Supabase. Two URLs (pooler runtime, direct migrations).
+//   - D-015: packages/db consumed only by apps/dashboard. Apps fetch via dashboard API.
+//
+// Hard rules:
+//   - DATABASE_URL must point at the Supabase pooler (port 6543) for runtime.
+//   - DIRECT_URL must point at the direct connection (port 5432) for migrations.
+//   - `prisma db push` is forbidden in production. Only `prisma migrate deploy`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Models added in subsequent PRs.
+//
+// PR 2-brands: Brand
+// PR 2-remittance: RemittanceConfig
+// PR 2-others: EarnConfig, VisaDirectConfig, WalletConfig, TradeConfig,
+//              DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig
+// PR 2-transactions: Transaction, WebhookEvent
+//
+// SchemaPlaceholder is a build-sanity model so `prisma generate` succeeds
+// before real models land. PR 2-brands removes this in the same migration
+// that introduces Brand. Do not depend on this type from application code.
+model SchemaPlaceholder {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  @@map("_dynamic_demos_db_placeholder")
+}
