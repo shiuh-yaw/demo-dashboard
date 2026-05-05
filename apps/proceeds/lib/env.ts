@@ -40,4 +40,11 @@ export const env = createEnv({
     IRON_DEMO_BANK_IBAN: process.env.IRON_DEMO_BANK_IBAN,
     NODE_ENV: process.env.NODE_ENV,
   },
+  /**
+   * Allow Next.js to collect page data during builds without the full env
+   * (e.g. fresh-clone smoke tests, integration test harnesses). Vercel
+   * preview deploys are the canonical build and have real values, so they
+   * always validate. Mirrors the spark26 pattern.
+   */
+  skipValidation: process.env.SKIP_ENV_VALIDATION === "true",
 });
