@@ -4,6 +4,8 @@
  * Types for the demo dashboard configurations.
  */
 
+import { TransactionState } from "@dynamic-demos/transactions";
+
 import type { WidgetConfig } from "../widget-config";
 
 // =============================================================================
@@ -709,7 +711,13 @@ export interface Token {
 // =============================================================================
 
 /**
- * Transaction status constants (single source of truth)
+ * Transaction status constants (back-compat alias).
+ *
+ * Canonical state values now live in `@dynamic-demos/transactions`
+ * (`TransactionState`); this map only preserves the dashboard's
+ * historical UPPERCASE_KEY shape so existing call-sites keep working
+ * (e.g. `Status.INITIALIZED`). New code should import
+ * `TransactionState` directly from `@dynamic-demos/transactions`.
  *
  * Lifecycle:
  * - INITIALIZED: Server created with externalId/metadata (awaiting user action)
@@ -720,21 +728,31 @@ export interface Token {
  * - FAILED: Transaction failed
  * - EXPIRED: Initialized but never completed (after TTL)
  * - ABANDONED: Draft but never submitted (after TTL)
+ *
+ * @see DECISIONS.md D-010
  */
 export const Status = {
-  INITIALIZED: "initialized",
-  DRAFT: "draft",
-  SUBMITTED: "submitted",
-  PENDING: "pending",
-  CONFIRMED: "confirmed",
-  FAILED: "failed",
-  CANCELLED: "cancelled",
-  EXPIRED: "expired",
-  ABANDONED: "abandoned",
+  INITIALIZED: TransactionState.initialized,
+  DRAFT: TransactionState.draft,
+  SUBMITTED: TransactionState.submitted,
+  PENDING: TransactionState.pending,
+  CONFIRMED: TransactionState.confirmed,
+  FAILED: TransactionState.failed,
+  CANCELLED: TransactionState.cancelled,
+  EXPIRED: TransactionState.expired,
+  ABANDONED: TransactionState.abandoned,
 } as const;
 
-/** Transaction status type (derived from Status const) */
-export type TransactionStatus = (typeof Status)[keyof typeof Status];
+/**
+ * Transaction status type — back-compat alias for the canonical
+ * `TransactionState`. Prefer `TransactionState` in new code.
+ */
+export type TransactionStatus = TransactionState;
+
+// Re-export the canonical state machine types for callers that prefer
+// the new naming. Existing imports of `Status` / `TransactionStatus`
+// from this module continue to work.
+export { TransactionState } from "@dynamic-demos/transactions";
 
 /**
  * Transaction record

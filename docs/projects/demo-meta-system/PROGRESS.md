@@ -25,7 +25,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 1B-iron | ⚪️ pending | — | — |
 | 1B-coinbase-onramp | 🟢 done | [#28](https://github.com/dynamic-labs/demo-dashboard/pull/28) | — |
 | 1B-lifi | ⚪️ pending | — | — |
-| 1E. Transactions package | ⚪️ pending | — | — |
+| 1E. Transactions package | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/24 | Canonical state machine in `@dynamic-demos/transactions`; dashboard consumes via back-compat re-exports. |
 | 1D. Dynamic SDK consolidation | ⚪️ pending | — | Sequence after others — touches many apps |
 | 2-scaffold. Prisma + Supabase setup | ⚪️ pending | — | Independent of provider work |
 
