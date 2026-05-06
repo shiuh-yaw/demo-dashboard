@@ -17,8 +17,8 @@ export function MetaRow({ label, value, labelWidth = 160 }: MetaRowProps) {
       className="grid items-baseline gap-4"
       style={{ gridTemplateColumns: `${labelWidth}px 1fr` }}
     >
-      <div className="text-[12px] text-(--widget-muted)">{label}</div>
-      <div className="text-[13px] text-(--widget-fg)">{value}</div>
+      <div className="text-[12px] text-(--brand-muted)">{label}</div>
+      <div className="text-[13px] text-(--brand-fg)">{value}</div>
     </div>
   );
 }

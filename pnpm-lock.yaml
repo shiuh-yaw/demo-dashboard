@@ -614,6 +614,9 @@ importers:
       '@dynamic-demos/iron':
         specifier: workspace:*
         version: link:../../packages/iron
+      '@dynamic-demos/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@dynamic-demos/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -209,27 +209,27 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
       }}
     >
       <div
-        className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="payout-modal-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+        <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
           <div className="flex items-center gap-2">
             {step === "confirm" && (
               <button
                 onClick={() => setStep("amount")}
-                className="p-1 rounded-md text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                className="p-1 rounded-md text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                 aria-label="Back"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
             )}
-            <Zap className="w-4 h-4 text-(--widget-primary)" />
+            <Zap className="w-4 h-4 text-(--brand-primary)" />
             <h2
               id="payout-modal-title"
-              className="text-base font-semibold text-(--widget-fg)"
+              className="text-base font-semibold text-(--brand-fg)"
             >
               {step === "amount" && "Pay out proceeds"}
               {step === "confirm" && "Confirm payout"}
@@ -241,7 +241,7 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
           {canClose && (
             <button
               onClick={handleClose}
-              className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+              className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -265,28 +265,28 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
                 step="0.01"
               />
               {!isNaN(amountNum) && amountNum > 0 && !isWithinDemoCap && (
-                <p className="text-xs text-(--widget-status-failed-fg)">
+                <p className="text-xs text-(--brand-status-failed-fg)">
                   Demo limit is {PAYOUT_SIMULATION_MAX_USDC} USDC per payout.
                 </p>
               )}
 
               {/* Destination wallet */}
               {walletAddress ? (
-                <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) p-3">
-                  <p className="text-xs text-(--widget-muted) mb-1">
+                <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) p-3">
+                  <p className="text-xs text-(--brand-muted) mb-1">
                     Sending to
                   </p>
                   <div className="flex items-center gap-2">
-                    <Wallet className="w-3.5 h-3.5 text-(--widget-primary) flex-shrink-0" />
-                    <p className="text-sm font-mono font-medium text-(--widget-fg)">
+                    <Wallet className="w-3.5 h-3.5 text-(--brand-primary) flex-shrink-0" />
+                    <p className="text-sm font-mono font-medium text-(--brand-fg)">
                       {truncateAddress(walletAddress)}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-2 p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                  <AlertCircle className="w-4 h-4 text-(--widget-muted) flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-(--widget-muted)">
+                <div className="flex gap-2 p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                  <AlertCircle className="w-4 h-4 text-(--brand-muted) flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-(--brand-muted)">
                     No stablecoin wallet found. Create one on the Payment
                     methods page.
                   </p>
@@ -306,41 +306,41 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
           {/* ── Step 2: Confirm ── */}
           {step === "confirm" && walletAddress && (
             <div className="space-y-4">
-              <p className="text-xs text-(--widget-muted)">
+              <p className="text-xs text-(--brand-muted)">
                 Review the payout details before submitting to Fireblocks. Funds
                 will be on-chain within minutes.
               </p>
 
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border) text-xs">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border) text-xs">
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Period</span>
-                  <span className="font-medium text-(--widget-fg)">
+                  <span className="text-(--brand-muted)">Period</span>
+                  <span className="font-medium text-(--brand-fg)">
                     {month.month}
                   </span>
                 </div>
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Amount</span>
-                  <span className="font-medium text-(--widget-fg)">
+                  <span className="text-(--brand-muted)">Amount</span>
+                  <span className="font-medium text-(--brand-fg)">
                     {formatUsd(amountNum)} USDC
                   </span>
                 </div>
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">
+                  <span className="text-(--brand-muted)">
                     Recipient wallet
                   </span>
-                  <span className="font-mono font-medium text-(--widget-fg)">
+                  <span className="font-mono font-medium text-(--brand-fg)">
                     {truncateAddress(walletAddress)}
                   </span>
                 </div>
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Network</span>
-                  <span className="font-medium text-(--widget-fg)">
+                  <span className="text-(--brand-muted)">Network</span>
+                  <span className="font-medium text-(--brand-fg)">
                     {networkDisplay}
                   </span>
                 </div>
                 {/* <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Settlement</span>
-                  <span className="font-medium text-(--widget-fg)">
+                  <span className="text-(--brand-muted)">Settlement</span>
+                  <span className="font-medium text-(--brand-fg)">
                     MTLco on-ramp
                   </span>
                 </div> */}
@@ -355,7 +355,7 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
           {/* ── Step 3: Processing ── */}
           {step === "processing" && (
             <div className="space-y-5 py-2">
-              <p className="text-xs text-(--widget-muted) text-center">
+              <p className="text-xs text-(--brand-muted) text-center">
                 Running compliance checks and submitting to Fireblocks…
               </p>
 
@@ -371,22 +371,22 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
                     <div key={s.id} className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
                         {isDone ? (
-                          <div className="w-6 h-6 rounded-full bg-(--widget-success) flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-(--brand-success) flex items-center justify-center">
                             <Check className="w-3.5 h-3.5 text-white" />
                           </div>
                         ) : isActive ? (
-                          <Loader2 className="w-5 h-5 text-(--widget-primary) animate-spin" />
+                          <Loader2 className="w-5 h-5 text-(--brand-primary) animate-spin" />
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-(--widget-border)" />
+                          <div className="w-5 h-5 rounded-full border-2 border-(--brand-border)" />
                         )}
                       </div>
                       <span
                         className={`text-sm ${
                           isDone
-                            ? "text-(--widget-fg) font-medium"
+                            ? "text-(--brand-fg) font-medium"
                             : isActive
-                              ? "text-(--widget-fg)"
-                              : "text-(--widget-muted)"
+                              ? "text-(--brand-fg)"
+                              : "text-(--brand-muted)"
                         }`}
                       >
                         {s.label}
@@ -396,7 +396,7 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
                 })}
               </div>
 
-              <p className="text-xs text-(--widget-muted) text-center pt-2">
+              <p className="text-xs text-(--brand-muted) text-center pt-2">
                 Powered by MTLco × Fireblocks
               </p>
             </div>
@@ -406,38 +406,38 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
           {step === "done" && payoutResult && (
             <div className="space-y-4">
               <div className="flex flex-col items-center gap-3 py-2">
-                <div className="w-12 h-12 rounded-full bg-(--widget-success) flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-(--brand-success) flex items-center justify-center">
                   <Check className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-(--widget-fg)">
+                  <p className="text-sm font-semibold text-(--brand-fg)">
                     Payout submitted
                   </p>
-                  <p className="text-xs text-(--widget-muted) mt-0.5">
+                  <p className="text-xs text-(--brand-muted) mt-0.5">
                     {formatUsd(amountNum)} USDC · {month.month}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border) text-xs">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border) text-xs">
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Order ID</span>
-                  <span className="font-mono text-(--widget-fg) text-right max-w-48 truncate">
+                  <span className="text-(--brand-muted)">Order ID</span>
+                  <span className="font-mono text-(--brand-fg) text-right max-w-48 truncate">
                     {payoutResult.orderId}
                   </span>
                 </div>
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Status</span>
-                  <span className="font-medium text-(--widget-fg)">
+                  <span className="text-(--brand-muted)">Status</span>
+                  <span className="font-medium text-(--brand-fg)">
                     {orderStatusLabel(payoutResult.status)}
                   </span>
                 </div>
                 {payoutResult.mock && (
                   <div className="flex justify-between px-3 py-2.5">
-                    <span className="text-(--widget-muted)">Mode</span>
+                    <span className="text-(--brand-muted)">Mode</span>
                     <span
                       className="font-medium"
-                      style={{ color: "var(--widget-status-pending-fg)" }}
+                      style={{ color: "var(--brand-status-pending-fg)" }}
                     >
                       Demo (simulated)
                     </span>
@@ -457,28 +457,28 @@ export function PayoutModal({ isOpen, onClose, month }: PayoutModalProps) {
               <div className="flex flex-col items-center gap-3 py-2">
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "var(--widget-status-failed-bg)" }}
+                  style={{ backgroundColor: "var(--brand-status-failed-bg)" }}
                 >
                   <AlertCircle
                     className="w-6 h-6"
-                    style={{ color: "var(--widget-status-failed-fg)" }}
+                    style={{ color: "var(--brand-status-failed-fg)" }}
                   />
                 </div>
-                <p className="text-sm font-medium text-(--widget-fg) text-center">
+                <p className="text-sm font-medium text-(--brand-fg) text-center">
                   Something went wrong
                 </p>
               </div>
 
               <div
-                className="p-3 rounded-(--widget-radius)"
+                className="p-3 rounded-(--brand-radius)"
                 style={{
-                  backgroundColor: "var(--widget-status-failed-bg)",
-                  border: "1px solid var(--widget-status-failed-border)",
+                  backgroundColor: "var(--brand-status-failed-bg)",
+                  border: "1px solid var(--brand-status-failed-border)",
                 }}
               >
                 <p
                   className="text-xs"
-                  style={{ color: "var(--widget-status-failed-fg)" }}
+                  style={{ color: "var(--brand-status-failed-fg)" }}
                 >
                   {errorMessage}
                 </p>

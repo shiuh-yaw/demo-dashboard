@@ -65,7 +65,7 @@ export function NetworkSwitcher({
           className={`absolute z-20 min-w-[200px] rounded-lg overflow-hidden shadow-lg ${
             variant === "header"
               ? "top-full right-0 mt-2 bg-[rgba(40,40,42,0.98)] border border-white/10 backdrop-blur-md"
-              : "top-full right-0 mt-1.5 bg-(--widget-bg) border border-(--widget-border)"
+              : "top-full right-0 mt-1.5 bg-(--brand-surface) border border-(--brand-border)"
           }`}
         >
           {networks.map((network) => {
@@ -79,13 +79,13 @@ export function NetworkSwitcher({
                 className={`w-full flex items-center gap-2.5 text-left px-3.5 py-2.5 transition-colors whitespace-nowrap cursor-pointer ${
                   variant === "header"
                     ? "hover:bg-white/5"
-                    : "hover:bg-(--widget-row-bg)"
+                    : "hover:bg-(--brand-row-bg)"
                 }`}
                 style={{
                   background: isActive
                     ? variant === "header"
                       ? "rgba(255,255,255,0.06)"
-                      : "var(--widget-row-bg)"
+                      : "var(--brand-row-bg)"
                     : "transparent",
                 }}
               >
@@ -101,7 +101,7 @@ export function NetworkSwitcher({
                   className={`text-[13px] font-medium ${
                     variant === "header"
                       ? "text-white"
-                      : "text-(--widget-fg)"
+                      : "text-(--brand-fg)"
                   }`}
                 >
                   {network.displayName}
@@ -131,7 +131,7 @@ function InlineTrigger({
       disabled={disabled}
       aria-haspopup="listbox"
       aria-expanded={expanded}
-      className="inline-flex items-center gap-1 text-[13px] font-medium text-(--widget-primary) disabled:opacity-60 cursor-pointer"
+      className="inline-flex items-center gap-1 text-[13px] font-medium text-(--brand-primary) disabled:opacity-60 cursor-pointer"
     >
       Change
       <ChevronDown className="w-3.5 h-3.5" />

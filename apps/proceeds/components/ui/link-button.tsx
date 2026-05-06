@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 export type LinkButtonTone = "primary" | "success" | "danger" | "muted";
 
 const TONE_COLOR: Record<LinkButtonTone, string> = {
-  primary: "var(--widget-primary)",
-  success: "var(--widget-success)",
-  danger: "var(--widget-error)",
-  muted: "var(--widget-muted)",
+  primary: "var(--brand-primary)",
+  success: "var(--brand-success)",
+  danger: "var(--brand-error)",
+  muted: "var(--brand-muted)",
 };
 
 export interface LinkButtonProps {

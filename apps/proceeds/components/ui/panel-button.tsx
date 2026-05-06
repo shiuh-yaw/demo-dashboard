@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 const PANEL_BUTTON_CLASS =
-  "inline-flex items-center gap-1.5 text-[13px] font-medium text-(--widget-fg) bg-(--widget-bg) border border-(--widget-input-border) rounded-lg px-3 py-1.5 hover:bg-(--widget-row-bg) transition-colors no-underline disabled:opacity-50 disabled:cursor-default";
+  "inline-flex items-center gap-1.5 text-[13px] font-medium text-(--brand-fg) bg-(--brand-surface) border border-(--brand-input-border) rounded-lg px-3 py-1.5 hover:bg-(--brand-row-bg) transition-colors no-underline disabled:opacity-50 disabled:cursor-default";
 
 export interface PanelButtonProps {
   icon?: ReactNode;

@@ -7,8 +7,8 @@ export function AgreementsCard() {
   return (
     <div className="card">
       <div className="card-body flex items-center justify-between">
-        <div className="text-sm text-(--widget-muted)">
-          <span className="text-(--widget-fg) font-medium">
+        <div className="text-sm text-(--brand-muted)">
+          <span className="text-(--brand-fg) font-medium">
             {activeCount} active
           </span>{" "}
           · {pendingCount} pending signature · Paid and Free Applications,
@@ -16,7 +16,7 @@ export function AgreementsCard() {
         </div>
         <button
           type="button"
-          className="text-sm font-medium text-(--widget-primary) bg-transparent border-none cursor-pointer p-0"
+          className="text-sm font-medium text-(--brand-primary) bg-transparent border-none cursor-pointer p-0"
         >
           View all →
         </button>

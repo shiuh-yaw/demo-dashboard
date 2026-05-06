@@ -13,14 +13,14 @@ export function AppShell({ children }: AppShellProps) {
 
   if (!isClientReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-(--widget-page-bg)">
+      <div className="min-h-screen flex items-center justify-center bg-(--brand-page-bg)">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-(--widget-page-bg)">
+    <div className="min-h-screen bg-(--brand-page-bg)">
       <DashboardHeader />
       <div
         className="mx-auto px-8 py-8"
@@ -28,7 +28,7 @@ export function AppShell({ children }: AppShellProps) {
       >
         {children}
       </div>
-      <div className="text-center py-3 text-xs text-(--widget-muted)">
+      <div className="text-center py-3 text-xs text-(--brand-muted)">
         Sandbox environment · No real funds or transactions
       </div>
     </div>

@@ -56,10 +56,10 @@ export function ReportsScreen() {
   return (
     <div>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="text-[13px] text-(--widget-muted) mb-4">
+      <nav aria-label="Breadcrumb" className="text-[13px] text-(--brand-muted) mb-4">
         <span>Home</span>
         <span className="mx-1.5 opacity-40">/</span>
-        <span className="text-(--widget-fg)">Payments and Financial Reports</span>
+        <span className="text-(--brand-fg)">Payments and Financial Reports</span>
       </nav>
 
       {/* Page heading with legal entity + vendor chip */}
@@ -69,14 +69,14 @@ export function ReportsScreen() {
       <div className="flex items-center gap-2 mb-7">
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-(--widget-fg) bg-(--widget-bg) border border-(--widget-input-border) rounded-lg px-3 py-1.5 hover:bg-(--widget-row-bg) transition-colors"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-(--brand-fg) bg-(--brand-surface) border border-(--brand-input-border) rounded-lg px-3 py-1.5 hover:bg-(--brand-row-bg) transition-colors"
         >
           {currentUser.company}
-          <span className="text-(--widget-muted)">·</span>
-          <span className="tabular-nums text-(--widget-muted)">
+          <span className="text-(--brand-muted)">·</span>
+          <span className="tabular-nums text-(--brand-muted)">
             Vendor {currentUser.vendorId}
           </span>
-          <ChevronDown className="w-3.5 h-3.5 text-(--widget-muted)" />
+          <ChevronDown className="w-3.5 h-3.5 text-(--brand-muted)" />
         </button>
       </div>
 
@@ -84,7 +84,7 @@ export function ReportsScreen() {
       <div
         role="tablist"
         aria-label="Payments and Financial Reports sections"
-        className="flex items-center gap-6 border-b border-(--widget-border) mb-6"
+        className="flex items-center gap-6 border-b border-(--brand-border) mb-6"
       >
         {(Object.keys(TABS) as Tab[]).map((key) => (
           <TabButton

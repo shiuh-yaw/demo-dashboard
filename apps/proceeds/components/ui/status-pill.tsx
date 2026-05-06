@@ -1,5 +1,5 @@
 /**
- * Rounded status pill. Uses the existing `--widget-status-*-{bg,fg}` CSS
+ * Rounded status pill. Uses the existing `--brand-status-*-{bg,fg}` CSS
  * custom properties so the palette stays in sync with the data-table badges.
  */
 export type StatusKind = "paid" | "estimated" | "failed" | "neutral";
@@ -7,23 +7,23 @@ export type StatusKind = "paid" | "estimated" | "failed" | "neutral";
 const KIND_STYLE: Record<StatusKind, { bg: string; fg: string; label: string }> =
   {
     paid: {
-      bg: "var(--widget-status-completed-bg)",
-      fg: "var(--widget-status-completed-fg)",
+      bg: "var(--brand-status-completed-bg)",
+      fg: "var(--brand-status-completed-fg)",
       label: "Paid",
     },
     estimated: {
-      bg: "var(--widget-status-pending-bg)",
-      fg: "var(--widget-status-pending-fg)",
+      bg: "var(--brand-status-pending-bg)",
+      fg: "var(--brand-status-pending-fg)",
       label: "Estimated",
     },
     failed: {
-      bg: "var(--widget-status-failed-bg)",
-      fg: "var(--widget-status-failed-fg)",
+      bg: "var(--brand-status-failed-bg)",
+      fg: "var(--brand-status-failed-fg)",
       label: "Failed",
     },
     neutral: {
-      bg: "var(--widget-row-bg)",
-      fg: "var(--widget-muted)",
+      bg: "var(--brand-row-bg)",
+      fg: "var(--brand-muted)",
       label: "Pending",
     },
   };

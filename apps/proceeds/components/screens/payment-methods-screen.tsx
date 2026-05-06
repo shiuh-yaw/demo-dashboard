@@ -9,11 +9,11 @@ export function PaymentMethodsScreen() {
     <div>
       <nav
         aria-label="Breadcrumb"
-        className="text-[13px] text-(--widget-muted) mb-4"
+        className="text-[13px] text-(--brand-muted) mb-4"
       >
         <span>Home</span>
         <span className="mx-1.5 opacity-40">/</span>
-        <span className="text-(--widget-fg)">Agreements, Tax, and Banking</span>
+        <span className="text-(--brand-fg)">Agreements, Tax, and Banking</span>
       </nav>
 
       <h1 className="heading-page mb-1">Agreements, Tax, and Banking</h1>
@@ -46,10 +46,10 @@ export function PaymentMethodsScreen() {
 
         <div className="mb-5">
           <div className="mb-2 px-1">
-            <h3 className="text-[13px] font-semibold text-(--widget-fg)">
+            <h3 className="text-[13px] font-semibold text-(--brand-fg)">
               Stablecoin wallet
             </h3>
-            <p className="text-[12px] text-(--widget-muted) mt-0.5">
+            <p className="text-[12px] text-(--brand-muted) mt-0.5">
               Receive App Store proceeds as USDC directly onchain.
             </p>
           </div>
@@ -58,10 +58,10 @@ export function PaymentMethodsScreen() {
 
         <div>
           <div className="mb-2 px-1">
-            <h3 className="text-[13px] font-semibold text-(--widget-fg)">
+            <h3 className="text-[13px] font-semibold text-(--brand-fg)">
               Bank accounts
             </h3>
-            <p className="text-[12px] text-(--widget-muted) mt-0.5">
+            <p className="text-[12px] text-(--brand-muted) mt-0.5">
               Linked accounts for fiat payouts and off-ramp transfers.
             </p>
           </div>

@@ -268,7 +268,7 @@ export function StablecoinWalletCard() {
           <DetailRow
             label="Wallet address"
             value={
-              <span className="font-mono text-[13px] text-(--widget-fg) tabular-nums">
+              <span className="font-mono text-[13px] text-(--brand-fg) tabular-nums">
                 {truncatedAddr}
               </span>
             }
@@ -319,8 +319,8 @@ export function StablecoinWalletCard() {
               <span
                 style={{
                   color: hasPasskey
-                    ? "var(--widget-success)"
-                    : "var(--widget-muted)",
+                    ? "var(--brand-success)"
+                    : "var(--brand-muted)",
                   fontWeight: hasPasskey ? 500 : 400,
                 }}
               >
@@ -344,7 +344,7 @@ export function StablecoinWalletCard() {
               hasCard ? (
                 <span className="tabular-nums">•••• {MOCK_CARD_LAST_FOUR}</span>
               ) : (
-                <span className="text-(--widget-muted)">Not linked</span>
+                <span className="text-(--brand-muted)">Not linked</span>
               )
             }
             hint="Add a card to iPhone to spend USDC at local merchants"
@@ -361,7 +361,7 @@ export function StablecoinWalletCard() {
           <DetailRow
             label="Recovery contact"
             value={
-              <span className="text-(--widget-muted)">Not configured</span>
+              <span className="text-(--brand-muted)">Not configured</span>
             }
             hint="Optional · helps regain access if you lose your device"
             action={
@@ -412,7 +412,7 @@ function EmptyState({
       <div className="card" style={{ marginBottom: 0 }}>
         <div className="card-body flex flex-col items-center justify-center gap-3 py-8">
           <StablecoinIcon />
-          <p className="text-[13px] text-(--widget-muted)">
+          <p className="text-[13px] text-(--brand-muted)">
             No stablecoin wallet configured
           </p>
           <Button onClick={onCreate}>Add stablecoin wallet</Button>
@@ -435,35 +435,35 @@ function PanelHeader({
   onRefresh: () => void;
 }) {
   return (
-    <div className="flex items-start gap-4 px-7 py-5 border-b border-(--widget-border)">
+    <div className="flex items-start gap-4 px-7 py-5 border-b border-(--brand-border)">
       <StablecoinIcon />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[15px] font-semibold text-(--widget-fg)">
+          <span className="text-[15px] font-semibold text-(--brand-fg)">
             Stablecoin (USDC)
           </span>
           <span
             className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full px-2 py-0.5"
             style={{
-              color: "var(--widget-status-completed-fg)",
-              background: "var(--widget-status-completed-bg)",
+              color: "var(--brand-status-completed-fg)",
+              background: "var(--brand-status-completed-bg)",
             }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full"
-              style={{ background: "var(--widget-accent)" }}
+              style={{ background: "var(--brand-accent)" }}
             />
             Connected
           </span>
         </div>
-        <div className="text-[13px] text-(--widget-muted) mt-0.5 leading-relaxed">
+        <div className="text-[13px] text-(--brand-muted) mt-0.5 leading-relaxed">
           Monthly App Store proceeds are pushed here as USDC on{" "}
           {network?.displayName ?? "Ethereum"}. Your balance stays onchain until
           you transfer or spend it.
         </div>
       </div>
       <div className="text-right shrink-0">
-        <div className="flex items-center justify-end gap-1.5 text-[11px] font-medium text-(--widget-muted) uppercase tracking-wider">
+        <div className="flex items-center justify-end gap-1.5 text-[11px] font-medium text-(--brand-muted) uppercase tracking-wider">
           <span>Balance</span>
           <button
             type="button"
@@ -471,7 +471,7 @@ function PanelHeader({
             disabled={isRefreshing || balance === null}
             aria-label="Refresh balance"
             title="Refresh balance"
-            className="p-0.5 -mr-0.5 rounded hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors disabled:opacity-50"
+            className="p-0.5 -mr-0.5 rounded hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors disabled:opacity-50"
           >
             <RotateCcw
               className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`}
@@ -479,9 +479,9 @@ function PanelHeader({
           </button>
         </div>
         {balance === null ? (
-          <div className="animate-pulse h-6 w-24 bg-(--widget-row-bg) rounded mt-1" />
+          <div className="animate-pulse h-6 w-24 bg-(--brand-row-bg) rounded mt-1" />
         ) : (
-          <div className="text-[20px] font-semibold text-(--widget-fg) tabular-nums tracking-tight mt-0.5">
+          <div className="text-[20px] font-semibold text-(--brand-fg) tabular-nums tracking-tight mt-0.5">
             {balance}
           </div>
         )}
@@ -499,8 +499,8 @@ function ActionBar({
 }) {
   return (
     <div
-      className="flex items-center gap-2 px-7 py-3 border-b border-(--widget-border)"
-      style={{ background: "var(--widget-strip-bg)" }}
+      className="flex items-center gap-2 px-7 py-3 border-b border-(--brand-border)"
+      style={{ background: "var(--brand-strip-bg)" }}
     >
       <PanelLinkButton
         icon={<Eye className="w-3.5 h-3.5" />}
@@ -518,7 +518,7 @@ function ActionBar({
         onClick={onAddFunds}
       />
       <div className="flex-1" />
-      <span className="text-[11px] text-(--widget-muted)">
+      <span className="text-[11px] text-(--brand-muted)">
         Last reconciled · just now
       </span>
     </div>
@@ -528,13 +528,13 @@ function ActionBar({
 function PanelFooter({ onRemove }: { onRemove: () => void }) {
   return (
     <div
-      className="flex items-center justify-between gap-4 px-7 py-3 border-t border-(--widget-border)"
-      style={{ background: "var(--widget-strip-bg)" }}
+      className="flex items-center justify-between gap-4 px-7 py-3 border-t border-(--brand-border)"
+      style={{ background: "var(--brand-strip-bg)" }}
     >
       <button
         type="button"
         onClick={onRemove}
-        className="text-[12px] text-(--widget-muted) bg-transparent border-none cursor-pointer p-0 transition-colors hover:text-(--widget-error)"
+        className="text-[12px] text-(--brand-muted) bg-transparent border-none cursor-pointer p-0 transition-colors hover:text-(--brand-error)"
       >
         Remove wallet
       </button>
@@ -549,7 +549,7 @@ function StablecoinIcon() {
   return (
     <div
       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-white"
-      style={{ background: "var(--widget-primary)" }}
+      style={{ background: "var(--brand-primary)" }}
       aria-hidden
     >
       <Wallet className="w-[18px] h-[18px]" strokeWidth={2.25} />

@@ -25,14 +25,14 @@ export function DetailRow({
 }: DetailRowProps) {
   return (
     <div
-      className="grid items-start gap-6 px-7 py-4 border-b border-(--widget-row-divider) last:border-b-0"
+      className="grid items-start gap-6 px-7 py-4 border-b border-(--brand-row-divider) last:border-b-0"
       style={{ gridTemplateColumns: "200px 1fr auto" }}
     >
-      <dt className="text-[13px] text-(--widget-muted) pt-[2px]">{label}</dt>
+      <dt className="text-[13px] text-(--brand-muted) pt-[2px]">{label}</dt>
       <dd className="min-w-0">
         <div
           className={`text-[14px] ${
-            valueSubdued ? "text-(--widget-muted)" : "text-(--widget-fg)"
+            valueSubdued ? "text-(--brand-muted)" : "text-(--brand-fg)"
           }`}
         >
           {value}
@@ -42,8 +42,8 @@ export function DetailRow({
             className="text-[12px] mt-0.5"
             style={{
               color: error
-                ? "var(--widget-status-failed-fg)"
-                : "var(--widget-muted)",
+                ? "var(--brand-status-failed-fg)"
+                : "var(--brand-muted)",
             }}
           >
             {error ?? hint}

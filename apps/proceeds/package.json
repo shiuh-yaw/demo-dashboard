@@ -16,6 +16,7 @@
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/fireblocks": "workspace:*",
     "@dynamic-demos/iron": "workspace:*",
+    "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
     "@dynamic-labs-sdk/client": "catalog:",

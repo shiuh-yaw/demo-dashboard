@@ -243,38 +243,38 @@ export function TransferModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
       onClick={(e) => { if (canClose && e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md">
+      <div className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
         <div className="p-6">
 
           {/* ── CHOOSE ── */}
           {step === "choose" && (
             <>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-(--widget-fg)">Transfer</h2>
-                <button onClick={onClose} className="text-sm text-(--widget-primary) hover:underline">
+                <h2 className="text-base font-semibold text-(--brand-fg)">Transfer</h2>
+                <button onClick={onClose} className="text-sm text-(--brand-primary) hover:underline">
                   Cancel
                 </button>
               </div>
 
               <button
-                className="w-full flex items-center gap-3 text-left p-4 rounded-(--widget-radius) bg-(--widget-row-bg) hover:bg-(--widget-row-hover) transition-colors mb-2"
+                className="w-full flex items-center gap-3 text-left p-4 rounded-(--brand-radius) bg-(--brand-row-bg) hover:bg-(--brand-row-hover) transition-colors mb-2"
                 onClick={() => setStep("form")}
               >
-                <ArrowUpDown className="w-5 h-5 text-(--widget-primary)" />
+                <ArrowUpDown className="w-5 h-5 text-(--brand-primary)" />
                 <div>
-                  <div className="text-sm font-semibold text-(--widget-fg)">External wallet</div>
-                  <div className="text-xs text-(--widget-muted) mt-0.5">Send USDC to another crypto wallet</div>
+                  <div className="text-sm font-semibold text-(--brand-fg)">External wallet</div>
+                  <div className="text-xs text-(--brand-muted) mt-0.5">Send USDC to another crypto wallet</div>
                 </div>
               </button>
 
               <button
-                className="w-full flex items-center gap-3 text-left p-4 rounded-(--widget-radius) bg-(--widget-row-bg) hover:bg-(--widget-row-hover) transition-colors"
+                className="w-full flex items-center gap-3 text-left p-4 rounded-(--brand-radius) bg-(--brand-row-bg) hover:bg-(--brand-row-hover) transition-colors"
                 onClick={() => setStep("bank_form")}
               >
-                <Building2 className="w-5 h-5 text-(--widget-primary)" />
+                <Building2 className="w-5 h-5 text-(--brand-primary)" />
                 <div>
-                  <div className="text-sm font-semibold text-(--widget-fg)">Bank account</div>
-                  <div className="text-xs text-(--widget-muted) mt-0.5">
+                  <div className="text-sm font-semibold text-(--brand-fg)">Bank account</div>
+                  <div className="text-xs text-(--brand-muted) mt-0.5">
                     Withdraw USDC to USD via IRON Finance
                   </div>
                 </div>
@@ -287,15 +287,15 @@ export function TransferModal({
           {step === "form" && (
             <>
               <div className="flex items-center justify-between mb-4">
-                <button onClick={() => setStep("choose")} className="text-sm text-(--widget-primary) hover:underline">Back</button>
-                <h2 className="text-base font-semibold text-(--widget-fg)">Send USDC</h2>
-                <button onClick={onClose} className="text-sm text-(--widget-muted) hover:underline">Cancel</button>
+                <button onClick={() => setStep("choose")} className="text-sm text-(--brand-primary) hover:underline">Back</button>
+                <h2 className="text-base font-semibold text-(--brand-fg)">Send USDC</h2>
+                <button onClick={onClose} className="text-sm text-(--brand-muted) hover:underline">Cancel</button>
               </div>
               <div className="space-y-4">
                 <div>
                   <Input label="Recipient address" value={recipient} onChange={(e) => setRecipient(e.target.value.trim())} />
                   {recipient && !isValidAddress && (
-                    <p className="text-xs text-(--widget-error) mt-1">Enter a valid Ethereum address</p>
+                    <p className="text-xs text-(--brand-error) mt-1">Enter a valid Ethereum address</p>
                   )}
                 </div>
                 <div>
@@ -309,7 +309,7 @@ export function TransferModal({
                       if (v.split(".").length <= 2) setAmount(v);
                     }}
                   />
-                  {balance && <p className="text-xs text-(--widget-muted) mt-1">Balance: {balance}</p>}
+                  {balance && <p className="text-xs text-(--brand-muted) mt-1">Balance: {balance}</p>}
                 </div>
                 <Button className="w-full" onClick={handleConfirmSend} disabled={!canSend}>Send USDC</Button>
               </div>
@@ -318,17 +318,17 @@ export function TransferModal({
 
           {step === "biometric_setup" && (
             <div className="flex flex-col items-center gap-5 py-2">
-              <div className="w-16 h-16 rounded-full bg-(--widget-row-bg) border-2 border-(--widget-border) flex items-center justify-center">
-                <Fingerprint className="w-8 h-8 text-(--widget-primary)" />
+              <div className="w-16 h-16 rounded-full bg-(--brand-row-bg) border-2 border-(--brand-border) flex items-center justify-center">
+                <Fingerprint className="w-8 h-8 text-(--brand-primary)" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-(--widget-fg)">Enable biometrics to continue</p>
-                <p className="text-xs text-(--widget-muted) mt-1 max-w-[320px]">
+                <p className="text-sm font-semibold text-(--brand-fg)">Enable biometrics to continue</p>
+                <p className="text-xs text-(--brand-muted) mt-1 max-w-[320px]">
                   Face ID or Touch ID is required to authorize this transfer and every future outbound transfer from your wallet.
                 </p>
               </div>
               {biometricError && (
-                <p className="text-xs text-center text-(--widget-error) max-w-[320px]">{biometricError}</p>
+                <p className="text-xs text-center text-(--brand-error) max-w-[320px]">{biometricError}</p>
               )}
               <div className="w-full space-y-2">
                 <Button className="w-full" onClick={handleRegisterBiometric}>Enable Face ID / Touch ID</Button>
@@ -339,40 +339,40 @@ export function TransferModal({
 
           {step === "biometric_registering" && (
             <div className="flex flex-col items-center py-12">
-              <Fingerprint className="w-12 h-12 text-(--widget-muted) mb-5" />
-              <p className="text-base font-medium text-(--widget-fg)">Complete the biometric prompt</p>
-              <p className="text-sm text-(--widget-muted) mt-2 text-center">Approve in your browser to register this device</p>
+              <Fingerprint className="w-12 h-12 text-(--brand-muted) mb-5" />
+              <p className="text-base font-medium text-(--brand-fg)">Complete the biometric prompt</p>
+              <p className="text-sm text-(--brand-muted) mt-2 text-center">Approve in your browser to register this device</p>
             </div>
           )}
 
           {step === "biometric_authorize" && (
             <div className="flex flex-col items-center py-10 px-4">
-              <div className="w-14 h-14 rounded-full bg-(--widget-row-bg) border-2 border-(--widget-border) flex items-center justify-center mb-5">
-                <Fingerprint className="w-7 h-7 text-(--widget-primary)" />
+              <div className="w-14 h-14 rounded-full bg-(--brand-row-bg) border-2 border-(--brand-border) flex items-center justify-center mb-5">
+                <Fingerprint className="w-7 h-7 text-(--brand-primary)" />
               </div>
-              <p className="text-base font-semibold text-(--widget-fg)">Activate your wallet</p>
-              <p className="text-sm text-(--widget-muted) mt-2 text-center max-w-[340px] leading-relaxed">
+              <p className="text-base font-semibold text-(--brand-fg)">Activate your wallet</p>
+              <p className="text-sm text-(--brand-muted) mt-2 text-center max-w-[340px] leading-relaxed">
                 Confirm with Touch ID to set up your wallet. This only happens once — next time you&apos;ll go straight to the transfer.
               </p>
-              <div className="flex items-center gap-2 mt-5 text-[11px] text-(--widget-muted)">
-                <span className="w-1.5 h-1.5 rounded-full bg-(--widget-primary)" /><span>Activate</span>
-                <span className="text-(--widget-border)">—</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-(--widget-border)" /><span className="opacity-60">Send</span>
+              <div className="flex items-center gap-2 mt-5 text-[11px] text-(--brand-muted)">
+                <span className="w-1.5 h-1.5 rounded-full bg-(--brand-primary)" /><span>Activate</span>
+                <span className="text-(--brand-border)">—</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-(--brand-border)" /><span className="opacity-60">Send</span>
               </div>
             </div>
           )}
 
           {step === "biometric_confirm" && (
             <div className="flex flex-col items-center py-10 px-4">
-              <div className="w-14 h-14 rounded-full bg-(--widget-row-bg) border-2 border-(--widget-border) flex items-center justify-center mb-5">
-                <Fingerprint className="w-7 h-7 text-(--widget-primary)" />
+              <div className="w-14 h-14 rounded-full bg-(--brand-row-bg) border-2 border-(--brand-border) flex items-center justify-center mb-5">
+                <Fingerprint className="w-7 h-7 text-(--brand-primary)" />
               </div>
-              <p className="text-base font-semibold text-(--widget-fg)">Confirm with Touch ID</p>
-              <p className="text-sm text-(--widget-muted) mt-2 text-center">Sending {amount} USDC</p>
-              <div className="flex items-center gap-2 mt-5 text-[11px] text-(--widget-muted)">
-                <span className="w-1.5 h-1.5 rounded-full bg-(--widget-accent)" /><span className="opacity-60">Activated</span>
-                <span className="text-(--widget-border)">—</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-(--widget-primary)" /><span>Send</span>
+              <p className="text-base font-semibold text-(--brand-fg)">Confirm with Touch ID</p>
+              <p className="text-sm text-(--brand-muted) mt-2 text-center">Sending {amount} USDC</p>
+              <div className="flex items-center gap-2 mt-5 text-[11px] text-(--brand-muted)">
+                <span className="w-1.5 h-1.5 rounded-full bg-(--brand-accent)" /><span className="opacity-60">Activated</span>
+                <span className="text-(--brand-border)">—</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-(--brand-primary)" /><span>Send</span>
               </div>
             </div>
           )}
@@ -380,8 +380,8 @@ export function TransferModal({
           {step === "sending" && (
             <div className="flex flex-col items-center py-12">
               <Spinner size="lg" />
-              <p className="text-base font-medium text-(--widget-fg) mt-5">Confirming transaction</p>
-              <p className="text-sm text-(--widget-muted) mt-1">Waiting for onchain confirmation…</p>
+              <p className="text-base font-medium text-(--brand-fg) mt-5">Confirming transaction</p>
+              <p className="text-sm text-(--brand-muted) mt-1">Waiting for onchain confirmation…</p>
             </div>
           )}
 
@@ -390,10 +390,10 @@ export function TransferModal({
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
                 <Check className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">Transfer sent</p>
-              <p className="text-sm text-(--widget-muted) text-center">{amount} USDC sent to {truncateAddress(recipient)}</p>
+              <p className="text-lg font-semibold text-(--brand-fg)">Transfer sent</p>
+              <p className="text-sm text-(--brand-muted) text-center">{amount} USDC sent to {truncateAddress(recipient)}</p>
               {txHash && explorerUrl && (
-                <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-(--widget-primary) hover:underline mb-2">
+                <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-(--brand-primary) hover:underline mb-2">
                   View transaction →
                 </a>
               )}
@@ -406,8 +406,8 @@ export function TransferModal({
               <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-2">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">Transfer failed</p>
-              <p className="text-xs text-(--widget-muted) text-center max-w-[340px] mb-2">{sendError}</p>
+              <p className="text-lg font-semibold text-(--brand-fg)">Transfer failed</p>
+              <p className="text-xs text-(--brand-muted) text-center max-w-[340px] mb-2">{sendError}</p>
               <div className="flex gap-3 w-full mt-2">
                 <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
                 <Button className="flex-1" onClick={() => setStep("form")}>Try again</Button>
@@ -420,16 +420,16 @@ export function TransferModal({
           {step === "bank_form" && (
             <>
               <div className="flex items-center justify-between mb-5">
-                <button onClick={() => setStep("choose")} className="text-sm text-(--widget-primary) hover:underline">Back</button>
-                <h2 className="text-base font-semibold text-(--widget-fg)">Withdraw to bank</h2>
-                <button onClick={onClose} className="text-sm text-(--widget-muted) hover:underline">Cancel</button>
+                <button onClick={() => setStep("choose")} className="text-sm text-(--brand-primary) hover:underline">Back</button>
+                <h2 className="text-base font-semibold text-(--brand-fg)">Withdraw to bank</h2>
+                <button onClick={onClose} className="text-sm text-(--brand-muted) hover:underline">Cancel</button>
               </div>
 
-              <div className="flex items-center gap-3 p-3 mb-5 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                <Building2 className="w-5 h-5 text-(--widget-muted) shrink-0" />
+              <div className="flex items-center gap-3 p-3 mb-5 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                <Building2 className="w-5 h-5 text-(--brand-muted) shrink-0" />
                 <div>
-                  <div className="text-[13px] font-medium text-(--widget-fg)">Bank account · ACH</div>
-                  <div className="text-[11px] text-(--widget-muted)">Powered by IRON Finance (MoonPay)</div>
+                  <div className="text-[13px] font-medium text-(--brand-fg)">Bank account · ACH</div>
+                  <div className="text-[11px] text-(--brand-muted)">Powered by IRON Finance (MoonPay)</div>
                 </div>
               </div>
 
@@ -447,9 +447,9 @@ export function TransferModal({
                   />
                   {balance && (
                     <div className="flex justify-between mt-1">
-                      <p className="text-xs text-(--widget-muted)">Available: {balance}</p>
+                      <p className="text-xs text-(--brand-muted)">Available: {balance}</p>
                       {balanceRaw != null && (
-                        <button type="button" className="text-xs text-(--widget-primary) hover:underline"
+                        <button type="button" className="text-xs text-(--brand-primary) hover:underline"
                           onClick={() => setBankAmount(String(Math.floor(balanceRaw * 100) / 100))}>
                           Max
                         </button>
@@ -467,16 +467,16 @@ export function TransferModal({
           {step === "bank_quoting" && (
             <div className="flex flex-col items-center py-12">
               <Spinner size="lg" />
-              <p className="text-base font-medium text-(--widget-fg) mt-5">Getting quote…</p>
+              <p className="text-base font-medium text-(--brand-fg) mt-5">Getting quote…</p>
             </div>
           )}
 
           {step === "bank_confirm" && bankQuote && (
             <>
               <div className="flex items-center justify-between mb-5">
-                <button onClick={() => setStep("bank_form")} className="text-sm text-(--widget-primary) hover:underline">Back</button>
-                <h2 className="text-base font-semibold text-(--widget-fg)">Confirm withdrawal</h2>
-                <button onClick={onClose} className="text-sm text-(--widget-muted) hover:underline">Cancel</button>
+                <button onClick={() => setStep("bank_form")} className="text-sm text-(--brand-primary) hover:underline">Back</button>
+                <h2 className="text-base font-semibold text-(--brand-fg)">Confirm withdrawal</h2>
+                <button onClick={onClose} className="text-sm text-(--brand-muted) hover:underline">Cancel</button>
               </div>
 
               <div className="space-y-2 mb-5">
@@ -487,7 +487,7 @@ export function TransferModal({
                 <QuoteRow label="Rail" value="ACH · 1–2 business days" />
               </div>
 
-              <p className="text-[11px] text-(--widget-muted) mb-4 text-center">
+              <p className="text-[11px] text-(--brand-muted) mb-4 text-center">
                 IRON Finance will pull USDC from your stablecoin wallet and initiate a bank transfer. Settlement typically takes 1–2 business days.
               </p>
 
@@ -501,7 +501,7 @@ export function TransferModal({
             <div className="py-8 px-2">
               <div className="flex flex-col items-center mb-6">
                 <Spinner size="lg" />
-                <p className="text-base font-medium text-(--widget-fg) mt-5">Processing withdrawal</p>
+                <p className="text-base font-medium text-(--brand-fg) mt-5">Processing withdrawal</p>
               </div>
               <div className="space-y-3">
                 {BANK_PROCESSING_STEPS.map((label, i) => (
@@ -520,16 +520,16 @@ export function TransferModal({
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
                 <Check className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">Withdrawal initiated</p>
-              <p className="text-sm text-(--widget-muted) text-center">
+              <p className="text-lg font-semibold text-(--brand-fg)">Withdrawal initiated</p>
+              <p className="text-sm text-(--brand-muted) text-center">
                 {bankResult
                   ? `${fmtUsd(bankResult.destination_amount_usd)} will arrive in your bank account in 1–2 business days.`
                   : "Your withdrawal has been submitted to IRON Finance."}
               </p>
               {bankResult?.id && (
-                <p className="text-[11px] text-(--widget-muted) mt-1 font-mono">Ref: {bankResult.id.slice(0, 16)}…</p>
+                <p className="text-[11px] text-(--brand-muted) mt-1 font-mono">Ref: {bankResult.id.slice(0, 16)}…</p>
               )}
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-(--widget-muted)">
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-(--brand-muted)">
                 <Building2 className="w-3.5 h-3.5" />
                 <span>Powered by IRON Finance × MoonPay</span>
               </div>
@@ -542,8 +542,8 @@ export function TransferModal({
               <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-2">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">Withdrawal failed</p>
-              <p className="text-xs text-(--widget-muted) text-center max-w-[340px] mb-2">{bankError}</p>
+              <p className="text-lg font-semibold text-(--brand-fg)">Withdrawal failed</p>
+              <p className="text-xs text-(--brand-muted) text-center max-w-[340px] mb-2">{bankError}</p>
               <div className="flex gap-3 w-full mt-2">
                 <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
                 <Button className="flex-1" onClick={() => setStep("bank_form")}>Try again</Button>
@@ -561,11 +561,11 @@ export function TransferModal({
 
 function QuoteRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 rounded-(--widget-radius) bg-(--widget-row-bg)">
-      <span className="text-sm text-(--widget-muted)">{label}</span>
+    <div className="flex items-center justify-between px-4 py-2.5 rounded-(--brand-radius) bg-(--brand-row-bg)">
+      <span className="text-sm text-(--brand-muted)">{label}</span>
       <span
         className="text-sm font-medium"
-        style={{ color: highlight ? "var(--widget-accent)" : "var(--widget-fg)", fontWeight: highlight ? 600 : 500 }}
+        style={{ color: highlight ? "var(--brand-accent)" : "var(--brand-fg)", fontWeight: highlight ? 600 : 500 }}
       >
         {value}
       </span>
@@ -580,19 +580,19 @@ function ProcessingRow({ label, state }: { label: string; state: "idle" | "activ
         className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
         style={{
           background:
-            state === "done" ? "var(--widget-accent)" :
-            state === "active" ? "var(--widget-primary)" :
-            "var(--widget-border)",
+            state === "done" ? "var(--brand-accent)" :
+            state === "active" ? "var(--brand-primary)" :
+            "var(--brand-border)",
         }}
       >
         {state === "done"   ? <Check className="w-3 h-3 text-white" /> :
          state === "active" ? <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> :
-                              <ChevronRight className="w-3 h-3 text-(--widget-muted)" />}
+                              <ChevronRight className="w-3 h-3 text-(--brand-muted)" />}
       </span>
       <span
         className="text-sm"
         style={{
-          color: state === "idle" ? "var(--widget-muted)" : "var(--widget-fg)",
+          color: state === "idle" ? "var(--brand-muted)" : "var(--brand-fg)",
           fontWeight: state === "active" ? 500 : 400,
         }}
       >

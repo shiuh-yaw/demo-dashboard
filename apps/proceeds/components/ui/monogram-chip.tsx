@@ -37,11 +37,11 @@ export function MonogramChip({
   const fontSize = shape === "wide" ? 9 : 10;
   return (
     <div
-      className="flex items-center justify-center shrink-0 text-(--widget-muted)"
+      className="flex items-center justify-center shrink-0 text-(--brand-muted)"
       style={{
         ...SIZE[shape],
-        background: "var(--widget-row-bg)",
-        border: "1px solid var(--widget-border)",
+        background: "var(--brand-row-bg)",
+        border: "1px solid var(--brand-border)",
       }}
     >
       {typeof glyph === "string" ? (

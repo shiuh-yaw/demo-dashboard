@@ -54,7 +54,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 4-app. Theme migration: remittance | ⚪️ pending | — | — |
 | 4-app. Theme migration: visa-direct | ⚪️ pending | — | Reference implementation; do last |
 | 4-app. Theme migration: cross-border-ap-ar | ⚪️ pending | — | — |
-| 4-app. Theme migration: proceeds | ⚪️ pending | — | — |
+| 4-app. Theme migration: proceeds | 🟢 done | [#57](https://github.com/dynamic-labs/demo-dashboard/pull/57) | Migrated to `@dynamic-demos/theme/defaults.css`; `--brand-*` namespace adopted; `--proceeds-*` chrome tokens retained app-locally. |
 | 4-app. Theme migration: earn | ⚪️ pending | — | Hardest (RGB conversion) |
 | 5A. Webhook framework | ⚪️ pending | — | — |
 | 5B. Orchestration API | ⚪️ pending | — | — |

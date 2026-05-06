@@ -2,20 +2,20 @@ type BadgeStatus = "Active" | "Expired" | "New" | "Pending";
 
 const statusStyles: Record<BadgeStatus, { background: string; color: string }> = {
   Active: {
-    background: "var(--widget-status-completed-bg)",
-    color: "var(--widget-status-completed-fg)",
+    background: "var(--brand-status-completed-bg)",
+    color: "var(--brand-status-completed-fg)",
   },
   Expired: {
-    background: "var(--widget-status-failed-bg)",
-    color: "var(--widget-status-failed-fg)",
+    background: "var(--brand-status-failed-bg)",
+    color: "var(--brand-status-failed-fg)",
   },
   New: {
-    background: "var(--widget-status-pending-bg)",
-    color: "var(--widget-status-pending-fg)",
+    background: "var(--brand-status-pending-bg)",
+    color: "var(--brand-status-pending-fg)",
   },
   Pending: {
-    background: "var(--widget-status-pending-bg)",
-    color: "var(--widget-status-pending-fg)",
+    background: "var(--brand-status-pending-bg)",
+    color: "var(--brand-status-pending-fg)",
   },
 };
 

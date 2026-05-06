@@ -194,12 +194,12 @@ export function CreateWalletModal({
       }}
     >
       <div
-        className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
       >
         <div className="flex items-center justify-between px-6 pt-6">
-          <h2 className="text-base font-semibold text-(--widget-fg)">
+          <h2 className="text-base font-semibold text-(--brand-fg)">
             {step === "biometric_prompt" || step === "biometric_registering"
               ? "Secure your wallet"
               : "Create your wallet"}
@@ -208,7 +208,7 @@ export function CreateWalletModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-sm text-(--widget-primary) hover:underline"
+              className="text-sm text-(--brand-primary) hover:underline"
             >
               Cancel
             </button>
@@ -218,12 +218,12 @@ export function CreateWalletModal({
         <div className="px-6 pb-6 pt-4">
           {step === "confirm" && (
             <div className="space-y-4">
-              <p className="text-sm text-(--widget-muted) leading-relaxed">
+              <p className="text-sm text-(--brand-muted) leading-relaxed">
                 A Dynamic Embedded Wallet will be created for you. The key is
                 split via TSS-MPC between this device and Dynamic — no single
                 party ever holds the full key.
               </p>
-              {/* <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border)">
+              {/* <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border)">
                 {[
                   ["Network", "Polygon"],
                   ["Asset", "USDC"],
@@ -235,10 +235,10 @@ export function CreateWalletModal({
                     key={label}
                     className="flex justify-between items-center px-3 py-2.5"
                   >
-                    <span className="text-xs text-(--widget-muted)">
+                    <span className="text-xs text-(--brand-muted)">
                       {label}
                     </span>
-                    <span className="text-xs font-medium text-(--widget-fg)">
+                    <span className="text-xs font-medium text-(--brand-fg)">
                       {value}
                     </span>
                   </div>
@@ -253,20 +253,20 @@ export function CreateWalletModal({
 
           {step === "biometric_prompt" && (
             <div className="flex flex-col items-center gap-5 py-2">
-              <div className="w-16 h-16 rounded-full bg-(--widget-row-bg) border-2 border-(--widget-border) flex items-center justify-center">
-                <Fingerprint className="w-8 h-8 text-(--widget-primary)" />
+              <div className="w-16 h-16 rounded-full bg-(--brand-row-bg) border-2 border-(--brand-border) flex items-center justify-center">
+                <Fingerprint className="w-8 h-8 text-(--brand-primary)" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-(--widget-fg)">
+                <p className="text-sm font-semibold text-(--brand-fg)">
                   Protect with biometrics
                 </p>
-                <p className="text-xs text-(--widget-muted) mt-1 max-w-[320px]">
+                <p className="text-xs text-(--brand-muted) mt-1 max-w-[320px]">
                   Face ID or Touch ID is required to secure your wallet and
                   confirm every outbound transfer.
                 </p>
               </div>
               {biometricError && (
-                <p className="text-xs text-center text-(--widget-error) max-w-[320px]">
+                <p className="text-xs text-center text-(--brand-error) max-w-[320px]">
                   {biometricError}
                 </p>
               )}
@@ -278,8 +278,8 @@ export function CreateWalletModal({
 
           {step === "biometric_registering" && (
             <div className="flex flex-col items-center py-10 gap-4">
-              <Fingerprint className="w-10 h-10 text-(--widget-muted)" />
-              <p className="text-sm text-(--widget-fg)">
+              <Fingerprint className="w-10 h-10 text-(--brand-muted)" />
+              <p className="text-sm text-(--brand-fg)">
                 Complete the biometric prompt…
               </p>
             </div>
@@ -288,7 +288,7 @@ export function CreateWalletModal({
           {step === "creating" && (
             <div className="flex flex-col items-center py-10 gap-4">
               <Spinner size="lg" />
-              <p className="text-sm text-(--widget-fg)">
+              <p className="text-sm text-(--brand-fg)">
                 Creating your wallet…
               </p>
             </div>
@@ -299,11 +299,11 @@ export function CreateWalletModal({
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <Check className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-sm font-medium text-(--widget-fg)">
+              <p className="text-sm font-medium text-(--brand-fg)">
                 Wallet ready
               </p>
               {createdAddress && (
-                <p className="text-sm font-mono text-(--widget-muted)">
+                <p className="text-sm font-mono text-(--brand-muted)">
                   {truncate(createdAddress)}
                 </p>
               )}
@@ -312,7 +312,7 @@ export function CreateWalletModal({
 
           {step === "error" && (
             <div className="space-y-4">
-              <div className="p-3 rounded-(--widget-radius) bg-red-50 border border-red-200">
+              <div className="p-3 rounded-(--brand-radius) bg-red-50 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
                   Wallet creation failed
                 </p>

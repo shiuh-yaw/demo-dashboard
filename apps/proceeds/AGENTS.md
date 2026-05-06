@@ -30,7 +30,7 @@ regions:
 
 # @dynamic-demos/proceeds
 
-Operator-facing onchain proceeds-to-bank demo. A merchant connects their Dynamic wallet, views balances + transaction history sourced from Alchemy, and offramps USDC to fiat via Iron (US ACH/wire, EU SEPA, GB Faster Payments). The app is also the **source of the canonical theme** — its `globals.css` is the basis for `packages/theme/src/defaults.css` (D-020).
+Operator-facing onchain proceeds-to-bank demo. A merchant connects their Dynamic wallet, views balances + transaction history sourced from Alchemy, and offramps USDC to fiat via Iron (US ACH/wire, EU SEPA, GB Faster Payments). The app is the **historical source of the canonical theme** — its `globals.css` was promoted to `packages/theme/src/defaults.css` in Phase 4-defaults (D-020).
 
 ## Capabilities
 
@@ -65,7 +65,7 @@ Cookie / header contract (D-008):
 
 ## Theming
 
-Source of the `--brand-*` contract — `proceeds/app/globals.css` is the canonical base; Phase 4 promotes it to `packages/theme/src/defaults.css` (D-020). The app uses `createDemoMiddleware` + the SSR `<ThemeStyleTag>` pattern (D-008): no client-side theme fetch, no FOUC.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; proceeds-specific tokens (`--proceeds-navy`, `--proceeds-blue`, `--proceeds-grey*`, `--proceeds-gold`, `--proceeds-teal`, `--max-width-content`) remain in `app/globals.css` since they're consumed by app-only chrome (`dashboard-header`, `app-shell`). The app uses `createDemoMiddleware` with `configIdSource: 'none'` — there's no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if proceeds ever gains per-tenant theming.
 
 ## Credentials
 
@@ -128,6 +128,6 @@ export const middleware = createDemoMiddleware({
 
 ## Open questions / known gaps
 
-- Phase 4 promotes `globals.css` into `packages/theme/src/defaults.css` (D-020) and namespaces the variables onto `--brand-*`.
+- Phase 4-app proceeds completed: `globals.css` is now thin, importing `@dynamic-demos/theme/defaults.css` and keeping only `--proceeds-*` chrome tokens. All component refs use the `--brand-*` namespace (D-007).
 - Phase 5B routes Iron through dashboard `/api/orchestrate/offramp`; per-app `IRON_API_KEY` retires then.
 - No real-network E2E tests in CI (D-023). Manual sandbox runs cover offramp flow.

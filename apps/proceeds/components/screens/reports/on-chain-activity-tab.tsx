@@ -280,7 +280,7 @@ export function OnChainActivityTab() {
 
   return (
     <>
-      <p className="text-[13px] text-(--widget-muted) mb-5 max-w-[680px] leading-relaxed">
+      <p className="text-[13px] text-(--brand-muted) mb-5 max-w-[680px] leading-relaxed">
         Every inbound payout and outbound transfer, settled onchain. Unlike
         batched monthly proceeds, stablecoin payouts stream continuously and are
         individually verifiable.
@@ -328,7 +328,7 @@ export function OnChainActivityTab() {
                 disabled={isFetching || pendingFetching}
                 aria-label="Refresh activity"
                 title="Refresh activity"
-                className="p-0.5 -mr-0.5 rounded text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-default"
+                className="p-0.5 -mr-0.5 rounded text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-default"
               >
                 <RotateCcw
                   className={`w-3 h-3 ${isFetching || pendingFetching ? "animate-spin" : ""}`}
@@ -391,12 +391,12 @@ export function OnChainActivityTab() {
         )}
 
         {hasNextPage && filtered.length > 0 && (
-          <div className="flex items-center justify-center py-3 border-t border-(--widget-border)">
+          <div className="flex items-center justify-center py-3 border-t border-(--brand-border)">
             <button
               type="button"
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
-              className="inline-flex items-center gap-2 text-[13px] font-medium text-(--widget-primary) bg-transparent border-none cursor-pointer p-0 disabled:opacity-50"
+              className="inline-flex items-center gap-2 text-[13px] font-medium text-(--brand-primary) bg-transparent border-none cursor-pointer p-0 disabled:opacity-50"
             >
               {isFetchingNextPage ? (
                 <>
@@ -410,7 +410,7 @@ export function OnChainActivityTab() {
         )}
       </div>
 
-      <p className="text-[11px] text-(--widget-muted) mt-3 px-1">
+      <p className="text-[11px] text-(--brand-muted) mt-3 px-1">
         Served by Alchemy&apos;s onchain indexer · Addresses and amounts are
         public on the underlying blockchain.
       </p>
@@ -423,8 +423,8 @@ export function OnChainActivityTab() {
 function EmptyState({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="py-16 text-center">
-      <p className="text-[15px] font-medium text-(--widget-fg) mb-1">{title}</p>
-      <p className="text-[13px] text-(--widget-muted)">{hint}</p>
+      <p className="text-[15px] font-medium text-(--brand-fg) mb-1">{title}</p>
+      <p className="text-[13px] text-(--brand-muted)">{hint}</p>
     </div>
   );
 }
@@ -463,15 +463,15 @@ function FilterBar({
           onClick={onRangeOpenToggle}
           aria-haspopup="listbox"
           aria-expanded={rangeOpen}
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-(--widget-fg) bg-(--widget-bg) border border-(--widget-input-border) rounded-lg px-3 py-1.5 hover:bg-(--widget-row-bg) transition-colors"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-(--brand-fg) bg-(--brand-surface) border border-(--brand-input-border) rounded-lg px-3 py-1.5 hover:bg-(--brand-row-bg) transition-colors"
         >
           {RANGE_LABELS[range]}
-          <ChevronDown className="w-3.5 h-3.5 text-(--widget-muted)" />
+          <ChevronDown className="w-3.5 h-3.5 text-(--brand-muted)" />
         </button>
         {rangeOpen && (
           <div
             role="listbox"
-            className="absolute top-full left-0 mt-1.5 z-20 min-w-[180px] bg-(--widget-bg) border border-(--widget-border) rounded-lg overflow-hidden shadow-lg"
+            className="absolute top-full left-0 mt-1.5 z-20 min-w-[180px] bg-(--brand-surface) border border-(--brand-border) rounded-lg overflow-hidden shadow-lg"
           >
             {(Object.keys(RANGE_LABELS) as RangeKey[]).map((key) => (
               <button
@@ -479,17 +479,17 @@ function FilterBar({
                 role="option"
                 aria-selected={range === key}
                 onClick={() => onRangeSelect(key)}
-                className="w-full flex items-center justify-between text-left px-3.5 py-2 hover:bg-(--widget-row-bg) transition-colors"
+                className="w-full flex items-center justify-between text-left px-3.5 py-2 hover:bg-(--brand-row-bg) transition-colors"
                 style={{
                   background:
-                    range === key ? "var(--widget-row-bg)" : "transparent",
+                    range === key ? "var(--brand-row-bg)" : "transparent",
                 }}
               >
-                <span className="text-[13px] text-(--widget-fg)">
+                <span className="text-[13px] text-(--brand-fg)">
                   {RANGE_LABELS[key]}
                 </span>
                 {range === key && (
-                  <span className="text-[13px] text-(--widget-primary)">✓</span>
+                  <span className="text-[13px] text-(--brand-primary)">✓</span>
                 )}
               </button>
             ))}
@@ -500,7 +500,7 @@ function FilterBar({
       <div
         role="tablist"
         aria-label="Transaction type"
-        className="inline-flex items-center bg-(--widget-row-bg) border border-(--widget-border) rounded-lg p-0.5"
+        className="inline-flex items-center bg-(--brand-row-bg) border border-(--brand-border) rounded-lg p-0.5"
       >
         {(Object.keys(TYPE_LABELS) as TypeKey[]).map((key) => (
           <button
@@ -510,8 +510,8 @@ function FilterBar({
             onClick={() => onTypeSelect(key)}
             className="text-[13px] font-medium rounded-md px-3 py-1 transition-colors"
             style={{
-              background: type === key ? "var(--widget-bg)" : "transparent",
-              color: type === key ? "var(--widget-fg)" : "var(--widget-muted)",
+              background: type === key ? "var(--brand-surface)" : "transparent",
+              color: type === key ? "var(--brand-fg)" : "var(--brand-muted)",
               boxShadow: type === key ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
             }}
           >
@@ -522,7 +522,7 @@ function FilterBar({
 
       <div className="flex-1" />
 
-      <div className="text-[12px] text-(--widget-muted) tabular-nums">
+      <div className="text-[12px] text-(--brand-muted) tabular-nums">
         {filteredCount} of {totalCount} entries
       </div>
     </div>
@@ -556,13 +556,13 @@ function LedgerTable({
             <td>
               <div className="flex items-center gap-3">
                 <MonogramChip text={tx.label} />
-                <span className="text-sm font-medium text-(--widget-fg)">
+                <span className="text-sm font-medium text-(--brand-fg)">
                   {tx.label}
                 </span>
               </div>
             </td>
             <td>
-              <span className="text-[13px] text-(--widget-muted)">
+              <span className="text-[13px] text-(--brand-muted)">
                 {tx.description}
               </span>
             </td>
@@ -572,15 +572,15 @@ function LedgerTable({
                 style={{
                   color:
                     tx.type === "credit"
-                      ? "var(--widget-status-completed-fg)"
-                      : "var(--widget-fg)",
+                      ? "var(--brand-status-completed-fg)"
+                      : "var(--brand-fg)",
                 }}
               >
                 {tx.amount}
               </span>
             </td>
             <td>
-              <span className="text-[13px] text-(--widget-muted) tabular-nums whitespace-nowrap">
+              <span className="text-[13px] text-(--brand-muted) tabular-nums whitespace-nowrap">
                 {tx.date}
               </span>
             </td>
@@ -592,12 +592,12 @@ function LedgerTable({
                   rel="noopener noreferrer"
                   aria-label="View on block explorer"
                   title="View on block explorer"
-                  className="inline-flex items-center text-(--widget-primary) no-underline"
+                  className="inline-flex items-center text-(--brand-primary) no-underline"
                 >
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
               ) : (
-                <span className="text-[13px] text-(--widget-muted) whitespace-nowrap">
+                <span className="text-[13px] text-(--brand-muted) whitespace-nowrap">
                   —
                 </span>
               )}
@@ -644,26 +644,26 @@ function PendingLedgerRow({ order }: { order: PendingPayoutRecord }) {
   })} ${order.asset}`;
 
   return (
-    <tr style={{ background: "var(--widget-status-pending-bg)" }}>
+    <tr style={{ background: "var(--brand-status-pending-bg)" }}>
       <td>
         <div className="flex items-center gap-3">
           <MonogramChip text="Connect" />
-          <span className="text-sm font-medium text-(--widget-fg)">
+          <span className="text-sm font-medium text-(--brand-fg)">
             Connect
           </span>
         </div>
       </td>
       <td>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[13px] text-(--widget-muted)">
+          <span className="text-[13px] text-(--brand-muted)">
             App Store proceeds · {order.asset}
           </span>
           <span
             className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
             style={{
-              background: "var(--widget-bg)",
-              color: "var(--widget-status-pending-fg)",
-              border: "1px solid var(--widget-status-pending-fg)",
+              background: "var(--brand-surface)",
+              color: "var(--brand-status-pending-fg)",
+              border: "1px solid var(--brand-status-pending-fg)",
             }}
           >
             {statusLabel}
@@ -673,20 +673,20 @@ function PendingLedgerRow({ order }: { order: PendingPayoutRecord }) {
       <td style={{ textAlign: "right" }}>
         <span
           className="text-sm font-medium tabular-nums"
-          style={{ color: "var(--widget-status-pending-fg)" }}
+          style={{ color: "var(--brand-status-pending-fg)" }}
         >
           {amountDisplay}
         </span>
       </td>
       <td>
-        <span className="text-[13px] text-(--widget-muted) whitespace-nowrap">
+        <span className="text-[13px] text-(--brand-muted) whitespace-nowrap">
           Submitted {relativeFromNow(order.createdAt)}
         </span>
       </td>
       <td style={{ textAlign: "right" }}>
         <Loader2
           className="w-4 h-4 animate-spin inline-block"
-          style={{ color: "var(--widget-status-pending-fg)" }}
+          style={{ color: "var(--brand-status-pending-fg)" }}
           aria-label="Settling on-chain"
         />
       </td>

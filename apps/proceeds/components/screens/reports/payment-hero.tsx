@@ -29,8 +29,8 @@ export function PaymentHero({ month }: PaymentHeroProps) {
   const isPaid = month.status === "paid";
   const label = isPaid ? "Payment" : "Total estimated proceeds";
   const accent = isPaid
-    ? "var(--widget-status-completed-fg)"
-    : "var(--widget-status-pending-fg)";
+    ? "var(--brand-status-completed-fg)"
+    : "var(--brand-status-pending-fg)";
 
   const [modalOpen, setModalOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(() => {
@@ -58,8 +58,8 @@ export function PaymentHero({ month }: PaymentHeroProps) {
       <div className="flex items-stretch" style={{ minHeight: "120px" }}>
         {/* Left: amount */}
         <div
-          className="flex-1 px-8 py-6 border-r border-(--widget-border)"
-          style={{ background: "var(--widget-strip-bg)" }}
+          className="flex-1 px-8 py-6 border-r border-(--brand-border)"
+          style={{ background: "var(--brand-strip-bg)" }}
         >
           <div
             className="text-[11px] font-semibold uppercase tracking-wider mb-2"
@@ -67,12 +67,12 @@ export function PaymentHero({ month }: PaymentHeroProps) {
           >
             {label} · {month.month}
           </div>
-          <div className="text-[36px] font-semibold text-(--widget-fg) tracking-[-0.02em] tabular-nums leading-none mb-3">
+          <div className="text-[36px] font-semibold text-(--brand-fg) tracking-[-0.02em] tabular-nums leading-none mb-3">
             {formatUsd(month.totalUsdc)}
           </div>
-          <div className="text-[13px] text-(--widget-muted)">
+          <div className="text-[13px] text-(--brand-muted)">
             {isPaid ? "Sent to" : "Will be sent to"}{" "}
-            <span className="text-(--widget-fg) font-medium">
+            <span className="text-(--brand-fg) font-medium">
               {destination}
             </span>
           </div>
@@ -136,7 +136,7 @@ function PaidMetadata({ month }: { month: MonthlyProceeds }) {
         label="Fireblocks order ID"
         value={
           orderId ? (
-            <span className="font-mono text-(--widget-primary) tabular-nums">
+            <span className="font-mono text-(--brand-primary) tabular-nums">
               {truncateHash(orderId)}
             </span>
           ) : (
@@ -173,7 +173,7 @@ function EstimatedActions({ month, onOpenModal }: EstimatedActionsProps) {
         value={month.expectedDate ?? "—"}
       />
       <MetaRow label="Status" value={<StatusPill kind="estimated" />} />
-      <div className="text-[12px] text-(--widget-muted) leading-snug">
+      <div className="text-[12px] text-(--brand-muted) leading-snug">
         Fiscal month still accruing. Use the demo action to push this
         month&apos;s proceeds onchain.
       </div>

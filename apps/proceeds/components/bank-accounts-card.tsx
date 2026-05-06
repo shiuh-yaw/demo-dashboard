@@ -33,32 +33,32 @@ export function BankAccountsCard() {
                 <div className="flex items-center gap-3">
                   <MonogramChip text={acct.bankName} />
                   <div>
-                    <div className="text-sm font-semibold text-(--widget-fg)">
+                    <div className="text-sm font-semibold text-(--brand-fg)">
                       {acct.bankName}
                     </div>
-                    <div className="text-xs text-(--widget-muted) mt-0.5">
+                    <div className="text-xs text-(--brand-muted) mt-0.5">
                       {acct.accountType}
                     </div>
                   </div>
                 </div>
               </td>
               <td>
-                <div className="text-sm font-medium text-(--widget-fg) tabular-nums">
+                <div className="text-sm font-medium text-(--brand-fg) tabular-nums">
                   •••• {acct.lastFour}
                 </div>
                 {acct.isPrimary && (
-                  <div className="text-xs font-medium text-(--widget-primary) mt-0.5">
+                  <div className="text-xs font-medium text-(--brand-primary) mt-0.5">
                     Primary
                   </div>
                 )}
               </td>
               <td>
-                <span className="text-(--widget-muted)">
+                <span className="text-(--brand-muted)">
                   {acct.currency} · {acct.country}
                 </span>
               </td>
               <td>
-                <span className="text-(--widget-muted)">{acct.addedDate}</span>
+                <span className="text-(--brand-muted)">{acct.addedDate}</span>
               </td>
               <td>
                 <StatusBadge status={acct.status} />

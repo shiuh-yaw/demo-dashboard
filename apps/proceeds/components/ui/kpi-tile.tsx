@@ -18,10 +18,10 @@ export interface KpiTileProps {
 }
 
 const ACCENT_COLOR: Record<NonNullable<KpiTileProps["accent"]>, string> = {
-  positive: "var(--widget-status-completed-fg)",
-  negative: "var(--widget-status-failed-fg)",
-  pending: "var(--widget-status-pending-fg)",
-  neutral: "var(--widget-fg)",
+  positive: "var(--brand-status-completed-fg)",
+  negative: "var(--brand-status-failed-fg)",
+  pending: "var(--brand-status-pending-fg)",
+  neutral: "var(--brand-fg)",
 };
 
 export function KpiTile({
@@ -35,7 +35,7 @@ export function KpiTile({
     <div className="card" style={{ marginBottom: 0 }}>
       <div className="card-body" style={{ padding: "20px 22px" }}>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-(--widget-muted)">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-(--brand-muted)">
             {label}
           </div>
           {labelAction && <div className="shrink-0">{labelAction}</div>}
@@ -47,7 +47,7 @@ export function KpiTile({
           {value}
         </div>
         {hint && (
-          <div className="text-[12px] text-(--widget-muted) mt-1">{hint}</div>
+          <div className="text-[12px] text-(--brand-muted) mt-1">{hint}</div>
         )}
       </div>
     </div>

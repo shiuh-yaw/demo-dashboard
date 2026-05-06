@@ -116,30 +116,30 @@ export function OfframpModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
       onClick={(e) => canClose && e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md">
+      <div className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
         <div className="p-6">
           {/* ── FORM ── */}
           {step === "form" && (
             <>
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-base font-semibold text-(--widget-fg)">
+                <h2 className="text-base font-semibold text-(--brand-fg)">
                   Withdraw to bank
                 </h2>
                 <button
                   onClick={onClose}
-                  className="text-sm text-(--widget-primary) hover:underline"
+                  className="text-sm text-(--brand-primary) hover:underline"
                 >
                   Cancel
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 p-3 mb-5 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                <Building2 className="w-5 h-5 text-(--widget-muted) shrink-0" />
+              <div className="flex items-center gap-3 p-3 mb-5 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                <Building2 className="w-5 h-5 text-(--brand-muted) shrink-0" />
                 <div>
-                  <div className="text-[13px] font-medium text-(--widget-fg)">
+                  <div className="text-[13px] font-medium text-(--brand-fg)">
                     Bank account · ACH
                   </div>
-                  <div className="text-[11px] text-(--widget-muted)">
+                  <div className="text-[11px] text-(--brand-muted)">
                     Powered by IRON Finance (MoonPay)
                   </div>
                 </div>
@@ -159,13 +159,13 @@ export function OfframpModal({
                   />
                   {balance && (
                     <div className="flex justify-between mt-1">
-                      <p className="text-xs text-(--widget-muted)">
+                      <p className="text-xs text-(--brand-muted)">
                         Available: {balance}
                       </p>
                       {balanceRaw !== null && (
                         <button
                           type="button"
-                          className="text-xs text-(--widget-primary) hover:underline"
+                          className="text-xs text-(--brand-primary) hover:underline"
                           onClick={() =>
                             setAmount(String(Math.floor(balanceRaw * 100) / 100))
                           }
@@ -191,7 +191,7 @@ export function OfframpModal({
           {step === "quoting" && (
             <div className="flex flex-col items-center py-12">
               <Spinner size="lg" />
-              <p className="text-base font-medium text-(--widget-fg) mt-5">
+              <p className="text-base font-medium text-(--brand-fg) mt-5">
                 Getting quote…
               </p>
             </div>
@@ -203,16 +203,16 @@ export function OfframpModal({
               <div className="flex items-center justify-between mb-5">
                 <button
                   onClick={() => setStep("form")}
-                  className="text-sm text-(--widget-primary) hover:underline"
+                  className="text-sm text-(--brand-primary) hover:underline"
                 >
                   Back
                 </button>
-                <h2 className="text-base font-semibold text-(--widget-fg)">
+                <h2 className="text-base font-semibold text-(--brand-fg)">
                   Confirm withdrawal
                 </h2>
                 <button
                   onClick={onClose}
-                  className="text-sm text-(--widget-muted) hover:underline"
+                  className="text-sm text-(--brand-muted) hover:underline"
                 >
                   Cancel
                 </button>
@@ -239,7 +239,7 @@ export function OfframpModal({
                 <QuoteRow label="Rail" value="ACH · 1–2 business days" />
               </div>
 
-              <p className="text-[11px] text-(--widget-muted) mb-4 text-center">
+              <p className="text-[11px] text-(--brand-muted) mb-4 text-center">
                 IRON Finance will pull USDC from your stablecoin wallet and
                 initiate a bank transfer. Settlement typically takes 1–2
                 business days.
@@ -256,7 +256,7 @@ export function OfframpModal({
             <div className="py-8 px-2">
               <div className="flex flex-col items-center mb-6">
                 <Spinner size="lg" />
-                <p className="text-base font-medium text-(--widget-fg) mt-5">
+                <p className="text-base font-medium text-(--brand-fg) mt-5">
                   Processing withdrawal
                 </p>
               </div>
@@ -284,20 +284,20 @@ export function OfframpModal({
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
                 <Check className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">
+              <p className="text-lg font-semibold text-(--brand-fg)">
                 Withdrawal initiated
               </p>
-              <p className="text-sm text-(--widget-muted) text-center">
+              <p className="text-sm text-(--brand-muted) text-center">
                 {result
                   ? `${fmtUsd(result.destination_amount_usd)} will arrive in your bank account in 1–2 business days.`
                   : "Your withdrawal has been submitted to IRON Finance."}
               </p>
               {result?.id && (
-                <p className="text-[11px] text-(--widget-muted) mt-1 font-mono">
+                <p className="text-[11px] text-(--brand-muted) mt-1 font-mono">
                   Ref: {result.id.slice(0, 16)}…
                 </p>
               )}
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-(--widget-muted)">
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-(--brand-muted)">
                 <Building2 className="w-3.5 h-3.5" />
                 <span>Powered by IRON Finance × MoonPay</span>
               </div>
@@ -313,10 +313,10 @@ export function OfframpModal({
               <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-2">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">
+              <p className="text-lg font-semibold text-(--brand-fg)">
                 Withdrawal failed
               </p>
-              <p className="text-xs text-(--widget-muted) text-center max-w-[340px] mb-2">
+              <p className="text-xs text-(--brand-muted) text-center max-w-[340px] mb-2">
                 {error}
               </p>
               <div className="flex gap-3 w-full mt-2">
@@ -345,12 +345,12 @@ function QuoteRow({
   highlight?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 rounded-(--widget-radius) bg-(--widget-row-bg)">
-      <span className="text-sm text-(--widget-muted)">{label}</span>
+    <div className="flex items-center justify-between px-4 py-2.5 rounded-(--brand-radius) bg-(--brand-row-bg)">
+      <span className="text-sm text-(--brand-muted)">{label}</span>
       <span
         className="text-sm font-medium"
         style={{
-          color: highlight ? "var(--widget-accent)" : "var(--widget-fg)",
+          color: highlight ? "var(--brand-accent)" : "var(--brand-fg)",
           fontWeight: highlight ? 600 : 500,
         }}
       >
@@ -374,10 +374,10 @@ function ProcessingRow({
         style={{
           background:
             state === "done"
-              ? "var(--widget-accent)"
+              ? "var(--brand-accent)"
               : state === "active"
-              ? "var(--widget-primary)"
-              : "var(--widget-border)",
+              ? "var(--brand-primary)"
+              : "var(--brand-border)",
         }}
       >
         {state === "done" ? (
@@ -385,7 +385,7 @@ function ProcessingRow({
         ) : state === "active" ? (
           <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
         ) : (
-          <ChevronRight className="w-3 h-3 text-(--widget-muted)" />
+          <ChevronRight className="w-3 h-3 text-(--brand-muted)" />
         )}
       </span>
       <span
@@ -393,8 +393,8 @@ function ProcessingRow({
         style={{
           color:
             state === "idle"
-              ? "var(--widget-muted)"
-              : "var(--widget-fg)",
+              ? "var(--brand-muted)"
+              : "var(--brand-fg)",
           fontWeight: state === "active" ? 500 : 400,
         }}
       >

@@ -31,9 +31,9 @@ export function TabButton({
       onClick={onClick}
       className="relative text-[14px] font-medium pb-3 -mb-px transition-colors"
       style={{
-        color: active ? "var(--widget-fg)" : "var(--widget-muted)",
+        color: active ? "var(--brand-fg)" : "var(--brand-muted)",
         borderBottom: active
-          ? "2px solid var(--widget-primary)"
+          ? "2px solid var(--brand-primary)"
           : "2px solid transparent",
       }}
     >
