@@ -1,7 +1,7 @@
 ---
 name: "@dynamic-demos/deposit"
 kind: app
-flow_role: onramp
+flow_role: wallet
 custody: mixed
 status: experimental
 ---

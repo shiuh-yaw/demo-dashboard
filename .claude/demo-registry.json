@@ -1,0 +1,537 @@
+{
+  "generatedAt": null,
+  "apps": [
+    {
+      "name": "@dynamic-demos/checkouts",
+      "kind": "app",
+      "flow_role": "checkout",
+      "custody": "non-custodial",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/cross-border-ap-ar",
+      "kind": "app",
+      "flow_role": "payouts",
+      "custody": "custodial",
+      "status": "experimental"
+    },
+    {
+      "name": "@dynamic-demos/dashboard",
+      "kind": "app",
+      "flow_role": "utility",
+      "custody": "mixed",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/deposit",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "mixed",
+      "status": "experimental"
+    },
+    {
+      "name": "@dynamic-demos/earn",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "non-custodial",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/proceeds",
+      "kind": "app",
+      "flow_role": "offramp",
+      "custody": "non-custodial",
+      "status": "stable",
+      "regions": [
+        {
+          "country": "US",
+          "currency": "USD",
+          "rails": [
+            "ach",
+            "wire"
+          ]
+        },
+        {
+          "country": "DE",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "FR",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "ES",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "IT",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "NL",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "GB",
+          "currency": "GBP",
+          "rails": [
+            "faster_payments"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@dynamic-demos/remittance",
+      "kind": "app",
+      "flow_role": "offramp",
+      "custody": "non-custodial",
+      "status": "stable",
+      "regions": [
+        {
+          "country": "US",
+          "currency": "USD",
+          "rails": [
+            "ach"
+          ]
+        },
+        {
+          "country": "BR",
+          "currency": "BRL",
+          "rails": [
+            "pix"
+          ]
+        },
+        {
+          "country": "MX",
+          "currency": "MXN",
+          "rails": [
+            "spei"
+          ]
+        },
+        {
+          "country": "CO",
+          "currency": "COP",
+          "rails": [
+            "pse"
+          ]
+        },
+        {
+          "country": "AR",
+          "currency": "ARS",
+          "rails": [
+            "cbu"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "@dynamic-demos/shop",
+      "kind": "app",
+      "flow_role": "checkout",
+      "custody": "non-custodial",
+      "status": "experimental"
+    },
+    {
+      "name": "@dynamic-demos/spark26",
+      "kind": "app",
+      "flow_role": "checkout",
+      "custody": "mixed",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/trade",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "non-custodial",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/visa-direct",
+      "kind": "app",
+      "flow_role": "payouts",
+      "custody": "mixed",
+      "status": "experimental"
+    },
+    {
+      "name": "@dynamic-demos/wallet",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "non-custodial",
+      "status": "stable"
+    }
+  ],
+  "packages": [
+    {
+      "name": "@dynamic-demos/alchemy",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable",
+      "provider": {
+        "name": "Alchemy",
+        "docs": "https://www.alchemy.com/docs",
+        "api_reference": "https://docs.alchemy.com/reference",
+        "agent_docs": "none",
+        "status_page": "https://status.alchemy.com"
+      }
+    },
+    {
+      "name": "@dynamic-demos/alfredpay",
+      "kind": "package",
+      "flow_role": "offramp",
+      "custody": "non-custodial",
+      "status": "experimental",
+      "regions": [
+        {
+          "country": "BR",
+          "currency": "BRL",
+          "rails": [
+            "pix"
+          ]
+        },
+        {
+          "country": "MX",
+          "currency": "MXN",
+          "rails": [
+            "spei"
+          ]
+        },
+        {
+          "country": "CO",
+          "currency": "COP",
+          "rails": [
+            "pse"
+          ]
+        },
+        {
+          "country": "AR",
+          "currency": "ARS",
+          "rails": [
+            "cbu"
+          ]
+        },
+        {
+          "country": "SV",
+          "currency": "USD",
+          "rails": [
+            "bank"
+          ]
+        },
+        {
+          "country": "US",
+          "currency": "USD",
+          "rails": [
+            "ach"
+          ]
+        }
+      ],
+      "provider": {
+        "name": "alfred (alfredPay)",
+        "docs": "https://alfredpay.io/documentation",
+        "api_reference": "https://alfredpay.readme.io",
+        "agent_docs": "none",
+        "status_page": "none"
+      }
+    },
+    {
+      "name": "@dynamic-demos/blindpay",
+      "kind": "package",
+      "flow_role": "offramp",
+      "custody": "custodial",
+      "status": "experimental",
+      "regions": [
+        {
+          "country": "BR",
+          "currency": "BRL",
+          "rails": [
+            "pix",
+            "ted"
+          ]
+        },
+        {
+          "country": "US",
+          "currency": "USD",
+          "rails": [
+            "ach",
+            "wire"
+          ]
+        },
+        {
+          "country": "MX",
+          "currency": "MXN",
+          "rails": [
+            "spei"
+          ]
+        },
+        {
+          "country": "CO",
+          "currency": "COP",
+          "rails": [
+            "pse"
+          ]
+        },
+        {
+          "country": "AR",
+          "currency": "ARS",
+          "rails": [
+            "cbu"
+          ]
+        }
+      ],
+      "provider": {
+        "name": "BlindPay",
+        "docs": "https://www.blindpay.com/docs/getting-started/overview",
+        "api_reference": "https://www.blindpay.com/docs/api-reference",
+        "agent_docs": "none",
+        "status_page": "https://status.blindpay.com"
+      }
+    },
+    {
+      "name": "@dynamic-demos/coinbase-onramp",
+      "kind": "package",
+      "flow_role": "onramp",
+      "custody": "non-custodial",
+      "status": "experimental",
+      "regions": [
+        {
+          "country": "US",
+          "currency": "USD",
+          "rails": [
+            "card",
+            "ach",
+            "apple_pay"
+          ]
+        },
+        {
+          "country": "GB",
+          "currency": "GBP",
+          "rails": [
+            "card"
+          ]
+        },
+        {
+          "country": "CA",
+          "currency": "CAD",
+          "rails": [
+            "card"
+          ]
+        },
+        {
+          "country": "AU",
+          "currency": "AUD",
+          "rails": [
+            "card"
+          ]
+        },
+        {
+          "country": "EU",
+          "currency": "EUR",
+          "rails": [
+            "card",
+            "sepa"
+          ]
+        }
+      ],
+      "provider": {
+        "name": "Coinbase Onramp (CDP)",
+        "docs": "https://docs.cdp.coinbase.com/",
+        "api_reference": "https://docs.cdp.coinbase.com/onramp/docs",
+        "agent_docs": "none",
+        "status_page": "https://status.coinbase.com"
+      }
+    },
+    {
+      "name": "@dynamic-demos/coingecko",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable",
+      "provider": {
+        "name": "CoinGecko",
+        "docs": "https://docs.coingecko.com/reference/introduction",
+        "api_reference": "https://docs.coingecko.com/reference",
+        "agent_docs": "none",
+        "status_page": "https://status.coingecko.com"
+      }
+    },
+    {
+      "name": "@dynamic-demos/db",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/dynamic",
+      "kind": "package",
+      "flow_role": "auth",
+      "custody": "n/a",
+      "status": "stable",
+      "provider": {
+        "name": "Dynamic SDK (first-party)",
+        "docs": "https://docs.dynamic.xyz",
+        "api_reference": "https://docs.dynamic.xyz/api-reference",
+        "agent_docs": "none",
+        "source": "https://github.com/dynamic-labs/dynamic-frontend-sdk"
+      }
+    },
+    {
+      "name": "@dynamic-demos/fireblocks",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "custodial",
+      "status": "stable",
+      "provider": {
+        "name": "Fireblocks",
+        "docs": "https://developers.fireblocks.com/",
+        "api_reference": "https://developers.fireblocks.com/reference",
+        "agent_docs": "none",
+        "status_page": "https://status.fireblocks.io"
+      }
+    },
+    {
+      "name": "@dynamic-demos/iron",
+      "kind": "package",
+      "flow_role": "offramp",
+      "custody": "non-custodial",
+      "status": "experimental",
+      "regions": [
+        {
+          "country": "US",
+          "currency": "USD",
+          "rails": [
+            "ach",
+            "wire"
+          ]
+        },
+        {
+          "country": "DE",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "FR",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "ES",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "IT",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "NL",
+          "currency": "EUR",
+          "rails": [
+            "sepa"
+          ]
+        },
+        {
+          "country": "GB",
+          "currency": "GBP",
+          "rails": [
+            "faster_payments"
+          ]
+        }
+      ],
+      "provider": {
+        "name": "Iron Finance (a MoonPay product)",
+        "docs": "https://docs.iron.xyz/",
+        "api_reference": "https://docs.iron.xyz/reference-sandbox",
+        "agent_docs": "none",
+        "status_page": "none"
+      }
+    },
+    {
+      "name": "@dynamic-demos/lifi",
+      "kind": "package",
+      "flow_role": "bridge",
+      "custody": "non-custodial",
+      "status": "stable",
+      "provider": {
+        "name": "LI.FI",
+        "docs": "https://docs.li.fi/",
+        "api_reference": "https://apidocs.li.fi/",
+        "agent_docs": "none",
+        "status_page": "none"
+      }
+    },
+    {
+      "name": "@dynamic-demos/polymarket",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable",
+      "provider": {
+        "name": "Polymarket",
+        "docs": "https://docs.polymarket.com/",
+        "api_reference": "https://docs.polymarket.com/quickstart/introduction/main",
+        "agent_docs": "none",
+        "status_page": "none"
+      }
+    },
+    {
+      "name": "@dynamic-demos/theme",
+      "kind": "package",
+      "flow_role": "theming",
+      "custody": "n/a",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/transactions",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/types",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/ui",
+      "kind": "package",
+      "flow_role": "shared-ui",
+      "custody": "n/a",
+      "status": "stable"
+    },
+    {
+      "name": "@dynamic-demos/utils",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable"
+    }
+  ]
+}

@@ -4,6 +4,28 @@ kind: app
 flow_role: offramp
 custody: non-custodial
 status: stable
+regions:
+  - country: US
+    currency: USD
+    rails: [ach, wire]
+  - country: DE
+    currency: EUR
+    rails: [sepa]
+  - country: FR
+    currency: EUR
+    rails: [sepa]
+  - country: ES
+    currency: EUR
+    rails: [sepa]
+  - country: IT
+    currency: EUR
+    rails: [sepa]
+  - country: NL
+    currency: EUR
+    rails: [sepa]
+  - country: GB
+    currency: GBP
+    rails: [faster_payments]
 ---
 
 # @dynamic-demos/proceeds

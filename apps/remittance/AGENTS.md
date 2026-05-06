@@ -4,6 +4,22 @@ kind: app
 flow_role: offramp
 custody: non-custodial
 status: stable
+regions:
+  - country: US
+    currency: USD
+    rails: [ach]
+  - country: BR
+    currency: BRL
+    rails: [pix]
+  - country: MX
+    currency: MXN
+    rails: [spei]
+  - country: CO
+    currency: COP
+    rails: [pse]
+  - country: AR
+    currency: ARS
+    rails: [cbu]
 ---
 
 # @dynamic-demos/remittance

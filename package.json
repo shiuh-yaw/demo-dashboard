@@ -14,7 +14,10 @@
     "dev:spark26": "turbo run dev --filter=@dynamic-demos/spark26",
     "dev:proceeds": "turbo run dev --filter=@dynamic-demos/proceeds",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "registry": "node scripts/generate-demo-registry.mjs",
+    "registry:check": "node scripts/generate-demo-registry.mjs --check",
+    "lint:agents-md": "node scripts/lint-agents-md.mjs"
   },
   "devDependencies": {
     "turbo": "2.8.0"

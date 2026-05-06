@@ -3,7 +3,7 @@ name: "@dynamic-demos/db"
 kind: package
 flow_role: utility
 custody: n/a
-status: active
+status: stable
 ---
 
 # @dynamic-demos/db
