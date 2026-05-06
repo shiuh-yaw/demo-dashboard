@@ -292,4 +292,17 @@ export const REDIS_KEYS = {
 
   /** Set of all Brand record IDs. */
   brandRecordList: `${DASHBOARD_PREFIX}:brand-v2:list`,
+
+  // ==========================================================================
+  // Phase 2-transactions — canonical TransactionRecord (state-machine carrier).
+  // Distinct from the legacy LI.FI-checkout `transaction` keys above; the
+  // `tx-v2` namespace mirrors the Postgres `Transaction` table so the Redis
+  // backend can serve as a parity baseline behind USE_POSTGRES_TRANSACTIONS.
+  // ==========================================================================
+
+  /** Single TransactionRecord by ID. */
+  transactionRecord: (id: string) => `${DASHBOARD_PREFIX}:tx-v2:${id}`,
+
+  /** Set of all TransactionRecord IDs. */
+  transactionRecordList: `${DASHBOARD_PREFIX}:tx-v2:list`,
 } as const;

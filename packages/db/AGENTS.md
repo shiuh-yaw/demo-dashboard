@@ -10,9 +10,10 @@ status: stable
 
 Prisma + Supabase Postgres access layer for the demo monorepo. Provides a
 serverless-safe `PrismaClient` singleton and the schema definition. The
-first real model — `Brand` — landed in PR 2-brands (Part A). Per-demo-type
-configs and the transactions/webhook tables ship in subsequent PRs, each
-gated by its own migration so a flag-flipped rollout is incremental.
+first real model — `Brand` — landed in PR 2-brands (Part A). The canonical
+`Transaction` and `WebhookEvent` pair landed in PR 2-transactions.
+Per-demo-type configs ship in subsequent PRs, each gated by its own
+migration so a flag-flipped rollout is incremental.
 
 ## Hard rule: single consumer
 
@@ -33,16 +34,42 @@ fetch from that endpoint instead.
 - Re-exports `Prisma` and `PrismaClient` types from `@prisma/client`.
 - Owns the `prisma/schema.prisma` source of truth and the generated migration
   history under `prisma/migrations/`.
-- Models: `Brand` (PR 2-brands Part A).
+- Models: `Brand` (PR 2-brands Part A), `Transaction` and `WebhookEvent`
+  (PR 2-transactions).
 
 ## Public surface
 
 - `prisma` — singleton `PrismaClient` instance with delegates for every
-  declared model (currently `prisma.brand`). (stable)
+  declared model: `prisma.brand`, `prisma.transaction`, `prisma.webhookEvent`.
+  (stable)
 - `Prisma` — namespace re-exported from `@prisma/client` for input/output
-  typing (e.g., `Prisma.BrandCreateInput`). (stable)
+  typing (e.g., `Prisma.BrandCreateInput`, `Prisma.TransactionCreateInput`).
+  (stable)
 - `PrismaClient` — class re-exported from `@prisma/client` for callers that
   need to construct their own instance (rare; prefer the singleton). (stable)
+
+### Models at a glance
+
+- `Brand` — first-class brand record (PR 2-brands Part A). Indexed on
+  `ownerId`. Service: `apps/dashboard/src/lib/services/postgres/brands.ts`,
+  flag `USE_POSTGRES_BRANDS`.
+- `Transaction` — canonical "money in flight" record (D-010). State string
+  is validated by `assertValidTransition` from `@dynamic-demos/transactions`
+  at the service-layer boundary; the DB stores the value verbatim. Indexed
+  on `demoInstanceId`, `brandId`, `state`, `parentTransactionId`. Self-FK
+  for multi-leg flows (parent ↔ children). Service:
+  `apps/dashboard/src/lib/services/postgres/transactions.ts`, flag
+  `USE_POSTGRES_TRANSACTIONS`. Note: distinct from the legacy LI.FI
+  `Transaction` shape stored in Redis under
+  `apps/dashboard/src/lib/services/redis/transactions.ts`; the two coexist
+  intentionally and the legacy shape stays Redis-only.
+- `WebhookEvent` — audit row for every received webhook (D-011). Unique
+  on `(provider, providerEventId)` for dedup. Indexed on `transactionId`,
+  `receivedAt`, `processingStatus`. Optional FK to `Transaction` with
+  `ON DELETE SET NULL`. Service:
+  `apps/dashboard/src/lib/services/postgres/webhook-events.ts` —
+  Postgres-only by design (no Redis parity backend). Phase 5A's webhook
+  receiver framework is the consumer.
 
 ## Required environment
 
@@ -104,12 +131,18 @@ export async function listBrandsForOwner(ownerId: string) {
 
 - Pending models: per-demo-type configs (`RemittanceConfig`, `EarnConfig`,
   `VisaDirectConfig`, `WalletConfig`, `TradeConfig`, `DepositConfig`,
-  `ShopConfig`, `SandwichConfig`, `CheckoutConfig`) and the
-  `Transaction` / `WebhookEvent` pair. Each lands in its own PR with its
-  own migration so a flag flip is per-domain.
+  `ShopConfig`, `SandwichConfig`, `CheckoutConfig`). Each lands in its
+  own PR with its own migration so a flag flip is per-domain.
 - Brand backfill (read existing demo configs in Redis, materialise Brand
   rows) is deferred to PR 2-brands Part B. Until then `prisma.brand` is
   the only writer and the table starts empty in every environment.
-- Row-level security (RLS) is deferred. Service-layer ownership checks in
-  `apps/dashboard/src/lib/services/postgres/` are the trust boundary until
-  RLS is layered on (potential Phase 8).
+- Transaction backfill: PR 2-transactions intentionally **skips** the
+  backfill. The legacy LI.FI-checkout-bound `Transaction` shape (Redis,
+  with `txHash`, etc.) is a different model — migrating it loses info
+  for no benefit on ephemeral demo data. New txs write to Postgres only
+  when `USE_POSTGRES_TRANSACTIONS=true`.
+- Row-level security (RLS) is enabled on every Phase-2 table at the
+  migration level (see memory `project_postgres_rls_pattern`). Prisma
+  connects as the `postgres` superuser and bypasses RLS, so service-layer
+  ownership checks remain the trust boundary; RLS-on hardens against a
+  future Supabase anon-key consumer drifting in.

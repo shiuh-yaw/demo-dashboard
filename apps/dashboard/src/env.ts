@@ -120,6 +120,27 @@ export const env = createEnv({
       .optional()
       .default("false")
       .transform((v) => v === "true"),
+    /**
+     * Phase 2-transactions cutover flag.
+     * When "true", the dashboard reads/writes canonical TransactionRecord
+     * rows (the state-machine carrier from `@dynamic-demos/transactions`)
+     * via Postgres (`@dynamic-demos/db`). When "false" (default), the
+     * Redis-backed implementation handles them. Both implementations
+     * satisfy the same `TransactionRecordService` contract (see
+     * lib/services/__tests__/transactions.parity.test.ts) and call
+     * `assertValidTransition` at the boundary before every state mutation.
+     *
+     * The webhook event store is Postgres-only by design (D-011): when
+     * this flag is "false", `WebhookEventService` still resolves to the
+     * Postgres implementation. Phase 5A's webhook receiver framework
+     * therefore requires `DATABASE_URL` populated even when the rest of
+     * the dashboard is on Redis.
+     */
+    USE_POSTGRES_TRANSACTIONS: z
+      .enum(["true", "false"])
+      .optional()
+      .default("false")
+      .transform((v) => v === "true"),
   },
   /*
    * Environment variables available on the client (and server).
@@ -216,6 +237,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
     USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
+    USE_POSTGRES_TRANSACTIONS: process.env.USE_POSTGRES_TRANSACTIONS,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

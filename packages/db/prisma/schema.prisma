@@ -25,13 +25,13 @@ datasource db {
 // Models added incrementally — one PR per migration.
 //
 // Landed:
-//   PR 2-brands (this PR — Part A): Brand.
+//   PR 2-brands (Part A):    Brand.
+//   PR 2-transactions (this): Transaction, WebhookEvent.
 //
 // Pending:
 //   PR 2-remittance: RemittanceConfig (adds brandId FK).
 //   PR 2-others: EarnConfig, VisaDirectConfig, WalletConfig, TradeConfig,
 //                DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig.
-//   PR 2-transactions: Transaction, WebhookEvent.
 
 /// First-class Brand record. Owns shared theme + logo metadata that demo
 /// configs (remittance, earn, etc.) will reference via FK in subsequent PRs.
@@ -50,4 +50,92 @@ model Brand {
   updatedAt      DateTime @updatedAt
 
   @@index([ownerId])
+}
+
+/// Canonical "money in flight" transaction record (D-010). Every state
+/// mutation goes through `assertValidTransition` from `@dynamic-demos/transactions`
+/// at the service-layer boundary; the database stores the state string
+/// verbatim. Apps never read or write this table — only the dashboard via
+/// `apps/dashboard/src/lib/services/postgres/transactions.ts` (D-015).
+///
+/// Distinct from the legacy `Transaction` shape in
+/// `apps/dashboard/src/lib/types/dashboard.ts`, which is the LI.FI-checkout-
+/// bound record persisted in Redis. The two coexist; this model is the
+/// canonical state machine carrier and Phase 5A's webhook receiver writes
+/// here only.
+model Transaction {
+  id                  String   @id @default(cuid())
+  /// Discriminator for the demo / flow that owns this transaction
+  /// (e.g. "checkout", "disbursement", "payout", "swap").
+  kind                String
+  /// Canonical TransactionState string. Validation happens at the service
+  /// boundary — never widen at the DB.
+  state               String
+  /// Optional pointer to the demo-instance config that initiated the flow.
+  demoInstanceId      String?
+  /// Optional FK to a Brand row (added in PR 2-brands Part A). Stored as
+  /// String, not a relation, because brandId is also nullable for
+  /// pre-Phase-2-brands transactions and we want decoupled lifetimes.
+  brandId             String?
+  /// Self-relation for multi-leg flows (e.g. "sandwich" cross-border).
+  /// `parent` is unset for top-level transactions; `children` lists legs.
+  parentTransactionId String?
+  parent              Transaction?   @relation("TransactionParentChild", fields: [parentTransactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children            Transaction[]  @relation("TransactionParentChild")
+  /// Kind-specific data payload. Schema enforced at the service layer.
+  payload             Json
+  /// Cross-package references not first-class on this row (e.g. provider
+  /// ids, idempotency keys). Service layer narrows the shape.
+  refs                Json
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  webhookEvents       WebhookEvent[]
+
+  @@index([demoInstanceId])
+  @@index([brandId])
+  @@index([state])
+  @@index([parentTransactionId])
+}
+
+/// Webhook event audit row (D-011). Phase 5A's webhook receivers persist
+/// every received event before doing work; this table is the system of
+/// record for "what arrived, when, and was it valid". The unique
+/// `(provider, providerEventId)` constraint is the dedup primitive — every
+/// receiver upserts on it so retries don't double-process.
+///
+/// `signatureValid = false` rows are kept on purpose: invalid signatures
+/// are an attack signal worth auditing.
+model WebhookEvent {
+  id                String       @id @default(cuid())
+  provider          String
+  /// Provider-supplied event id. Combined with `provider` it's the dedup
+  /// key — a retry from the same provider always lands on the same row.
+  providerEventId   String
+  eventType         String
+  /// Provider-claimed occurrence timestamp (from the payload).
+  occurredAt        DateTime
+  /// Wall-clock timestamp the dashboard observed the event.
+  receivedAt        DateTime     @default(now())
+  /// True if HMAC / signature verification passed.
+  signatureValid    Boolean
+  /// Untouched payload as the provider sent it. Source of truth for replay.
+  rawPayload        Json
+  /// Provider-agnostic shape produced by the receiver's normaliser.
+  normalizedPayload Json
+  /// Optional FK to the Transaction this event references. Populated when
+  /// the receiver can resolve a local transaction; null otherwise.
+  transactionId     String?
+  transaction       Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Mirror fields for fast filtering when no Transaction row exists yet.
+  demoInstanceId    String?
+  brandId           String?
+  /// "pending" | "processed" | "failed" | "ignored". Service layer enforces.
+  processingStatus  String       @default("pending")
+  processingError   String?
+  processedAt       DateTime?
+
+  @@unique([provider, providerEventId])
+  @@index([transactionId])
+  @@index([receivedAt])
+  @@index([processingStatus])
 }

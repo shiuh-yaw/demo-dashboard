@@ -5,6 +5,8 @@
  * This allows swapping between Redis and Prisma implementations.
  */
 
+import type { TransactionState } from "@dynamic-demos/transactions";
+
 import type {
   Transaction,
   TransactionStatus,
@@ -279,11 +281,223 @@ export interface BrandService {
 }
 
 // =============================================================================
+// Transaction Record Service (Phase 2-transactions — canonical state machine)
+// =============================================================================
+//
+// Distinct from `TransactionService` above, which is the LI.FI-checkout-bound
+// transaction stored in Redis. `TransactionRecordService` carries the
+// canonical "money in flight" record from `@dynamic-demos/transactions`
+// (D-010); state transitions are validated by `assertValidTransition` at the
+// service boundary before every write.
+//
+// The two services coexist intentionally — Phase 5A's webhook framework
+// writes here only; existing demos keep using the legacy shape until they
+// migrate one-by-one.
+
+/**
+ * Cross-package references attached to a TransactionRecord. Mirrors
+ * `TransactionRefs` from `@dynamic-demos/transactions` so the service
+ * layer is the only translator between in-memory and on-disk shapes.
+ */
+export interface TransactionRecordRefs {
+  /** ID of the demo instance (config) that initiated the transaction. */
+  demoInstanceId?: string | null;
+  /** ID of the brand profile linked to the demo instance. */
+  brandId?: string | null;
+  /** ID of the parent transaction in a multi-leg flow. */
+  parentTransactionId?: string | null;
+}
+
+/**
+ * Canonical TransactionRecord row as it lives in Postgres (mirrors the
+ * Prisma `Transaction` model). The dashboard service layer surfaces this
+ * shape regardless of backend so parity tests can run cross-impl.
+ *
+ * `payload` and `refs` are intentionally `unknown` here — kind-specific
+ * narrowing happens in the consumer (e.g. webhook normaliser, Phase 5A).
+ */
+export interface TransactionRecord {
+  id: string;
+  kind: string;
+  state: TransactionState;
+  demoInstanceId: string | null;
+  brandId: string | null;
+  parentTransactionId: string | null;
+  payload: unknown;
+  refs: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateTransactionRecordInput {
+  kind: string;
+  /** Optional initial state. Defaults to `"initialized"` if omitted. */
+  state?: TransactionState;
+  demoInstanceId?: string | null;
+  brandId?: string | null;
+  parentTransactionId?: string | null;
+  payload?: unknown;
+  refs?: unknown;
+}
+
+/**
+ * Update only the state of a TransactionRecord. The service must validate
+ * `from → to` via `assertValidTransition` before writing — never widen
+ * acceptable states at the service boundary.
+ */
+export interface UpdateTransactionStateInput {
+  state: TransactionState;
+}
+
+/**
+ * Update mutable non-state fields. State changes go through
+ * `updateState`; this method exists for late-arriving payload data
+ * (e.g. provider txHash) and must NOT touch `state`.
+ */
+export interface UpdateTransactionPayloadInput {
+  payload?: unknown;
+  refs?: unknown;
+  demoInstanceId?: string | null;
+  brandId?: string | null;
+}
+
+export interface TransactionRecordListOptions {
+  demoInstanceId?: string;
+  brandId?: string;
+  state?: TransactionState | TransactionState[];
+  kind?: string;
+  parentTransactionId?: string;
+}
+
+export interface TransactionRecordService {
+  create(input: CreateTransactionRecordInput): Promise<TransactionRecord>;
+  get(id: string): Promise<TransactionRecord | null>;
+  list(options?: TransactionRecordListOptions): Promise<TransactionRecord[]>;
+  /**
+   * Validate `from → to` via `assertValidTransition`, then persist.
+   * Throws `IllegalTransitionError` (re-exported by the state machine) if
+   * the transition is illegal. The terminal state check lives in the
+   * state machine itself — service callers never branch on terminality.
+   */
+  updateState(
+    id: string,
+    input: UpdateTransactionStateInput,
+  ): Promise<TransactionRecord>;
+  updatePayload(
+    id: string,
+    input: UpdateTransactionPayloadInput,
+  ): Promise<TransactionRecord>;
+  delete(id: string): Promise<void>;
+}
+
+// =============================================================================
+// Webhook Event Service (Phase 2-transactions)
+// =============================================================================
+//
+// Persists every received webhook before processing (D-011). Phase 5A's
+// receivers consume this. Postgres-only by design — Redis never had a
+// webhook event table and we want the audit trail durable from day one.
+
+/**
+ * Webhook event row as it lives in Postgres (mirrors the Prisma
+ * `WebhookEvent` model). `processingStatus` is a string enum maintained
+ * at the service layer; "pending" | "processed" | "failed" | "ignored".
+ */
+export type WebhookProcessingStatus =
+  | "pending"
+  | "processed"
+  | "failed"
+  | "ignored";
+
+export interface WebhookEventRecord {
+  id: string;
+  provider: string;
+  providerEventId: string;
+  eventType: string;
+  occurredAt: Date;
+  receivedAt: Date;
+  signatureValid: boolean;
+  rawPayload: unknown;
+  normalizedPayload: unknown;
+  transactionId: string | null;
+  demoInstanceId: string | null;
+  brandId: string | null;
+  processingStatus: WebhookProcessingStatus;
+  processingError: string | null;
+  processedAt: Date | null;
+}
+
+export interface CreateWebhookEventInput {
+  provider: string;
+  providerEventId: string;
+  eventType: string;
+  occurredAt: Date;
+  signatureValid: boolean;
+  rawPayload: unknown;
+  normalizedPayload: unknown;
+  transactionId?: string | null;
+  demoInstanceId?: string | null;
+  brandId?: string | null;
+  /** Defaults to "pending" if omitted. */
+  processingStatus?: WebhookProcessingStatus;
+}
+
+export interface MarkWebhookEventProcessedInput {
+  processingStatus: WebhookProcessingStatus;
+  processingError?: string | null;
+  /** When omitted, defaults to "now" at the service layer. */
+  processedAt?: Date;
+}
+
+export interface WebhookEventListOptions {
+  provider?: string;
+  transactionId?: string;
+  processingStatus?: WebhookProcessingStatus;
+  /** ISO range filter on `receivedAt`. Inclusive. */
+  receivedAfter?: Date;
+  receivedBefore?: Date;
+}
+
+export class DuplicateWebhookEventError extends Error {
+  constructor(
+    public readonly provider: string,
+    public readonly providerEventId: string,
+  ) {
+    super(
+      `Duplicate webhook event: provider=${provider} providerEventId=${providerEventId}`,
+    );
+    this.name = "DuplicateWebhookEventError";
+  }
+}
+
+export interface WebhookEventService {
+  /**
+   * Insert a new webhook event. Throws `DuplicateWebhookEventError` if a
+   * row already exists with the same `(provider, providerEventId)` —
+   * callers can catch and treat as idempotent success.
+   */
+  create(input: CreateWebhookEventInput): Promise<WebhookEventRecord>;
+  get(id: string): Promise<WebhookEventRecord | null>;
+  /** Look up by the provider's dedup key. */
+  findByProviderEvent(
+    provider: string,
+    providerEventId: string,
+  ): Promise<WebhookEventRecord | null>;
+  list(options?: WebhookEventListOptions): Promise<WebhookEventRecord[]>;
+  markProcessed(
+    id: string,
+    input: MarkWebhookEventProcessedInput,
+  ): Promise<WebhookEventRecord>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
 export interface Services {
   transactions: TransactionService;
+  transactionRecords: TransactionRecordService;
+  webhookEvents: WebhookEventService;
   users: UserService;
   checkouts: CheckoutService;
   brands: BrandService;
