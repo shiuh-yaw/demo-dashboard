@@ -1,0 +1,12 @@
+-- Enable Row Level Security on the Brand table to match the dev Supabase
+-- state (applied directly via Supabase MCP on 2026-05-06; this migration
+-- records it in the schema history so a fresh deploy reproduces the
+-- runtime configuration).
+--
+-- Service-layer ownership checks remain the trust boundary (D-013 says RLS
+-- is deferred). Enabling RLS without policies makes the table reject all
+-- direct queries; the dashboard reaches it via the Prisma singleton, which
+-- connects with the privileged role and is unaffected. This is a
+-- belt-and-suspenders posture: any future caller that connects with a
+-- non-privileged role is blocked by default until policies are added.
+ALTER TABLE public."Brand" ENABLE ROW LEVEL SECURITY;

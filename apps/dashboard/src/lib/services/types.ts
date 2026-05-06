@@ -278,6 +278,16 @@ export interface BrandService {
   list(options?: BrandListOptions): Promise<Brand[]>;
   update(id: string, input: UpdateBrandInput): Promise<Brand>;
   delete(id: string): Promise<void>;
+  /**
+   * Idempotent create-or-update by caller-supplied id. Used by the
+   * Phase 2-brands backfill so re-runs don't duplicate rows. The
+   * caller supplies a deterministic id derived from the brand's
+   * stable shape (see scripts/backfill-brands/hash.ts).
+   *
+   * If the row exists, all fields are overwritten with the new input
+   * and `updatedAt` bumps. `createdAt` is preserved on update.
+   */
+  upsertWithId(id: string, input: CreateBrandInput): Promise<Brand>;
 }
 
 // =============================================================================

@@ -55,6 +55,28 @@ export interface BrandPrismaClient {
       }>;
     }): Promise<Brand>;
     delete(args: { where: { id: string } }): Promise<Brand>;
+    upsert(args: {
+      where: { id: string };
+      create: {
+        id: string;
+        ownerId: string;
+        name: string;
+        description?: string | null;
+        primaryColor: string;
+        secondaryColor?: string | null;
+        accentColor?: string | null;
+        logoUrl?: string | null;
+      };
+      update: Partial<{
+        ownerId: string;
+        name: string;
+        description: string | null;
+        primaryColor: string;
+        secondaryColor: string | null;
+        accentColor: string | null;
+        logoUrl: string | null;
+      }>;
+    }): Promise<Brand>;
   };
 }
 
@@ -106,5 +128,30 @@ export class PostgresBrandService implements BrandService {
 
   async delete(id: string): Promise<void> {
     await this.client.brand.delete({ where: { id } });
+  }
+
+  async upsertWithId(id: string, input: CreateBrandInput): Promise<Brand> {
+    return this.client.brand.upsert({
+      where: { id },
+      create: {
+        id,
+        ownerId: input.ownerId,
+        name: input.name,
+        description: input.description ?? null,
+        primaryColor: input.primaryColor,
+        secondaryColor: input.secondaryColor ?? null,
+        accentColor: input.accentColor ?? null,
+        logoUrl: input.logoUrl ?? null,
+      },
+      update: {
+        ownerId: input.ownerId,
+        name: input.name,
+        description: input.description ?? null,
+        primaryColor: input.primaryColor,
+        secondaryColor: input.secondaryColor ?? null,
+        accentColor: input.accentColor ?? null,
+        logoUrl: input.logoUrl ?? null,
+      },
+    });
   }
 }

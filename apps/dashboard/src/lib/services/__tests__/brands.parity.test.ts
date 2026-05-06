@@ -157,4 +157,28 @@ describe.each(backends)("BrandService parity ($name)", ({ build }) => {
     expect(remaining.map((r) => r.name)).toEqual(["B"]);
     expect(remaining[0]!.id).toBe(b.id);
   });
+
+  it("upsertWithId creates with the provided id when absent", async () => {
+    const created = await svc.upsertWithId("custom_id_1", makeInput());
+    expect(created.id).toBe("custom_id_1");
+    const found = await svc.get("custom_id_1");
+    expect(found).not.toBeNull();
+  });
+
+  it("upsertWithId updates and bumps updatedAt on the second call with the same id", async () => {
+    const first = await svc.upsertWithId("custom_id_2", makeInput({ name: "A" }));
+    await new Promise((r) => setTimeout(r, 5));
+    const second = await svc.upsertWithId(
+      "custom_id_2",
+      makeInput({ name: "B" }),
+    );
+    expect(second.id).toBe("custom_id_2");
+    expect(second.name).toBe("B");
+    expect(second.createdAt.getTime()).toBe(first.createdAt.getTime());
+    expect(second.updatedAt.getTime()).toBeGreaterThanOrEqual(
+      first.updatedAt.getTime(),
+    );
+    const all = await svc.list();
+    expect(all).toHaveLength(1);
+  });
 });

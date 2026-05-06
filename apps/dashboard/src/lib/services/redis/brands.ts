@@ -129,4 +129,39 @@ export class RedisBrandService implements BrandService {
     await this.redis.del(REDIS_KEYS.brandRecord(id));
     await this.redis.srem(REDIS_KEYS.brandRecordList, id);
   }
+
+  async upsertWithId(id: string, input: CreateBrandInput): Promise<Brand> {
+    const existing = await this.redis.get<StoredBrand>(
+      REDIS_KEYS.brandRecord(id),
+    );
+    const now = new Date().toISOString();
+    const stored: StoredBrand = existing
+      ? {
+          id,
+          ownerId: input.ownerId,
+          name: input.name,
+          description: input.description ?? null,
+          primaryColor: input.primaryColor,
+          secondaryColor: input.secondaryColor ?? null,
+          accentColor: input.accentColor ?? null,
+          logoUrl: input.logoUrl ?? null,
+          createdAt: existing.createdAt,
+          updatedAt: now,
+        }
+      : {
+          id,
+          ownerId: input.ownerId,
+          name: input.name,
+          description: input.description ?? null,
+          primaryColor: input.primaryColor,
+          secondaryColor: input.secondaryColor ?? null,
+          accentColor: input.accentColor ?? null,
+          logoUrl: input.logoUrl ?? null,
+          createdAt: now,
+          updatedAt: now,
+        };
+    await this.redis.set(REDIS_KEYS.brandRecord(id), stored);
+    await this.redis.sadd(REDIS_KEYS.brandRecordList, id);
+    return toBrand(stored);
+  }
 }

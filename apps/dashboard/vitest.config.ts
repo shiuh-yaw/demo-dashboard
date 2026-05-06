@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     // Populate env vars before any test module loads so that importing
     // `@/env` (transitively pulled in via `@/lib/redis`) doesn't fail
     // validation. Dummies only — tests never open real connections.

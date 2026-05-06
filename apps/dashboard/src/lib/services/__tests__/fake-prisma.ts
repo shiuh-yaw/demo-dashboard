@@ -51,12 +51,36 @@ interface DeleteArgs {
   where: { id: string };
 }
 
+interface UpsertArgs {
+  where: { id: string };
+  create: {
+    id: string;
+    ownerId: string;
+    name: string;
+    description?: string | null;
+    primaryColor: string;
+    secondaryColor?: string | null;
+    accentColor?: string | null;
+    logoUrl?: string | null;
+  };
+  update: Partial<{
+    ownerId: string;
+    name: string;
+    description: string | null;
+    primaryColor: string;
+    secondaryColor: string | null;
+    accentColor: string | null;
+    logoUrl: string | null;
+  }>;
+}
+
 export interface FakePrismaBrandDelegate {
   create(args: CreateArgs): Promise<Brand>;
   findUnique(args: FindUniqueArgs): Promise<Brand | null>;
   findMany(args?: FindManyArgs): Promise<Brand[]>;
   update(args: UpdateArgs): Promise<Brand>;
   delete(args: DeleteArgs): Promise<Brand>;
+  upsert(args: UpsertArgs): Promise<Brand>;
 }
 
 export interface FakePrismaClient {
@@ -131,6 +155,35 @@ export function createFakePrisma(): FakePrismaClient {
         }
         store.delete(where.id);
         return { ...existing };
+      },
+      async upsert({ where, create, update }) {
+        const existing = store.get(where.id);
+        if (!existing) {
+          const ts = now();
+          const row: Brand = {
+            id: where.id,
+            ownerId: create.ownerId,
+            name: create.name,
+            description: create.description ?? null,
+            primaryColor: create.primaryColor,
+            secondaryColor: create.secondaryColor ?? null,
+            accentColor: create.accentColor ?? null,
+            logoUrl: create.logoUrl ?? null,
+            createdAt: ts,
+            updatedAt: ts,
+          };
+          store.set(where.id, row);
+          return { ...row };
+        }
+        const updated: Brand = {
+          ...existing,
+          ...Object.fromEntries(
+            Object.entries(update).filter(([, v]) => v !== undefined),
+          ),
+          updatedAt: now(),
+        } as Brand;
+        store.set(where.id, updated);
+        return { ...updated };
       },
     },
   };

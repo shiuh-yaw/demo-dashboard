@@ -133,16 +133,14 @@ export async function listBrandsForOwner(ownerId: string) {
   `VisaDirectConfig`, `WalletConfig`, `TradeConfig`, `DepositConfig`,
   `ShopConfig`, `SandwichConfig`, `CheckoutConfig`). Each lands in its
   own PR with its own migration so a flag flip is per-domain.
-- Brand backfill (read existing demo configs in Redis, materialise Brand
-  rows) is deferred to PR 2-brands Part B. Until then `prisma.brand` is
-  the only writer and the table starts empty in every environment.
-- Transaction backfill: PR 2-transactions intentionally **skips** the
-  backfill. The legacy LI.FI-checkout-bound `Transaction` shape (Redis,
-  with `txHash`, etc.) is a different model — migrating it loses info
-  for no benefit on ephemeral demo data. New txs write to Postgres only
-  when `USE_POSTGRES_TRANSACTIONS=true`.
-- Row-level security (RLS) is enabled on every Phase-2 table at the
-  migration level (see memory `project_postgres_rls_pattern`). Prisma
-  connects as the `postgres` superuser and bypasses RLS, so service-layer
-  ownership checks remain the trust boundary; RLS-on hardens against a
-  future Supabase anon-key consumer drifting in.
+  rows) landed in PR 2-brands Part B. Run via `pnpm --filter
+  @dynamic-demos/dashboard backfill:brands`. Idempotent: deterministic id
+  from `(ownerId, primaryColor, logoUrl)` collapses re-runs.
+- Transaction backfill: PR 2-transactions **skips** the backfill — the
+  legacy LI.FI-checkout-bound `Transaction` shape (Redis, with `txHash`,
+  etc.) is a different model. New txs write to Postgres only when
+  `USE_POSTGRES_TRANSACTIONS=true`.
+- Row-level security is enabled on every Phase-2 table at the migration
+  level (see memory `project_postgres_rls_pattern`). Prisma connects as
+  superuser and bypasses RLS; service-layer ownership checks are the
+  trust boundary. RLS-on hardens against future anon-key drift.

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "backfill:brands": "tsx scripts/backfill-brands/cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.71.2",
@@ -52,6 +53,7 @@
     "eslint": "catalog:",
     "eslint-config-next": "catalog:",
     "tailwindcss": "4.1.17",
+    "tsx": "4.19.2",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
