@@ -7,6 +7,7 @@
  * flags flip record types onto Postgres one at a time:
  *   - USE_POSTGRES_BRANDS         → BrandService
  *   - USE_POSTGRES_TRANSACTIONS   → TransactionRecordService
+ *   - USE_POSTGRES_REMITTANCE     → RemittanceConfigService
  * Default is Redis so production stays unchanged until each explicit
  * cutover.
  *
@@ -22,11 +23,14 @@ import { RedisUserService } from "./redis/users";
 import { RedisCheckoutService } from "./redis/checkouts";
 import { RedisBrandService } from "./redis/brands";
 import { RedisTransactionRecordService } from "./redis/transactions-record";
+import { RedisRemittanceConfigService } from "./redis/remittance";
 import { PostgresBrandService } from "./postgres/brands";
 import { PostgresTransactionRecordService } from "./postgres/transactions";
 import { PostgresWebhookEventService } from "./postgres/webhook-events";
+import { PostgresRemittanceConfigService } from "./postgres/remittance";
 import type {
   BrandService,
+  RemittanceConfigService,
   Services,
   TransactionRecordService,
   WebhookEventService,
@@ -45,6 +49,10 @@ export const transactionRecordService: TransactionRecordService =
     : new RedisTransactionRecordService();
 export const webhookEventService: WebhookEventService =
   new PostgresWebhookEventService();
+export const remittanceConfigService: RemittanceConfigService =
+  env.USE_POSTGRES_REMITTANCE
+    ? new PostgresRemittanceConfigService()
+    : new RedisRemittanceConfigService();
 
 // Export as combined services object
 export const services: Services = {
@@ -54,6 +62,7 @@ export const services: Services = {
   users: userService,
   checkouts: checkoutService,
   brands: brandService,
+  remittanceConfigs: remittanceConfigService,
 };
 
 // Re-export types
@@ -80,6 +89,11 @@ export type {
   CreateWebhookEventInput,
   MarkWebhookEventProcessedInput,
   WebhookProcessingStatus,
+  RemittanceConfigService,
+  RemittanceConfigRecord,
+  RemittanceConfigListOptions,
+  CreateRemittanceConfigInput,
+  UpdateRemittanceConfigInput,
   Services,
 } from "./types";
 export { DuplicateWebhookEventError } from "./types";

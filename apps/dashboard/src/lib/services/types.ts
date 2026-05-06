@@ -501,6 +501,84 @@ export interface WebhookEventService {
 }
 
 // =============================================================================
+// Remittance Config Service (Phase 2-remittance)
+// =============================================================================
+//
+// First-class per-instance Remittance demo config (mirrors the Prisma
+// `RemittanceConfig` model). Distinct from the embedded `RemittanceConfig`
+// theme/branding shape in `lib/types/dashboard.ts` — that shape lives
+// inside this record's `config` JSON column. Both backends satisfy the
+// same parity contract (`__tests__/remittance.parity.test.ts`).
+
+/**
+ * Remittance config row as it lives in Postgres (mirrors the Prisma
+ * `RemittanceConfig` model). The dashboard service layer surfaces this
+ * shape regardless of backend.
+ */
+export interface RemittanceConfigRecord {
+  id: string;
+  ownerId: string;
+  name: string;
+  description: string | null;
+  brandId: string;
+  /**
+   * Demo-specific fields — currently the embedded theme/branding payload
+   * from `StoredRemittanceConfig.config`. Kept `unknown` at the service
+   * boundary so callers narrow against `RemittanceConfig` from
+   * `lib/types/dashboard.ts` (the embedded-config shape).
+   */
+  config: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateRemittanceConfigInput {
+  ownerId: string;
+  name: string;
+  description?: string | null;
+  brandId: string;
+  config: unknown;
+}
+
+export interface UpdateRemittanceConfigInput {
+  name?: string;
+  description?: string | null;
+  brandId?: string;
+  config?: unknown;
+}
+
+export interface RemittanceConfigListOptions {
+  /** When set, restrict results to configs owned by this user. */
+  ownerId?: string;
+  /** When set, restrict results to configs that reference this Brand. */
+  brandId?: string;
+}
+
+export interface RemittanceConfigService {
+  create(input: CreateRemittanceConfigInput): Promise<RemittanceConfigRecord>;
+  get(id: string): Promise<RemittanceConfigRecord | null>;
+  list(
+    options?: RemittanceConfigListOptions,
+  ): Promise<RemittanceConfigRecord[]>;
+  update(
+    id: string,
+    input: UpdateRemittanceConfigInput,
+  ): Promise<RemittanceConfigRecord>;
+  delete(id: string): Promise<void>;
+  /**
+   * Idempotent create-or-update by caller-supplied id. Used by the
+   * Phase 2-remittance backfill so re-runs don't duplicate rows and
+   * the existing demo URLs (which embed the legacy id) keep working
+   * unchanged (Q-014). Preserves `createdAt` on update; bumps
+   * `updatedAt`.
+   */
+  upsertWithId(
+    id: string,
+    input: CreateRemittanceConfigInput,
+  ): Promise<RemittanceConfigRecord>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
@@ -511,4 +589,5 @@ export interface Services {
   users: UserService;
   checkouts: CheckoutService;
   brands: BrandService;
+  remittanceConfigs: RemittanceConfigService;
 }

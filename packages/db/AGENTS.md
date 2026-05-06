@@ -32,16 +32,15 @@ fetch from that endpoint instead.
 
 - Exports a serverless-safe Prisma singleton (`prisma`).
 - Re-exports `Prisma` and `PrismaClient` types from `@prisma/client`.
-- Owns the `prisma/schema.prisma` source of truth and the generated migration
-  history under `prisma/migrations/`.
-- Models: `Brand` (PR 2-brands Part A), `Transaction` and `WebhookEvent`
-  (PR 2-transactions).
+- Owns `prisma/schema.prisma` and the migration history under `prisma/migrations/`.
+- Models: `Brand` (2-brands), `Transaction` + `WebhookEvent`
+  (2-transactions), `RemittanceConfig` (2-remittance).
 
 ## Public surface
 
 - `prisma` — singleton `PrismaClient` instance with delegates for every
-  declared model: `prisma.brand`, `prisma.transaction`, `prisma.webhookEvent`.
-  (stable)
+  declared model: `prisma.brand`, `prisma.transaction`,
+  `prisma.webhookEvent`, `prisma.remittanceConfig`. (stable)
 - `Prisma` — namespace re-exported from `@prisma/client` for input/output
   typing (e.g., `Prisma.BrandCreateInput`, `Prisma.TransactionCreateInput`).
   (stable)
@@ -53,16 +52,19 @@ fetch from that endpoint instead.
 - `Brand` — first-class brand record (PR 2-brands Part A). Indexed on
   `ownerId`. Service: `apps/dashboard/src/lib/services/postgres/brands.ts`,
   flag `USE_POSTGRES_BRANDS`.
-- `Transaction` — canonical "money in flight" record (D-010). State string
-  is validated by `assertValidTransition` from `@dynamic-demos/transactions`
-  at the service-layer boundary; the DB stores the value verbatim. Indexed
-  on `demoInstanceId`, `brandId`, `state`, `parentTransactionId`. Self-FK
-  for multi-leg flows (parent ↔ children). Service:
+- `RemittanceConfig` — first-class per-instance config for the Remittance
+  demo (PR 2-remittance). FK `brandId` → `Brand`. Indexed on `ownerId`,
+  `brandId`. Service:
+  `apps/dashboard/src/lib/services/postgres/remittance.ts`, flag
+  `USE_POSTGRES_REMITTANCE`.
+- `Transaction` — canonical "money in flight" record (D-010). State is
+  validated by `assertValidTransition` from `@dynamic-demos/transactions`
+  at the service boundary; the DB stores the value verbatim. Indexed on
+  `demoInstanceId`, `brandId`, `state`, `parentTransactionId`. Self-FK
+  for multi-leg flows. Service:
   `apps/dashboard/src/lib/services/postgres/transactions.ts`, flag
-  `USE_POSTGRES_TRANSACTIONS`. Note: distinct from the legacy LI.FI
-  `Transaction` shape stored in Redis under
-  `apps/dashboard/src/lib/services/redis/transactions.ts`; the two coexist
-  intentionally and the legacy shape stays Redis-only.
+  `USE_POSTGRES_TRANSACTIONS`. Distinct from the legacy LI.FI
+  `Transaction` shape in `redis/transactions.ts`; the two coexist.
 - `WebhookEvent` — audit row for every received webhook (D-011). Unique
   on `(provider, providerEventId)` for dedup. Indexed on `transactionId`,
   `receivedAt`, `processingStatus`. Optional FK to `Transaction` with
@@ -129,13 +131,14 @@ export async function listBrandsForOwner(ownerId: string) {
 
 ## Open questions / known gaps
 
-- Pending models: per-demo-type configs (`RemittanceConfig`, `EarnConfig`,
+- Pending models: remaining per-demo-type configs (`EarnConfig`,
   `VisaDirectConfig`, `WalletConfig`, `TradeConfig`, `DepositConfig`,
   `ShopConfig`, `SandwichConfig`, `CheckoutConfig`). Each lands in its
   own PR with its own migration so a flag flip is per-domain.
-  rows) landed in PR 2-brands Part B. Run via `pnpm --filter
-  @dynamic-demos/dashboard backfill:brands`. Idempotent: deterministic id
-  from `(ownerId, primaryColor, logoUrl)` collapses re-runs.
+- Backfills: brand backfill landed in PR 2-brands Part B
+  (`backfill:brands`); remittance backfill in PR 2-remittance
+  (`backfill:remittance`). Both idempotent — deterministic Brand id
+  from `(ownerId, primaryColor, logoUrl)` and preserved legacy ids.
 - Transaction backfill: PR 2-transactions **skips** the backfill — the
   legacy LI.FI-checkout-bound `Transaction` shape (Redis, with `txHash`,
   etc.) is a different model. New txs write to Postgres only when

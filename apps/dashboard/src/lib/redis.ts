@@ -250,6 +250,19 @@ export const REDIS_KEYS = {
   /** Set of all Remittance config IDs */
   remittanceConfigList: `${DASHBOARD_PREFIX}:remittance:list`,
 
+  /**
+   * Single Remittance config v2 by ID — Phase 2-remittance parity backend
+   * for `RedisRemittanceConfigService`. Lives under a separate keyspace
+   * so the legacy `lib/actions/remittance.ts` path (which uses the v1
+   * `StoredRemittanceConfig` shape) keeps working unchanged until a
+   * follow-up PR migrates it.
+   */
+  remittanceConfigV2: (id: string) =>
+    `${DASHBOARD_PREFIX}:remittance-v2:${id}`,
+
+  /** Set of all Remittance config v2 IDs */
+  remittanceConfigV2List: `${DASHBOARD_PREFIX}:remittance-v2:list`,
+
   // ==========================================================================
   // Trade configs (theme/branding for Trade demo)
   // ==========================================================================

@@ -149,6 +149,24 @@ export const env = createEnv({
       .optional()
       .default("false")
       .transform((v) => v === "true"),
+    /**
+     * Phase 2-remittance cutover flag.
+     * When "true", the dashboard reads/writes RemittanceConfig records
+     * via Postgres (`@dynamic-demos/db`). When "false" (default), the
+     * Redis-backed implementation handles them. Both implementations
+     * satisfy the same `RemittanceConfigService` contract (see
+     * lib/services/__tests__/remittance.parity.test.ts).
+     *
+     * Note: this flag governs the new first-class `RemittanceConfig`
+     * record. The legacy `StoredRemittanceConfig` shape used by
+     * `lib/actions/remittance.ts` is unaffected and stays on Redis until
+     * the actions layer migrates to the service in a follow-up PR.
+     */
+    USE_POSTGRES_REMITTANCE: z
+      .enum(["true", "false"])
+      .optional()
+      .default("false")
+      .transform((v) => v === "true"),
   },
   /*
    * Environment variables available on the client (and server).
@@ -247,6 +265,7 @@ export const env = createEnv({
     DIRECT_URL: process.env.DIRECT_URL,
     USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
     USE_POSTGRES_TRANSACTIONS: process.env.USE_POSTGRES_TRANSACTIONS,
+    USE_POSTGRES_REMITTANCE: process.env.USE_POSTGRES_REMITTANCE,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

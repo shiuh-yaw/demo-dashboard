@@ -38,7 +38,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 |---|---|---|---|
 | 2-migrate. Brand model (Part A) | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/52 | Brand model + Postgres service + parity tests; backfill deferred to Part B |
 | 2-migrate. Brand backfill (Part B) | 🟡 in-flight | — | Idempotent backfill via `pnpm --filter @dynamic-demos/dashboard backfill:brands`; deterministic id from `(ownerId, primaryColor, logoUrl)`. Smoke against dev Supabase deferred (no `.env.local` in this worktree); CI `db-migration-dryrun.yml` covers schema. |
-| 2-migrate. First config-type migration (remittance) | ⚪️ pending | — | — |
+| 2-migrate. First config-type migration (remittance) | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/59 | `RemittanceConfig` Prisma model + migration with RLS, Postgres + Redis services with 36 parity tests, `USE_POSTGRES_REMITTANCE` flag, and idempotent backfill (`pnpm --filter @dynamic-demos/dashboard backfill:remittance`) that auto-upserts a Brand per legacy config and preserves legacy ids (Q-014). |
 | 2-migrate. Per demo type migrations | ⚪️ pending | — | — |
 | 2-migrate. Transactions + WebhookEvents tables | ⚪️ pending | — | — |
 | 3. AGENTS.md + demo-registry | ⚪️ pending | — | Parallel per package/app |

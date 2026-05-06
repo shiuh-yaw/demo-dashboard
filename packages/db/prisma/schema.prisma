@@ -26,10 +26,10 @@ datasource db {
 //
 // Landed:
 //   PR 2-brands (Part A):    Brand.
-//   PR 2-transactions (this): Transaction, WebhookEvent.
+//   PR 2-transactions:       Transaction, WebhookEvent.
+//   PR 2-remittance (this):  RemittanceConfig.
 //
 // Pending:
-//   PR 2-remittance: RemittanceConfig (adds brandId FK).
 //   PR 2-others: EarnConfig, VisaDirectConfig, WalletConfig, TradeConfig,
 //                DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig.
 
@@ -38,18 +38,43 @@ datasource db {
 /// `id` is application-generated (cuid) so it stays stable across backfill
 /// and matches the existing service-layer convention.
 model Brand {
-  id             String   @id @default(cuid())
-  ownerId        String
-  name           String
-  description    String?
-  primaryColor   String
-  secondaryColor String?
-  accentColor    String?
-  logoUrl        String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                String             @id @default(cuid())
+  ownerId           String
+  name              String
+  description       String?
+  primaryColor      String
+  secondaryColor    String?
+  accentColor       String?
+  logoUrl           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  remittanceConfigs RemittanceConfig[]
 
   @@index([ownerId])
+}
+
+/// First-class per-instance config for the Remittance demo (Phase 2-
+/// remittance). `brandId` links to the canonical Brand row so theming /
+/// logo render through the shared Brand surface; `config` carries any
+/// residual demo-specific fields (currently the embedded `theme` /
+/// `branding` shape from `StoredRemittanceConfig` in
+/// `apps/dashboard/src/lib/types/dashboard.ts`). Apps never read this
+/// table — only the dashboard via the service layer (D-015). Service:
+/// `apps/dashboard/src/lib/services/postgres/remittance.ts`, flag
+/// `USE_POSTGRES_REMITTANCE`.
+model RemittanceConfig {
+  id          String   @id @default(cuid())
+  ownerId     String
+  name        String
+  description String?
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  config      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([brandId])
 }
 
 /// Canonical "money in flight" transaction record (D-010). Every state
