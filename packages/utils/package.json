@@ -8,11 +8,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "clsx": "2.1.1",
+    "clsx": "catalog:",
     "tailwind-merge": "3.3.0"
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   }
 }

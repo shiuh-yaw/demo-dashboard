@@ -16,6 +16,6 @@
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
     "@types/node": "20.19.25",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   }
 }

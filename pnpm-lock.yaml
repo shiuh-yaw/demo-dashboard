@@ -4,6 +4,66 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@dynamic-labs-sdk/client':
+      specifier: 0.25.0
+      version: 0.25.0
+    '@dynamic-labs-sdk/evm':
+      specifier: 0.25.0
+      version: 0.25.0
+    '@dynamic-labs-sdk/solana':
+      specifier: 0.25.0
+      version: 0.25.0
+    '@dynamic-labs-sdk/wallet-connect':
+      specifier: 0.25.0
+      version: 0.25.0
+    '@dynamic-labs-sdk/zerodev':
+      specifier: 0.25.0
+      version: 0.25.0
+    '@dynamic-labs/iconic':
+      specifier: 4.61.1
+      version: 4.61.1
+    '@eslint/eslintrc':
+      specifier: 3.3.1
+      version: 3.3.1
+    '@lifi/sdk':
+      specifier: 3.14.1
+      version: 3.14.1
+    '@solana/web3.js':
+      specifier: 1.98.4
+      version: 1.98.4
+    '@tanstack/react-query':
+      specifier: 5.90.16
+      version: 5.90.16
+    clsx:
+      specifier: 2.1.1
+      version: 2.1.1
+    eslint:
+      specifier: 9.39.1
+      version: 9.39.1
+    eslint-config-next:
+      specifier: 15.5.4
+      version: 15.5.4
+    next:
+      specifier: 15.5.9
+      version: 15.5.9
+    react:
+      specifier: 19.1.4
+      version: 19.1.4
+    react-dom:
+      specifier: 19.1.4
+      version: 19.1.4
+    tw-animate-css:
+      specifier: 1.4.0
+      version: 1.4.0
+    typescript:
+      specifier: 5.9.3
+      version: 5.9.3
+    vitest:
+      specifier: 2.1.9
+      version: 2.1.9
+
 overrides:
   ufo: 1.6.2
   axios: 1.13.6
@@ -37,19 +97,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@dynamic-labs-sdk/solana':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/wallet-connect':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@lifi/sdk':
-        specifier: 3.14.1
+        specifier: 'catalog:'
         version: 3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@radix-ui/react-dialog':
         specifier: 1.1.15
@@ -70,7 +130,7 @@ importers:
         specifier: 0.9.27
         version: 0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@solana/web3.js':
-        specifier: 1.98.4
+        specifier: 'catalog:'
         version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@t3-oss/env-nextjs':
         specifier: 0.11.1
@@ -79,13 +139,13 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       lucide-react:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       next-themes:
         specifier: 0.4.6
@@ -94,10 +154,10 @@ importers:
         specifier: 4.2.0
         version: 4.2.0(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -113,7 +173,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.18
@@ -128,22 +188,22 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.18
         version: 4.1.18
       tw-animate-css:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.27)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/cross-border-ap-ar:
@@ -155,7 +215,7 @@ importers:
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jsonwebtoken:
         specifier: 9.0.2
@@ -164,13 +224,13 @@ importers:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -183,7 +243,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -201,16 +261,16 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/dashboard:
@@ -249,7 +309,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@paralleldrive/cuid2':
         specifier: 2.2.2
@@ -264,7 +324,7 @@ importers:
         specifier: 1.34.8
         version: 1.34.8
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       ioredis:
         specifier: 5.6.1
@@ -276,7 +336,7 @@ importers:
         specifier: 0.511.0
         version: 0.511.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       next-themes:
         specifier: 0.4.6
@@ -285,16 +345,16 @@ importers:
         specifier: 13.1.2
         version: 13.1.2
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.3.0
         version: 3.3.0
       tw-animate-css:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
       zod:
         specifier: 3.25.76
@@ -304,7 +364,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -322,16 +382,16 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/deposit:
@@ -349,28 +409,28 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       lucide-react:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       viem:
         specifier: 2.42.1
@@ -383,7 +443,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -398,19 +458,19 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/earn:
@@ -431,13 +491,13 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
@@ -455,7 +515,7 @@ importers:
         specifier: ^0.7.1
         version: 0.7.1
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jsonwebtoken:
         specifier: 9.0.2
@@ -464,16 +524,16 @@ importers:
         specifier: 0.542.0
         version: 0.542.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       sonner:
         specifier: ^2.0.7
@@ -492,7 +552,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@radix-ui/react-label':
         specifier: ^2.1.8
@@ -516,19 +576,19 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/proceeds:
@@ -552,22 +612,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jsonwebtoken:
         specifier: 9.0.2
@@ -576,13 +636,13 @@ importers:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -598,7 +658,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -616,10 +676,10 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
@@ -628,10 +688,10 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/remittance:
@@ -658,13 +718,13 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@faker-js/faker':
         specifier: ^9.5.0
@@ -673,10 +733,10 @@ importers:
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jsonwebtoken:
         specifier: 9.0.2
@@ -685,16 +745,16 @@ importers:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       qrcode.react:
         specifier: 4.2.0
         version: 4.2.0(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -710,7 +770,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -728,19 +788,19 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/shop:
@@ -758,43 +818,43 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@dynamic-labs-sdk/solana':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/wallet-connect':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@t3-oss/env-nextjs':
         specifier: 0.11.1
         version: 0.11.1(typescript@5.9.3)(zod@3.24.3)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       lucide-react:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       next-themes:
         specifier: 0.4.6
         version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -807,7 +867,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.18
@@ -822,22 +882,22 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.18
         version: 4.1.18
       tw-animate-css:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.27)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/spark26:
@@ -991,25 +1051,25 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/solana':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/iconic':
-        specifier: 4.61.1
+        specifier: 'catalog:'
         version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jsonwebtoken:
         specifier: 9.0.2
@@ -1024,16 +1084,16 @@ importers:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -1049,7 +1109,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -1067,19 +1127,19 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/visa-direct:
@@ -1094,25 +1154,25 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs/iconic':
-        specifier: 4.61.1
+        specifier: 'catalog:'
         version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jsonwebtoken:
         specifier: 9.0.2
@@ -1121,13 +1181,13 @@ importers:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -1143,7 +1203,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -1161,19 +1221,19 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/wallet:
@@ -1194,34 +1254,34 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/solana':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/zerodev':
-        specifier: 0.25.0
+        specifier: 'catalog:'
         version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs/iconic':
-        specifier: 4.61.1
+        specifier: 'catalog:'
         version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       '@solana/spl-token':
         specifier: 0.4.13
         version: 0.4.13(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@solana/web3.js':
-        specifier: 1.98.4
+        specifier: 'catalog:'
         version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
-        specifier: 5.90.16
+        specifier: 'catalog:'
         version: 5.90.16(react@19.1.4)
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       jose:
         specifier: ^6.1.3
@@ -1230,16 +1290,16 @@ importers:
         specifier: 0.541.0
         version: 0.541.0(react@19.1.4)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       qrcode.react:
         specifier: 4.2.0
         version: 4.2.0(react@19.1.4)
       react:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4
       react-dom:
-        specifier: 19.1.4
+        specifier: 'catalog:'
         version: 19.1.4(react@19.1.4)
       tailwind-merge:
         specifier: 3.4.0
@@ -1255,7 +1315,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@eslint/eslintrc':
-        specifier: 3.3.1
+        specifier: 'catalog:'
         version: 3.3.1
       '@tailwindcss/postcss':
         specifier: 4.1.17
@@ -1270,19 +1330,19 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.5)
       eslint:
-        specifier: 9.39.1
+        specifier: 'catalog:'
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
+        specifier: 'catalog:'
         version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/alchemy:
@@ -1294,7 +1354,7 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/alfredpay:
@@ -1310,10 +1370,10 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/blindpay:
@@ -1329,10 +1389,10 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/coinbase-onramp:
@@ -1351,13 +1411,13 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       undici:
         specifier: 6.21.1
         version: 6.21.1
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/coingecko:
@@ -1369,7 +1429,7 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/db:
@@ -1388,7 +1448,7 @@ importers:
         specifier: 5.22.0
         version: 5.22.0
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/dynamic:
@@ -1422,13 +1482,13 @@ importers:
         specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.5)
       next:
-        specifier: 15.5.9
+        specifier: 'catalog:'
         version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.27)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/fireblocks:
@@ -1450,10 +1510,10 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/iron:
@@ -1465,16 +1525,16 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/lifi:
     dependencies:
       '@lifi/sdk':
-        specifier: 3.14.1
+        specifier: 'catalog:'
         version: 3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.17))(zod@4.0.17)
     devDependencies:
       '@dynamic-demos/tsconfig':
@@ -1484,10 +1544,10 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/polymarket:
@@ -1503,7 +1563,7 @@ importers:
         specifier: 20.19.25
         version: 20.19.25
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/theme:
@@ -1519,7 +1579,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/transactions:
@@ -1528,10 +1588,10 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
-        specifier: 2.1.9
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@20.19.27)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   packages/tsconfig: {}
@@ -1542,7 +1602,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/ui:
@@ -1554,7 +1614,7 @@ importers:
         specifier: workspace:*
         version: link:../utils
       '@dynamic-labs/iconic':
-        specifier: 4.61.1
+        specifier: 'catalog:'
         version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       '@radix-ui/react-dialog':
         specifier: ^1.1.6
@@ -1582,13 +1642,13 @@ importers:
         specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.5)
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/utils:
     dependencies:
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       tailwind-merge:
         specifier: 3.3.0
@@ -1598,7 +1658,7 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
 packages:

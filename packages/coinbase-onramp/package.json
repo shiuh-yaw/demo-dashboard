@@ -18,8 +18,8 @@
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
     "@types/node": "20.19.25",
-    "typescript": "5.9.3",
+    "typescript": "catalog:",
     "undici": "6.21.1",
-    "vitest": "2.1.9"
+    "vitest": "catalog:"
   }
 }

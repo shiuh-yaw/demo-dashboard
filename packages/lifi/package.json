@@ -13,12 +13,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@lifi/sdk": "3.14.1"
+    "@lifi/sdk": "catalog:"
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
     "@types/node": "20.19.25",
-    "typescript": "5.9.3",
-    "vitest": "2.1.9"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

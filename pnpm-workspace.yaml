@@ -1,3 +1,47 @@
+# Dependency catalog — single source of truth for shared package versions.
+# Apps reference via `"<pkg>": "catalog:"` instead of pinning. Future bumps
+# = edit this file, then run `pnpm install --no-frozen-lockfile`.
+#
+# spark26 is intentionally NOT migrated to catalog references (D-006 zero-touch).
+# Leave its package.json untouched even when versions match the catalog.
+#
+# Inclusion rule: only deps that are byte-identical across all non-spark26
+# consumers belong in the catalog. Drift cases (caret-vs-exact, minor-version
+# spread) are deliberately left explicit and tracked for follow-up PRs.
 packages:
   - "apps/*"
   - "packages/*"
+
+catalog:
+  # Dynamic SDK (Phase 1D consolidated all 9 SDK-consuming apps to 0.25.0)
+  "@dynamic-labs-sdk/client": "0.25.0"
+  "@dynamic-labs-sdk/evm": "0.25.0"
+  "@dynamic-labs-sdk/solana": "0.25.0"
+  "@dynamic-labs-sdk/wallet-connect": "0.25.0"
+  "@dynamic-labs-sdk/zerodev": "0.25.0"
+  "@dynamic-labs/iconic": "4.61.1"
+
+  # Framework
+  next: "15.5.9"
+  react: "19.1.4"
+  react-dom: "19.1.4"
+
+  # Solana ecosystem (used by checkouts, wallet, etc.)
+  "@solana/web3.js": "1.98.4"
+
+  # Cross-chain SDK
+  "@lifi/sdk": "3.14.1"
+
+  # Data fetching
+  "@tanstack/react-query": "5.90.16"
+
+  # Shared UI primitives
+  clsx: "2.1.1"
+  tw-animate-css: "1.4.0"
+
+  # Tooling
+  typescript: "5.9.3"
+  vitest: "2.1.9"
+  eslint: "9.39.1"
+  "eslint-config-next": "15.5.4"
+  "@eslint/eslintrc": "3.3.1"

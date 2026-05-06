@@ -24,6 +24,6 @@
     "@dynamic-demos/tsconfig": "workspace:*",
     "@types/node": "20.19.25",
     "prisma": "5.22.0",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   }
 }
