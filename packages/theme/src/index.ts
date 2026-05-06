@@ -4,6 +4,26 @@
  * Unified theming system for Dynamic demo apps.
  */
 
+// Brand contract (D-007) — the canonical `--brand-*` token surface.
+// Companion stylesheet: `@dynamic-demos/theme/defaults.css`.
+export {
+  BRAND_DEFAULTS,
+  type BrandTheme,
+} from "./brandTheme";
+export { themeToCssVars, cssVarsToRootBlock } from "./themeToCssVars";
+
+// SSR helpers (D-008) — inject theme overrides + fetch dashboard config.
+export { ThemeStyleTag, type ThemeStyleTagProps } from "./ThemeStyleTag";
+export {
+  fetchDemoConfig,
+  type FetchDemoConfigOpts,
+} from "./fetchDemoConfig";
+
+// Color math — promoted from apps/visa-direct/lib/visa-direct-config.ts so
+// every consumer can derive hover states / accent variants without copying
+// HSL conversion code.
+export { darkenHex, lightenHex, mixHex } from "./colorMath";
+
 // Base theme (shared properties)
 export {
   BORDER_RADIUS_SCALE,

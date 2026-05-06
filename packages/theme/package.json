@@ -9,14 +9,31 @@
     "./base": "./src/base.ts",
     "./widget": "./src/widget.ts",
     "./dashboard": "./src/dashboard.ts",
-    "./presets": "./src/presets.ts"
+    "./presets": "./src/presets.ts",
+    "./brand": "./src/brandTheme.ts",
+    "./theme-style-tag": "./src/ThemeStyleTag.tsx",
+    "./fetch-demo-config": "./src/fetchDemoConfig.ts",
+    "./color-math": "./src/colorMath.ts",
+    "./defaults.css": "./src/defaults.css"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dynamic-demos/types": "workspace:*",
     "@dynamic-demos/utils": "workspace:*"
   },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
