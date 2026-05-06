@@ -9,87 +9,108 @@ provider:
   docs: https://docs.li.fi/
   api_reference: https://apidocs.li.fi/
   agent_docs: none
+  status_page: none
 ---
 
 # @dynamic-demos/lifi
 
-Shared LI.FI bridge / swap integration. Wraps the public REST API at
-`https://li.quest/v1` for server-side quote fetching and status polling,
-plus a thin `configureLifi` helper that browser code uses to set up the
-official `@lifi/sdk` for `executeRoute`.
+Shared LI.FI bridge / swap integration. Wraps the public REST API at `https://li.quest/v1` for server-side quote fetching and status polling, plus a thin `configureLifi` helper that browser code uses to set up the official `@lifi/sdk` for `executeRoute`. LI.FI is non-custodial — the user's wallet signs and submits the bridge transaction; the package never holds funds.
 
-> **Phase 3 placeholder.** Full AGENTS.md (capabilities, public surface,
-> env vars, integration map, do/don't) is regenerated in Phase 3 of the
-> demo-meta-system project. The frontmatter above is enough for the
-> demo-registry generator to find the package; the body below summarises
-> what changed in Phase 1B so reviewers don't lose context.
+## Provider documentation
+
+If you are an AI agent integrating against LI.FI, **consult the provider docs first**:
+
+- **Main docs:** [docs.li.fi](https://docs.li.fi/)
+- **API reference:** [apidocs.li.fi](https://apidocs.li.fi/)
+- **Live chain list:** [`/v1/chains`](https://apidocs.li.fi/reference/get_v1-chains) — the source of truth for currently supported chains.
 
 ## Supported chains
 
-LI.FI aggregates 25+ chains across EVM and Solana. Coverage changes as
-LI.FI onboards new networks; the canonical list is at
-[`https://li.quest/v1/chains`](https://apidocs.li.fi/reference/get_v1-chains).
-At the time of writing the demos in this repo route over:
+LI.FI aggregates 25+ chains across EVM and Solana. Coverage changes as LI.FI onboards new networks; the canonical list is at [`https://li.quest/v1/chains`](https://apidocs.li.fi/reference/get_v1-chains). At the time of writing the demos route over:
 
-- **EVM:** Ethereum, Polygon, Arbitrum, Optimism, Base, BNB Chain,
-  Avalanche, Linea, Scroll, zkSync Era, Polygon zkEVM, Mantle, Mode,
-  Blast, Gnosis, Fantom, Celo, Aurora, Boba, Metis, Moonbeam, Moonriver.
+- **EVM:** Ethereum, Polygon, Arbitrum, Optimism, Base, BNB Chain, Avalanche, Linea, Scroll, zkSync Era, Polygon zkEVM, Mantle, Mode, Blast, Gnosis, Fantom, Celo, Aurora, Boba, Metis, Moonbeam, Moonriver.
 - **Non-EVM:** Solana.
 
-`packages/lifi` is chain-agnostic — it sends whatever `fromChainId` /
-`toChainId` the caller passes through to the REST API. New chains light
-up automatically once LI.FI lists them.
+The package is chain-agnostic — it forwards whatever `fromChainId` / `toChainId` the caller passes. New chains light up automatically once LI.FI lists them.
 
-## What Phase 1B added
+## Capabilities
 
-- `src/env.ts` — `LifiEnvironment` discriminator (`'sandbox' | 'production'`)
-  and `resolveLifiApiUrl`. LI.FI has no separate sandbox host today, so
-  both environments resolve to `https://li.quest/v1`. The seam exists so
-  callers stay symmetrical with the other Phase 1B providers.
-- `src/client.ts` — REST client (`createLifiClient`, `getQuote`,
-  `getStatus`, `LifiError`). Extracted from
-  `apps/dashboard/src/lib/services/lifi.ts`. The package never reads
-  `process.env`; consumers wire `LIFI_API_KEY` in at call time per D-005.
-- `src/sdk-config.ts` — `configureLifi(providers, options)` browser-side
-  SDK config helper. Extracted from
-  `apps/checkouts/hooks/use-lifi/utils.ts`. Sets `disableVersionCheck`
-  and forwards the integrator string from the dashboard so the SDK and
-  REST API stay in sync.
-- `src/state-mapping.ts` — `mapLifiStatus` / `mapLifiStatusResult` map
-  LI.FI's coarse `PENDING | DONE | FAILED | NOT_FOUND` enum onto a
-  string-union placeholder. **TODO(phase-1e):** swap the placeholder for
-  the canonical `TransactionState` import from
-  `@dynamic-demos/transactions` once Phase 1E lands.
-- `src/webhooks.ts` — placeholder. LI.FI does not deliver webhooks; the
-  module surfaces `verifySignature` and `normalize` as no-ops so the
-  package shape matches the other Phase 1B providers and so a future
-  webhook product can land without restructuring imports.
-- Vitest config + tests covering the public surface, REST shape, error
-  surfacing, status fall-back, state mapping, and webhook placeholders.
-  Tests stub `globalThis.fetch`; no real network calls.
+- REST client — `createLifiClient`, `getQuote`, `getStatus`, `LifiError`. Used server-side from dashboard route handlers.
+- Browser SDK config — `configureLifi(providers, options)`. Sets `disableVersionCheck` and forwards the integrator string so REST quotes and SDK execution stay aligned.
+- Environment seam — `LifiEnvironment` (`'sandbox' | 'production'`) and `resolveLifiApiUrl`. LI.FI has no separate sandbox host today; both resolve to `https://li.quest/v1`. The seam exists so callers stay symmetrical with other Phase 1B providers.
+- State mapping — `mapLifiStatus`, `mapLifiStatusResult` translate LI.FI's `PENDING | DONE | FAILED | NOT_FOUND` enum onto the canonical placeholder (Phase 1E rebinds to `TransactionState`).
+- Webhook stubs — `webhooks.verifySignature`, `webhooks.normalize`. LI.FI does not deliver webhooks today; the no-ops keep the package shape symmetric with the other providers and let a future webhook product land without restructuring imports.
 
-## Sandbox-by-default (D-005)
+## Public surface
 
-Every public function takes an explicit `env: 'sandbox' | 'production'`
-via `createLifiClient({ env, ... })`. There is no implicit default —
-callers default at the call site so the choice is visible in app code.
+All exports are stable and live at the package root.
 
-## Hard rules (carried from D-005, D-006, D-009)
+- `createLifiClient`, `getQuote`, `getStatus`, `LifiError`. (stable)
+- `LifiEnvironment`, `resolveLifiApiUrl`. (stable)
+- `configureLifi` — browser-side `@lifi/sdk` config helper. (stable)
+- `mapLifiStatus`, `mapLifiStatusResult`. (stable, rebinds in Phase 1E)
+- `webhooks.verifySignature`, `webhooks.normalize` — no-op placeholders. (stable)
 
-- Never log raw API keys.
-- Don't import `process.env` from inside this package; consumers pass
-  credentials in.
-- Server-side LI.FI access goes through `client.ts` (REST). Browser-side
-  route execution goes through `sdk-config.ts` + `@lifi/sdk` directly.
-  The SDK is **not** used for quote / status fetching.
-- `apps/spark26/` is zero-touch.
+## Required environment
+
+The package reads no `process.env` — callers pass credentials at call time per D-005.
+
+- `LIFI_API_KEY` — LI.FI API key — required at the consumer (dashboard runtime). LI.FI rate-limits unauthenticated traffic aggressively.
+- `LIFI_INTEGRATOR` — integrator string — optional; recommended for partner-tier rate limits.
+
+## Slots vs invariants
+
+**Slots:** `fromChainId` / `toChainId`, token addresses, integrator string, slippage, order preferences (cheapest, fastest, recommended).
+
+**Invariants:**
+
+- Server-side LI.FI access goes through `client.ts` (REST). Browser-side route execution goes through `sdk-config.ts` + `@lifi/sdk` directly. The SDK is **not** used for quote / status fetching.
+- Sandbox-by-default: every public function takes an explicit `env: 'sandbox' | 'production'`. No implicit default — callers default at the call site so the choice is visible.
+- Non-custodial: the bridge transaction is signed and submitted by the user's wallet; LI.FI never holds funds.
+- Apps don't import this package — go through dashboard `/api/orchestrate/swap` (D-001/D-003).
+- The package never reads `process.env`. Adding env reads breaks the "anywhere" guarantee.
+
+## Integration map
+
+**Imports:** none (uses global `fetch`).
+**Imported by:** `apps/dashboard` (orchestration), `apps/checkouts` (`configureLifi` for browser-side `executeRoute` only — no quote/status; those go through dashboard).
+
+## Examples
+
+```ts
+// Server-side: quote + status
+import { createLifiClient, getQuote, getStatus } from "@dynamic-demos/lifi";
+
+const client = createLifiClient({ env: "sandbox", apiKey: process.env.LIFI_API_KEY });
+
+const quote = await getQuote(client, {
+  fromChain: 1, // Ethereum
+  toChain: 8453, // Base
+  fromToken: "0xA0b8...", // USDC mainnet
+  toToken: "0x8335...", // USDC base
+  fromAmount: "1000000", // 1 USDC, 6 decimals
+  fromAddress: "0xabc...",
+});
+
+const status = await getStatus(client, { txHash: "0xdef..." });
+```
+
+```ts
+// Browser-side: SDK setup once at app boot
+import { configureLifi } from "@dynamic-demos/lifi";
+configureLifi([/* wallet providers */], { integrator: "demo-checkouts" });
+```
+
+## Do / Don't
+
+- Do: route quote + status through `/api/orchestrate/swap`. The dashboard owns the API key (D-003).
+- Do: keep `configureLifi(...)` to one call at app boot. The SDK self-registers — re-calling fights itself.
+- Don't: import this package's `client.ts` from a browser bundle.
+- Don't: assume LI.FI sandbox vs production differ — they're the same host today. The seam is for future-proofing, not behavior.
 
 ## Open questions / known gaps
 
-- `mapLifiStatus` is a stub until Phase 1E (`packages/transactions`)
-  merges. Replace the placeholder string-union with the canonical enum
-  then.
-- Webhook stubs are intentionally inert. If LI.FI ships a webhook
-  product, replace them with real signature verification + normaliser
-  in the same PR that adds the dashboard webhook handler.
+- `mapLifiStatus` is a placeholder until Phase 1E rebinds it to the canonical `TransactionState` from `@dynamic-demos/transactions`.
+- Webhook stubs are intentionally inert. Replace with real signature verification + normaliser if LI.FI ships a webhook product.
 - No real-network E2E tests in CI (D-023). Tests stub `globalThis.fetch`.
+- LI.FI's chain list mutates over time — consumers caching the result of `/v1/chains` should set a short TTL.
