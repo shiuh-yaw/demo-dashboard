@@ -279,4 +279,17 @@ export const REDIS_KEYS = {
 
   /** Set of all brand profile IDs */
   brandProfileList: `${DASHBOARD_PREFIX}:brands`,
+
+  // ==========================================================================
+  // Phase 2-brands — service-layer Brand records (separate from BrandProfile
+  // above, which is the legacy rich aggregate used by lib/actions/brands.ts).
+  // The new Brand shape mirrors the Postgres model so the Redis backend can
+  // serve as a parity baseline behind USE_POSTGRES_BRANDS.
+  // ==========================================================================
+
+  /** Single Brand record by ID. */
+  brandRecord: (id: string) => `${DASHBOARD_PREFIX}:brand-v2:${id}`,
+
+  /** Set of all Brand record IDs. */
+  brandRecordList: `${DASHBOARD_PREFIX}:brand-v2:list`,
 } as const;

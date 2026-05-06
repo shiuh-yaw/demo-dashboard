@@ -221,6 +221,64 @@ export interface CheckoutService {
 }
 
 // =============================================================================
+// Brand Service
+// =============================================================================
+//
+// Phase 2-brands: first-class Brand records (separate from the legacy
+// `BrandProfile` aggregate in `lib/actions/brands.ts`, which is a richer
+// object with auto-generated demos baked in). Both shapes coexist —
+// BrandService is the migration target for the Postgres flip.
+
+/**
+ * Brand row as it lives in Postgres (mirrors the Prisma `Brand` model).
+ * The dashboard service layer surfaces this shape regardless of backend.
+ */
+export interface Brand {
+  id: string;
+  ownerId: string;
+  name: string;
+  description: string | null;
+  primaryColor: string;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  logoUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateBrandInput {
+  ownerId: string;
+  name: string;
+  description?: string | null;
+  primaryColor: string;
+  secondaryColor?: string | null;
+  accentColor?: string | null;
+  logoUrl?: string | null;
+}
+
+export interface UpdateBrandInput {
+  name?: string;
+  description?: string | null;
+  primaryColor?: string;
+  secondaryColor?: string | null;
+  accentColor?: string | null;
+  logoUrl?: string | null;
+}
+
+export interface BrandListOptions {
+  /** When set, restrict results to brands owned by this user. */
+  ownerId?: string;
+}
+
+export interface BrandService {
+  create(input: CreateBrandInput): Promise<Brand>;
+  get(id: string): Promise<Brand | null>;
+  list(options?: BrandListOptions): Promise<Brand[]>;
+  update(id: string, input: UpdateBrandInput): Promise<Brand>;
+  delete(id: string): Promise<void>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
@@ -228,4 +286,5 @@ export interface Services {
   transactions: TransactionService;
   users: UserService;
   checkouts: CheckoutService;
+  brands: BrandService;
 }

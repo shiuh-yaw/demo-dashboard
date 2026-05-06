@@ -107,6 +107,19 @@ export const env = createEnv({
      * lands in PR 2-brands.
      */
     DIRECT_URL: z.string().url().optional(),
+    /**
+     * Phase 2-brands cutover flag.
+     * When "true", the dashboard reads/writes Brand records via Postgres
+     * (`@dynamic-demos/db`). When "false" (default), the Redis-backed
+     * implementation handles them. The two implementations satisfy the
+     * same `BrandService` contract (see lib/services/__tests__/brands.parity.test.ts)
+     * so production can be flipped without code changes.
+     */
+    USE_POSTGRES_BRANDS: z
+      .enum(["true", "false"])
+      .optional()
+      .default("false")
+      .transform((v) => v === "true"),
   },
   /*
    * Environment variables available on the client (and server).
@@ -202,6 +215,7 @@ export const env = createEnv({
     IRON_API_KEY: process.env.IRON_API_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
+    USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

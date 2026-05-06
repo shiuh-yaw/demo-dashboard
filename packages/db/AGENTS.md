@@ -3,16 +3,16 @@ name: "@dynamic-demos/db"
 kind: package
 flow_role: utility
 custody: n/a
-status: stub
+status: active
 ---
 
 # @dynamic-demos/db
 
 Prisma + Supabase Postgres access layer for the demo monorepo. Provides a
 serverless-safe `PrismaClient` singleton and the schema definition. The
-schema currently has no models — it lands as a scaffold so subsequent PRs
-(brands, remittance, transactions, etc.) can each ship one model + migration
-in isolation.
+first real model — `Brand` — landed in PR 2-brands (Part A). Per-demo-type
+configs and the transactions/webhook tables ship in subsequent PRs, each
+gated by its own migration so a flag-flipped rollout is incremental.
 
 ## Hard rule: single consumer
 
@@ -32,13 +32,15 @@ fetch from that endpoint instead.
 - Exports a serverless-safe Prisma singleton (`prisma`).
 - Re-exports `Prisma` and `PrismaClient` types from `@prisma/client`.
 - Owns the `prisma/schema.prisma` source of truth and the generated migration
-  history under `prisma/migrations/` (added in subsequent PRs).
+  history under `prisma/migrations/`.
+- Models: `Brand` (PR 2-brands Part A).
 
 ## Public surface
 
-- `prisma` — singleton `PrismaClient` instance. (stable)
+- `prisma` — singleton `PrismaClient` instance with delegates for every
+  declared model (currently `prisma.brand`). (stable)
 - `Prisma` — namespace re-exported from `@prisma/client` for input/output
-  typing. (stable)
+  typing (e.g., `Prisma.BrandCreateInput`). (stable)
 - `PrismaClient` — class re-exported from `@prisma/client` for callers that
   need to construct their own instance (rare; prefer the singleton). (stable)
 
@@ -80,9 +82,10 @@ Supabase project. Production opt-in only via explicit env override.
 import { prisma } from "@dynamic-demos/db";
 
 export async function listBrandsForOwner(ownerId: string) {
-  // Uncomment once the Brand model lands in PR 2-brands.
-  // return prisma.brand.findMany({ where: { ownerId } });
-  return [];
+  return prisma.brand.findMany({
+    where: { ownerId },
+    orderBy: { createdAt: "asc" },
+  });
 }
 ```
 
@@ -99,11 +102,14 @@ export async function listBrandsForOwner(ownerId: string) {
 
 ## Open questions / known gaps
 
-- No models yet. Brand lands in PR 2-brands; per-demo-type configs follow;
-  Transaction + WebhookEvent ship last (PR 2-transactions).
-- No CI migration dry-run gate yet for actual migration files because there
-  are no migrations. The workflow ships in this PR (Phase 2 scaffold) and
-  becomes meaningful once PR 2-brands generates the first migration.
+- Pending models: per-demo-type configs (`RemittanceConfig`, `EarnConfig`,
+  `VisaDirectConfig`, `WalletConfig`, `TradeConfig`, `DepositConfig`,
+  `ShopConfig`, `SandwichConfig`, `CheckoutConfig`) and the
+  `Transaction` / `WebhookEvent` pair. Each lands in its own PR with its
+  own migration so a flag flip is per-domain.
+- Brand backfill (read existing demo configs in Redis, materialise Brand
+  rows) is deferred to PR 2-brands Part B. Until then `prisma.brand` is
+  the only writer and the table starts empty in every environment.
 - Row-level security (RLS) is deferred. Service-layer ownership checks in
   `apps/dashboard/src/lib/services/postgres/` are the trust boundary until
   RLS is layered on (potential Phase 8).

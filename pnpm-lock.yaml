@@ -284,6 +284,9 @@ importers:
       '@dynamic-demos/coinbase-onramp':
         specifier: workspace:*
         version: link:../../packages/coinbase-onramp
+      '@dynamic-demos/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@dynamic-demos/dynamic':
         specifier: workspace:*
         version: link:../../packages/dynamic
@@ -393,6 +396,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 2.1.9(@types/node@20.19.25)(jsdom@24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)
 
   apps/deposit:
     dependencies:

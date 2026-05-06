@@ -15,4 +15,5 @@
  * D-015: only `apps/dashboard` may import `@dynamic-demos/db`. Other apps
  * fetch via the dashboard HTTP API.
  */
-export {};
+export { PostgresBrandService } from "./brands";
+export type { BrandPrismaClient } from "./brands";

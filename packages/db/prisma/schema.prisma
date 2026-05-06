@@ -22,20 +22,32 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Models added in subsequent PRs.
+// Models added incrementally — one PR per migration.
 //
-// PR 2-brands: Brand
-// PR 2-remittance: RemittanceConfig
-// PR 2-others: EarnConfig, VisaDirectConfig, WalletConfig, TradeConfig,
-//              DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig
-// PR 2-transactions: Transaction, WebhookEvent
+// Landed:
+//   PR 2-brands (this PR — Part A): Brand.
 //
-// SchemaPlaceholder is a build-sanity model so `prisma generate` succeeds
-// before real models land. PR 2-brands removes this in the same migration
-// that introduces Brand. Do not depend on this type from application code.
-model SchemaPlaceholder {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
+// Pending:
+//   PR 2-remittance: RemittanceConfig (adds brandId FK).
+//   PR 2-others: EarnConfig, VisaDirectConfig, WalletConfig, TradeConfig,
+//                DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig.
+//   PR 2-transactions: Transaction, WebhookEvent.
 
-  @@map("_dynamic_demos_db_placeholder")
+/// First-class Brand record. Owns shared theme + logo metadata that demo
+/// configs (remittance, earn, etc.) will reference via FK in subsequent PRs.
+/// `id` is application-generated (cuid) so it stays stable across backfill
+/// and matches the existing service-layer convention.
+model Brand {
+  id             String   @id @default(cuid())
+  ownerId        String
+  name           String
+  description    String?
+  primaryColor   String
+  secondaryColor String?
+  accentColor    String?
+  logoUrl        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerId])
 }
