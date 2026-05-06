@@ -30,31 +30,104 @@ provider:
 
 # @dynamic-demos/blindpay
 
-> **Phase 1B stub.** Phase 3 will replace this body with the full AGENTS.md
-> per `docs/templates/AGENTS.template.md`. The frontmatter above is
-> authoritative — the demo registry queries it.
-
-BlindPay payouts/payins/rates client + Svix webhook verifier. Extracted from
-`apps/dashboard/src/lib/services/blindpay.ts` in Phase 1B per D-009.
+BlindPay payouts/payins/rates client + Svix webhook verifier. Custodial offramp: BlindPay holds the USD/USDC and disburses local fiat through bank rails. Used by dashboard offramp orchestration; demo apps don't import this package directly (D-003).
 
 ## Provider documentation
 
-- Main docs: <https://www.blindpay.com/docs/getting-started/overview>
-- API reference: <https://www.blindpay.com/docs/api-reference>
-- Webhooks: <https://www.blindpay.com/docs/essentials/webhooks>
+If you are an AI agent integrating against BlindPay, **consult the provider docs first**:
 
-## Public surface (preview)
+- **Main docs:** [blindpay.com/docs](https://www.blindpay.com/docs/getting-started/overview)
+- **API reference:** [blindpay.com/docs/api-reference](https://www.blindpay.com/docs/api-reference)
+- **Webhooks:** [blindpay.com/docs/essentials/webhooks](https://www.blindpay.com/docs/essentials/webhooks) (Svix HMAC-SHA256)
+- **Status:** [status.blindpay.com](https://status.blindpay.com)
 
-- `createBlindpayClient({ env, instanceId, apiKey })` — REST client factory.
-- `webhooks.verifySignature` — Svix HMAC-SHA256 verification.
-- `webhooks.normalize` — translate event payload to a `CanonicalEvent`.
-- `mapBlindpayStatus` — provider status to canonical state (placeholder; Phase 1E swaps in the real `TransactionState` enum).
+## Supported regions
 
-## Open items
+| Country | Currency | Rails    | Notes |
+|---------|----------|----------|-------|
+| BR      | BRL      | PIX, TED | PIX sub-minute; TED business hours. |
+| US      | USD      | ACH, WIRE| ACH same-day; wire intra-day. |
+| MX      | MXN      | SPEI     | Business hours. |
+| CO      | COP      | PSE      | Bank business hours. |
+| AR      | ARS      | CBU      | Argentina bank account routing. |
 
-- Full body content (capabilities, slots/invariants, integration map,
-  do/don't, examples) lands in Phase 3.
-- Webhook framework (signature -> persist -> fan-out) lands in Phase 5A;
-  this package ships verifier + normalizer only today.
-- `state-mapping.ts` will switch from the placeholder to
-  `@dynamic-demos/transactions` when Phase 1E merges.
+If region coverage changes, update both this table and the `regions` field in frontmatter.
+
+## Capabilities
+
+- REST client factory — `createBlindpayClient({ env, instanceId, apiKey })`.
+- Quote + execute payouts — `client.payouts.quote(...)`, `client.payouts.execute(...)`.
+- Quote + execute payins — `client.payins.quote(...)`, `client.payins.execute(...)`.
+- Live FX rates — `client.rates.fetch(...)`.
+- Webhook signature verification — `webhooks.verifySignature` (Svix HMAC-SHA256).
+- Webhook normalisation — `webhooks.normalize` → `CanonicalEvent`.
+- Status mapping — `mapBlindpayStatus(upstream)` → canonical placeholder (Phase 1E swaps in `TransactionState`).
+
+## Public surface
+
+All exports are stable and live at the package root.
+
+- `createBlindpayClient`, `BlindpayClient`, `CreateBlindpayClientOptions` — client factory + types. (stable)
+- `DEFAULT_BLINDPAY_API_URL`, `resolveBlindpayApiUrl`, `BlindpayEnvironment` — env helpers. (stable)
+- Types: `BlindpayBankDetails`, `Currency`, `CurrencyType`, `FiatCurrency`, `Network`, `PaymentMethod`, request/response shapes for payins/payouts/rates. (stable)
+- `webhooks` namespace — `verifySignature`, `normalize`, header types. (stable)
+- `mapBlindpayStatus`, `BlindpayStatus`, `CanonicalTransactionStatePlaceholder` — state mapping (placeholder). (stable, will rebind in Phase 1E)
+
+## Required environment
+
+The package reads no `process.env` directly — credentials live at the dashboard (D-003).
+
+- `BLINDPAY_API_KEY` — BlindPay API key — required (dashboard runtime).
+- `BLINDPAY_INSTANCE_ID` — BlindPay tenant id — required.
+- `BLINDPAY_ENVIRONMENT` — `sandbox` | `production` — optional, defaults to sandbox (D-005).
+- `BLINDPAY_WEBHOOK_SECRET` — Svix endpoint secret for signature verify — required when wiring the receiver.
+
+## Slots vs invariants
+
+**Slots:** corridor + rail, payout currency, beneficiary bank details, KYB business profile.
+
+**Invariants:**
+
+- Sandbox-by-default (D-005).
+- **Custodial**: BlindPay holds funds between USDC receipt and fiat disbursement — surface this in demo copy.
+- Webhook signatures (Svix) must verify before any transaction state transitions. Replay attacks otherwise.
+- Apps never import this package — go through dashboard `/api/orchestrate/offramp` (D-001/D-003).
+
+## Integration map
+
+**Imports:** none (uses global `fetch`).
+**Imported by:** `apps/dashboard` (orchestration + webhook receiver). Demo apps interact via dashboard HTTP API.
+
+## Examples
+
+```ts
+import { createBlindpayClient } from "@dynamic-demos/blindpay";
+
+const client = createBlindpayClient({
+  env: "sandbox",
+  instanceId: process.env.BLINDPAY_INSTANCE_ID!,
+  apiKey: process.env.BLINDPAY_API_KEY!,
+});
+
+const quote = await client.payouts.quote({
+  request_amount: 100_00,
+  currency_type: "sender",
+  cover_fees: false,
+  payment_method: "pix",
+});
+const result = await client.payouts.execute({ quote_id: quote.quote_id, /* beneficiary */ });
+```
+
+## Do / Don't
+
+- Do: keep secrets in dashboard env. Never `apps/*`.
+- Do: surface "custodial" status in demo UX — users should know BlindPay holds funds in flight.
+- Don't: import this package from a demo app.
+- Don't: skip Svix signature verification on webhook delivery.
+
+## Open questions / known gaps
+
+- Phase 1E re-binds `mapBlindpayStatus` to `TransactionState` from `@dynamic-demos/transactions`.
+- Phase 5A wires the dashboard webhook framework against `webhooks.verifySignature` + `normalize`.
+- KYB onboarding flow is a separate dashboard workflow; this package is payout/payin/rates only.
+- No real-network tests in CI (D-023). Vitest stubs `fetch`.
