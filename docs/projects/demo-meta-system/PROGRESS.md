@@ -26,7 +26,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 1B-coinbase-onramp | 🟢 done | [#28](https://github.com/dynamic-labs/demo-dashboard/pull/28) | — |
 | 1B-lifi | 🟢 done | [#31](https://github.com/dynamic-labs/demo-dashboard/pull/31) | Extracts LI.FI bridge/swap into `@dynamic-demos/lifi`. Dashboard service + checkouts SDK config now consume the package. |
 | 1E. Transactions package | 🟢 done | [#24](https://github.com/dynamic-labs/demo-dashboard/pull/24) | Canonical state machine in `@dynamic-demos/transactions`; dashboard consumes via back-compat re-exports. |
-| 1D. Dynamic SDK consolidation | ⚪️ pending | — | Sequence after others — touches many apps |
+| 1D. Dynamic SDK consolidation | 🟡 in-flight | [#35](https://github.com/dynamic-labs/demo-dashboard/pull/35) | Bucket 1: package primitives + 5 app migrations (remittance, visa-direct, proceeds, trade, earn). Bucket 2: client-singleton factory + `createSafeWrapper`/`createAsyncSafeWrapper` promoted to `@dynamic-demos/dynamic/client-singleton`; wallet+deposit fully migrated, checkouts+shop partially migrated (env-id resolution + singleton where it fits). All 9 SDK-consuming apps aligned to `@dynamic-labs-sdk/*` 0.25.0 (matches spark26's known-working version). cross-border-ap-ar does not use Dynamic. Spark26 zero-touch. |
 | 1F. pnpm catalog for shared dependencies | ⚪️ pending | — | Sequence after 1D — locks consolidated versions; spark26 zero-touch |
 | 2-scaffold. Prisma + Supabase setup | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/25 | Independent of provider work |
 

@@ -25,8 +25,20 @@ export const env = createEnv({
     /** Fireblocks default asset ID for omnibus (e.g. DUSD_B724A1Y3_RPM5). Check /admin/assets for supported IDs. */
     FIREBLOCKS_DEFAULT_ASSET_ID: z.string().optional(),
 
-    /** Dynamic API key for server-side admin operations */
-    DYNAMIC_API_KEY: z.string().optional(),
+    /**
+     * Dynamic API key for server-side admin operations.
+     *
+     * Required — every server-side flow that touches Dynamic (KYC approve,
+     * user lookup, WaaS create, metadata updates) needs it.
+     *
+     * IMPORTANT: must be issued for the same Dynamic project as
+     * NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID. A token from a different project
+     * will return 401 Unauthorized on every admin call.
+     */
+    DYNAMIC_API_KEY: z.string().min(1, {
+      message:
+        "DYNAMIC_API_KEY is required (same Dynamic project as NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID).",
+    }),
 
     /** Alchemy API key for transaction history */
     ALCHEMY_API_KEY: z.string().min(1, {

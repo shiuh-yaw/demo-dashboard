@@ -13,6 +13,7 @@ import { getServerUsdcBalance } from "@/lib/balance/server";
 import { getFireblocksClient } from "@/lib/fireblocks";
 import { resolveVaultIdByName } from "@dynamic-demos/fireblocks";
 import { OFFRAMP_VAULT_PREFIX } from "@/lib/fireblocks-vault";
+import { env } from "@/lib/env";
 import type { DynamicUser } from "@/lib/dynamic-api";
 
 export type UserWithBalance = DynamicUser & {
@@ -64,7 +65,7 @@ export async function listUsersWithBalances(
       if (vaultId) {
         try {
           const client = getFireblocksClient();
-          const assetId = process.env.FIREBLOCKS_DEFAULT_ASSET_ID;
+          const assetId = env.FIREBLOCKS_DEFAULT_ASSET_ID;
           if (assetId) {
             const asset = await client.getVaultAssetBalance(vaultId, assetId);
             vaultBalance = parseFloat(asset.available || "0");

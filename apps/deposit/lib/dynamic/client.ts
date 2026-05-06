@@ -5,46 +5,41 @@ import {
   type DynamicClient,
 } from "@dynamic-labs-sdk/client";
 import { addEvmExtension } from "@dynamic-labs-sdk/evm";
+import {
+  createDynamicClientSingleton,
+  createAsyncSafeWrapper as packageCreateAsyncSafeWrapper,
+  createSafeWrapper as packageCreateSafeWrapper,
+} from "@dynamic-demos/dynamic/client-singleton";
+import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 
-let _client: DynamicClient | null = null;
-
-export function getClient(): DynamicClient | null {
-  if (typeof window === "undefined") return null;
-
-  if (!_client) {
-    _client = createDynamicClient({
-      environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID!,
+const singleton = createDynamicClientSingleton<DynamicClient>({
+  create: () => {
+    const { environmentId } = resolveCredentials();
+    return createDynamicClient({
+      environmentId,
       autoInitialize: true,
       metadata: {
         name: "Deposit Demo",
-        universalLink: window.location.origin,
+        universalLink:
+          typeof window !== "undefined" ? window.location.origin : "",
       },
     });
+  },
+  extend: (client) => {
+    addEvmExtension(client);
+  },
+});
 
-    addEvmExtension(_client);
-  }
-
-  return _client;
+export function getClient(): DynamicClient | null {
+  return singleton.getClient();
 }
 
 export function createSafeWrapper<T>(fn: () => T, fallback: T): () => T {
-  return () => {
-    const client = getClient();
-    if (!client) return fallback;
-    try {
-      return fn();
-    } catch {
-      return fallback;
-    }
-  };
+  return packageCreateSafeWrapper(getClient, fn, fallback);
 }
 
 export function createAsyncSafeWrapper<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
 ): (...args: TArgs) => Promise<TResult> {
-  return async (...args: TArgs) => {
-    const client = getClient();
-    if (!client) throw new Error("Dynamic client not initialized");
-    return fn(...args);
-  };
+  return packageCreateAsyncSafeWrapper(getClient, fn);
 }

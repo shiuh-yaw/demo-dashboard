@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -17,10 +18,10 @@
     "@dynamic-demos/types": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
-    "@dynamic-labs-sdk/client": "0.12.1",
-    "@dynamic-labs-sdk/evm": "0.12.1",
-    "@dynamic-labs-sdk/solana": "0.12.1",
-    "@dynamic-labs-sdk/zerodev": "0.12.1",
+    "@dynamic-labs-sdk/client": "0.25.0",
+    "@dynamic-labs-sdk/evm": "0.25.0",
+    "@dynamic-labs-sdk/solana": "0.25.0",
+    "@dynamic-labs-sdk/zerodev": "0.25.0",
     "@dynamic-labs/iconic": "4.61.1",
     "@solana/spl-token": "0.4.13",
     "@solana/web3.js": "1.98.4",
@@ -46,6 +47,7 @@
     "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "2.1.9"
   }
 }

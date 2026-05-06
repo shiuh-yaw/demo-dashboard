@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { SocialIcon } from "@dynamic-labs/iconic";
-import { ChevronDown, Key, Mail } from "lucide-react";
+import { ChevronDown, ExternalLink, Key, Mail } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { Button } from "./button";
 import { Spinner } from "./spinner";
@@ -55,6 +55,9 @@ export interface LoginFormProps {
   isJwtPending?: boolean;
   /** Error from JWT auth */
   jwtError?: unknown;
+  /** Optional href to a helper page that mints a test JWT.
+   *  When set, a "Generate a test token" link renders in the JWT panel header. */
+  jwtHelperHref?: string;
 
   // ── General ──────────────────────────────────────────────────
   /** Additional CSS classes for the root element */
@@ -208,10 +211,12 @@ function JwtAuthSection({
   onJwtAuth,
   isJwtPending,
   jwtError,
+  jwtHelperHref,
 }: {
   onJwtAuth: (jwt: string) => Promise<void>;
   isJwtPending?: boolean;
   jwtError?: unknown;
+  jwtHelperHref?: string;
 }) {
   const [jwt, setJwt] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -251,12 +256,23 @@ function JwtAuthSection({
             className="px-4 pb-4 pt-1 space-y-4 border-t border-[var(--widget-border,#e1e4ea)]"
           >
             <div className="space-y-1.5 pt-2">
-              <label
-                htmlFor="login-jwt-token"
-                className="block text-xs font-normal text-[var(--widget-muted,#9a9a9a)]"
-              >
-                JWT Token
-              </label>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="login-jwt-token"
+                  className="block text-xs font-normal text-[var(--widget-muted,#9a9a9a)]"
+                >
+                  JWT Token
+                </label>
+                {jwtHelperHref && (
+                  <a
+                    href={jwtHelperHref}
+                    className="flex items-center gap-1 text-[11px] text-[var(--widget-primary,#335cff)] hover:underline"
+                  >
+                    Generate a test token
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
               <textarea
                 id="login-jwt-token"
                 value={jwt}
@@ -341,6 +357,7 @@ export function LoginForm({
   onJwtAuth,
   isJwtPending,
   jwtError,
+  jwtHelperHref,
   className,
 }: LoginFormProps) {
   const [isCompletingOAuth, setIsCompletingOAuth] = useState(() => {
@@ -419,6 +436,7 @@ export function LoginForm({
           onJwtAuth={onJwtAuth}
           isJwtPending={isJwtPending}
           jwtError={jwtError}
+          jwtHelperHref={jwtHelperHref}
         />
       )}
     </div>

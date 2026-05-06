@@ -54,6 +54,39 @@ export { getSafeRedirectDest, buildLoginUrl } from "./redirect";
 // Middleware
 export { createAuthMiddleware, type MiddlewareConfig } from "./middleware";
 
+// Phase 1D — canonical demo primitives
+export {
+  createDemoMiddleware,
+  type CreateDemoMiddlewareOptions,
+} from "./createDemoMiddleware";
+export {
+  setDynamicJwtCookie,
+  clearDynamicJwtCookie,
+  getJwtMaxAgeSeconds,
+  createSyncCookieRoute,
+  type CookieStore,
+  type SetDynamicJwtCookieOptions,
+} from "./auth-cookies";
+export {
+  resolveCredentials,
+  type ResolveCredentialsOptions,
+  type ResolvedDynamicCredentials,
+} from "./resolveCredentials";
+export {
+  createNetworkConfig,
+  KNOWN_NETWORK_IDS,
+  type SupportedChain,
+  type NetworkConfigEntry,
+  type CreateNetworkConfigOptions,
+} from "./networks";
+export {
+  createDynamicClientSingleton,
+  createSafeWrapper,
+  createAsyncSafeWrapper,
+  type DynamicClientSingletonAPI,
+  type CreateDynamicClientSingletonOptions,
+} from "./clientSingleton";
+
 // Client (must be imported separately for "use client" boundary)
 export { ConnectedAuthScreen } from "./connected-auth-screen";
 export { useAuthForm } from "./use-auth-form";

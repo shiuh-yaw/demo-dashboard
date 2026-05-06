@@ -104,7 +104,8 @@ import {
   type WalletConnectCatalogWallet,
 } from "@dynamic-labs-sdk/client";
 import { getActiveNetworkData as sdkGetActiveNetworkData } from "@dynamic-labs-sdk/client";
-import { env } from "./env";
+import { createDynamicClientSingleton } from "@dynamic-demos/dynamic/client-singleton";
+import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 
 // =============================================================================
 // TYPES & CONSTANTS
@@ -115,49 +116,41 @@ import { env } from "./env";
 export const DYNAMIC_ICON_URL =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -2 24 24' fill='%230050FF'%3E%3Cpath d='M9.9 1.5c-.43.4-.85.79-1.27 1.18C6.67 4.5 4.71 6.32 2.75 8.14c-.45.41-.92.81-1.48 1.06-.67.29-1.06.1-1.27-.62-.3-1.01-.14-1.95.44-2.82.5-.74 1.12-1.36 1.76-1.96 1.02-.96 2.05-1.9 3.1-2.83.46-.41.96-.78 1.57-.9C8.69-.31 9.85 1.44 9.9 1.5z'/%3E%3Cpath d='M1.1 10.75c1.11-.32 1.95-1.02 2.76-1.77 2.59-2.36 5.18-4.73 7.78-7.08.57-.52 1.18-1.01 1.81-1.45.81-.55 1.7-.63 2.57-.1.31.19.62.41.88.67.88.92 1.76 1.85 2.61 2.8.91 1 1.8 2.03 2.67 3.07.3.36.54.77.74 1.2.38.78.28 1.56-.18 2.29-.4.65-.95 1.19-1.52 1.7-2.21 2-4.42 3.99-6.65 5.96-.6.53-1.26 1-1.94 1.42-1.28.79-2.57.69-3.74-.24-.68-.55-1.32-1.16-1.9-1.8C5.06 15.34 3.21 13.23 1.4 11.1c-.1-.1-.18-.22-.3-.36z'/%3E%3C/svg%3E";
 
-export const environmentId = env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID;
-
-// Singleton state
-let _client: DynamicClient | null = null;
+/**
+ * Resolved Dynamic environment id. Reads `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID`
+ * with the workspace-default fallback chain (D-003).
+ */
+export const environmentId = resolveCredentials().environmentId;
 
 /**
- * Add wallet extensions to the client.
+ * Lazy / SSR-safe singleton wired through `@dynamic-demos/dynamic`.
  *
- * In 0.6.0, addEvmExtension already includes EIP-6963 support (MetaMask, Coinbase Wallet, etc.)
- * and addSolanaExtension already includes Wallet Standard support (Phantom, Solflare, etc.)
- * WalletConnect is added eagerly (async, fire-and-forget) — the SDK handles readiness internally.
+ * Extensions are layered in order:
+ *   - `addEvmExtension` (includes EIP-6963 — MetaMask, Coinbase Wallet, …)
+ *   - `addSolanaExtension` (includes Wallet Standard — Phantom, Solflare, …)
+ *   - `addWalletConnectEvmExtension` is async, fire-and-forget; the SDK
+ *     handles readiness internally.
+ *
+ * TODO: Add addWalletConnectSolanaExtension once SDK v0.6.x ships the runtime.
  */
-const addExtensions = (client: DynamicClient) => {
-  addEvmExtension(client);
-  addSolanaExtension(client);
-  void addWalletConnectEvmExtension(client);
-  // TODO: Add addWalletConnectSolanaExtension once SDK v0.6.x ships the runtime
-};
-
-/**
- * Gets or creates the Dynamic client instance (singleton pattern)
- */
-const getClient = (): DynamicClient | null => {
-  // SSR guard - return null to prevent hydration mismatches
-  if (typeof window === "undefined") return null;
-
-  // Create client on first access
-  if (!_client) {
-    _client = createDynamicClient({
+const singleton = createDynamicClientSingleton<DynamicClient>({
+  create: () =>
+    createDynamicClient({
       environmentId,
       autoInitialize: true,
       metadata: {
         name: "Payment Widget",
         universalLink: window.location.origin,
       },
-    });
+    }),
+  extend: (client) => {
+    addEvmExtension(client);
+    addSolanaExtension(client);
+    void addWalletConnectEvmExtension(client);
+  },
+});
 
-    // Add sync extensions immediately after client creation
-    addExtensions(_client);
-  }
-
-  return _client;
-};
+const getClient = (): DynamicClient | null => singleton.getClient();
 
 /**
  * SSR-safe wrappers for Dynamic SDK functions

@@ -62,10 +62,15 @@ describe("visa-direct middleware — public route (/login)", () => {
     expect(isRedirect(res)).toBe(false);
   });
 
-  test("E. OAuth callback (?code=...&state=...) on /login is NOT redirected", () => {
+  test("E. OAuth callback (?dynamicOauthCode=...&dynamicOauthState=...) on /login is NOT redirected", () => {
+    // Per docs/projects/demo-meta-system/research/dynamic-auth-patterns.md,
+    // Dynamic SDK uses `dynamicOauthCode`/`dynamicOauthState` (not `code`/`state`)
+    // as its callback params. The factory's default `oauthCallbackParams` is
+    // `['dynamicOauthCode']`; the legacy `code`+`state` exemption was a
+    // leftover from another flow and is intentionally NOT in the default.
     const res = middleware(
       makeRequest({
-        url: "/login?code=abc&state=xyz",
+        url: "/login?dynamicOauthCode=abc&dynamicOauthState=xyz",
         cookies: AUTH,
       }),
     );

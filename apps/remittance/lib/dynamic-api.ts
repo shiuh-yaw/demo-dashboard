@@ -3,32 +3,22 @@
  *
  * Server-side helper for Dynamic admin operations.
  * Uses DYNAMIC_API_KEY for authentication.
+ *
+ * Both NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID and DYNAMIC_API_KEY are validated
+ * at boot in lib/env.ts (Zod / @t3-oss/env-nextjs). No runtime null-checks
+ * needed here.
  */
+
+import { env } from "./env";
 
 const DYNAMIC_API_BASE = "https://app.dynamicauth.com/api/v0";
 
-function getEnvironmentId(): string {
-  const envId = process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID?.trim();
-  if (!envId) {
-    throw new Error(
-      "NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID is required (must match createDynamicClient environmentId).",
-    );
-  }
-  return envId;
-}
+const getEnvironmentId = () => env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID;
 
-function getAdminHeaders(): HeadersInit {
-  const apiKey = process.env.DYNAMIC_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error(
-      "DYNAMIC_API_KEY is required for Dynamic admin API calls. Create an API token in the Dynamic dashboard for the same project as NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID.",
-    );
-  }
-  return {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  };
-}
+const getAdminHeaders = (): HeadersInit => ({
+  Authorization: `Bearer ${env.DYNAMIC_API_KEY}`,
+  "Content-Type": "application/json",
+});
 
 export interface DynamicUser {
   id: string;

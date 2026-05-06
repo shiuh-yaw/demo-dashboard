@@ -8,6 +8,7 @@ import type { TokenInfo } from "./token-select-step";
 
 const MOCK_NETWORK: NetworkData = {
   networkId: "mock",
+  name: "Mock Network",
   displayName: "Mock Network",
   chain: "EVM" as NetworkData["chain"],
   blockExplorerUrls: [],

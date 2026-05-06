@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { DynamicInit as PackageDynamicInit } from "@dynamic-demos/dynamic/init";
 import {
   isSignedIn,
   getAuthToken,
@@ -22,49 +22,24 @@ import { setDynamicJWT, clearAuthCookie } from "@/lib/auth/session";
  * - Logout: clear cookie
  */
 export function DynamicInit() {
-  const cleanupRef = useRef<(() => void) | null>(null);
-  const initializedRef = useRef(false);
-
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    async function init() {
-      try {
-        await waitForClientInitialized();
-
-        // Listen for logout — clear cookie
-        const unsubLogout = onEvent({
-          event: "logout",
-          listener: () => {
-            void clearAuthCookie();
-          },
-        });
-
-        cleanupRef.current = () => {
-          unsubLogout?.();
-        };
-
-        // Returning user: sync existing auth to cookie
-        if (isSignedIn()) {
-          const jwt = await getAuthToken();
-          if (jwt) {
-            await setDynamicJWT(jwt);
-          }
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("DynamicInit error:", error);
-        }
-      }
-    }
-
-    if (typeof window !== "undefined") void init();
-
-    return () => {
-      cleanupRef.current?.();
-    };
-  }, []);
-
-  return null;
+  return (
+    <PackageDynamicInit
+      client={{
+        isSignedIn,
+        getAuthToken,
+        waitForClientInitialized,
+        onEvent: ({ event, listener }) =>
+          // SDK enforces a typed event union; the package adapter is generic.
+          // The cast is safe — only "logout" is subscribed in this adapter.
+          onEvent({
+            event: event as "logout",
+            listener: listener as () => void,
+          }),
+      }}
+      cookieSync={{
+        set: (token) => setDynamicJWT(token),
+        clear: () => clearAuthCookie(),
+      }}
+    />
+  );
 }

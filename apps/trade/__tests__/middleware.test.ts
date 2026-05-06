@@ -67,9 +67,14 @@ describe("trade middleware — public route /login", () => {
     expect(isRedirect(res)).toBe(false);
   });
 
-  test("E. OAuth callback (?code=...&state=...) on /login is NOT redirected", () => {
+  test("E. OAuth callback (?dynamicOauthCode=...&dynamicOauthState=...) on /login is NOT redirected", () => {
+    // Per docs/projects/demo-meta-system/research/dynamic-auth-patterns.md,
+    // Dynamic SDK uses `dynamicOauthCode`/`dynamicOauthState` (not `code`/`state`).
     const res = middleware(
-      makeRequest({ url: "/login?code=abc&state=xyz", cookies: AUTH }),
+      makeRequest({
+        url: "/login?dynamicOauthCode=abc&dynamicOauthState=xyz",
+        cookies: AUTH,
+      }),
     );
     expect(isRedirect(res)).toBe(false);
   });

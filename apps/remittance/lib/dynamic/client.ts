@@ -12,6 +12,7 @@ import {
 
 import { addEvmExtension } from "@dynamic-labs-sdk/evm";
 import { addZerodevExtension } from "@dynamic-labs-sdk/zerodev";
+import { env } from "@/lib/env";
 
 let _client: DynamicClient | null = null;
 
@@ -20,7 +21,7 @@ export function getClient(): DynamicClient | null {
 
   if (!_client) {
     _client = createDynamicClient({
-      environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID!,
+      environmentId: env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
       autoInitialize: true,
       metadata: {
         name: "Remittance Demo",
