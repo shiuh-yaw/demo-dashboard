@@ -31,9 +31,7 @@ export function PaymentView({
   const [banner, setBanner] = useState<string | null>(
     state.status === "tx_failed"
       ? "Previous attempt failed — try again."
-      : state.status === "checkout_expired"
-        ? "Your checkout expired. Starting a fresh one."
-        : null
+      : null
   );
 
   const createMutation = useMutation({
