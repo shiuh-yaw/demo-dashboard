@@ -79,6 +79,14 @@ export const env = createEnv({
      */
     BLINDPAY_API_KEY: z.string().optional(),
     /**
+     * BlindPay webhook secret (Svix `whsec_...` form).
+     * Required to verify incoming `/api/webhooks/blindpay` deliveries
+     * (Phase 5A, D-011). When unset the receiver rejects every request
+     * with 401 — failing closed is intentional so a misconfigured
+     * deployment never silently accepts unsigned webhooks.
+     */
+    BLINDPAY_WEBHOOK_SECRET: z.string().optional(),
+    /**
      * Iron Finance Environment (production or sandbox)
      * Defaults to production
      */
@@ -232,6 +240,7 @@ export const env = createEnv({
     BLINDPAY_API_URL: process.env.BLINDPAY_API_URL,
     BLINDPAY_INSTANCE_ID: process.env.BLINDPAY_INSTANCE_ID,
     BLINDPAY_API_KEY: process.env.BLINDPAY_API_KEY,
+    BLINDPAY_WEBHOOK_SECRET: process.env.BLINDPAY_WEBHOOK_SECRET,
     IRON_ENVIRONMENT: process.env.IRON_ENVIRONMENT,
     IRON_API_KEY: process.env.IRON_API_KEY,
     DATABASE_URL: process.env.DATABASE_URL,

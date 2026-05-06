@@ -15,7 +15,7 @@ The operator orchestrator for the Dynamic Demos monorepo (D-001). Demo creators 
 - Operator UI for demo creators (per-demo-type forms under `/brands`, `/remittance`, `/checkouts`, `/earns`, `/trade`, `/visa-direct`, `/wallets`, `/widgets`).
 - Orchestration API (`/api/orchestrate/*`) — quotes, onramp, offramp, swap, transactions, wallet verify (Phase 5B; partial today).
 - Per-provider HTTP endpoints used by demo apps: `blindpay`, `iron`, `coinbase`, `checkouts`, `earns`, `remittance`, `trade`, `visa-direct`, `wallets`, `widgets`.
-- Webhook receivers (per-provider, raw-body parsing + signature verification + dedup + DB persistence + optional QStash fan-out) — Phase 5A wires the framework.
+- Webhook receivers (per-provider, raw-body parsing + signature verification + dedup + DB persistence + optional QStash fan-out) — framework lives in `src/lib/webhooks/`; BlindPay wired as the reference receiver (Phase 5A).
 - Cron jobs (`/api/cron/...`) for recurring tasks.
 - Internal admin routes under `/api/internal/...`.
 - Documentation surfaces under `/documentation`.
@@ -43,7 +43,7 @@ API namespaces (server):
 - `DATABASE_URL` — Supabase pooler URL — required (D-013).
 - `DIRECT_URL` — Supabase direct URL for migrations — required.
 - Provider keys (D-003): `IRON_API_KEY`, `BLINDPAY_API_KEY` + `BLINDPAY_INSTANCE_ID`, `COINBASE_ONRAMP_API_KEY` + `COINBASE_ONRAMP_API_SECRET`, `LIFI_API_KEY`, `ALFREDPAY_API_KEY`. Sandbox-by-default (D-005).
-- Webhook secrets per provider (`*_WEBHOOK_SECRET`) — required when wiring receivers in Phase 5A.
+- Webhook secrets per provider (`*_WEBHOOK_SECRET`) — required when wiring receivers. `BLINDPAY_WEBHOOK_SECRET` is wired (Phase 5A); receivers fail closed with 401 if unset.
 - `FIREBLOCKS_API_KEY` / `FIREBLOCKS_API_SECRET` — for Trading Orders + DVP flows.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox flags off across all wired providers.
 
@@ -113,9 +113,32 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 - Don't: import `@dynamic-demos/db` from any app other than this one (D-015).
 - Don't: bypass `@dynamic-demos/transactions` helpers when updating state — direct assignment breaks invariants.
 
+## Webhook framework
+
+Lives at `src/lib/webhooks/` and serves all `/api/webhooks/<provider>` routes (D-011). Composes the standard receiver pipeline once so each provider route stays a few lines.
+
+**Files:**
+
+- `idempotency.ts` — `dedupOrThrow(redis, provider, eventId)`: Redis SETNX with TTL=7 days. Throws `DuplicateWebhookEventError` on a hit.
+- `handler-factory.ts` — `createWebhookHandler({ provider, secret, verifySignature, normalize, services, redis, rateLimit?, logger? })`: full pipeline (rate limit → verify → normalize → dedup → persist → state-machine → ack).
+- `redis-adapter.ts` + `redis-client.ts` — adapters that surface `SET … NX EX …` from Upstash and ioredis (the unified `RedisClient` doesn't expose NX).
+- `<provider>-adapter.ts` — per-provider translation between the framework's Web `Headers` contract and each package's webhook surface (`blindpay-adapter.ts` is the reference).
+- `app/api/webhooks/<provider>/route.ts` — explicit per-provider route handlers; never a dynamic `[provider]` route (D-011).
+
+**Invariants:**
+
+- Signature verification runs before any side effect. A bad signature produces a 401, no DB row, and a `[security:webhook-signature-failure]` log line.
+- Replay protection lives at two layers: Redis SETNX (in-flight) + Postgres unique `(provider, providerEventId)` (durable). Either short-circuits with a 200 ack on a duplicate.
+- All transaction state changes go through `assertValidTransition` from `@dynamic-demos/transactions` (D-010). Illegal transitions persist as `processingStatus=failed` with the error message; the row is not rolled back so the audit trail is complete.
+- Receivers fail closed: if `<PROVIDER>_WEBHOOK_SECRET` is unset the route returns 401 without invoking the framework.
+- One info log per delivery: `[webhook:<provider>] received eventId=<id> type=<type> dedup=<bool> durMs=<n> signatureValid=<bool> status=<state>`. Raw payloads stay at debug level — never above.
+
+**To wire a new provider:** see `docs/engineering/add-new-webhook-receiver.md`.
+
 ## Open questions / known gaps
 
-- Phase 5A wires the webhook framework against the verifiers + normalisers exposed by every provider package. Receivers are stubs today.
+- Receivers wired so far: BlindPay only. alfredPay, Iron, Coinbase Onramp, LI.FI follow as separate small PRs after the framework merges.
+- BlindPay normalizer doesn't yet resolve a local `transactionId` from the upstream `data.id` — every event currently persists with `processingStatus=ignored` until a `(provider, providerResourceId) → transactionId` index lands.
 - Phase 5B fills out the `/api/orchestrate/*` namespace beyond the partial coverage shipped to date.
 - Phase 5C lands dashboard scaffolding templates that auto-generate per-demo-type sections from the demo registry.
 - Phase 2-brands lands the `Brand` Prisma model; Phase 2-transactions lands `Transaction` + `WebhookEvent`.

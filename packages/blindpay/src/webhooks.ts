@@ -210,3 +210,66 @@ function classifyEventKind(type: string): CanonicalEventKind {
   if (type.startsWith("bankAccount")) return "bankAccount";
   return "unknown";
 }
+
+// ---------------------------------------------------------------------------
+// Replay helper (local development)
+// ---------------------------------------------------------------------------
+
+export interface ReplayOptions {
+  /** JSON payload to send. Will be `JSON.stringify`-ed once. */
+  payload: BlindpayWebhookPayload | Record<string, unknown>;
+  /** Receiver URL (e.g. `http://localhost:4000/api/webhooks/blindpay`). */
+  url: string;
+  /** Webhook secret (`whsec_<base64>` form). */
+  webhookSecret: string;
+  /** Override the message id. Defaults to `msg_replay_<random>`. */
+  messageId?: string;
+  /**
+   * Override the timestamp (unix seconds). Defaults to `Date.now()/1000`.
+   * Tests sometimes pin this to a fixed value for deterministic signing.
+   */
+  timestamp?: number;
+  /** Optional fetch implementation (defaults to `globalThis.fetch`). */
+  fetchFn?: typeof fetch;
+}
+
+/**
+ * POST a synthetic BlindPay webhook delivery to the receiver running
+ * locally. The body is signed with the supplied secret using the same
+ * Svix scheme `verifySignature` validates, so a correctly configured
+ * receiver accepts the replay.
+ *
+ * Example:
+ *   replay({
+ *     payload: JSON.parse(fs.readFileSync('./fixture.json', 'utf8')),
+ *     url: 'http://localhost:4000/api/webhooks/blindpay',
+ *     webhookSecret: process.env.BLINDPAY_WEBHOOK_SECRET!,
+ *   });
+ */
+export async function replay(opts: ReplayOptions): Promise<Response> {
+  const {
+    payload,
+    url,
+    webhookSecret,
+    messageId = `msg_replay_${Math.random().toString(36).slice(2, 10)}`,
+    timestamp = Math.floor(Date.now() / 1000),
+    fetchFn = globalThis.fetch,
+  } = opts;
+
+  const body = JSON.stringify(payload);
+  const key = decodeWebhookSecret(webhookSecret);
+  const signed = `${messageId}.${timestamp}.${body}`;
+  const digest = createHmac("sha256", key).update(signed).digest("base64");
+  const signature = `v1,${digest}`;
+
+  return await fetchFn(url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "svix-id": messageId,
+      "svix-timestamp": String(timestamp),
+      "svix-signature": signature,
+    },
+    body,
+  });
+}

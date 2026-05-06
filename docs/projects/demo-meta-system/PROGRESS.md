@@ -56,7 +56,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 4-app. Theme migration: cross-border-ap-ar | ⚪️ pending | — | — |
 | 4-app. Theme migration: proceeds | 🟢 done | [#57](https://github.com/dynamic-labs/demo-dashboard/pull/57) | Migrated to `@dynamic-demos/theme/defaults.css`; `--brand-*` namespace adopted; `--proceeds-*` chrome tokens retained app-locally. |
 | 4-app. Theme migration: earn | ⚪️ pending | — | Hardest (RGB conversion) |
-| 5A. Webhook framework | ⚪️ pending | — | — |
+| 5A. Webhook framework | 🟡 in-flight | — | Framework + BlindPay reference wired. alfredpay/iron/coinbase/lifi receivers follow as separate small PRs. Transaction resolution from upstream resource ids deferred (events currently persist as `ignored` until a `(provider, providerResourceId) → transactionId` index lands). |
 | 5B. Orchestration API | ⚪️ pending | — | — |
 | 5C. Dashboard scaffolding templates + mock-data | ⚪️ pending | — | — |
 
