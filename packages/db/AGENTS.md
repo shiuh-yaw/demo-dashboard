@@ -1,5 +1,5 @@
 ---
-name: db
+name: "@dynamic-demos/db"
 kind: package
 flow_role: utility
 custody: n/a
