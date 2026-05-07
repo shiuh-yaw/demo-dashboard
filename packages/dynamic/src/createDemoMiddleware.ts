@@ -7,8 +7,8 @@
  *   - header name:   `x-<demoType>-config-id`
  *
  * Behaviors (defaults):
- *   - `?id=<configId>` → set/overwrite cookie, forward as `x-<demoType>-config-id`.
- *   - `?id=` (empty)   → clear cookie.
+ *   - `?theme=<configId>` → set/overwrite cookie, forward as `x-<demoType>-config-id`.
+ *   - `?theme=` (empty)   → clear cookie.
  *   - Authenticated user on a public/login route with `?sessionExpired=1` → clear `dynamic_jwt`.
  *   - Authenticated user on login (no OAuth params) → redirect to `returnTo` or `defaultReturnPath`.
  *   - OAuth callback (`dynamicOauthCode` by default) on login → pass through.
@@ -73,13 +73,13 @@ export interface CreateDemoMiddlewareOptions {
 
   /**
    * How to source the config id.
-   *   - `'query'` (default): only `?id=` resolves a config id.
+   *   - `'query'` (default): only `?theme=` resolves a config id.
    *   - `'path'`: only `getConfigIdFromPath` resolves it.
    *   - `'both'`: path takes precedence; query falls back.
    *   - `'none'`: no config id is resolved; cookie + header sync are skipped.
    *
    * When `'query'`, the path-extractor still runs (used for rewrites/login
-   * pathing) but its value is NOT persisted to the cookie. Only `?id=` writes
+   * pathing) but its value is NOT persisted to the cookie. Only `?theme=` writes
    * the cookie.
    *
    * Default: `'query'`.
@@ -107,7 +107,7 @@ export interface CreateDemoMiddlewareOptions {
 
   /**
    * Whether to round-trip `?returnTo=<path>` on auth-redirect. When `true`,
-   * the original path (plus any non-`?id=` query params) is encoded so the
+   * the original path (plus any non-`?theme=` query params) is encoded so the
    * login page can return the user to where they came from.
    *
    * Default: `true`.
@@ -201,9 +201,9 @@ export function createDemoMiddleware(opts: CreateDemoMiddlewareOptions) {
     const path = request.nextUrl.pathname;
     const hasAuth = request.cookies.has(authCookieName);
 
-    // Resolve config id according to configIdSource. Empty `?id=` always
+    // Resolve config id according to configIdSource. Empty `?theme=` always
     // means "clear" when query is in scope.
-    const idParam = request.nextUrl.searchParams.get("id");
+    const idParam = request.nextUrl.searchParams.get("theme");
     const cookieConfigId = stickyConfigCookie
       ? request.cookies.get(configCookieName)?.value
       : undefined;
@@ -225,7 +225,7 @@ export function createDemoMiddleware(opts: CreateDemoMiddlewareOptions) {
       resolvedConfigId = queryConfigId ?? cookieConfigId;
     } else {
       // 'path' and 'both' — for header resolution, both consult query as
-      // a fallback so apps can deep-link via `?id=` even when path drives
+      // a fallback so apps can deep-link via `?theme=` even when path drives
       // the cookie. The distinction between 'path' and 'both' lives in
       // `syncConfigCookie` (cookie write policy), not here.
       resolvedConfigId =
@@ -313,17 +313,17 @@ export function createDemoMiddleware(opts: CreateDemoMiddlewareOptions) {
     if (!hasAuth) {
       // The login path is selected from the URL path's config id only
       // (config-aware login routes like `/r/<id>/login` are path-scoped). A
-      // bare `?id=` on a non-config path should NOT bounce the user into a
+      // bare `?theme=` on a non-config path should NOT bounce the user into a
       // config-aware login route they never visited.
       const loginPath = resolveLoginPath(pathConfigId ?? undefined);
       const url = new URL(loginPath, request.url);
       if (carryReturnTo) {
         // Build returnTo from the original path, preserving non-`id` query
-        // params (so /dashboard?id=brand&foo=bar → returnTo=/dashboard?foo=bar
-        // when configIdSource omits the query, OR /dashboard?id=brand&foo=bar
+        // params (so /dashboard?theme=brand&foo=bar → returnTo=/dashboard?foo=bar
+        // when configIdSource omits the query, OR /dashboard?theme=brand&foo=bar
         // when the id is meaningful).
-        // Per remittance test "B. ?id=brandX -> returnTo=/dashboard?id=brandX",
-        // the `?id=` is preserved when present.
+        // Per remittance test "B. ?theme=brandX -> returnTo=/dashboard?theme=brandX",
+        // the `?theme=` is preserved when present.
         let returnToBase: string;
         if (path === "/") {
           returnToBase = fallbackReturn;
@@ -339,9 +339,9 @@ export function createDemoMiddleware(opts: CreateDemoMiddlewareOptions) {
         const qs = originalParams.toString();
         const returnTo = qs ? `${returnToBase}?${qs}` : returnToBase;
         url.searchParams.set("returnTo", returnTo);
-        if (resolvedConfigId) url.searchParams.set("id", resolvedConfigId);
+        if (resolvedConfigId) url.searchParams.set("theme", resolvedConfigId);
       } else if (resolvedConfigId) {
-        url.searchParams.set("id", resolvedConfigId);
+        url.searchParams.set("theme", resolvedConfigId);
       }
       return syncConfigCookie(NextResponse.redirect(url));
     }

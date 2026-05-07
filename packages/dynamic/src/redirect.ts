@@ -41,7 +41,7 @@ export function buildLoginUrl(
   const safeReturnTo = getSafeRedirectDest(returnTo, baseUrl);
   url.searchParams.set("returnTo", safeReturnTo);
   if (configId && config.routePattern === "config") {
-    url.searchParams.set("id", configId);
+    url.searchParams.set("theme", configId);
   }
   return url.toString();
 }

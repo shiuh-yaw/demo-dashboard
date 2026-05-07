@@ -41,7 +41,7 @@ export function createAuthMiddleware(
 
     const configId =
       middlewareConfig.getConfigIdFromPath?.(path) ??
-      request.nextUrl.searchParams.get("id");
+      request.nextUrl.searchParams.get("theme");
 
     const isLoginRoute =
       path === middlewareConfig.loginPath ||
@@ -78,7 +78,7 @@ export function createAuthMiddleware(
       const safeReturnTo = getSafeRedirectDest(returnTo, request.url);
       loginUrl.searchParams.set("returnTo", safeReturnTo);
       if (configId) {
-        loginUrl.searchParams.set("id", configId);
+        loginUrl.searchParams.set("theme", configId);
       }
       return NextResponse.redirect(loginUrl);
     }

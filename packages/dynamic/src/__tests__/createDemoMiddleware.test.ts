@@ -29,19 +29,19 @@ describe("createDemoMiddleware", () => {
     defaultReturnPath: "/payment-methods",
   };
 
-  it("forwards x-<demoType>-config-id header when ?id= query is set", () => {
+  it("forwards x-<demoType>-config-id header when ?theme= query is set", () => {
     const middleware = createDemoMiddleware(baseOpts);
     const res = middleware(
-      makeRequest("/?id=abc123", { cookies: { dynamic_jwt: "tok" } }),
+      makeRequest("/?theme=abc123", { cookies: { dynamic_jwt: "tok" } }),
     );
     // header is set on the *next* request via the rewrite helpers; check Set-Cookie was emitted
     expect(res.cookies.get("visa_direct_config_id")?.value).toBe("abc123");
   });
 
-  it("clears the config cookie when ?id= is empty", () => {
+  it("clears the config cookie when ?theme= is empty", () => {
     const middleware = createDemoMiddleware(baseOpts);
     const res = middleware(
-      makeRequest("/?id=", {
+      makeRequest("/?theme=", {
         cookies: { dynamic_jwt: "tok", "visa_direct_config_id": "abc" },
       }),
     );
@@ -50,7 +50,7 @@ describe("createDemoMiddleware", () => {
     expect(cookie?.value ?? "").toBe("");
   });
 
-  it("uses cookie value for config id when ?id= is not set", () => {
+  it("uses cookie value for config id when ?theme= is not set", () => {
     const middleware = createDemoMiddleware(baseOpts);
     // No new cookie should be set when reusing the existing one — verifying via headers is done in app code.
     const res = middleware(

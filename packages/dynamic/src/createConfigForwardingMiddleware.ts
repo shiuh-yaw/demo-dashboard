@@ -19,13 +19,13 @@ export interface ConfigForwardingMiddlewareOptions {
 
 /**
  * Build a Next.js middleware that:
- *  1. Resolves the active config id from the request (`?id=<configId>` first,
+ *  1. Resolves the active config id from the request (`?theme=<configId>` first,
  *     then the sticky cookie).
  *  2. Forwards the resolved id as `x-<demoType>-config-id` so server
  *     components in `app/layout.tsx` can fetch the brand config.
  *  3. Sticky-cookies the query value across navigations so the brand
- *     persists without `?id=` in every URL.
- *  4. Empty `?id=` clears the cookie.
+ *     persists without `?theme=` in every URL.
+ *  4. Empty `?theme=` clears the cookie.
  *
  * No auth gating, no redirects — for client-side-auth apps (wallet,
  * checkouts, shop, deposit) where the Dynamic SDK widget handles login.
@@ -40,7 +40,7 @@ export function createConfigForwardingMiddleware(
   const cookieMaxAge = opts.cookieMaxAge ?? DEFAULT_COOKIE_MAX_AGE;
 
   return function middleware(request: NextRequest) {
-    const queryId = request.nextUrl.searchParams.get("id");
+    const queryId = request.nextUrl.searchParams.get("theme");
     const cookieId = request.cookies.get(cookieName)?.value;
     const resolvedId = queryId || cookieId || null;
 
