@@ -13,6 +13,7 @@
     "./client": "./src/client.ts",
     "./auth-cookies": "./src/auth-cookies.ts",
     "./demo-middleware": "./src/createDemoMiddleware.ts",
+    "./config-forwarder": "./src/createConfigForwardingMiddleware.ts",
     "./resolve-credentials": "./src/resolveCredentials.ts",
     "./networks": "./src/networks.ts",
     "./init": "./src/DynamicInit.tsx",

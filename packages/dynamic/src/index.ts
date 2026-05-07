@@ -60,6 +60,10 @@ export {
   type CreateDemoMiddlewareOptions,
 } from "./createDemoMiddleware";
 export {
+  createConfigForwardingMiddleware,
+  type ConfigForwardingMiddlewareOptions,
+} from "./createConfigForwardingMiddleware";
+export {
   setDynamicJwtCookie,
   clearDynamicJwtCookie,
   getJwtMaxAgeSeconds,
