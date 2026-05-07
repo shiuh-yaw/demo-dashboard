@@ -81,7 +81,8 @@ The shape includes Dynamic env id, Redis URL, Fireblocks credentials, and per-pr
 
 ## Deployment
 
-- **Vercel project:** spark26 production project (managed by the spark26 team).
+- **Vercel project:** spark26 production project (`dynamic-xyz/spark26`).
+- **Auto-deploy:** GitHub integration on `main` — every merge that lands a `[spark26]`-titled commit triggers a Production deployment.
 - **Root dir:** `apps/spark26`.
 - **Required env:** managed in Vercel; see local runbooks.
 - **Custom domain:** production domain — managed by spark26 ops.
