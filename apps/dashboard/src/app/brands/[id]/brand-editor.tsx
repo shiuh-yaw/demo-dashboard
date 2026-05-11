@@ -47,7 +47,6 @@ interface DemoConfig {
   iconBg: string;
   iconColor: string;
   baseUrl: string;
-  routePrefix: string;
   configRoute: string; // Dashboard route to edit config
 }
 
@@ -59,7 +58,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
     baseUrl: env.NEXT_PUBLIC_EARN_PROJECT_URL,
-    routePrefix: "e",
     configRoute: "/earns",
   },
   {
@@ -69,7 +67,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
     baseUrl: env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
-    routePrefix: "w",
     configRoute: "/checkouts",
   },
   {
@@ -79,7 +76,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
     baseUrl: env.NEXT_PUBLIC_WALLET_PROJECT_URL,
-    routePrefix: "w",
     configRoute: "/wallets",
   },
   {
@@ -89,7 +85,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
     baseUrl: env.NEXT_PUBLIC_REMITTANCE_PROJECT_URL,
-    routePrefix: "r",
     configRoute: "/remittance",
   },
 ];
@@ -122,15 +117,14 @@ export function BrandEditor({ profile: initialProfile }: BrandEditorProps) {
     logo: profile.brand.logoUrl || "",
   });
 
-  // Get demo URL for a given type
+  // Get demo URL for a given type. All demo apps share the same URL
+  // contract: `<baseUrl>/?theme=<configId>`. The middleware in each app
+  // resolves the brand from the `theme` query (or sticky cookie) and
+  // forwards it as a header to the layout, which fetches and applies it.
   function getDemoUrl(config: DemoConfig): string | null {
     const demoId = profile.demos[config.type];
     if (!demoId) return null;
-    // Wallet uses query param; Earn, Checkouts, Remittance use path
-    if (config.type === "wallet") {
-      return `${config.baseUrl}/?id=${demoId}`;
-    }
-    return `${config.baseUrl}/${config.routePrefix}/${demoId}`;
+    return `${config.baseUrl}/?theme=${demoId}`;
   }
 
   async function handleSave() {

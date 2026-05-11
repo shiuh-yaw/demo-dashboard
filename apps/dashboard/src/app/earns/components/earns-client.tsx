@@ -220,7 +220,7 @@ export function EarnsClient({
                     <Settings className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href={`${EARN_PROJECT_URL}/e/${config.id}`}
+                    href={`${EARN_PROJECT_URL}/?theme=${config.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(event) => event.stopPropagation()}

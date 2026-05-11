@@ -210,7 +210,7 @@ export function RemittanceClient({
                     <Settings className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href={`${REMITTANCE_PROJECT_URL}/r/${config.id}`}
+                    href={`${REMITTANCE_PROJECT_URL}/?theme=${config.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(event) => event.stopPropagation()}

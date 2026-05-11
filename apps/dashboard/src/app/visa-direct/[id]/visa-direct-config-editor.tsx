@@ -44,7 +44,7 @@ export function VisaDirectConfigEditor({
     ...initialConfig.config.theme,
   });
 
-  const demoUrl = `${VISA_DIRECT_PROJECT_URL}/?id=${initialConfig.id}`;
+  const demoUrl = `${VISA_DIRECT_PROJECT_URL}/?theme=${initialConfig.id}`;
 
   async function handleSave() {
     if (!name.trim()) {

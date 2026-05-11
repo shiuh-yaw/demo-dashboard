@@ -210,7 +210,7 @@ export function VisaDirectClient({
                     <Settings className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href={`${VISA_DIRECT_PROJECT_URL}/?id=${config.id}`}
+                    href={`${VISA_DIRECT_PROJECT_URL}/?theme=${config.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(event) => event.stopPropagation()}

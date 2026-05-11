@@ -39,7 +39,7 @@ export function TradeConfigEditor({
     initialConfig.config.branding?.appName ?? "NovaX"
   );
 
-  const demoUrl = `${TRADE_PROJECT_URL}/t/${initialConfig.id}`;
+  const demoUrl = `${TRADE_PROJECT_URL}/?theme=${initialConfig.id}`;
 
   async function handleSave() {
     if (!name.trim()) {

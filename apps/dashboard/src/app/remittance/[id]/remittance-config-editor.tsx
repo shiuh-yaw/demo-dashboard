@@ -44,7 +44,7 @@ export function RemittanceConfigEditor({
     initialConfig.config.branding?.logoUrl ?? ""
   );
 
-  const demoUrl = `${REMITTANCE_PROJECT_URL}/r/${initialConfig.id}`;
+  const demoUrl = `${REMITTANCE_PROJECT_URL}/?theme=${initialConfig.id}`;
 
   async function handleSave() {
     if (!name.trim()) {

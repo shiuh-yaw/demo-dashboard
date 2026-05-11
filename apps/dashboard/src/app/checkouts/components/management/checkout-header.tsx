@@ -103,7 +103,7 @@ export function CheckoutHeader({
             </button>
           )}
           <a
-            href={`${WIDGET_PROJECT_URL}/w/${checkout.id}`}
+            href={`${WIDGET_PROJECT_URL}/?theme=${checkout.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"

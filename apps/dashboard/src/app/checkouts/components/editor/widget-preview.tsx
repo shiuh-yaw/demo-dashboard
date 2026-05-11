@@ -29,7 +29,7 @@ export function WidgetPreview({ config, widgetId }: WidgetPreviewProps) {
   const livePreviewUrl = `${WIDGET_PROJECT_URL}/preview`;
   // Saved widget URL (for "open in new tab")
   const savedWidgetUrl = widgetId
-    ? `${WIDGET_PROJECT_URL}/w/${widgetId}`
+    ? `${WIDGET_PROJECT_URL}/?theme=${widgetId}`
     : null;
 
   // Send config to iframe via postMessage

@@ -62,7 +62,7 @@ export function WalletConfigEditor({
     showPoweredBy: initialConfig.config.branding?.showPoweredBy ?? true,
   });
 
-  const demoUrl = `${WALLET_PROJECT_URL}/?id=${initialConfig.id}`;
+  const demoUrl = `${WALLET_PROJECT_URL}/?theme=${initialConfig.id}`;
 
   async function handleSave() {
     if (!name.trim()) {

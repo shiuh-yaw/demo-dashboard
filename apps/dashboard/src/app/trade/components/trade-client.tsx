@@ -210,7 +210,7 @@ export function TradeClient({
                     <Settings className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href={`${TRADE_PROJECT_URL}/t/${config.id}`}
+                    href={`${TRADE_PROJECT_URL}/?theme=${config.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(event) => event.stopPropagation()}

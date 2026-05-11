@@ -256,7 +256,7 @@ export function CheckoutsClient({
                     <Settings className="w-3.5 h-3.5" />
                   </Link>
                   <a
-                    href={`${WIDGET_PROJECT_URL}/w/${config.id}`}
+                    href={`${WIDGET_PROJECT_URL}/?theme=${config.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(event) => event.stopPropagation()}

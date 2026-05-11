@@ -73,7 +73,7 @@ export function EarnConfigEditor({
     initialConfig.config.layout?.showSidebar ?? false,
   );
 
-  const demoUrl = `${EARN_PROJECT_URL}/e/${initialConfig.id}`;
+  const demoUrl = `${EARN_PROJECT_URL}/?theme=${initialConfig.id}`;
 
   async function handleSave() {
     if (!name.trim()) {
