@@ -2,15 +2,25 @@
  * Pure functions that normalise legacy records into BrandSeed values.
  * Each extractor is total — invalid input returns null + an emitted
  * "skipped" record that the orchestrator surfaces in the report.
+ *
+ * Phase 2-brand-cutover (2026-05-06): the BrandProfile extractor now
+ * pulls the full visual theme + logo discriminator + linked demo ids
+ * out of the aggregate. Orphan extractors (earn / wallet / checkout /
+ * remittance) stay narrow because the source records don't have the
+ * full BrandTheme; their seeds set the new fields to null and the
+ * service layer fills them with column defaults.
  */
 
 import type {
   BrandProfile,
+  BrandTheme,
+  BorderRadiusSize,
   StoredEarnConfig,
   StoredWalletConfig,
   StoredCheckoutConfig,
   StoredRemittanceConfig,
 } from "@/lib/types/dashboard";
+import type { BrandBorderRadius, BrandLogoKind } from "@/lib/services/types";
 import { isHexColor, normaliseHex } from "./hash";
 import type { BrandSeed, BrandSource } from "./types";
 
@@ -20,16 +30,70 @@ export interface ExtractResult {
   skipReason?: string;
 }
 
-function buildSeed(args: {
+const BORDER_RADIUS_VALUES: ReadonlySet<BrandBorderRadius> = new Set([
+  "xs",
+  "sm",
+  "md",
+  "lg",
+]);
+
+function asBorderRadius(value: unknown): BrandBorderRadius | null {
+  if (typeof value !== "string") return null;
+  return BORDER_RADIUS_VALUES.has(value as BrandBorderRadius)
+    ? (value as BrandBorderRadius)
+    : null;
+}
+
+function asLogo(value: unknown): BrandLogoKind {
+  return value === "custom" ? "custom" : "dynamic";
+}
+
+/**
+ * Extract a hex colour if the input parses; otherwise return null.
+ * Distinct from `normaliseHex` (which assumes the caller has already
+ * checked) so extractors can tolerate junk in legacy records.
+ */
+function asHex(value: unknown): string | null {
+  return isHexColor(value) ? normaliseHex(value as string) : null;
+}
+
+/**
+ * `gradientFrom` / `gradientTo` accept rgba() strings as well as hex —
+ * the legacy aggregate stores `rgba(218, 255, 255, 0.15)` for some
+ * brands. Pass non-empty strings through verbatim; null otherwise.
+ */
+function asColourLike(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+interface BuildSeedArgs {
   source: BrandSource;
   ownerId: string | undefined;
   name: string;
   description?: string | null;
+  /** Required hex; the seed is skipped if absent or unparseable. */
   primaryColor: unknown;
-  accentColor?: unknown;
-  secondaryColor?: unknown;
+  /** Optional theme overlay for richer extraction (BrandProfile only). */
+  theme?: Partial<Record<keyof BrandTheme, unknown>>;
+  /** Optional theme-radius (legacy may also carry it on BrandSettings). */
+  borderRadius?: unknown;
+  logo?: unknown;
   logoUrl?: string | null;
-}): ExtractResult {
+  companyUrl?: string | null;
+  /** Mirror the BrandProfile.demos linkage onto the seed. */
+  demoEarnId?: string | null;
+  demoCheckoutsId?: string | null;
+  demoWalletId?: string | null;
+  demoRemittanceId?: string | null;
+  /** Convenience accessor for accent (used when no theme.accentColor). */
+  accentColorFallback?: unknown;
+  /** Used by the legacy convenience field `secondaryColor` heuristic. */
+  secondaryColorFallback?: unknown;
+}
+
+function buildSeed(args: BuildSeedArgs): ExtractResult {
   if (!args.ownerId) {
     return { seed: null, skipReason: "missing ownerId" };
   }
@@ -39,44 +103,66 @@ function buildSeed(args: {
       skipReason: `invalid primaryColor (${typeof args.primaryColor})`,
     };
   }
-  return {
-    seed: {
-      source: args.source,
-      ownerId: args.ownerId,
-      name: args.name,
-      description: args.description ?? null,
-      primaryColor: normaliseHex(args.primaryColor),
-      accentColor: isHexColor(args.accentColor)
-        ? normaliseHex(args.accentColor as string)
-        : null,
-      secondaryColor: isHexColor(args.secondaryColor)
-        ? normaliseHex(args.secondaryColor as string)
-        : null,
-      logoUrl: args.logoUrl ?? null,
-    },
+  const theme = args.theme ?? {};
+  const seed: BrandSeed = {
+    source: args.source,
+    ownerId: args.ownerId,
+    name: args.name,
+    description: args.description ?? null,
+    companyUrl: args.companyUrl ?? null,
+    logo: asLogo(args.logo),
+    logoUrl: args.logoUrl ?? null,
+    borderRadius:
+      asBorderRadius(theme.borderRadius) ?? asBorderRadius(args.borderRadius),
+    primaryColor: normaliseHex(args.primaryColor as string),
+    primaryHoverColor: asHex(theme.primaryHoverColor),
+    accentColor: asHex(theme.accentColor) ?? asHex(args.accentColorFallback),
+    secondaryColor: asHex(args.secondaryColorFallback),
+    pageBackground: asHex(theme.pageBackground),
+    background: asHex(theme.background),
+    foreground: asHex(theme.foreground),
+    mutedTextColor: asHex(theme.mutedTextColor),
+    borderColor: asHex(theme.borderColor),
+    rowBackground: asHex(theme.rowBackground),
+    rowHoverBackground: asHex(theme.rowHoverBackground),
+    gradientFrom: asColourLike(theme.gradientFrom),
+    gradientTo: asColourLike(theme.gradientTo),
+    demoEarnId: args.demoEarnId ?? null,
+    demoCheckoutsId: args.demoCheckoutsId ?? null,
+    demoWalletId: args.demoWalletId ?? null,
+    demoRemittanceId: args.demoRemittanceId ?? null,
   };
+  return { seed };
 }
 
 export function extractFromBrandProfile(
   profile: BrandProfile,
 ): ExtractResult {
-  const themePrimary = profile.brand.theme?.primaryColor;
-  const settingsPrimary = profile.brand.primaryColor;
+  const settings = profile.brand;
+  const theme: Partial<BrandTheme> = settings.theme ?? {};
   // Theme overlay wins when present, else convenience accessor.
-  const primary = themePrimary ?? settingsPrimary;
-  const accent = profile.brand.theme?.accentColor ?? profile.brand.accentColor;
+  const primary = theme.primaryColor ?? settings.primaryColor;
+  const accentFallback = settings.accentColor;
   const logoUrl =
-    profile.brand.logo === "custom" && profile.brand.logoUrl
-      ? profile.brand.logoUrl
-      : null;
+    settings.logo === "custom" && settings.logoUrl ? settings.logoUrl : null;
+  const radius: BorderRadiusSize | undefined =
+    theme.borderRadius ?? settings.borderRadius;
   return buildSeed({
     source: { kind: "brand-profile", id: profile.id },
     ownerId: profile.ownerId,
     name: profile.name,
     description: null,
     primaryColor: primary,
-    accentColor: accent,
+    theme: theme as Partial<Record<keyof BrandTheme, unknown>>,
+    borderRadius: radius,
+    logo: settings.logo,
     logoUrl,
+    companyUrl: profile.companyUrl ?? null,
+    demoEarnId: profile.demos.earn ?? null,
+    demoCheckoutsId: profile.demos.checkouts ?? null,
+    demoWalletId: profile.demos.wallet ?? null,
+    demoRemittanceId: profile.demos.remittance ?? null,
+    accentColorFallback: accentFallback,
   });
 }
 
@@ -90,7 +176,8 @@ export function extractFromEarn(config: StoredEarnConfig): ExtractResult {
     name: config.name,
     description: config.description ?? null,
     primaryColor: config.config.theme?.primaryColor,
-    accentColor: config.config.theme?.accentColor,
+    accentColorFallback: config.config.theme?.accentColor,
+    logo: branding?.logo,
     logoUrl,
   });
 }
@@ -106,7 +193,10 @@ export function extractFromWallet(
     name: config.name,
     description: config.description ?? null,
     primaryColor: config.config.theme?.primaryColor,
-    accentColor: config.config.theme?.accentColor,
+    accentColorFallback: config.config.theme?.accentColor,
+    // Wallet stores the URL directly in `branding.logo`; treat any
+    // non-empty value as a custom logo.
+    logo: logoUrl ? "custom" : "dynamic",
     logoUrl,
   });
 }
@@ -127,7 +217,8 @@ export function extractFromCheckout(
     name: config.name,
     description: config.description ?? null,
     primaryColor: theme?.primaryColor,
-    accentColor: theme?.accentColor,
+    accentColorFallback: theme?.accentColor,
+    logo: branding?.logo ? "custom" : "dynamic",
     logoUrl: branding?.logo ?? null,
   });
 }
@@ -141,7 +232,8 @@ export function extractFromRemittance(
     name: config.name,
     description: config.description ?? null,
     primaryColor: config.config.theme?.primaryColor,
-    accentColor: config.config.theme?.secondaryColor,
+    accentColorFallback: config.config.theme?.secondaryColor,
+    logo: config.config.branding?.logoUrl ? "custom" : "dynamic",
     logoUrl: config.config.branding?.logoUrl ?? null,
   });
 }

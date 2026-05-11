@@ -7,13 +7,25 @@
  * Authenticates via Dynamic JWT cookie.
  *
  * Brand profiles store unified branding settings that are applied
- * across all demo types (Earn, Checkouts, Wallet).
+ * across all demo types (Earn, Checkouts, Wallet, Remittance).
+ *
+ * Phase 2-brand-cutover (2026-05-06): brand-row persistence routes
+ * through `services.brands.*` (Postgres when USE_POSTGRES_BRANDS=true,
+ * Redis otherwise). The demo-config side-effects below still write to
+ * Redis directly because Earn / Wallet / Checkout / Remittance configs
+ * haven't migrated yet (they land in PR 2-others).
  */
 
 import { revalidatePath } from "next/cache";
-import { createId } from "@paralleldrive/cuid2";
 import { getRedis, REDIS_KEYS } from "@/lib/redis";
 import { getCurrentUser } from "@/lib/auth/session";
+import { brandService } from "@/lib/services";
+import {
+  brandToProfile,
+  createRequestToInput,
+  demosToUpdateInput,
+  updateRequestToInput,
+} from "@/lib/services/brand-mapper";
 import type {
   BrandProfile,
   BrandSettings,
@@ -32,6 +44,7 @@ import {
   DEFAULT_REMITTANCE_CONFIG,
 } from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG } from "@/lib/widget-config";
+import { createId } from "@paralleldrive/cuid2";
 
 type ActionResult<T> =
   | { success: true; data: T }
@@ -475,43 +488,37 @@ export async function createBrandProfile(
   }
 
   try {
-    const redis = getRedis();
-    const id = createId();
-    const now = new Date().toISOString();
+    // 1) Create the canonical Brand row first so the id is stable.
+    const created = await brandService.create(
+      createRequestToInput(user.sub, request),
+    );
 
-    // Merge brand settings with defaults
-    const brand: BrandSettings = {
+    // 2) Build the BrandSettings the demo-config orchestration expects.
+    const merged: BrandSettings = {
       ...DEFAULT_BRAND_SETTINGS,
       ...request.brand,
     };
 
-    // Create demo configs for this brand
+    // 3) Spin up the demo configs in Redis (unchanged orchestration).
     const demos = await createBrandDemoConfigs(
-      id,
-      request.name,
-      brand,
+      created.id,
+      created.name,
+      merged,
       user.sub,
       request.generateDemos,
     );
 
-    const profile: BrandProfile = {
-      id,
-      name: request.name || "Untitled Brand",
-      companyUrl: request.companyUrl,
-      brand,
-      demos,
-      ownerId: user.sub,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.brandProfile(id), profile);
-    await redis.sadd(REDIS_KEYS.brandProfileList, id);
+    // 4) Persist the demo-config ids back onto the brand row so the
+    //    BrandProfile aggregate stays self-contained.
+    const finalRow = await brandService.update(
+      created.id,
+      demosToUpdateInput(demos),
+    );
 
     revalidatePath("/");
     revalidatePath("/brands");
 
-    return { success: true, data: profile };
+    return { success: true, data: brandToProfile(finalRow) };
   } catch (err) {
     console.error("Failed to create brand profile:", err);
     return { success: false, error: "Failed to create brand profile" };
@@ -530,19 +537,14 @@ export async function getBrandProfile(
   }
 
   try {
-    const redis = getRedis();
-    const profile = await redis.get<BrandProfile>(REDIS_KEYS.brandProfile(id));
-
-    if (!profile) {
+    const brand = await brandService.get(id);
+    if (!brand) {
       return { success: false, error: "Brand profile not found" };
     }
-
-    // Check ownership (allow orphaned profiles)
-    if (profile.ownerId && profile.ownerId !== user.sub) {
+    if (brand.ownerId && brand.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-
-    return { success: true, data: profile };
+    return { success: true, data: brandToProfile(brand) };
   } catch (err) {
     console.error("Failed to get brand profile:", err);
     return { success: false, error: "Failed to get brand profile" };
@@ -562,43 +564,65 @@ export async function updateBrandProfile(
   }
 
   try {
-    const redis = getRedis();
-    const existing = await redis.get<BrandProfile>(REDIS_KEYS.brandProfile(id));
-
+    const existing = await brandService.get(id);
     if (!existing) {
       return { success: false, error: "Brand profile not found" };
     }
-
-    // Check ownership (allow orphaned profiles to be claimed)
     if (existing.ownerId && existing.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
 
-    // Merge brand settings
-    const brand: BrandSettings = {
-      ...existing.brand,
+    // Persist the brand-row changes first so demo-config updates see
+    // the new theme.
+    const data = updateRequestToInput(request);
+    let updated = await brandService.update(id, data);
+
+    // Claim orphan rows by patching ownerId. UpdateBrandInput
+    // intentionally doesn't expose ownerId — only this code path needs
+    // to mutate it, so we route through upsertWithId which overwrites
+    // every column. We project from the fresh `updated` row to keep
+    // every field consistent.
+    if (!existing.ownerId && user.sub) {
+      updated = await brandService.upsertWithId(updated.id, {
+        ownerId: user.sub,
+        name: updated.name,
+        description: updated.description,
+        companyUrl: updated.companyUrl,
+        logo: updated.logo,
+        logoUrl: updated.logoUrl,
+        borderRadius: updated.borderRadius,
+        primaryColor: updated.primaryColor,
+        primaryHoverColor: updated.primaryHoverColor,
+        secondaryColor: updated.secondaryColor,
+        accentColor: updated.accentColor,
+        pageBackground: updated.pageBackground,
+        background: updated.background,
+        foreground: updated.foreground,
+        mutedTextColor: updated.mutedTextColor,
+        borderColor: updated.borderColor,
+        rowBackground: updated.rowBackground,
+        rowHoverBackground: updated.rowHoverBackground,
+        gradientFrom: updated.gradientFrom,
+        gradientTo: updated.gradientTo,
+        demoEarnId: updated.demoEarnId,
+        demoCheckoutsId: updated.demoCheckoutsId,
+        demoWalletId: updated.demoWalletId,
+        demoRemittanceId: updated.demoRemittanceId,
+      });
+    }
+
+    // Update demo configs using the merged settings.
+    const merged: BrandSettings = {
+      ...DEFAULT_BRAND_SETTINGS,
       ...request.brand,
     };
-
-    const updated: BrandProfile = {
-      ...existing,
-      name: request.name ?? existing.name,
-      companyUrl: request.companyUrl ?? existing.companyUrl,
-      brand,
-      ownerId: existing.ownerId || user.sub, // Claim orphaned profiles
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Update linked demo configs with new brand settings
-    await updateBrandDemoConfigs(updated, brand);
-
-    await redis.set(REDIS_KEYS.brandProfile(id), updated);
+    await updateBrandDemoConfigs(brandToProfile(updated), merged);
 
     revalidatePath("/");
     revalidatePath("/brands");
     revalidatePath(`/brands/${id}`);
 
-    return { success: true, data: updated };
+    return { success: true, data: brandToProfile(updated) };
   } catch (err) {
     console.error("Failed to update brand profile:", err);
     return { success: false, error: "Failed to update brand profile" };
@@ -617,24 +641,21 @@ export async function deleteBrandProfile(
   }
 
   try {
-    const redis = getRedis();
-    const profile = await redis.get<BrandProfile>(REDIS_KEYS.brandProfile(id));
-
-    if (!profile) {
+    const brand = await brandService.get(id);
+    if (!brand) {
       return { success: false, error: "Brand profile not found" };
     }
-
-    // Check ownership
-    if (profile.ownerId && profile.ownerId !== user.sub) {
+    if (brand.ownerId && brand.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
 
-    // Delete associated demo configs
-    await deleteBrandDemoConfigs(profile.demos);
-
-    // Delete the profile
-    await redis.del(REDIS_KEYS.brandProfile(id));
-    await redis.srem(REDIS_KEYS.brandProfileList, id);
+    await deleteBrandDemoConfigs({
+      earn: brand.demoEarnId ?? undefined,
+      checkouts: brand.demoCheckoutsId ?? undefined,
+      wallet: brand.demoWalletId ?? undefined,
+      remittance: brand.demoRemittanceId ?? undefined,
+    });
+    await brandService.delete(id);
 
     revalidatePath("/");
     revalidatePath("/brands");
@@ -658,44 +679,20 @@ export async function getAllBrandProfiles(): Promise<{
   const user = await getCurrentUser();
   if (!user) return { profiles: [], orphaned: [] };
 
-  const redis = getRedis();
-
-  // Get all profile IDs from the list
-  const profileIds = await redis.smembers(REDIS_KEYS.brandProfileList);
-
-  if (!profileIds || profileIds.length === 0) {
-    return { profiles: [], orphaned: [] };
-  }
-
-  // Fetch all profiles
-  const fetchedProfiles = await Promise.all(
-    profileIds.map(async (id) => {
-      const profile = await redis.get<BrandProfile>(
-        REDIS_KEYS.brandProfile(id),
-      );
-      return profile;
-    }),
-  );
-
-  // Filter out nulls
-  const validProfiles = fetchedProfiles.filter(
-    (p): p is BrandProfile => p !== null,
-  );
-
-  // Separate user's profiles and orphaned profiles
-  const userProfiles = user
-    ? validProfiles.filter((p) => p.ownerId === user.sub)
-    : [];
-  const orphanedProfiles = validProfiles.filter((p) => !p.ownerId);
-
-  // Sort both lists by updatedAt descending
+  const all = await brandService.list();
   const sortByUpdated = (a: BrandProfile, b: BrandProfile) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 
-  return {
-    profiles: userProfiles.sort(sortByUpdated),
-    orphaned: orphanedProfiles.sort(sortByUpdated),
-  };
+  const userProfiles = all
+    .filter((b) => b.ownerId === user.sub)
+    .map(brandToProfile)
+    .sort(sortByUpdated);
+  const orphanedProfiles = all
+    .filter((b) => !b.ownerId)
+    .map(brandToProfile)
+    .sort(sortByUpdated);
+
+  return { profiles: userProfiles, orphaned: orphanedProfiles };
 }
 
 /**
@@ -706,9 +703,8 @@ export async function getBrandProfilePublic(
   id: string,
 ): Promise<BrandProfile | null> {
   try {
-    const redis = getRedis();
-    const profile = await redis.get<BrandProfile>(REDIS_KEYS.brandProfile(id));
-    return profile;
+    const brand = await brandService.get(id);
+    return brand ? brandToProfile(brand) : null;
   } catch (err) {
     console.error("Failed to get brand profile:", err);
     return null;
@@ -728,43 +724,33 @@ export async function deleteBrandDemo(
   }
 
   try {
-    const redis = getRedis();
-    const profile = await redis.get<BrandProfile>(REDIS_KEYS.brandProfile(id));
-
-    if (!profile) {
+    const brand = await brandService.get(id);
+    if (!brand) {
       return { success: false, error: "Brand profile not found" };
     }
-
-    // Check ownership
-    if (profile.ownerId && profile.ownerId !== user.sub) {
+    if (brand.ownerId && brand.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
 
-    const demoId = profile.demos[demoType];
+    const demoColumn = ({
+      earn: "demoEarnId",
+      checkouts: "demoCheckoutsId",
+      wallet: "demoWalletId",
+      remittance: "demoRemittanceId",
+    } as const)[demoType];
+    const demoId = brand[demoColumn];
     if (!demoId) {
       return { success: false, error: `${demoType} demo not found` };
     }
 
-    // Delete the demo config
     await deleteBrandDemoConfigs({ [demoType]: demoId });
-
-    // Update the profile
-    const updatedDemos = { ...profile.demos };
-    delete updatedDemos[demoType];
-
-    const updated: BrandProfile = {
-      ...profile,
-      demos: updatedDemos,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await redis.set(REDIS_KEYS.brandProfile(id), updated);
+    const updated = await brandService.update(id, { [demoColumn]: null });
 
     revalidatePath("/");
     revalidatePath("/brands");
     revalidatePath(`/brands/${id}`);
 
-    return { success: true, data: updated };
+    return { success: true, data: brandToProfile(updated) };
   } catch (err) {
     console.error("Failed to delete demo:", err);
     return { success: false, error: "Failed to delete demo" };
@@ -790,21 +776,15 @@ export async function createMissingDemos(
   }
 
   try {
-    const redis = getRedis();
-    const profile = await redis.get<BrandProfile>(REDIS_KEYS.brandProfile(id));
-
-    if (!profile) {
+    const brand = await brandService.get(id);
+    if (!brand) {
       return { success: false, error: "Brand profile not found" };
     }
-
-    // Check ownership
-    if (profile.ownerId && profile.ownerId !== user.sub) {
+    if (brand.ownerId && brand.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
 
-    const now = new Date().toISOString();
-
-    // Only create demos that don't exist and are requested
+    const profile = brandToProfile(brand);
     const createOptions = {
       earn: demoTypes.earn && !profile.demos.earn,
       checkouts: demoTypes.checkouts && !profile.demos.checkouts,
@@ -812,7 +792,6 @@ export async function createMissingDemos(
       remittance: demoTypes.remittance && !profile.demos.remittance,
     };
 
-    // Create the missing demos
     const createdDemos = await createBrandDemoConfigs(
       profile.id,
       profile.name,
@@ -821,25 +800,17 @@ export async function createMissingDemos(
       createOptions,
     );
 
-    // Merge with existing demos
-    const updatedDemos = {
-      ...profile.demos,
-      ...createdDemos,
-    };
-
-    const updated: BrandProfile = {
-      ...profile,
-      demos: updatedDemos,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.brandProfile(id), updated);
+    const merged = { ...profile.demos, ...createdDemos };
+    const updated = await brandService.update(
+      id,
+      demosToUpdateInput(merged),
+    );
 
     revalidatePath("/");
     revalidatePath("/brands");
     revalidatePath(`/brands/${id}`);
 
-    return { success: true, data: updated };
+    return { success: true, data: brandToProfile(updated) };
   } catch (err) {
     console.error("Failed to create missing demos:", err);
     return { success: false, error: "Failed to create missing demos" };

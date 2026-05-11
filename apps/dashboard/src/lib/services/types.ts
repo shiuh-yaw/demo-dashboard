@@ -232,18 +232,53 @@ export interface CheckoutService {
 // BrandService is the migration target for the Postgres flip.
 
 /**
+ * Border radius token. Mirrors `BorderRadiusSize` in
+ * `lib/types/dashboard.ts` — kept service-local so the service module
+ * stays standalone.
+ */
+export type BrandBorderRadius = "xs" | "sm" | "md" | "lg";
+
+/**
+ * Logo discriminator. "dynamic" renders the default Dynamic mark;
+ * "custom" renders `logoUrl`.
+ */
+export type BrandLogoKind = "custom" | "dynamic";
+
+/**
  * Brand row as it lives in Postgres (mirrors the Prisma `Brand` model).
  * The dashboard service layer surfaces this shape regardless of backend.
+ *
+ * Phase 2-brand-cutover (2026-05-06): expanded to carry every field the
+ * legacy `BrandProfile` aggregate carried. The colour fields used to
+ * live in a nested `BrandTheme` object on the Redis-only aggregate;
+ * they now live flat on the row in both backends.
  */
 export interface Brand {
   id: string;
   ownerId: string;
   name: string;
   description: string | null;
+  companyUrl: string | null;
+  logo: BrandLogoKind;
+  logoUrl: string | null;
+  borderRadius: BrandBorderRadius | null;
   primaryColor: string;
+  primaryHoverColor: string | null;
   secondaryColor: string | null;
   accentColor: string | null;
-  logoUrl: string | null;
+  pageBackground: string | null;
+  background: string | null;
+  foreground: string | null;
+  mutedTextColor: string | null;
+  borderColor: string | null;
+  rowBackground: string | null;
+  rowHoverBackground: string | null;
+  gradientFrom: string | null;
+  gradientTo: string | null;
+  demoEarnId: string | null;
+  demoCheckoutsId: string | null;
+  demoWalletId: string | null;
+  demoRemittanceId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -252,19 +287,54 @@ export interface CreateBrandInput {
   ownerId: string;
   name: string;
   description?: string | null;
+  companyUrl?: string | null;
+  /** Defaults to "dynamic" if omitted. */
+  logo?: BrandLogoKind;
+  logoUrl?: string | null;
+  borderRadius?: BrandBorderRadius | null;
   primaryColor: string;
+  primaryHoverColor?: string | null;
   secondaryColor?: string | null;
   accentColor?: string | null;
-  logoUrl?: string | null;
+  pageBackground?: string | null;
+  background?: string | null;
+  foreground?: string | null;
+  mutedTextColor?: string | null;
+  borderColor?: string | null;
+  rowBackground?: string | null;
+  rowHoverBackground?: string | null;
+  gradientFrom?: string | null;
+  gradientTo?: string | null;
+  demoEarnId?: string | null;
+  demoCheckoutsId?: string | null;
+  demoWalletId?: string | null;
+  demoRemittanceId?: string | null;
 }
 
 export interface UpdateBrandInput {
   name?: string;
   description?: string | null;
+  companyUrl?: string | null;
+  logo?: BrandLogoKind;
+  logoUrl?: string | null;
+  borderRadius?: BrandBorderRadius | null;
   primaryColor?: string;
+  primaryHoverColor?: string | null;
   secondaryColor?: string | null;
   accentColor?: string | null;
-  logoUrl?: string | null;
+  pageBackground?: string | null;
+  background?: string | null;
+  foreground?: string | null;
+  mutedTextColor?: string | null;
+  borderColor?: string | null;
+  rowBackground?: string | null;
+  rowHoverBackground?: string | null;
+  gradientFrom?: string | null;
+  gradientTo?: string | null;
+  demoEarnId?: string | null;
+  demoCheckoutsId?: string | null;
+  demoWalletId?: string | null;
+  demoRemittanceId?: string | null;
 }
 
 export interface BrandListOptions {

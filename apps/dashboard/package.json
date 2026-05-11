@@ -9,8 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "backfill:brands": "tsx scripts/backfill-brands/cli.ts",
-    "backfill:remittance": "tsx scripts/backfill-remittance/cli.ts"
+    "backfill:brands": "tsx --env-file=.env.local scripts/backfill-brands/cli.ts",
+    "backfill:remittance": "tsx --env-file=.env.local scripts/backfill-remittance/cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.71.2",

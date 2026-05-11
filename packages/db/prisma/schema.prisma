@@ -34,21 +34,51 @@ datasource db {
 //                DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig.
 
 /// First-class Brand record. Owns shared theme + logo metadata that demo
-/// configs (remittance, earn, etc.) will reference via FK in subsequent PRs.
-/// `id` is application-generated (cuid) so it stays stable across backfill
-/// and matches the existing service-layer convention.
+/// configs (remittance, earn, etc.) reference via FK. `id` is application-
+/// generated (cuid) so it stays stable across backfill and matches the
+/// existing service-layer convention.
+///
+/// Phase 2-brand-cutover (2026-05-06): expanded to carry every field the
+/// legacy `BrandProfile` aggregate (Redis-only, in
+/// `apps/dashboard/src/lib/actions/brands.ts`) carried. The actions
+/// surface still returns `BrandProfile` aggregates; this row is the
+/// canonical persistence backing them when `USE_POSTGRES_BRANDS=true`.
 model Brand {
-  id                String             @id @default(cuid())
-  ownerId           String
-  name              String
-  description       String?
-  primaryColor      String
-  secondaryColor    String?
-  accentColor       String?
-  logoUrl           String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  remittanceConfigs RemittanceConfig[]
+  id                  String             @id @default(cuid())
+  ownerId             String
+  name                String
+  description         String?
+  companyUrl          String?
+  /// "custom" or "dynamic". Discriminator that decides whether `logoUrl`
+  /// renders. Validated at the service layer.
+  logo                String             @default("dynamic")
+  logoUrl             String?
+  /// Border radius token: "xs" | "sm" | "md" | "lg". Validated at the
+  /// service layer; column stays text for forward compat.
+  borderRadius        String?
+  primaryColor        String
+  primaryHoverColor   String?
+  secondaryColor      String?
+  accentColor         String?
+  pageBackground      String?
+  background          String?
+  foreground          String?
+  mutedTextColor      String?
+  borderColor         String?
+  rowBackground       String?
+  rowHoverBackground  String?
+  gradientFrom        String?
+  gradientTo          String?
+  /// Linked demo-config ids (still Redis-resident until per-demo-type
+  /// migrations land in PR 2-others). Mirrored on the row so the
+  /// canonical Brand record is self-contained.
+  demoEarnId          String?
+  demoCheckoutsId     String?
+  demoWalletId        String?
+  demoRemittanceId    String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  remittanceConfigs   RemittanceConfig[]
 
   @@index([ownerId])
 }

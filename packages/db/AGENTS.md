@@ -49,9 +49,11 @@ fetch from that endpoint instead.
 
 ### Models at a glance
 
-- `Brand` — first-class brand record (PR 2-brands Part A). Indexed on
-  `ownerId`. Service: `apps/dashboard/src/lib/services/postgres/brands.ts`,
-  flag `USE_POSTGRES_BRANDS`.
+- `Brand` — first-class brand record (PR 2-brands Part A; cutover PR
+  added full visual theme + logo discriminator + demo-config ids;
+  legacy `BrandProfile` aggregate is now a thin wrapper). Service:
+  `apps/dashboard/src/lib/services/postgres/brands.ts`, flag
+  `USE_POSTGRES_BRANDS`.
 - `RemittanceConfig` — first-class per-instance config for the Remittance
   demo (PR 2-remittance). FK `brandId` → `Brand`. Indexed on `ownerId`,
   `brandId`. Service:
@@ -139,11 +141,9 @@ export async function listBrandsForOwner(ownerId: string) {
   (`backfill:brands`); remittance backfill in PR 2-remittance
   (`backfill:remittance`). Both idempotent — deterministic Brand id
   from `(ownerId, primaryColor, logoUrl)` and preserved legacy ids.
-- Transaction backfill: PR 2-transactions **skips** the backfill — the
-  legacy LI.FI-checkout-bound `Transaction` shape (Redis, with `txHash`,
-  etc.) is a different model. New txs write to Postgres only when
-  `USE_POSTGRES_TRANSACTIONS=true`.
-- Row-level security is enabled on every Phase-2 table at the migration
-  level (see memory `project_postgres_rls_pattern`). Prisma connects as
-  superuser and bypasses RLS; service-layer ownership checks are the
-  trust boundary. RLS-on hardens against future anon-key drift.
+- Transaction backfill: PR 2-transactions **skips** it — legacy LI.FI
+  `Transaction` shape (Redis) is a different model. New txs write to
+  Postgres only when `USE_POSTGRES_TRANSACTIONS=true`.
+- RLS is enabled on every Phase-2 table at the migration level.
+  Prisma connects as superuser and bypasses it; service-layer
+  ownership checks remain the trust boundary.

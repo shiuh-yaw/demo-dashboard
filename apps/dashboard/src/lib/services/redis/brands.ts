@@ -3,8 +3,10 @@
  *
  * Phase 2-brands parity baseline. Stored under a separate keyspace
  * (`brand-v2`) from the legacy `BrandProfile` aggregate in
- * `lib/actions/brands.ts` — they're different shapes and live concurrently
- * until the legacy aggregate is retired.
+ * `lib/actions/brands.ts`. After Phase 2-brand-cutover (2026-05-06)
+ * the legacy aggregate is a thin wrapper over this service when
+ * `USE_POSTGRES_BRANDS` is false; both backends carry the same row
+ * shape.
  *
  * The Postgres equivalent (`../postgres/brands.ts`) implements the same
  * BrandService contract; both pass the parity test suite at
@@ -15,7 +17,9 @@ import { createId } from "@paralleldrive/cuid2";
 import { getRedis, REDIS_KEYS, type RedisClient } from "@/lib/redis";
 import type {
   Brand,
+  BrandBorderRadius,
   BrandListOptions,
+  BrandLogoKind,
   BrandService,
   CreateBrandInput,
   UpdateBrandInput,
@@ -31,19 +35,72 @@ interface StoredBrand {
   ownerId: string;
   name: string;
   description: string | null;
+  companyUrl: string | null;
+  logo: BrandLogoKind;
+  logoUrl: string | null;
+  borderRadius: BrandBorderRadius | null;
   primaryColor: string;
+  primaryHoverColor: string | null;
   secondaryColor: string | null;
   accentColor: string | null;
-  logoUrl: string | null;
+  pageBackground: string | null;
+  background: string | null;
+  foreground: string | null;
+  mutedTextColor: string | null;
+  borderColor: string | null;
+  rowBackground: string | null;
+  rowHoverBackground: string | null;
+  gradientFrom: string | null;
+  gradientTo: string | null;
+  demoEarnId: string | null;
+  demoCheckoutsId: string | null;
+  demoWalletId: string | null;
+  demoRemittanceId: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-function toBrand(stored: StoredBrand): Brand {
+function hydrate(stored: StoredBrand): Brand {
   return {
     ...stored,
     createdAt: new Date(stored.createdAt),
     updatedAt: new Date(stored.updatedAt),
+  };
+}
+
+/**
+ * Build a fully-defaulted `StoredBrand` (minus timestamps + id) from a
+ * `CreateBrandInput`. Mirrors `fromCreateInput` in the Postgres impl so
+ * both backends serialise the same nulls when callers omit fields.
+ */
+function fromCreateInput(
+  input: CreateBrandInput,
+): Omit<StoredBrand, "id" | "createdAt" | "updatedAt"> {
+  return {
+    ownerId: input.ownerId,
+    name: input.name,
+    description: input.description ?? null,
+    companyUrl: input.companyUrl ?? null,
+    logo: input.logo ?? "dynamic",
+    logoUrl: input.logoUrl ?? null,
+    borderRadius: input.borderRadius ?? null,
+    primaryColor: input.primaryColor,
+    primaryHoverColor: input.primaryHoverColor ?? null,
+    secondaryColor: input.secondaryColor ?? null,
+    accentColor: input.accentColor ?? null,
+    pageBackground: input.pageBackground ?? null,
+    background: input.background ?? null,
+    foreground: input.foreground ?? null,
+    mutedTextColor: input.mutedTextColor ?? null,
+    borderColor: input.borderColor ?? null,
+    rowBackground: input.rowBackground ?? null,
+    rowHoverBackground: input.rowHoverBackground ?? null,
+    gradientFrom: input.gradientFrom ?? null,
+    gradientTo: input.gradientTo ?? null,
+    demoEarnId: input.demoEarnId ?? null,
+    demoCheckoutsId: input.demoCheckoutsId ?? null,
+    demoWalletId: input.demoWalletId ?? null,
+    demoRemittanceId: input.demoRemittanceId ?? null,
   };
 }
 
@@ -59,26 +116,20 @@ export class RedisBrandService implements BrandService {
     const now = new Date().toISOString();
     const stored: StoredBrand = {
       id,
-      ownerId: input.ownerId,
-      name: input.name,
-      description: input.description ?? null,
-      primaryColor: input.primaryColor,
-      secondaryColor: input.secondaryColor ?? null,
-      accentColor: input.accentColor ?? null,
-      logoUrl: input.logoUrl ?? null,
+      ...fromCreateInput(input),
       createdAt: now,
       updatedAt: now,
     };
     await this.redis.set(REDIS_KEYS.brandRecord(id), stored);
     await this.redis.sadd(REDIS_KEYS.brandRecordList, id);
-    return toBrand(stored);
+    return hydrate(stored);
   }
 
   async get(id: string): Promise<Brand | null> {
     const stored = await this.redis.get<StoredBrand>(
       REDIS_KEYS.brandRecord(id),
     );
-    return stored ? toBrand(stored) : null;
+    return stored ? hydrate(stored) : null;
   }
 
   async list(options: BrandListOptions = {}): Promise<Brand[]> {
@@ -98,7 +149,7 @@ export class RedisBrandService implements BrandService {
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
-    return rows.map(toBrand);
+    return rows.map(hydrate);
   }
 
   async update(id: string, input: UpdateBrandInput): Promise<Brand> {
@@ -116,7 +167,7 @@ export class RedisBrandService implements BrandService {
       updatedAt: new Date().toISOString(),
     } as StoredBrand;
     await this.redis.set(REDIS_KEYS.brandRecord(id), updated);
-    return toBrand(updated);
+    return hydrate(updated);
   }
 
   async delete(id: string): Promise<void> {
@@ -135,33 +186,12 @@ export class RedisBrandService implements BrandService {
       REDIS_KEYS.brandRecord(id),
     );
     const now = new Date().toISOString();
+    const base = fromCreateInput(input);
     const stored: StoredBrand = existing
-      ? {
-          id,
-          ownerId: input.ownerId,
-          name: input.name,
-          description: input.description ?? null,
-          primaryColor: input.primaryColor,
-          secondaryColor: input.secondaryColor ?? null,
-          accentColor: input.accentColor ?? null,
-          logoUrl: input.logoUrl ?? null,
-          createdAt: existing.createdAt,
-          updatedAt: now,
-        }
-      : {
-          id,
-          ownerId: input.ownerId,
-          name: input.name,
-          description: input.description ?? null,
-          primaryColor: input.primaryColor,
-          secondaryColor: input.secondaryColor ?? null,
-          accentColor: input.accentColor ?? null,
-          logoUrl: input.logoUrl ?? null,
-          createdAt: now,
-          updatedAt: now,
-        };
+      ? { id, ...base, createdAt: existing.createdAt, updatedAt: now }
+      : { id, ...base, createdAt: now, updatedAt: now };
     await this.redis.set(REDIS_KEYS.brandRecord(id), stored);
     await this.redis.sadd(REDIS_KEYS.brandRecordList, id);
-    return toBrand(stored);
+    return hydrate(stored);
   }
 }

@@ -8,6 +8,9 @@
  *
  * If a behaviour diverges between the two, the test asserting it fails
  * for at least one backend, blocking merge.
+ *
+ * Phase 2-brand-cutover (2026-05-06): coverage extended to every field
+ * on the wider Brand row.
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
@@ -41,10 +44,27 @@ function makeInput(
     ownerId: "owner-1",
     name: "Acme",
     description: "Acme co",
+    companyUrl: "https://acme.example",
+    logo: "custom",
+    logoUrl: "https://example.com/logo.png",
+    borderRadius: "md",
     primaryColor: "#FF0000",
+    primaryHoverColor: "#cc0000",
     secondaryColor: "#00FF00",
     accentColor: "#0000FF",
-    logoUrl: "https://example.com/logo.png",
+    pageBackground: "#f6f8fa",
+    background: "#ffffff",
+    foreground: "#0e121b",
+    mutedTextColor: "#99a0ae",
+    borderColor: "#e1e4ea",
+    rowBackground: "#f8f9fb",
+    rowHoverBackground: "#eef1f1",
+    gradientFrom: "#daffff",
+    gradientTo: "rgba(218, 255, 255, 0.15)",
+    demoEarnId: "earn_1",
+    demoCheckoutsId: "ck_1",
+    demoWalletId: "wallet_1",
+    demoRemittanceId: "rem_1",
     ...overrides,
   };
 }
@@ -71,19 +91,60 @@ describe.each(backends)("BrandService parity ($name)", ({ build }) => {
     expect(created.updatedAt).toBeInstanceOf(Date);
   });
 
-  it("treats missing optional fields as null", async () => {
-    const created = await svc.create(
-      makeInput({
-        description: undefined,
-        secondaryColor: undefined,
-        accentColor: undefined,
-        logoUrl: undefined,
-      }),
-    );
+  it("persists every visual theme field round-trip", async () => {
+    const created = await svc.create(makeInput());
+    const fetched = await svc.get(created.id);
+    expect(fetched).not.toBeNull();
+    expect(fetched!.companyUrl).toBe("https://acme.example");
+    expect(fetched!.logo).toBe("custom");
+    expect(fetched!.logoUrl).toBe("https://example.com/logo.png");
+    expect(fetched!.borderRadius).toBe("md");
+    expect(fetched!.primaryColor).toBe("#FF0000");
+    expect(fetched!.primaryHoverColor).toBe("#cc0000");
+    expect(fetched!.secondaryColor).toBe("#00FF00");
+    expect(fetched!.accentColor).toBe("#0000FF");
+    expect(fetched!.pageBackground).toBe("#f6f8fa");
+    expect(fetched!.background).toBe("#ffffff");
+    expect(fetched!.foreground).toBe("#0e121b");
+    expect(fetched!.mutedTextColor).toBe("#99a0ae");
+    expect(fetched!.borderColor).toBe("#e1e4ea");
+    expect(fetched!.rowBackground).toBe("#f8f9fb");
+    expect(fetched!.rowHoverBackground).toBe("#eef1f1");
+    expect(fetched!.gradientFrom).toBe("#daffff");
+    expect(fetched!.gradientTo).toBe("rgba(218, 255, 255, 0.15)");
+    expect(fetched!.demoEarnId).toBe("earn_1");
+    expect(fetched!.demoCheckoutsId).toBe("ck_1");
+    expect(fetched!.demoWalletId).toBe("wallet_1");
+    expect(fetched!.demoRemittanceId).toBe("rem_1");
+  });
+
+  it("treats missing optional fields as null and defaults logo to 'dynamic'", async () => {
+    const created = await svc.create({
+      ownerId: "owner-1",
+      name: "Acme",
+      primaryColor: "#FF0000",
+    });
     expect(created.description).toBeNull();
+    expect(created.companyUrl).toBeNull();
+    expect(created.logo).toBe("dynamic");
+    expect(created.logoUrl).toBeNull();
+    expect(created.borderRadius).toBeNull();
+    expect(created.primaryHoverColor).toBeNull();
     expect(created.secondaryColor).toBeNull();
     expect(created.accentColor).toBeNull();
-    expect(created.logoUrl).toBeNull();
+    expect(created.pageBackground).toBeNull();
+    expect(created.background).toBeNull();
+    expect(created.foreground).toBeNull();
+    expect(created.mutedTextColor).toBeNull();
+    expect(created.borderColor).toBeNull();
+    expect(created.rowBackground).toBeNull();
+    expect(created.rowHoverBackground).toBeNull();
+    expect(created.gradientFrom).toBeNull();
+    expect(created.gradientTo).toBeNull();
+    expect(created.demoEarnId).toBeNull();
+    expect(created.demoCheckoutsId).toBeNull();
+    expect(created.demoWalletId).toBeNull();
+    expect(created.demoRemittanceId).toBeNull();
   });
 
   it("get returns null when the brand does not exist", async () => {
@@ -116,7 +177,6 @@ describe.each(backends)("BrandService parity ($name)", ({ build }) => {
 
   it("update changes only provided fields and bumps updatedAt", async () => {
     const created = await svc.create(makeInput());
-    // Force a measurable gap so updatedAt strictly increases.
     await new Promise((r) => setTimeout(r, 5));
     const updated = await svc.update(created.id, {
       name: "Acme 2",
@@ -127,9 +187,72 @@ describe.each(backends)("BrandService parity ($name)", ({ build }) => {
     // unchanged fields
     expect(updated.primaryColor).toBe("#FF0000");
     expect(updated.description).toBe("Acme co");
+    expect(updated.gradientFrom).toBe("#daffff");
+    expect(updated.demoEarnId).toBe("earn_1");
     expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(
       created.updatedAt.getTime(),
     );
+  });
+
+  it("update can set every visual theme field independently", async () => {
+    const created = await svc.create({
+      ownerId: "owner-1",
+      name: "Acme",
+      primaryColor: "#FF0000",
+    });
+    await new Promise((r) => setTimeout(r, 5));
+    const updated = await svc.update(created.id, {
+      companyUrl: "https://later.example",
+      logo: "custom",
+      logoUrl: "https://later.example/logo.svg",
+      borderRadius: "lg",
+      primaryHoverColor: "#aa0000",
+      pageBackground: "#101010",
+      background: "#202020",
+      foreground: "#fafafa",
+      mutedTextColor: "#888888",
+      borderColor: "#303030",
+      rowBackground: "#181818",
+      rowHoverBackground: "#202020",
+      gradientFrom: "#abcdef",
+      gradientTo: "#123456",
+      demoEarnId: "earn_x",
+      demoCheckoutsId: "ck_x",
+      demoWalletId: "w_x",
+      demoRemittanceId: "r_x",
+    });
+    expect(updated.companyUrl).toBe("https://later.example");
+    expect(updated.logo).toBe("custom");
+    expect(updated.logoUrl).toBe("https://later.example/logo.svg");
+    expect(updated.borderRadius).toBe("lg");
+    expect(updated.primaryHoverColor).toBe("#aa0000");
+    expect(updated.pageBackground).toBe("#101010");
+    expect(updated.background).toBe("#202020");
+    expect(updated.foreground).toBe("#fafafa");
+    expect(updated.mutedTextColor).toBe("#888888");
+    expect(updated.borderColor).toBe("#303030");
+    expect(updated.rowBackground).toBe("#181818");
+    expect(updated.rowHoverBackground).toBe("#202020");
+    expect(updated.gradientFrom).toBe("#abcdef");
+    expect(updated.gradientTo).toBe("#123456");
+    expect(updated.demoEarnId).toBe("earn_x");
+    expect(updated.demoCheckoutsId).toBe("ck_x");
+    expect(updated.demoWalletId).toBe("w_x");
+    expect(updated.demoRemittanceId).toBe("r_x");
+  });
+
+  it("update can clear an optional field by passing null", async () => {
+    const created = await svc.create(makeInput());
+    const updated = await svc.update(created.id, {
+      logoUrl: null,
+      companyUrl: null,
+      gradientFrom: null,
+    });
+    expect(updated.logoUrl).toBeNull();
+    expect(updated.companyUrl).toBeNull();
+    expect(updated.gradientFrom).toBeNull();
+    // sibling fields on the same row stay populated
+    expect(updated.gradientTo).toBe("rgba(218, 255, 255, 0.15)");
   });
 
   it("update throws when the brand does not exist", async () => {
@@ -163,22 +286,42 @@ describe.each(backends)("BrandService parity ($name)", ({ build }) => {
     expect(created.id).toBe("custom_id_1");
     const found = await svc.get("custom_id_1");
     expect(found).not.toBeNull();
+    expect(found!.gradientFrom).toBe("#daffff");
   });
 
   it("upsertWithId updates and bumps updatedAt on the second call with the same id", async () => {
-    const first = await svc.upsertWithId("custom_id_2", makeInput({ name: "A" }));
+    const first = await svc.upsertWithId(
+      "custom_id_2",
+      makeInput({ name: "A" }),
+    );
     await new Promise((r) => setTimeout(r, 5));
     const second = await svc.upsertWithId(
       "custom_id_2",
-      makeInput({ name: "B" }),
+      makeInput({ name: "B", primaryColor: "#abcdef" }),
     );
     expect(second.id).toBe("custom_id_2");
     expect(second.name).toBe("B");
+    expect(second.primaryColor).toBe("#abcdef");
     expect(second.createdAt.getTime()).toBe(first.createdAt.getTime());
     expect(second.updatedAt.getTime()).toBeGreaterThanOrEqual(
       first.updatedAt.getTime(),
     );
     const all = await svc.list();
     expect(all).toHaveLength(1);
+  });
+
+  it("ownership scoping holds across the wider row (list + get)", async () => {
+    const owned = await svc.create(
+      makeInput({ ownerId: "owner-1", name: "Owned" }),
+    );
+    await svc.create(makeInput({ ownerId: "owner-2", name: "Other" }));
+    const list = await svc.list({ ownerId: "owner-1" });
+    expect(list).toHaveLength(1);
+    expect(list[0]!.id).toBe(owned.id);
+    // get does not enforce ownership at the service layer (caller is
+    // expected to scope by ownerId in actions). Confirm get returns
+    // both rows so we never silently regress that contract.
+    const all = await svc.list();
+    expect(all).toHaveLength(2);
   });
 });

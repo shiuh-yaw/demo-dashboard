@@ -4,25 +4,51 @@
  * Why a hand-rolled fake instead of the real PrismaClient?
  *   The Postgres BrandService depends on a small slice of the delegate:
  *   create, findUnique, findMany (with optional `where.ownerId`), update,
- *   and delete. Mocking that surface is a few dozen lines and avoids
+ *   delete, upsert. Mocking that surface is a few dozen lines and avoids
  *   pulling Prisma + Postgres into a unit test. Real-database integration
  *   tests belong in a separate suite (out of scope for this PR).
  *
  * The shape here exactly matches the `BrandPrismaClient` interface the
  * service expects, so structural typing keeps the fake honest.
+ *
+ * Phase 2-brand-cutover (2026-05-06): expanded to cover the wider Brand
+ * row (full visual theme + demo-config id mirrors).
  */
 
-import type { Brand } from "../types";
+import type { Brand, BrandBorderRadius, BrandLogoKind } from "../types";
+
+interface BrandWritable {
+  ownerId: string;
+  name: string;
+  description: string | null;
+  companyUrl: string | null;
+  logo: BrandLogoKind;
+  logoUrl: string | null;
+  borderRadius: BrandBorderRadius | null;
+  primaryColor: string;
+  primaryHoverColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  pageBackground: string | null;
+  background: string | null;
+  foreground: string | null;
+  mutedTextColor: string | null;
+  borderColor: string | null;
+  rowBackground: string | null;
+  rowHoverBackground: string | null;
+  gradientFrom: string | null;
+  gradientTo: string | null;
+  demoEarnId: string | null;
+  demoCheckoutsId: string | null;
+  demoWalletId: string | null;
+  demoRemittanceId: string | null;
+}
 
 interface CreateArgs {
-  data: {
+  data: Partial<BrandWritable> & {
     ownerId: string;
     name: string;
-    description?: string | null;
     primaryColor: string;
-    secondaryColor?: string | null;
-    accentColor?: string | null;
-    logoUrl?: string | null;
   };
 }
 
@@ -37,14 +63,7 @@ interface FindManyArgs {
 
 interface UpdateArgs {
   where: { id: string };
-  data: Partial<{
-    name: string;
-    description: string | null;
-    primaryColor: string;
-    secondaryColor: string | null;
-    accentColor: string | null;
-    logoUrl: string | null;
-  }>;
+  data: Partial<BrandWritable>;
 }
 
 interface DeleteArgs {
@@ -53,25 +72,13 @@ interface DeleteArgs {
 
 interface UpsertArgs {
   where: { id: string };
-  create: {
+  create: Partial<BrandWritable> & {
     id: string;
     ownerId: string;
     name: string;
-    description?: string | null;
     primaryColor: string;
-    secondaryColor?: string | null;
-    accentColor?: string | null;
-    logoUrl?: string | null;
   };
-  update: Partial<{
-    ownerId: string;
-    name: string;
-    description: string | null;
-    primaryColor: string;
-    secondaryColor: string | null;
-    accentColor: string | null;
-    logoUrl: string | null;
-  }>;
+  update: Partial<BrandWritable>;
 }
 
 export interface FakePrismaBrandDelegate {
@@ -87,12 +94,44 @@ export interface FakePrismaClient {
   brand: FakePrismaBrandDelegate;
 }
 
+/**
+ * Build a Brand row's nullable fields, defaulting any field the caller
+ * omitted to the same null/discriminator the real Postgres column does.
+ * Keeps the fake equivalent to the database when callers under-specify
+ * input.
+ */
+function applyNullDefaults(
+  data: Partial<BrandWritable>,
+): Omit<BrandWritable, "ownerId" | "name" | "primaryColor"> {
+  return {
+    description: data.description ?? null,
+    companyUrl: data.companyUrl ?? null,
+    logo: data.logo ?? "dynamic",
+    logoUrl: data.logoUrl ?? null,
+    borderRadius: data.borderRadius ?? null,
+    primaryHoverColor: data.primaryHoverColor ?? null,
+    secondaryColor: data.secondaryColor ?? null,
+    accentColor: data.accentColor ?? null,
+    pageBackground: data.pageBackground ?? null,
+    background: data.background ?? null,
+    foreground: data.foreground ?? null,
+    mutedTextColor: data.mutedTextColor ?? null,
+    borderColor: data.borderColor ?? null,
+    rowBackground: data.rowBackground ?? null,
+    rowHoverBackground: data.rowHoverBackground ?? null,
+    gradientFrom: data.gradientFrom ?? null,
+    gradientTo: data.gradientTo ?? null,
+    demoEarnId: data.demoEarnId ?? null,
+    demoCheckoutsId: data.demoCheckoutsId ?? null,
+    demoWalletId: data.demoWalletId ?? null,
+    demoRemittanceId: data.demoRemittanceId ?? null,
+  };
+}
+
 export function createFakePrisma(): FakePrismaClient {
   const store = new Map<string, Brand>();
   let counter = 0;
   const nextId = () => `cuid_${++counter}`;
-  // Each call returns a fresh Date; tests force monotonicity with a
-  // small await between create and update.
   const now = () => new Date();
 
   return {
@@ -104,11 +143,8 @@ export function createFakePrisma(): FakePrismaClient {
           id,
           ownerId: data.ownerId,
           name: data.name,
-          description: data.description ?? null,
           primaryColor: data.primaryColor,
-          secondaryColor: data.secondaryColor ?? null,
-          accentColor: data.accentColor ?? null,
-          logoUrl: data.logoUrl ?? null,
+          ...applyNullDefaults(data),
           createdAt: ts,
           updatedAt: ts,
         };
@@ -134,8 +170,6 @@ export function createFakePrisma(): FakePrismaClient {
       async update({ where, data }) {
         const existing = store.get(where.id);
         if (!existing) {
-          // Mirrors Prisma's RecordNotFoundError shape just enough for
-          // service-layer error handling assertions in the parity suite.
           throw new Error(`Record to update not found. id=${where.id}`);
         }
         const updated: Brand = {
@@ -164,11 +198,8 @@ export function createFakePrisma(): FakePrismaClient {
             id: where.id,
             ownerId: create.ownerId,
             name: create.name,
-            description: create.description ?? null,
             primaryColor: create.primaryColor,
-            secondaryColor: create.secondaryColor ?? null,
-            accentColor: create.accentColor ?? null,
-            logoUrl: create.logoUrl ?? null,
+            ...applyNullDefaults(create),
             createdAt: ts,
             updatedAt: ts,
           };

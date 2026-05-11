@@ -141,5 +141,5 @@ Lives at `src/lib/webhooks/` and serves all `/api/webhooks/<provider>` routes (D
 - BlindPay normalizer doesn't yet resolve a local `transactionId` from the upstream `data.id` — every event currently persists with `processingStatus=ignored` until a `(provider, providerResourceId) → transactionId` index lands.
 - Phase 5B fills out the `/api/orchestrate/*` namespace beyond the partial coverage shipped to date.
 - Phase 5C lands dashboard scaffolding templates that auto-generate per-demo-type sections from the demo registry.
-- Phase 2-brands lands the `Brand` Prisma model; Phase 2-transactions lands `Transaction` + `WebhookEvent`.
+- Phase 2-brands landed in three PRs: Part A (model + Postgres service), Part B (backfill), and the brand cutover (legacy `BrandProfile` actions now route through `BrandService`; row carries the full visual theme + linked demo ids). Phase 2-transactions landed `Transaction` + `WebhookEvent`.
 - Mock-mode-aware orchestration: when demo apps emit "this was a mock action" events, dashboard should ignore them rather than persist a real transaction. Pattern needs codifying once a third app adopts mock mode.

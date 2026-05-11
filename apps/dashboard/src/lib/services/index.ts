@@ -75,6 +75,8 @@ export type {
   BrandService,
   BrandListOptions,
   Brand,
+  BrandLogoKind,
+  BrandBorderRadius,
   CreateBrandInput,
   UpdateBrandInput,
   TransactionRecordService,
