@@ -23,32 +23,21 @@ export type EarnBrand = "dynamic" | "youtube" | "meta" | "remitly" | "custom";
 export type BorderRadiusSize = "xs" | "sm" | "md" | "lg";
 
 /**
- * Theme configuration for Earn demo
+ * Theme configuration for the Earn demo.
+ *
+ * Aligned on the canonical `WidgetTheme` contract from
+ * `@dynamic-demos/theme/widget` (D-008): same field names every other
+ * themed demo uses, plus an earn-only `backgroundLightColor` retained
+ * because earn-era brand data was stored with that name as the surface
+ * variant. New brands should set `background` (WidgetTheme name);
+ * existing brands continue to work via the projector's legacy fallback.
  */
-export interface EarnTheme {
-  /** Primary brand color (e.g., brand red, Meta blue) */
-  primaryColor?: string;
-  /** Primary color hover state */
-  primaryHoverColor?: string;
-  /** Accent color for highlights */
-  accentColor?: string;
-  /** Main background color */
-  backgroundColor?: string;
-  /** Light background variant */
+import type { WidgetTheme } from "@dynamic-demos/theme";
+
+export type EarnTheme = Partial<WidgetTheme> & {
+  /** Legacy alias for `WidgetTheme.background` — the widget/card surface. */
   backgroundLightColor?: string;
-  /** Primary text color */
-  foregroundColor?: string;
-  /** Secondary/muted text color */
-  mutedTextColor?: string;
-  /** Border color */
-  borderColor?: string;
-  /** Active/selected background color */
-  activeBgColor?: string;
-  /** Active/selected text color */
-  activeTextColor?: string;
-  /** Border radius size */
-  borderRadius?: BorderRadiusSize;
-}
+};
 
 /**
  * Branding configuration for Earn demo
@@ -109,9 +98,11 @@ export interface StoredEarnConfig {
 // =============================================================================
 
 /**
- * Default theme for Earn Dashboard
+ * Default theme for Earn Dashboard. Earn-specific design language
+ * (Google-ish blue accent, near-white surface) baked in as a fallback
+ * when no per-brand theme is set.
  */
-export const DEFAULT_EARN_THEME: Required<EarnTheme> = {
+export const DEFAULT_EARN_THEME: EarnTheme = {
   primaryColor: "#4779FF",
   primaryHoverColor: "#3968e8",
   accentColor: "#1967D2",
@@ -120,8 +111,6 @@ export const DEFAULT_EARN_THEME: Required<EarnTheme> = {
   foregroundColor: "#030303",
   mutedTextColor: "#606060",
   borderColor: "#DADADA",
-  activeBgColor: "#E8F0FE",
-  activeTextColor: "#1967D2",
   borderRadius: "md",
 };
 
@@ -199,61 +188,6 @@ export async function getEarnConfig(
     console.error(`Error fetching Earn config ${id}:`, error);
     return null;
   }
-}
-
-// =============================================================================
-// Theme Utilities
-// =============================================================================
-
-/**
- * Border radius scale configuration
- */
-const BORDER_RADIUS_SCALE: Record<
-  BorderRadiusSize,
-  { sm: string; md: string; lg: string }
-> = {
-  xs: { sm: "2px", md: "4px", lg: "6px" },
-  sm: { sm: "4px", md: "6px", lg: "10px" },
-  md: { sm: "6px", md: "10px", lg: "16px" },
-  lg: { sm: "10px", md: "16px", lg: "22px" },
-};
-
-/**
- * Converts theme config to CSS custom properties
- */
-export function themeToCssVars(theme: EarnTheme): Record<string, string> {
-  const merged = { ...DEFAULT_EARN_THEME, ...theme };
-  const radiusScale = BORDER_RADIUS_SCALE[merged.borderRadius];
-
-  return {
-    "--color-earn-primary": merged.primaryColor,
-    "--color-earn-dark": "#282828",
-    "--color-earn-light": merged.backgroundColor,
-    "--color-earn-border": merged.borderColor,
-    "--color-earn-text-primary": merged.foregroundColor,
-    "--color-earn-text-secondary": merged.mutedTextColor,
-    "--color-earn-active-bg": merged.activeBgColor,
-    "--color-earn-active-text": merged.activeTextColor,
-    "--background": hexToRgb(merged.backgroundColor),
-    "--foreground": hexToRgb(merged.foregroundColor),
-    "--primary": hexToRgb(merged.primaryColor),
-    "--muted-foreground": hexToRgb(merged.mutedTextColor),
-    "--border": hexToRgb(merged.borderColor),
-    "--radius": radiusScale.md,
-  };
-}
-
-/**
- * Converts hex color to RGB values (space-separated)
- * e.g., "#FF0000" -> "255 0 0"
- */
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return "0 0 0";
-  return `${parseInt(result[1]!, 16)} ${parseInt(result[2]!, 16)} ${parseInt(
-    result[3]!,
-    16,
-  )}`;
 }
 
 /**

@@ -8,7 +8,7 @@ status: stable
 
 # @dynamic-demos/earn
 
-Vault-deposit / yield demo. End users sign in via Dynamic, deposit USDC into curated yield vaults, and view positions. Uses a per-config-id route shape (`/e/[id]/...`) so a single app deployment can serve many branded vault demos. Includes a "mock mode" toggle so demos work without on-chain transactions.
+Vault-deposit / yield demo. End users sign in via Dynamic, deposit USDC into curated yield vaults, and view positions. Per-config branding rides on `?theme=<configId>` (sticky cookie + header forward) so a single app deployment can serve many branded vault demos from flat top-level routes. Includes a "mock mode" toggle so demos work without onchain transactions.
 
 ## Capabilities
 
@@ -20,14 +20,15 @@ Vault-deposit / yield demo. End users sign in via Dynamic, deposit USDC into cur
 
 ## Public surface
 
-App routes:
+App routes (flat — no path-based config segments):
 
 - `/(auth)/login` — auth.
-- `/(dashboard)/...` — main dashboard.
-- `/e/[id]/...` — per-config branded vault surface.
+- `/(dashboard)/earn` — main dashboard.
 - `/api/...` — server-only.
 
-Cookie / header contract (D-008): query `?id=<configId>` → cookie `earn_config_id` → header `x-earn-config-id` → dashboard config fetch. Route pattern uses `configParam: "id"` (see `app.config.ts`) so the id rides in the URL too.
+Cookie / header contract (D-008): query `?theme=<configId>` → cookie `earn_config_id` (sticky) → header `x-earn-config-id` → dashboard config fetch. Subsequent navigations carry the cookie; the query param can be dropped from the URL once set.
+
+Legacy `/e/<id>/...` deep-links 307-redirect to `/?theme=<id>` via `next.config.ts` `redirects()` for back-compat — first hit sets the cookie, then everything is flat.
 
 ## Required environment
 
@@ -40,7 +41,12 @@ No provider keys — vault contracts are onchain; deposits are user-signed.
 
 ## Theming
 
-`createDemoMiddleware` + `<ThemeStyleTag>` per D-008. Phase 4 promotes the per-config theme overlay onto the canonical `--brand-*` contract.
+Unified theme injection per D-008:
+
+- `middleware.ts` uses `createDemoMiddleware({ demoType: "earn", publicRoutes: ["/login"], defaultReturnPath: "/earn", authenticatedRootRedirect: "/earn" })`. Defaults: `configIdSource: "query"`, `stickyConfigCookie: true`. Forwards `x-earn-config-id` from `?theme=` query or sticky cookie.
+- Root `app/layout.tsx` reads the header server-side, fetches the config via `getEarnConfig`, projects `EarnTheme` onto `Partial<BrandTheme>` (`lib/earn-brand.ts`), and emits the override block via `<ThemeStyleTag overridesOnly>` in `<head>`. Zero FOUC, zero hydration mismatch.
+- `app/globals.css` declares earn's static `--brand-*` values; `--widget-*` and `--color-earn-*` namespaces are compat aliases pointing at `--brand-*` so per-config overrides cascade through `packages/ui` consumers and earn's existing utility classes (`bg-earn-light`, `text-earn-text-primary`, etc.) without per-component sweeps.
+- `EarnConfigProvider` (in the root layout) hydrates `useEarnConfig()` for branding/layout/title.
 
 ## Credentials
 
@@ -88,12 +94,12 @@ No provider keys — vault contracts are onchain; deposits are user-signed.
 ## Examples
 
 ```ts
-// middleware.ts — config-aware
-import { createDemoMiddleware } from "@dynamic-demos/dynamic/demo-middleware";
-
+// middleware.ts — simplified D-008 pattern, cookie + query only
 export const middleware = createDemoMiddleware({
   demoType: "earn",
-  defaultReturnPath: (configId) => `/e/${configId}/earn`,
+  publicRoutes: ["/login"],
+  defaultReturnPath: "/earn",
+  authenticatedRootRedirect: "/earn",
 });
 ```
 
@@ -107,5 +113,4 @@ export const middleware = createDemoMiddleware({
 ## Open questions / known gaps
 
 - WAAS / wallet-creation logic here is bespoke; Phase 4 considers extending `@dynamic-demos/dynamic` to model that pattern.
-- Phase 4 migrates color variables to the canonical `--brand-*` contract.
 - Mock-mode pattern in this app is the reference for trade + future demos.

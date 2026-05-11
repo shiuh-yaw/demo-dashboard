@@ -3,16 +3,26 @@
 /**
  * Login Content Component
  *
- * Client component that handles:
- * 1. OAuth completion (when returning from Google)
- * 2. Displaying the login button
+ * Screen state machine for the unified login surface (D-008 parity
+ * with wallet / remittance / checkouts). Two screens:
  *
- * Uses useCompleteSocialAuth hook to detect and complete OAuth redirects.
+ *   - `auth`        : renders `<AuthScreen>` (LoginForm with email +
+ *                     social + JWT enabled by capability check).
+ *   - `otp-verify`  : renders `<OtpVerifyScreen>` after the email OTP
+ *                     send returns an `OTPVerification` token.
+ *
+ * OAuth completion stays on the existing `useCompleteSocialAuth` effect
+ * hook — it runs on mount, detects redirect params, syncs the cookie,
+ * and fires `onSuccess`. LoginForm's `onHandleOAuthRedirect` prop is
+ * intentionally NOT passed (double-handling would race).
  */
 
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useCompleteSocialAuth } from "@/hooks/use-complete-social-auth";
-import { LoginButton } from "@/components/login-button";
+import { AuthScreen } from "@/components/screens/auth-screen";
+import { OtpVerifyScreen } from "@/components/screens/otp-verify-screen";
+import type { OTPVerification } from "@/lib/dynamic-auth";
 
 interface LoginContentProps {
   /** Server-detected OAuth callback - show spinner immediately */
@@ -21,46 +31,52 @@ interface LoginContentProps {
   redirectTo?: string;
 }
 
+type Screen =
+  | { type: "auth" }
+  | { type: "otp-verify"; email: string; otpVerification: OTPVerification };
+
 export function LoginContent({
   isOAuthCallback = false,
   redirectTo = "/earn",
 }: LoginContentProps) {
+  const [screen, setScreen] = useState<Screen>({ type: "auth" });
+
+  const goToApp = () => {
+    // Full page load so the server sees the freshly-synced cookie.
+    window.location.href = redirectTo;
+  };
+
   const { isLoading, error } = useCompleteSocialAuth({
-    onSuccess: () => {
-      // Redirect to specified page after successful OAuth
-      // Use window.location for full page reload to ensure server sees cookie
-      window.location.href = redirectTo;
-    },
-    onError: (error) => {
-      console.error("OAuth error:", error);
-    },
+    onSuccess: goToApp,
+    onError: (e) => console.error("OAuth error:", e),
   });
 
-  // Show loading state while completing OAuth (unless there's an error)
-  // Use server-detected isOAuthCallback OR client-detected isLoading
   if (!error && (isOAuthCallback || isLoading)) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-8">
-        <Loader2 className="h-10 w-10 animate-spin text-earn-primary" />
-        <p className="text-base text-earn-text-secondary">
-          Completing sign in...
-        </p>
+        <Loader2 className="h-10 w-10 animate-spin text-(--brand-primary)" />
+        <p className="text-base text-(--brand-muted)">Completing sign in...</p>
       </div>
     );
   }
 
-  // Show error if OAuth failed
-  if (error) {
+  if (screen.type === "otp-verify") {
     return (
-      <div className="space-y-4">
-        <div className="text-center text-sm text-red-500">
-          Sign in failed. Please try again.
-        </div>
-        <LoginButton />
-      </div>
+      <OtpVerifyScreen
+        email={screen.email}
+        otpVerification={screen.otpVerification}
+        onBack={() => setScreen({ type: "auth" })}
+        onLoginSuccess={goToApp}
+      />
     );
   }
 
-  // Show login button
-  return <LoginButton />;
+  return (
+    <AuthScreen
+      onOtpVerify={(email, otpVerification) =>
+        setScreen({ type: "otp-verify", email, otpVerification })
+      }
+      onLoginSuccess={goToApp}
+    />
+  );
 }

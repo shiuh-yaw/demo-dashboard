@@ -1,19 +1,77 @@
 @import "tailwindcss";
+@import "@dynamic-demos/theme/defaults.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../../packages/ui/src/**/*.tsx";
 @source "../../../../packages/ui/src/**/*.ts";
 
+/*
+ * Class-based dark mode (opt out of Tailwind v4's default media-query dark
+ * mode). Earn is light-only today; without this opt-out, system dark mode
+ * triggers `dark:` variants in shared components (e.g. <DynamicLogo>'s
+ * wordmark `dark:fill-[#E5E5E7]`) while the page chrome remains light —
+ * producing invisible-logo / low-contrast bugs.
+ */
+@variant dark (&:where(.dark, .dark *));
+
+/*
+ * Earn-brand override of the canonical --brand-* contract (D-007).
+ * Earn's design language is light-grey-on-white with a #4779FF blue
+ * primary — distinct from the proceeds-sourced defaults in
+ * @dynamic-demos/theme/defaults.css. We keep the contract (--brand-*
+ * names) and only diverge on values, so per-config <ThemeStyleTag>
+ * overrides can layer cleanly on top.
+ */
+:root {
+  --brand-page-bg: #f9f9f9;
+  --brand-surface: #ffffff;
+  --brand-fg: #030303;
+  --brand-primary: #4779ff;
+  --brand-primary-hover: #3968e8;
+  --brand-accent: #1967d2;
+  --brand-row-bg: #f0f0f0;
+  --brand-row-hover: #e8e8e8;
+  --brand-muted: #606060;
+  --brand-border: #dadada;
+
+  /*
+   * `--widget-*` compat aliases for shared `packages/ui` components
+   * (AuthLayout, Card, Dialog, etc.) that haven't migrated to `--brand-*`
+   * yet. These track the brand contract above so per-config
+   * <ThemeStyleTag> overrides cascade through cleanly. Retire when
+   * packages/ui migrates.
+   */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface);
+  --widget-fg: var(--brand-fg);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
+}
+
+/*
+ * `--color-earn-*` Tailwind v4 theme tokens. By aliasing to `--brand-*`
+ * variables, every existing earn class (e.g. `bg-earn-light`,
+ * `text-earn-text-primary`, `border-earn-border`) automatically picks up
+ * the per-config override emitted by <ThemeStyleTag>. This avoids
+ * sweeping 32 component files for the prefix swap.
+ *
+ * `--color-earn-active-*` are not part of the brand contract — earn-only
+ * tokens used by the Active tab styling. They remain hardcoded.
+ */
 @theme {
-  /* Earn Dashboard colors for Tailwind 4.x */
-  --color-earn-primary: #4779FF;
+  --color-earn-primary: var(--brand-primary);
   --color-earn-dark: #282828;
-  --color-earn-light: #F9F9F9;
-  --color-earn-border: #DADADA;
-  --color-earn-text-primary: #030303;
-  --color-earn-text-secondary: #606060;
-  --color-earn-active-bg: #E8F0FE;
-  --color-earn-active-text: #1967D2;
+  --color-earn-light: var(--brand-page-bg);
+  --color-earn-border: var(--brand-border);
+  --color-earn-text-primary: var(--brand-fg);
+  --color-earn-text-secondary: var(--brand-muted);
+  --color-earn-active-bg: #e8f0fe;
+  --color-earn-active-text: #1967d2;
 }
 
 @keyframes get-paid-check {
@@ -28,41 +86,9 @@
 }
 
 @layer base {
-  :root {
-    --background: 249 249 249; /* #F9F9F9 */
-    --foreground: 3 3 3; /* #030303 */
-    --card: 255 255 255;
-    --card-foreground: 3 3 3;
-    --popover: 255 255 255;
-    --popover-foreground: 3 3 3;
-    --primary: 71 121 255; /* Default primary #4779FF */
-    --primary-foreground: 255 255 255;
-    --secondary: 240 240 240;
-    --secondary-foreground: 3 3 3;
-    --muted: 240 240 240;
-    --muted-foreground: 96 96 96; /* #606060 */
-    --accent: 240 240 240;
-    --accent-foreground: 3 3 3;
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
-    --border: 218 218 218; /* #DADADA */
-    --input: 224 224 224;
-    --ring: 71 121 255;
-    --radius: 0.75rem;
-
-    /* Widget variables for shared @dynamic-demos/ui components */
-    --widget-primary: #030303;
-    --widget-fg: #030303;
-    --widget-accent: #4779ff;
-    --widget-row-bg: #f0f0f0;
-    --widget-row-hover: #e8e8e8;
-    --widget-border: #dadada;
-  }
-
   body {
-    background-color: rgb(var(--background));
-    color: rgb(var(--foreground));
+    background-color: var(--brand-page-bg);
+    color: var(--brand-fg);
     font-family: "Roboto", system-ui, sans-serif;
   }
 }
-

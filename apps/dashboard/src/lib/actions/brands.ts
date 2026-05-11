@@ -101,7 +101,6 @@ async function createBrandDemoConfigs(
           primaryColor: brand.primaryColor,
           accentColor: brand.accentColor || brand.primaryColor,
           primaryHoverColor: theme.primaryHoverColor || brand.primaryColor,
-          activeTextColor: brand.accentColor || brand.primaryColor,
           borderRadius: brand.borderRadius,
           // Apply extended theme colors if available
           backgroundColor:
@@ -295,8 +294,7 @@ async function updateBrandDemoConfigs(
             primaryColor: brand.primaryColor,
             accentColor: brand.accentColor || brand.primaryColor,
             primaryHoverColor: theme.primaryHoverColor || brand.primaryColor,
-            activeTextColor: brand.accentColor || brand.primaryColor,
-            borderRadius: brand.borderRadius,
+              borderRadius: brand.borderRadius,
             // Apply extended theme colors if available
             ...(theme.pageBackground && {
               backgroundColor: theme.pageBackground,

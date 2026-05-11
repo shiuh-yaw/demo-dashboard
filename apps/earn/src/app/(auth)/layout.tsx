@@ -1,23 +1,38 @@
 /**
  * Auth Layout
  *
- * Layout for authentication pages (login, callback, etc.)
- * Provides the centered container and white card wrapper
+ * Layout for authentication pages (login, callback, etc.) Server
+ * component so it can read the `x-earn-config-id` middleware header,
+ * fetch the brand config, and render the brand's logo above the auth
+ * card. Falls back to the Dynamic wordmark when no config is resolved.
+ *
+ * Theme tokens (`--brand-*`) are injected at the document level by
+ * `<ThemeStyleTag>` in the root layout, so the card's surface +
+ * borders follow the brand automatically.
  */
 
+import { headers } from "next/headers";
 import { AppLogo } from "@/components/icons";
+import { getEarnConfig } from "@/lib/earn-config";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const configId = headersList.get("x-earn-config-id");
+  const storedConfig = configId ? await getEarnConfig(configId) : null;
+  const branding = storedConfig?.config?.branding;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-earn-light">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-earn-light p-6">
+      <AppLogo
+        className="h-12 w-auto"
+        brand={branding?.logo}
+        logoUrl={branding?.logoUrl}
+      />
       <div className="bg-white border border-earn-border rounded-lg p-8 max-w-md w-full shadow-lg">
-        <div className="flex justify-center mb-2">
-          <AppLogo className="h-6 w-auto" />
-        </div>
         {children}
       </div>
     </div>

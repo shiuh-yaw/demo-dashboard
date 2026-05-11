@@ -5,6 +5,7 @@
  */
 
 import { TransactionState } from "@dynamic-demos/transactions";
+import type { WidgetTheme } from "@dynamic-demos/theme";
 
 import type { WidgetConfig } from "../widget-config";
 
@@ -91,32 +92,17 @@ export type EarnBrand = "dynamic" | "youtube" | "meta" | "remitly" | "custom";
 export type BorderRadiusSize = "xs" | "sm" | "md" | "lg";
 
 /**
- * Theme configuration for Earn demo
+ * Theme configuration for Earn demo — the canonical `WidgetTheme`
+ * shape (D-008). Aliased so callsites can keep the demo-scoped name.
+ * Earn-era brand data was stored with `backgroundLightColor` as the
+ * surface variant; that legacy key is retained as an optional alias
+ * for `WidgetTheme.background` so existing stored configs continue to
+ * theme correctly.
  */
-export interface EarnTheme {
-  /** Primary brand color (e.g., brand red, Meta blue) */
-  primaryColor?: string;
-  /** Primary color hover state */
-  primaryHoverColor?: string;
-  /** Accent color for highlights */
-  accentColor?: string;
-  /** Main background color */
-  backgroundColor?: string;
-  /** Light background variant */
+export type EarnTheme = Partial<WidgetTheme> & {
+  /** Legacy alias for `WidgetTheme.background` — the widget/card surface. */
   backgroundLightColor?: string;
-  /** Primary text color */
-  foregroundColor?: string;
-  /** Secondary/muted text color */
-  mutedTextColor?: string;
-  /** Border color */
-  borderColor?: string;
-  /** Active/selected background color */
-  activeBgColor?: string;
-  /** Active/selected text color */
-  activeTextColor?: string;
-  /** Border radius size */
-  borderRadius?: BorderRadiusSize;
-}
+};
 
 /**
  * Branding configuration for Earn demo
@@ -155,9 +141,11 @@ export interface EarnConfig {
 }
 
 /**
- * Default theme for Earn Dashboard
+ * Default theme for Earn Dashboard. Earn's design language (Google-ish
+ * blue accent on a near-white surface) baked in as a fallback when no
+ * per-brand theme is set.
  */
-export const DEFAULT_EARN_THEME: Required<EarnTheme> = {
+export const DEFAULT_EARN_THEME: EarnTheme = {
   primaryColor: "#4779FF",
   primaryHoverColor: "#3968e8",
   accentColor: "#1967D2",
@@ -166,8 +154,6 @@ export const DEFAULT_EARN_THEME: Required<EarnTheme> = {
   foregroundColor: "#030303",
   mutedTextColor: "#606060",
   borderColor: "#DADADA",
-  activeBgColor: "#E8F0FE",
-  activeTextColor: "#1967D2",
   borderRadius: "md",
 };
 
