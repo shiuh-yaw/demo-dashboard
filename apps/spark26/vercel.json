@@ -1,4 +1,5 @@
 {
+  "ignoreCommand": "npx turbo-ignore @dynamic-demos/spark26",
   "crons": [
     {
       "path": "/api/internal/reconcile",

@@ -43,17 +43,17 @@ catalogs:
       specifier: 9.39.1
       version: 9.39.1
     eslint-config-next:
-      specifier: 15.5.4
-      version: 15.5.4
+      specifier: 15.5.18
+      version: 15.5.18
     next:
-      specifier: 15.5.9
-      version: 15.5.9
+      specifier: 15.5.18
+      version: 15.5.18
     react:
-      specifier: 19.1.4
-      version: 19.1.4
+      specifier: 19.1.7
+      version: 19.1.7
     react-dom:
-      specifier: 19.1.4
-      version: 19.1.4
+      specifier: 19.1.7
+      version: 19.1.7
     tw-animate-css:
       specifier: 1.4.0
       version: 1.4.0
@@ -98,31 +98,31 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@dynamic-labs-sdk/solana':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/wallet-connect':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@lifi/sdk':
         specifier: 'catalog:'
-        version: 3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
+        version: 3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@radix-ui/react-dialog':
         specifier: 1.1.15
-        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-dropdown-menu':
         specifier: 2.1.16
-        version: 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-select':
         specifier: 2.2.6
-        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-slot':
         specifier: 1.2.4
-        version: 1.2.4(@types/react@19.2.5)(react@19.1.4)
+        version: 1.2.4(@types/react@19.2.5)(react@19.1.7)
       '@solana/spl-token':
         specifier: 0.4.14
         version: 0.4.14(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -143,22 +143,22 @@ importers:
         version: 2.1.1
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       next-themes:
         specifier: 0.4.6
-        version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 0.4.6(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       qrcode.react:
         specifier: 4.2.0
-        version: 4.2.0(react@19.1.4)
+        version: 4.2.0(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -192,7 +192,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.18
         version: 4.1.18
@@ -222,16 +222,16 @@ importers:
         version: 9.0.2
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -265,7 +265,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -313,7 +313,7 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@paralleldrive/cuid2':
         specifier: 2.2.2
         version: 2.2.2
@@ -337,22 +337,22 @@ importers:
         version: 9.0.2
       lucide-react:
         specifier: 0.511.0
-        version: 0.511.0(react@19.1.4)
+        version: 0.511.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       next-themes:
         specifier: 0.4.6
-        version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 0.4.6(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       pino-pretty:
         specifier: 13.1.2
         version: 13.1.2
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.3.0
         version: 3.3.0
@@ -389,7 +389,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -419,28 +419,28 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       viem:
         specifier: 2.42.1
         version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -471,7 +471,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -501,22 +501,22 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
-        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-popover':
         specifier: ^1.1.15
-        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-slot':
         specifier: ^1.2.4
-        version: 1.2.4(@types/react@19.2.5)(react@19.1.4)
+        version: 1.2.4(@types/react@19.2.5)(react@19.1.7)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
@@ -531,22 +531,22 @@ importers:
         version: 9.0.2
       lucide-react:
         specifier: 0.542.0
-        version: 0.542.0(react@19.1.4)
+        version: 0.542.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       qrcode.react:
         specifier: ^4.2.0
-        version: 4.2.0(react@19.1.4)
+        version: 4.2.0(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       sonner:
         specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 2.0.7(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       tailwind-merge:
         specifier: 3.3.0
         version: 3.3.0
@@ -565,10 +565,10 @@ importers:
         version: 3.3.1
       '@radix-ui/react-label':
         specifier: ^2.1.8
-        version: 2.1.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 2.1.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-radio-group':
         specifier: ^1.3.8
-        version: 1.3.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.3.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@tailwindcss/postcss':
         specifier: 4.1.17
         version: 4.1.17
@@ -589,7 +589,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -625,19 +625,19 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -646,16 +646,16 @@ importers:
         version: 9.0.2
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -692,7 +692,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -731,13 +731,13 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@faker-js/faker':
         specifier: ^9.5.0
         version: 9.9.0
@@ -746,7 +746,7 @@ importers:
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -755,19 +755,19 @@ importers:
         version: 9.0.2
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       qrcode.react:
         specifier: 4.2.0
-        version: 4.2.0(react@19.1.4)
+        version: 4.2.0(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -804,7 +804,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -831,22 +831,22 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@dynamic-labs-sdk/solana':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/wallet-connect':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@t3-oss/env-nextjs':
         specifier: 0.11.1
         version: 0.11.1(typescript@5.9.3)(zod@3.24.3)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -855,19 +855,19 @@ importers:
         version: 2.1.1
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       next-themes:
         specifier: 0.4.6
-        version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 0.4.6(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -898,7 +898,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.18
         version: 4.1.18
@@ -931,25 +931,25 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/bitcoin':
         specifier: 0.25.0
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/client':
         specifier: 0.25.0
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 0.25.0
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)
       '@dynamic-labs-sdk/solana':
         specifier: 0.25.0
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/wallet-connect':
         specifier: 0.25.0
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.1.0(typescript@5.9.3))(zod@3.24.3)
       '@tanstack/react-query':
         specifier: 5.81.2
-        version: 5.81.2(react@19.1.4)
+        version: 5.81.2(react@19.1.7)
       '@upstash/qstash':
         specifier: 2.7.23
         version: 2.7.23
@@ -964,16 +964,16 @@ importers:
         version: 5.4.1
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
-        specifier: 15.5.9
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        specifier: 15.5.18
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
-        specifier: 19.1.4
-        version: 19.1.4
+        specifier: 19.1.7
+        version: 19.1.7
       react-dom:
-        specifier: 19.1.4
-        version: 19.1.4(react@19.1.4)
+        specifier: 19.1.7
+        version: 19.1.7(react@19.1.7)
       viem:
         specifier: 2.42.1
         version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3)
@@ -995,7 +995,7 @@ importers:
         version: 10.4.1
       '@testing-library/react':
         specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@types/node':
         specifier: 20.19.27
         version: 20.19.27
@@ -1015,8 +1015,8 @@ importers:
         specifier: 9.39.1
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 15.5.4
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        specifier: 15.5.18
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       jsdom:
         specifier: 24.1.3
         version: 24.1.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -1064,22 +1064,22 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/solana':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/iconic':
         specifier: 'catalog:'
-        version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 4.61.1(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -1094,19 +1094,19 @@ importers:
         version: 4.2.3
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       next-themes:
         specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 0.4.6(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -1143,7 +1143,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -1167,22 +1167,22 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/zerodev':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs/iconic':
         specifier: 'catalog:'
-        version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 4.61.1(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@t3-oss/env-nextjs':
         specifier: 0.13.8
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -1191,16 +1191,16 @@ importers:
         version: 9.0.2
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -1237,7 +1237,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -1267,19 +1267,19 @@ importers:
         version: link:../../packages/utils
       '@dynamic-labs-sdk/client':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/evm':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/solana':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs-sdk/zerodev':
         specifier: 'catalog:'
-        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+        version: 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs/iconic':
         specifier: 'catalog:'
-        version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 4.61.1(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@solana/spl-token':
         specifier: 0.4.13
         version: 0.4.13(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -1291,7 +1291,7 @@ importers:
         version: 0.13.8(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.90.16(react@19.1.4)
+        version: 5.90.16(react@19.1.7)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -1300,19 +1300,19 @@ importers:
         version: 6.1.3
       lucide-react:
         specifier: 0.541.0
-        version: 0.541.0(react@19.1.4)
+        version: 0.541.0(react@19.1.7)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       qrcode.react:
         specifier: 4.2.0
-        version: 4.2.0(react@19.1.4)
+        version: 4.2.0(react@19.1.7)
       react:
         specifier: 'catalog:'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: 'catalog:'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -1346,7 +1346,7 @@ importers:
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
         specifier: 'catalog:'
-        version: 15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
+        version: 15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: 4.1.17
         version: 4.1.17
@@ -1476,10 +1476,10 @@ importers:
         version: 3.2.0
       react:
         specifier: '>=18.0.0'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: '>=18.0.0'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
     devDependencies:
       '@dynamic-demos/tsconfig':
         specifier: workspace:*
@@ -1495,7 +1495,7 @@ importers:
         version: 19.2.3(@types/react@19.2.5)
       next:
         specifier: 'catalog:'
-        version: 15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1588,10 +1588,10 @@ importers:
         version: link:../utils
       react:
         specifier: '>=18.0.0'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: '>=18.0.0'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
     devDependencies:
       '@dynamic-demos/tsconfig':
         specifier: workspace:*
@@ -1642,22 +1642,22 @@ importers:
         version: link:../utils
       '@dynamic-labs/iconic':
         specifier: 'catalog:'
-        version: 4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 4.61.1(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       '@radix-ui/react-dialog':
         specifier: ^1.1.6
-        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       lucide-react:
         specifier: ^0.511.0
-        version: 0.511.0(react@19.1.4)
+        version: 0.511.0(react@19.1.7)
       next-themes:
         specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+        version: 0.4.6(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       react:
         specifier: '>=18.0.0'
-        version: 19.1.4
+        version: 19.1.7
       react-dom:
         specifier: '>=18.0.0'
-        version: 19.1.4(react@19.1.4)
+        version: 19.1.7(react@19.1.7)
     devDependencies:
       '@dynamic-demos/tsconfig':
         specifier: workspace:*
@@ -2791,56 +2791,56 @@ packages:
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
 
-  '@next/env@15.5.9':
-    resolution: {integrity: sha512-4GlTZ+EJM7WaW2HEZcyU317tIQDjkQIyENDLxYJfSWlfqguN+dHkZgyQTV/7ykvobU7yEH5gKvreNrH4B6QgIg==}
+  '@next/env@15.5.18':
+    resolution: {integrity: sha512-hAV85Ckd9QR6RvH04MEKwsfLTksvFpO47j9xwtoIuvuPnlwecpSi+uZTtm8HirVbtlI2Fnz//xpcSTjFdyJk+g==}
 
-  '@next/eslint-plugin-next@15.5.4':
-    resolution: {integrity: sha512-SR1vhXNNg16T4zffhJ4TS7Xn7eq4NfKfcOsRwea7RIAHrjRpI9ALYbamqIJqkAhowLlERffiwk0FMvTLNdnVtw==}
+  '@next/eslint-plugin-next@15.5.18':
+    resolution: {integrity: sha512-w4MYq8M26a8PNrfto0JosLf5/3ssln1rsyP96g2DkC8uFVymStM5DLSz5ElxxrPRg2XnTMnFo3kREFlhYvxhWw==}
 
-  '@next/swc-darwin-arm64@15.5.7':
-    resolution: {integrity: sha512-IZwtxCEpI91HVU/rAUOOobWSZv4P2DeTtNaCdHqLcTJU4wdNXgAySvKa/qJCgR5m6KI8UsKDXtO2B31jcaw1Yw==}
+  '@next/swc-darwin-arm64@15.5.18':
+    resolution: {integrity: sha512-w0WvQf1n+txiwns/9pwIQteCJpZTbxzO2SE0FLcwuD4v0WEh1JPOjdyxWL21XwJsdpx8cFRjyzxzCS/siP7HcQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@15.5.7':
-    resolution: {integrity: sha512-UP6CaDBcqaCBuiq/gfCEJw7sPEoX1aIjZHnBWN9v9qYHQdMKvCKcAVs4OX1vIjeE+tC5EIuwDTVIoXpUes29lg==}
+  '@next/swc-darwin-x64@15.5.18':
+    resolution: {integrity: sha512-znn71QmDuxm+BOaglihMZfvyySMnNljkVIY5Z2TCssBmm+WqL6c19VhtH5ktFkHa8EZ2bnTUpcNcmNSQsg67og==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-linux-arm64-gnu@15.5.7':
-    resolution: {integrity: sha512-NCslw3GrNIw7OgmRBxHtdWFQYhexoUCq+0oS2ccjyYLtcn1SzGzeM54jpTFonIMUjNbHmpKpziXnpxhSWLcmBA==}
+  '@next/swc-linux-arm64-gnu@15.5.18':
+    resolution: {integrity: sha512-yPPe5MNL+igZUa+OsqQJisqSfh6oarIuA1Q0BDxljGJhRQyZeP+WRHh7rs/jZUGMh5aY0YdIjXZG0VohkKkUdw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-musl@15.5.7':
-    resolution: {integrity: sha512-nfymt+SE5cvtTrG9u1wdoxBr9bVB7mtKTcj0ltRn6gkP/2Nu1zM5ei8rwP9qKQP0Y//umK+TtkKgNtfboBxRrw==}
+  '@next/swc-linux-arm64-musl@15.5.18':
+    resolution: {integrity: sha512-glaCczEWIrHsokFZ3pP08U4BpKxwIdnT+txdOM32OBgpL9Yw4aqx8NejmgtZQZOdstQ5f0L3CasIZudzCuD+nw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-x64-gnu@15.5.7':
-    resolution: {integrity: sha512-hvXcZvCaaEbCZcVzcY7E1uXN9xWZfFvkNHwbe/n4OkRhFWrs1J1QV+4U1BN06tXLdaS4DazEGXwgqnu/VMcmqw==}
+  '@next/swc-linux-x64-gnu@15.5.18':
+    resolution: {integrity: sha512-oUfg2EgJmU3R0OCOWiokGFUTvZiPfXtriXiuF3YNxRoROCdgvTedHIzYoeKH34gsZxS/V7mHbfq2hpAHwhH1/A==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-musl@15.5.7':
-    resolution: {integrity: sha512-4IUO539b8FmF0odY6/SqANJdgwn1xs1GkPO5doZugwZ3ETF6JUdckk7RGmsfSf7ws8Qb2YB5It33mvNL/0acqA==}
+  '@next/swc-linux-x64-musl@15.5.18':
+    resolution: {integrity: sha512-JLxSP3KTd9iu/bvUMQxH7RJo9xKSHf55/6RPE4a6FTSZygGn7uvZbCej0AHXydwkggQGSD9UddSjwv6Xz5ESfA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-win32-arm64-msvc@15.5.7':
-    resolution: {integrity: sha512-CpJVTkYI3ZajQkC5vajM7/ApKJUOlm6uP4BknM3XKvJ7VXAvCqSjSLmM0LKdYzn6nBJVSjdclx8nYJSa3xlTgQ==}
+  '@next/swc-win32-arm64-msvc@15.5.18':
+    resolution: {integrity: sha512-ir1v7enP52K2HNz3tQQvwF+x7VNxBk1ciiZ18WBPvxf4C59IqdfmHPJYK3vH7rSxpuCVw/8C712wTXNAtEp+NA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@next/swc-win32-x64-msvc@15.5.7':
-    resolution: {integrity: sha512-gMzgBX164I6DN+9/PGA+9dQiwmTkE4TloBNx8Kv9UiGARsr9Nba7IpcBRA1iTV9vwlYnrE3Uy6I7Aj6qLjQuqw==}
+  '@next/swc-win32-x64-msvc@15.5.18':
+    resolution: {integrity: sha512-LIu5me6QTANCd25E7I5uIEfvgQ06RK7tvHAbYo3zCb3VpxQEPvMcSpd87NwUABDT6MbGPdEGR5VRiK4PPTJhQg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -5294,8 +5294,8 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  eslint-config-next@15.5.4:
-    resolution: {integrity: sha512-BzgVVuT3kfJes8i2GHenC1SRJ+W3BTML11lAOYFOOPzrk2xp66jBOAGEFRw+3LkYCln5UzvFsLhojrshb5Zfaw==}
+  eslint-config-next@15.5.18:
+    resolution: {integrity: sha512-HuoJU6uUPD00eyiud78IBnT4HLhztFj2V+ild2Uon5ZUrYZKe0Olu2QRD99e9IgL4/H1eg5Onka3BsfRW2U0Xw==}
     peerDependencies:
       eslint: ^7.23.0 || ^8.0.0 || ^9.0.0
       typescript: '>=3.3.1'
@@ -6258,8 +6258,8 @@ packages:
       react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
       react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
 
-  next@15.5.9:
-    resolution: {integrity: sha512-agNLK89seZEtC5zUHwtut0+tNrc0Xw4FT/Dg+B/VLEo9pAcS9rtTKpek3V6kVcVwsB2YlqMaHdfZL4eLEVYuCg==}
+  next@15.5.18:
+    resolution: {integrity: sha512-eKL8zUJkX9Y5lE+RX/2YJoItVdGlIscyVyboeD9wSpp0PaGqjoA4tTpT2qPqz9ax+5IzGESyLSeZ/RCwbSZ2uQ==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
     hasBin: true
     peerDependencies:
@@ -6560,10 +6560,10 @@ packages:
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
 
-  react-dom@19.1.4:
-    resolution: {integrity: sha512-s2868ab/xo2SI6H4106A7aFI8Mrqa4xC6HZT/pBzYyQ3cBLqa88hu47xYD8xf+uECleN698Awn7RCWlkTiKnqQ==}
+  react-dom@19.1.7:
+    resolution: {integrity: sha512-hE2iTlqZDmmCBRpmXbzHJLngNeHfLtdMA1qp4eDreMgdtbCgFAWGJhvD2u1KF0UQe5W5y2cQkpjAYTGhXbil4A==}
     peerDependencies:
-      react: ^19.1.4
+      react: ^19.1.7
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -6601,8 +6601,8 @@ packages:
       '@types/react':
         optional: true
 
-  react@19.1.4:
-    resolution: {integrity: sha512-DHINL3PAmPUiK1uszfbKiXqfE03eszdt5BpVSuEAHb5nfmNPwnsy7g39h2t8aXFc/Bv99GH81s+j8dobtD+jOw==}
+  react@19.1.7:
+    resolution: {integrity: sha512-sExZFfembjCLTr9ran4JS8W2Z9m3d0lbrOAuFreAR8krpw76YnK+lnzlkO4OvFjEuHzKc8rw94h0EAVSh/Gn+w==}
     engines: {node: '>=0.10.0'}
 
   readable-stream@3.6.2:
@@ -7279,6 +7279,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   valibot@0.37.0:
@@ -7645,14 +7646,14 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@bigmi/core@0.6.5(@types/react@19.2.5)(bs58@6.0.0)(react@19.1.4)(typescript@5.9.3)':
+  '@bigmi/core@0.6.5(@types/react@19.2.5)(bs58@6.0.0)(react@19.1.7)(typescript@5.9.3)':
     dependencies:
       '@noble/hashes': 1.8.0
       bech32: 2.0.0
       bitcoinjs-lib: 7.0.1(typescript@5.9.3)
       bs58: 6.0.0
       eventemitter3: 5.0.4
-      zustand: 5.0.11(@types/react@19.2.5)(react@19.1.4)
+      zustand: 5.0.11(@types/react@19.2.5)(react@19.1.7)
     transitivePeerDependencies:
       - '@types/react'
       - immer
@@ -7713,11 +7714,11 @@ snapshots:
 
   '@dynamic-labs-sdk/assert-package-version@0.25.0': {}
 
-  '@dynamic-labs-sdk/bitcoin@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/bitcoin@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@bitcoinerlab/secp256k1': 1.2.0
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@leather.io/rpc': 2.20.20
       bitcoinjs-lib: 7.0.0(typescript@5.9.3)
@@ -7734,13 +7735,13 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@dynamic-labs-sdk/client@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/client@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
       '@dynamic-labs-wallet/browser-wallet-client': 0.0.325(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@simplewebauthn/browser': 13.1.0
-      ably: 2.17.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+      ably: 2.17.1(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       buffer: 6.0.3
       eventemitter3: 5.0.1
       zod: 4.0.5
@@ -7752,11 +7753,11 @@ snapshots:
       - react-dom
       - utf-8-validate
 
-  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
+  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.3)(ioredis@5.4.1)
       '@walletconnect/utils': 2.21.8(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3)
@@ -7790,11 +7791,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
+  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.8)(ioredis@5.6.1)
       '@walletconnect/utils': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -7828,11 +7829,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
+  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.8)(ioredis@5.6.1)
       '@walletconnect/utils': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3)
@@ -7866,11 +7867,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
+  '@dynamic-labs-sdk/evm@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.8)(ioredis@5.6.1)
       '@walletconnect/utils': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -7904,11 +7905,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/solana@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/solana@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@solana/spl-token': 0.4.14(@solana/web3.js@1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -7951,11 +7952,11 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@dynamic-labs-sdk/solana@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/solana@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@solana/spl-token': 0.4.14(@solana/web3.js@1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -7998,11 +7999,11 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@dynamic-labs-sdk/solana@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/solana@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/wallet-connect': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@solana/spl-token': 0.4.14(@solana/web3.js@1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -8045,10 +8046,10 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@dynamic-labs-sdk/wallet-connect@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/wallet-connect@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@walletconnect/sign-client': 2.21.8(@upstash/redis@1.34.3)(bufferutil@4.1.0)(ioredis@5.4.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.5)
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.3)(ioredis@5.4.1)
@@ -8082,10 +8083,10 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@dynamic-labs-sdk/wallet-connect@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@dynamic-labs-sdk/wallet-connect@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@walletconnect/sign-client': 2.21.8(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.5)
       '@walletconnect/types': 2.21.8(@upstash/redis@1.34.8)(ioredis@5.6.1)
@@ -8119,11 +8120,11 @@ snapshots:
       - uploadthing
       - utf-8-validate
 
-  '@dynamic-labs-sdk/zerodev@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
+  '@dynamic-labs-sdk/zerodev@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/evm': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/evm': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@zerodev/ecdsa-validator': 5.4.9(@zerodev/sdk@5.4.37(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
       '@zerodev/multi-chain-ecdsa-validator': 5.4.5(@zerodev/sdk@5.4.37(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(@zerodev/webauthn-key@5.5.0(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
@@ -8159,11 +8160,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@dynamic-labs-sdk/zerodev@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
+  '@dynamic-labs-sdk/zerodev@0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@dynamic-labs-sdk/assert-package-version': 0.25.0
-      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
-      '@dynamic-labs-sdk/evm': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
+      '@dynamic-labs-sdk/client': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10)
+      '@dynamic-labs-sdk/evm': 0.25.0(@dynamic-labs-wallet/forward-mpc-client@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@upstash/redis@1.34.8)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs/sdk-api-core': 0.0.941
       '@zerodev/ecdsa-validator': 5.4.9(@zerodev/sdk@5.4.37(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
       '@zerodev/multi-chain-ecdsa-validator': 5.4.5(@zerodev/sdk@5.4.37(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(@zerodev/webauthn-key@5.5.0(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
@@ -8395,12 +8396,12 @@ snapshots:
     dependencies:
       '@dynamic-labs/logger': 4.65.0
 
-  '@dynamic-labs/iconic@4.61.1(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@dynamic-labs/iconic@4.61.1(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@dynamic-labs/assert-package-version': 4.61.1
       '@dynamic-labs/logger': 4.61.1
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
       sharp: 0.33.5
       url: 0.11.0
 
@@ -8758,11 +8759,11 @@ snapshots:
       '@floating-ui/core': 1.7.4
       '@floating-ui/utils': 0.2.10
 
-  '@floating-ui/react-dom@2.1.7(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@floating-ui/react-dom@2.1.7(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@floating-ui/dom': 1.7.5
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
 
   '@floating-ui/utils@0.2.10': {}
 
@@ -9053,9 +9054,9 @@ snapshots:
       bignumber.js: 9.1.2
       dompurify: 3.2.4
 
-  '@lifi/sdk@3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.4)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
+  '@lifi/sdk@3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.7)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3))(zod@3.24.3)':
     dependencies:
-      '@bigmi/core': 0.6.5(@types/react@19.2.5)(bs58@6.0.0)(react@19.1.4)(typescript@5.9.3)
+      '@bigmi/core': 0.6.5(@types/react@19.2.5)(bs58@6.0.0)(react@19.1.7)(typescript@5.9.3)
       '@bitcoinerlab/secp256k1': 1.2.0
       '@lifi/types': 17.53.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.3)
       '@mysten/sui': 1.45.2(typescript@5.9.3)
@@ -9081,7 +9082,7 @@ snapshots:
 
   '@lifi/sdk@3.14.1(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.17))(zod@4.0.17)':
     dependencies:
-      '@bigmi/core': 0.6.5(@types/react@19.2.5)(bs58@6.0.0)(react@19.1.4)(typescript@5.9.3)
+      '@bigmi/core': 0.6.5(@types/react@19.2.5)(bs58@6.0.0)(react@19.1.7)(typescript@5.9.3)
       '@bitcoinerlab/secp256k1': 1.2.0
       '@lifi/types': 17.53.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.0.17)
       '@mysten/sui': 1.45.2(typescript@5.9.3)
@@ -9172,34 +9173,34 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@next/env@15.5.9': {}
+  '@next/env@15.5.18': {}
 
-  '@next/eslint-plugin-next@15.5.4':
+  '@next/eslint-plugin-next@15.5.18':
     dependencies:
       fast-glob: 3.3.1
 
-  '@next/swc-darwin-arm64@15.5.7':
+  '@next/swc-darwin-arm64@15.5.18':
     optional: true
 
-  '@next/swc-darwin-x64@15.5.7':
+  '@next/swc-darwin-x64@15.5.18':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@15.5.7':
+  '@next/swc-linux-arm64-gnu@15.5.18':
     optional: true
 
-  '@next/swc-linux-arm64-musl@15.5.7':
+  '@next/swc-linux-arm64-musl@15.5.18':
     optional: true
 
-  '@next/swc-linux-x64-gnu@15.5.7':
+  '@next/swc-linux-x64-gnu@15.5.18':
     optional: true
 
-  '@next/swc-linux-x64-musl@15.5.7':
+  '@next/swc-linux-x64-musl@15.5.18':
     optional: true
 
-  '@next/swc-win32-arm64-msvc@15.5.7':
+  '@next/swc-win32-arm64-msvc@15.5.18':
     optional: true
 
-  '@next/swc-win32-x64-msvc@15.5.7':
+  '@next/swc-win32-x64-msvc@15.5.18':
     optional: true
 
   '@noble/ciphers@0.4.1': {}
@@ -9324,370 +9325,370 @@ snapshots:
 
   '@radix-ui/primitive@1.1.3': {}
 
-  '@radix-ui/react-arrow@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-arrow@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-collection@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-collection@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-compose-refs@1.1.2(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-compose-refs@1.1.2(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-context@1.1.2(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-context@1.1.2(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-dialog@1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-dialog@1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.7)
       aria-hidden: 1.2.6
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-direction@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-direction@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-dismissable-layer@1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-dismissable-layer@1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-escape-keydown': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-escape-keydown': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-dropdown-menu@2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-dropdown-menu@2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-menu': 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-menu': 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-focus-guards@1.1.3(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-focus-guards@1.1.3(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-focus-scope@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-focus-scope@1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-    optionalDependencies:
-      '@types/react': 19.2.5
-      '@types/react-dom': 19.2.3(@types/react@19.2.5)
-
-  '@radix-ui/react-id@1.1.1(@types/react@19.2.5)(react@19.1.4)':
-    dependencies:
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-    optionalDependencies:
-      '@types/react': 19.2.5
-
-  '@radix-ui/react-label@2.1.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
-    dependencies:
-      '@radix-ui/react-primitive': 2.1.4(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-menu@2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-id@1.1.1(@types/react@19.2.5)(react@19.1.7)':
+    dependencies:
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+    optionalDependencies:
+      '@types/react': 19.2.5
+
+  '@radix-ui/react-label@2.1.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
+    dependencies:
+      '@radix-ui/react-primitive': 2.1.4(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+    optionalDependencies:
+      '@types/react': 19.2.5
+      '@types/react-dom': 19.2.3(@types/react@19.2.5)
+
+  '@radix-ui/react-menu@2.1.16(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-roving-focus': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
+      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-roving-focus': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
       aria-hidden: 1.2.6
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-popover@1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-popover@1.1.15(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.7)
       aria-hidden: 1.2.6
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-popper@1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-popper@1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.7(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-arrow': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-rect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-size': 1.1.1(@types/react@19.2.5)(react@19.1.4)
+      '@floating-ui/react-dom': 2.1.7(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-arrow': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-rect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-size': 1.1.1(@types/react@19.2.5)(react@19.1.7)
       '@radix-ui/rect': 1.1.1
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-portal@1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-portal@1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-presence@1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-presence@1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-primitive@2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-primitive@2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-primitive@2.1.4(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-primitive@2.1.4(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-slot': 1.2.4(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-slot': 1.2.4(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-radio-group@1.3.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
-    dependencies:
-      '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-roving-focus': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-previous': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-size': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-    optionalDependencies:
-      '@types/react': 19.2.5
-      '@types/react-dom': 19.2.3(@types/react@19.2.5)
-
-  '@radix-ui/react-roving-focus@1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-radio-group@1.3.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-roving-focus': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-previous': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-size': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-select@2.2.6(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-roving-focus@1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.3
+      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+    optionalDependencies:
+      '@types/react': 19.2.5
+      '@types/react-dom': 19.2.3(@types/react@19.2.5)
+
+  '@radix-ui/react-select@2.2.6(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@radix-ui/number': 1.1.1
       '@radix-ui/primitive': 1.1.3
-      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-previous': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-visually-hidden': 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      '@radix-ui/react-collection': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-direction': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-dismissable-layer': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-focus-guards': 1.1.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-popper': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-previous': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-visually-hidden': 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
       aria-hidden: 1.2.6
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+      react-remove-scroll: 2.7.2(@types/react@19.2.5)(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
 
-  '@radix-ui/react-slot@1.2.3(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-slot@1.2.3(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-slot@1.2.4(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-slot@1.2.4(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-callback-ref@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-callback-ref@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-controllable-state@1.2.2(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-controllable-state@1.2.2(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-use-effect-event': 0.0.2(@types/react@19.2.5)(react@19.1.4)
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
+      '@radix-ui/react-use-effect-event': 0.0.2(@types/react@19.2.5)(react@19.1.7)
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-effect-event@0.0.2(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-effect-event@0.0.2(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-escape-keydown@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-escape-keydown@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
+      '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-layout-effect@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-layout-effect@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-previous@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-previous@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-rect@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-rect@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
       '@radix-ui/rect': 1.1.1
-      react: 19.1.4
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-use-size@1.1.1(@types/react@19.2.5)(react@19.1.4)':
+  '@radix-ui/react-use-size@1.1.1(@types/react@19.2.5)(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.4)
-      react: 19.1.4
+      '@radix-ui/react-use-layout-effect': 1.1.1(@types/react@19.2.5)(react@19.1.7)
+      react: 19.1.7
     optionalDependencies:
       '@types/react': 19.2.5
 
-  '@radix-ui/react-visually-hidden@1.2.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@radix-ui/react-visually-hidden@1.2.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
@@ -10496,7 +10497,7 @@ snapshots:
       '@noble/hashes': 1.1.5
       '@noble/secp256k1': 1.7.1
       '@scure/bip39': 1.1.0
-      '@stacks/common': 7.0.2
+      '@stacks/common': 7.3.1
       base64-js: 1.5.1
       bs58: 5.0.0
       ripemd160-min: 0.0.6
@@ -10717,15 +10718,15 @@ snapshots:
 
   '@tanstack/query-core@5.90.16': {}
 
-  '@tanstack/react-query@5.81.2(react@19.1.4)':
+  '@tanstack/react-query@5.81.2(react@19.1.7)':
     dependencies:
       '@tanstack/query-core': 5.81.2
-      react: 19.1.4
+      react: 19.1.7
 
-  '@tanstack/react-query@5.90.16(react@19.1.4)':
+  '@tanstack/react-query@5.90.16(react@19.1.7)':
     dependencies:
       '@tanstack/query-core': 5.90.16
-      react: 19.1.4
+      react: 19.1.7
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -10738,12 +10739,12 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)':
     dependencies:
       '@babel/runtime': 7.28.6
       '@testing-library/dom': 10.4.1
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
       '@types/react-dom': 19.2.3(@types/react@19.2.5)
@@ -11825,7 +11826,7 @@ snapshots:
       typescript: 5.9.3
       zod: 4.0.5
 
-  ably@2.17.1(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10):
+  ably@2.17.1(bufferutil@4.1.0)(react-dom@19.1.7(react@19.1.7))(react@19.1.7)(utf-8-validate@5.0.10):
     dependencies:
       '@ably/msgpack-js': 0.4.1
       dequal: 2.0.3
@@ -11834,8 +11835,8 @@ snapshots:
       ulid: 2.4.0
       ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     optionalDependencies:
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -12608,9 +12609,9 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-config-next@15.5.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3):
+  eslint-config-next@15.5.18(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3):
     dependencies:
-      '@next/eslint-plugin-next': 15.5.4
+      '@next/eslint-plugin-next': 15.5.18
       '@rushstack/eslint-patch': 1.16.1
       '@typescript-eslint/eslint-plugin': 8.56.1(@typescript-eslint/parser@8.56.1(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       '@typescript-eslint/parser': 8.56.1(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
@@ -13587,17 +13588,17 @@ snapshots:
       lodash.clonedeep: 4.5.0
       lru-cache: 6.0.0
 
-  lucide-react@0.511.0(react@19.1.4):
+  lucide-react@0.511.0(react@19.1.7):
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
 
-  lucide-react@0.541.0(react@19.1.4):
+  lucide-react@0.541.0(react@19.1.7):
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
 
-  lucide-react@0.542.0(react@19.1.4):
+  lucide-react@0.542.0(react@19.1.7):
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
 
   lz-string@1.5.0: {}
 
@@ -13682,29 +13683,29 @@ snapshots:
 
   neverthrow@7.2.0: {}
 
-  next-themes@0.4.6(react-dom@19.1.4(react@19.1.4))(react@19.1.4):
+  next-themes@0.4.6(react-dom@19.1.7(react@19.1.7))(react@19.1.7):
     dependencies:
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
 
-  next@15.5.9(react-dom@19.1.4(react@19.1.4))(react@19.1.4):
+  next@15.5.18(react-dom@19.1.7(react@19.1.7))(react@19.1.7):
     dependencies:
-      '@next/env': 15.5.9
+      '@next/env': 15.5.18
       '@swc/helpers': 0.5.15
       caniuse-lite: 1.0.30001774
       postcss: 8.4.31
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
-      styled-jsx: 5.1.6(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
+      styled-jsx: 5.1.6(react@19.1.7)
     optionalDependencies:
-      '@next/swc-darwin-arm64': 15.5.7
-      '@next/swc-darwin-x64': 15.5.7
-      '@next/swc-linux-arm64-gnu': 15.5.7
-      '@next/swc-linux-arm64-musl': 15.5.7
-      '@next/swc-linux-x64-gnu': 15.5.7
-      '@next/swc-linux-x64-musl': 15.5.7
-      '@next/swc-win32-arm64-msvc': 15.5.7
-      '@next/swc-win32-x64-msvc': 15.5.7
+      '@next/swc-darwin-arm64': 15.5.18
+      '@next/swc-darwin-x64': 15.5.18
+      '@next/swc-linux-arm64-gnu': 15.5.18
+      '@next/swc-linux-arm64-musl': 15.5.18
+      '@next/swc-linux-x64-gnu': 15.5.18
+      '@next/swc-linux-x64-musl': 15.5.18
+      '@next/swc-win32-arm64-msvc': 15.5.18
+      '@next/swc-win32-x64-msvc': 15.5.18
       sharp: 0.34.5
     transitivePeerDependencies:
       - '@babel/core'
@@ -14059,9 +14060,9 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  qrcode.react@4.2.0(react@19.1.4):
+  qrcode.react@4.2.0(react@19.1.7):
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
 
   query-string@7.1.3:
     dependencies:
@@ -14086,43 +14087,43 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
-  react-dom@19.1.4(react@19.1.4):
+  react-dom@19.1.7(react@19.1.7):
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
       scheduler: 0.26.0
 
   react-is@16.13.1: {}
 
   react-is@17.0.2: {}
 
-  react-remove-scroll-bar@2.3.8(@types/react@19.2.5)(react@19.1.4):
+  react-remove-scroll-bar@2.3.8(@types/react@19.2.5)(react@19.1.7):
     dependencies:
-      react: 19.1.4
-      react-style-singleton: 2.2.3(@types/react@19.2.5)(react@19.1.4)
+      react: 19.1.7
+      react-style-singleton: 2.2.3(@types/react@19.2.5)(react@19.1.7)
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.5
 
-  react-remove-scroll@2.7.2(@types/react@19.2.5)(react@19.1.4):
+  react-remove-scroll@2.7.2(@types/react@19.2.5)(react@19.1.7):
     dependencies:
-      react: 19.1.4
-      react-remove-scroll-bar: 2.3.8(@types/react@19.2.5)(react@19.1.4)
-      react-style-singleton: 2.2.3(@types/react@19.2.5)(react@19.1.4)
+      react: 19.1.7
+      react-remove-scroll-bar: 2.3.8(@types/react@19.2.5)(react@19.1.7)
+      react-style-singleton: 2.2.3(@types/react@19.2.5)(react@19.1.7)
       tslib: 2.8.1
-      use-callback-ref: 1.3.3(@types/react@19.2.5)(react@19.1.4)
-      use-sidecar: 1.1.3(@types/react@19.2.5)(react@19.1.4)
+      use-callback-ref: 1.3.3(@types/react@19.2.5)(react@19.1.7)
+      use-sidecar: 1.1.3(@types/react@19.2.5)(react@19.1.7)
     optionalDependencies:
       '@types/react': 19.2.5
 
-  react-style-singleton@2.2.3(@types/react@19.2.5)(react@19.1.4):
+  react-style-singleton@2.2.3(@types/react@19.2.5)(react@19.1.7):
     dependencies:
       get-nonce: 1.0.1
-      react: 19.1.4
+      react: 19.1.7
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.5
 
-  react@19.1.4: {}
+  react@19.1.7: {}
 
   readable-stream@3.6.2:
     dependencies:
@@ -14432,10 +14433,10 @@ snapshots:
     dependencies:
       atomic-sleep: 1.0.0
 
-  sonner@2.0.7(react-dom@19.1.4(react@19.1.4))(react@19.1.4):
+  sonner@2.0.7(react-dom@19.1.7(react@19.1.7))(react@19.1.7):
     dependencies:
-      react: 19.1.4
-      react-dom: 19.1.4(react@19.1.4)
+      react: 19.1.7
+      react-dom: 19.1.7(react@19.1.7)
 
   source-map-js@1.2.1: {}
 
@@ -14552,10 +14553,10 @@ snapshots:
 
   strip-json-comments@5.0.3: {}
 
-  styled-jsx@5.1.6(react@19.1.4):
+  styled-jsx@5.1.6(react@19.1.7):
     dependencies:
       client-only: 0.0.1
-      react: 19.1.4
+      react: 19.1.7
 
   superstruct@2.0.2: {}
 
@@ -14841,17 +14842,17 @@ snapshots:
       punycode: 1.3.2
       querystring: 0.2.0
 
-  use-callback-ref@1.3.3(@types/react@19.2.5)(react@19.1.4):
+  use-callback-ref@1.3.3(@types/react@19.2.5)(react@19.1.7):
     dependencies:
-      react: 19.1.4
+      react: 19.1.7
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.5
 
-  use-sidecar@1.1.3(@types/react@19.2.5)(react@19.1.4):
+  use-sidecar@1.1.3(@types/react@19.2.5)(react@19.1.7):
     dependencies:
       detect-node-es: 1.1.0
-      react: 19.1.4
+      react: 19.1.7
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.5
@@ -15295,7 +15296,7 @@ snapshots:
 
   zod@4.0.5: {}
 
-  zustand@5.0.11(@types/react@19.2.5)(react@19.1.4):
+  zustand@5.0.11(@types/react@19.2.5)(react@19.1.7):
     optionalDependencies:
       '@types/react': 19.2.5
-      react: 19.1.4
+      react: 19.1.7
