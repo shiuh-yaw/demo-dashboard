@@ -99,7 +99,7 @@ Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--bran
 - **Required env:** see "Required environment". Iron + Alchemy keys are server-only.
 - **Custom domain:** TBD; preview URL stable.
 - **Owner:** demos team.
-- **Dev port:** 4008 (`pnpm dev:proceeds`).
+- **Dev port:** 4010 (`pnpm dev:proceeds`).
 
 ## Integration map
 
