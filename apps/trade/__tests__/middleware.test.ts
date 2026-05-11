@@ -182,26 +182,26 @@ describe("trade middleware — authenticated request pass-through", () => {
 });
 
 describe("trade middleware — D. config-id resolution (path > query > cookie)", () => {
-  test("path /t/abc/* takes precedence over ?id=other", () => {
+  test("path /t/abc/* takes precedence over ?theme=other", () => {
     const res = middleware(
       makeRequest({
-        url: "/t/abc/portfolio?id=other",
+        url: "/t/abc/portfolio?theme=other",
         cookies: AUTH,
       }),
     );
     expect(getForwardedRequestHeader(res, HEADER)).toBe("abc");
   });
 
-  test("?id=brand on plain protected route -> forwards header from query", () => {
+  test("?theme=brand on plain protected route -> forwards header from query", () => {
     const res = middleware(
-      makeRequest({ url: "/portfolio?id=brand", cookies: AUTH }),
+      makeRequest({ url: "/portfolio?theme=brand", cookies: AUTH }),
     );
     expect(getForwardedRequestHeader(res, HEADER)).toBe("brand");
   });
 
-  test("?id= alone does NOT set the trade_config_id cookie (path drives cookie)", () => {
+  test("?theme= alone does NOT set the trade_config_id cookie (path drives cookie)", () => {
     const res = middleware(
-      makeRequest({ url: "/portfolio?id=brand", cookies: AUTH }),
+      makeRequest({ url: "/portfolio?theme=brand", cookies: AUTH }),
     );
     expect(res.cookies.get(COOKIE)).toBeUndefined();
   });

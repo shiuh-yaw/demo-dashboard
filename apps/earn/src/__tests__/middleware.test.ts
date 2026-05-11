@@ -133,9 +133,9 @@ describe("earn middleware — authenticated request flows (non-config)", () => {
 });
 
 describe("earn middleware — D. no config-id pattern at middleware layer", () => {
-  test("?id=brand on /earn -> no cookie set, no header forwarded", () => {
+  test("?theme=brand on /earn -> no cookie set, no header forwarded", () => {
     const res = middleware(
-      makeRequest({ url: "/earn?id=brand", cookies: AUTH }),
+      makeRequest({ url: "/earn?theme=brand", cookies: AUTH }),
     );
     expect(isRedirect(res)).toBe(false);
     expect(res.cookies.get("earn_config_id")).toBeUndefined();

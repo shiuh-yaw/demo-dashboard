@@ -4,7 +4,7 @@
  * Locks down current pre-Phase-1D behavior. After Phase 1D rebases on top, these
  * tests gate whether the refactor preserved the contract.
  *
- * Asserts the visa-direct cookie pattern (D-008): query `?id=` -> cookie
+ * Asserts the visa-direct cookie pattern (D-008): query `?theme=` -> cookie
  * `visa_direct_config_id` + forwarded header `x-visa-direct-config-id`. Plus
  * standard auth gate, login passthrough, and OAuth-callback handling.
  */
@@ -143,9 +143,9 @@ describe("visa-direct middleware — authenticated request pass-through", () => 
 });
 
 describe("visa-direct middleware — D. config-id cookie + header sync", () => {
-  test("?id=abc on protected route (authed) -> sets cookie + forwards header", () => {
+  test("?theme=abc on protected route (authed) -> sets cookie + forwards header", () => {
     const res = middleware(
-      makeRequest({ url: "/payment-methods?id=abc", cookies: AUTH }),
+      makeRequest({ url: "/payment-methods?theme=abc", cookies: AUTH }),
     );
     expect(isRedirect(res)).toBe(false);
     const setCookie = res.cookies.get(COOKIE);
@@ -157,10 +157,10 @@ describe("visa-direct middleware — D. config-id cookie + header sync", () => {
     expect(getForwardedRequestHeader(res, HEADER)).toBe("abc");
   });
 
-  test("?id=  (empty/blank) on /login -> clears the config cookie", () => {
+  test("?theme=  (empty/blank) on /login -> clears the config cookie", () => {
     const res = middleware(
       makeRequest({
-        url: "/login?id=",
+        url: "/login?theme=",
         cookies: { [COOKIE]: "old" },
       }),
     );
@@ -169,7 +169,7 @@ describe("visa-direct middleware — D. config-id cookie + header sync", () => {
     expect(cleared?.value).toBe("");
   });
 
-  test("cookie already set, no ?id= -> cookie persists; header is forwarded", () => {
+  test("cookie already set, no ?theme= -> cookie persists; header is forwarded", () => {
     const res = middleware(
       makeRequest({
         url: "/payment-methods",
@@ -183,10 +183,10 @@ describe("visa-direct middleware — D. config-id cookie + header sync", () => {
     expect(getForwardedRequestHeader(res, HEADER)).toBe("stickyId");
   });
 
-  test("?id=newId differs from cookie value -> updates cookie to newId", () => {
+  test("?theme=newId differs from cookie value -> updates cookie to newId", () => {
     const res = middleware(
       makeRequest({
-        url: "/payment-methods?id=newId",
+        url: "/payment-methods?theme=newId",
         cookies: { ...AUTH, [COOKIE]: "oldId" },
       }),
     );
@@ -194,10 +194,10 @@ describe("visa-direct middleware — D. config-id cookie + header sync", () => {
     expect(getForwardedRequestHeader(res, HEADER)).toBe("newId");
   });
 
-  test("?id=  (blank) explicitly clears even when query carries other params", () => {
+  test("?theme=  (blank) explicitly clears even when query carries other params", () => {
     const res = middleware(
       makeRequest({
-        url: "/payment-methods?id=&foo=bar",
+        url: "/payment-methods?theme=&foo=bar",
         cookies: { ...AUTH, [COOKIE]: "old" },
       }),
     );

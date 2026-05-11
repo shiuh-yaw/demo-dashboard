@@ -5,7 +5,7 @@
  * tests gate whether the refactor preserved the contract.
  *
  * Notable: remittance does NOT set a config cookie — it only forwards
- * `x-remittance-config-id` (resolved from the /r/<id>/* path or ?id= query).
+ * `x-remittance-config-id` (resolved from the /r/<id>/* path or ?theme= query).
  */
 
 import { describe, expect, test } from "vitest";
@@ -141,12 +141,12 @@ describe("remittance middleware — auth gate on protected routes", () => {
     expect(loc.searchParams.get("returnTo")).toBe("/");
   });
 
-  test("B. unauthenticated GET /dashboard?id=brandX -> returnTo carries the id query", () => {
-    const res = middleware(makeRequest({ url: "/dashboard?id=brandX" }));
+  test("B. unauthenticated GET /dashboard?theme=brandX -> returnTo carries the id query", () => {
+    const res = middleware(makeRequest({ url: "/dashboard?theme=brandX" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
     expect(loc.pathname).toBe("/login");
-    expect(loc.searchParams.get("returnTo")).toBe("/dashboard?id=brandX");
+    expect(loc.searchParams.get("returnTo")).toBe("/dashboard?theme=brandX");
   });
 
   test("B. unauthenticated GET /r/abc/dashboard -> redirect to /r/abc/login with returnTo", () => {
@@ -171,9 +171,9 @@ describe("remittance middleware — authenticated request pass-through", () => {
 });
 
 describe("remittance middleware — D. config-id header forwarding (path + query)", () => {
-  test("?id=brandX on protected route -> forwards x-remittance-config-id", () => {
+  test("?theme=brandX on protected route -> forwards x-remittance-config-id", () => {
     const res = middleware(
-      makeRequest({ url: "/dashboard?id=brandX", cookies: AUTH }),
+      makeRequest({ url: "/dashboard?theme=brandX", cookies: AUTH }),
     );
     expect(isRedirect(res)).toBe(false);
     expect(getForwardedRequestHeader(res, HEADER)).toBe("brandX");
@@ -181,7 +181,7 @@ describe("remittance middleware — D. config-id header forwarding (path + query
 
   test("/r/abc/* path -> forwards x-remittance-config-id=abc (path takes precedence)", () => {
     const res = middleware(
-      makeRequest({ url: "/r/abc/dashboard?id=other", cookies: AUTH }),
+      makeRequest({ url: "/r/abc/dashboard?theme=other", cookies: AUTH }),
     );
     expect(isRedirect(res)).toBe(false);
     expect(getForwardedRequestHeader(res, HEADER)).toBe("abc");
@@ -189,7 +189,7 @@ describe("remittance middleware — D. config-id header forwarding (path + query
 
   test("remittance does NOT set a config cookie (header-only forwarding)", () => {
     const res = middleware(
-      makeRequest({ url: "/dashboard?id=brandX", cookies: AUTH }),
+      makeRequest({ url: "/dashboard?theme=brandX", cookies: AUTH }),
     );
     // No remittance_config_id (or any other config) cookie is set by middleware.
     expect(res.cookies.get("remittance_config_id")).toBeUndefined();
