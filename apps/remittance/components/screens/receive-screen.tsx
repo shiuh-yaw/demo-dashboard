@@ -21,7 +21,7 @@ export function ReceiveScreen({
     >
       <div className="flex flex-col items-center gap-5 py-2">
         {/* QR Code */}
-        <div className="p-4 bg-white rounded-(--widget-radius-lg) border border-(--widget-border)">
+        <div className="p-4 bg-white rounded-(--brand-radius-lg) border border-(--brand-border)">
           <QRCodeSVG
             value={walletAddress}
             size={180}
@@ -32,10 +32,10 @@ export function ReceiveScreen({
 
         {/* Address */}
         <div className="w-full space-y-2">
-          <p className="text-xs text-(--widget-muted) text-center">
+          <p className="text-xs text-(--brand-muted) text-center">
             Your wallet address (Base Sepolia)
           </p>
-          <div className="flex items-center gap-2 p-3 rounded-(--widget-radius) bg-(--widget-row-bg)">
+          <div className="flex items-center gap-2 p-3 rounded-(--brand-radius) bg-(--brand-row-bg)">
             <code className="flex-1 text-xs break-all font-mono">
               {truncateAddress(walletAddress, 16, 12)}
             </code>
@@ -43,7 +43,7 @@ export function ReceiveScreen({
           </div>
         </div>
 
-        <p className="text-xs text-(--widget-muted) text-center">
+        <p className="text-xs text-(--brand-muted) text-center">
           Only send USDC on the Base Sepolia network to this address
         </p>
       </div>

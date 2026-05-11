@@ -55,7 +55,7 @@ export function RecentTransactions({
         action={
           <div className="flex items-center gap-2">
             {isFetching && (
-              <span className="text-xs text-(--widget-muted)">Updating…</span>
+              <span className="text-xs text-(--brand-muted)">Updating…</span>
             )}
             <Button
               variant="ghost"
@@ -85,13 +85,13 @@ export function RecentTransactions({
           </div>
         ) : transactions.length === 0 ? (
           <div className="text-center px-4 py-8 sm:px-5">
-            <p className="text-sm text-(--widget-muted)">No transactions yet</p>
-            <p className="text-xs text-(--widget-muted)/60 mt-1">
+            <p className="text-sm text-(--brand-muted)">No transactions yet</p>
+            <p className="text-xs text-(--brand-muted)/60 mt-1">
               Send or receive USDC to see activity here
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-(--widget-border)">
+          <div className="divide-y divide-(--brand-border)">
             {transactions.map((tx) => (
               <RecentTxRow
                 key={tx.hash}
@@ -127,7 +127,7 @@ function RecentTxRow({
       href={`https://sepolia.basescan.org/tx/${tx.hash}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col gap-3 px-4 py-3.5 hover:bg-(--widget-row-hover) transition-colors group sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+      className="flex flex-col gap-3 px-4 py-3.5 hover:bg-(--brand-row-hover) transition-colors group sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
       {/* Top row (mobile) / Left + Middle (desktop) */}
       <div className="flex items-center justify-between gap-3 min-w-0 sm:flex-1 sm:justify-start">
@@ -135,8 +135,8 @@ function RecentTxRow({
           <div
             className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center sm:w-10 sm:h-10 ${
               isSent
-                ? "bg-red-50 text-(--widget-error)"
-                : "bg-green-50 text-(--widget-success)"
+                ? "bg-red-50 text-(--brand-error)"
+                : "bg-green-50 text-(--brand-success)"
             }`}
           >
             {isSent ? (
@@ -146,21 +146,21 @@ function RecentTxRow({
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-(--widget-fg)">
+            <p className="text-sm font-medium text-(--brand-fg)">
               {isSent ? "Sent" : "Received"}
             </p>
-            <p className="text-xs text-(--widget-muted)">
+            <p className="text-xs text-(--brand-muted)">
               <TxTime timestamp={tx.timestamp} />
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 sm:flex-1 sm:justify-center">
-          <span className="inline-flex items-center rounded-md bg-(--widget-row-bg) px-2 py-0.5 text-xs font-medium text-(--widget-muted)">
+          <span className="inline-flex items-center rounded-md bg-(--brand-row-bg) px-2 py-0.5 text-xs font-medium text-(--brand-muted)">
             {tx.asset}
           </span>
           <span
             className={`text-sm font-semibold tabular-nums ${
-              isSent ? "text-(--widget-error)" : "text-(--widget-success)"
+              isSent ? "text-(--brand-error)" : "text-(--brand-success)"
             }`}
           >
             {isSent ? "-" : "+"}
@@ -172,17 +172,17 @@ function RecentTxRow({
       {/* Bottom row (mobile) / Right (desktop) */}
       <div className="flex items-center justify-between gap-2 sm:flex-1 sm:justify-end">
         <div className="min-w-0 sm:text-right">
-          <p className="text-xs text-(--widget-muted)">
+          <p className="text-xs text-(--brand-muted)">
             {isSent ? "To" : "From"}
           </p>
-          <p className="text-sm font-mono text-(--widget-fg) truncate">
+          <p className="text-sm font-mono text-(--brand-fg) truncate">
             {getCounterpartyDisplayLabel(counterparty, {
               withdrawVaultAddress,
               addressToEmail,
             }) ?? truncateAddress(counterparty)}
           </p>
         </div>
-        <ExternalLink className="w-4 h-4 shrink-0 text-(--widget-muted) transition-colors group-hover:text-(--widget-accent)" />
+        <ExternalLink className="w-4 h-4 shrink-0 text-(--brand-muted) transition-colors group-hover:text-(--brand-accent)" />
       </div>
     </a>
   );

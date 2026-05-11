@@ -16,10 +16,10 @@ export function ComingSoonScreen({
   return (
     <WidgetCard title={feature}>
       <div className="flex flex-col items-center justify-center py-12 gap-4">
-        <div className="w-16 h-16 rounded-full bg-(--widget-row-bg) flex items-center justify-center">
-          <Construction className="w-8 h-8 text-(--widget-muted)" />
+        <div className="w-16 h-16 rounded-full bg-(--brand-row-bg) flex items-center justify-center">
+          <Construction className="w-8 h-8 text-(--brand-muted)" />
         </div>
-        <p className="text-sm text-(--widget-muted)">
+        <p className="text-sm text-(--brand-muted)">
           {feature} is coming soon
         </p>
         <Button variant="outline" onClick={navigation.goToDashboard}>

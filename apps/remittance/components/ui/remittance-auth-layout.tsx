@@ -3,7 +3,6 @@
 import { AuthLayout } from "@dynamic-demos/ui";
 import { AppLogo } from "@/components/ui/app-logo";
 import { useRemittanceConfig } from "@/contexts/remittance-config-context";
-import { themeToCssVars } from "@/lib/remittance-config";
 
 interface RemittanceAuthLayoutProps {
   children: React.ReactNode;
@@ -12,10 +11,14 @@ interface RemittanceAuthLayoutProps {
 /**
  * Auth layout with logo above the card, matching wallet app pattern.
  * Uses shared AuthLayout from packages/ui (logo + footer).
- * Passes theme overrides so custom branding (primary, accent, etc.) is preserved.
+ *
+ * No per-instance theme overrides — `--brand-*` tokens are emitted once
+ * at SSR by `<ThemeStyleTag>` in the root `app/layout.tsx`, and the
+ * `--widget-*` compat shims in `app/globals.css` alias them so this
+ * layout (and the LoginForm it renders) picks up the brand colors.
  */
 export function RemittanceAuthLayout({ children }: RemittanceAuthLayoutProps) {
-  const { branding, theme } = useRemittanceConfig();
+  const { branding } = useRemittanceConfig();
 
   return (
     <AuthLayout
@@ -25,7 +28,6 @@ export function RemittanceAuthLayout({ children }: RemittanceAuthLayoutProps) {
           logoUrl={branding.logoUrl}
         />
       }
-      themeOverrides={themeToCssVars(theme)}
       showThemeToggle={false}
     >
       {children}

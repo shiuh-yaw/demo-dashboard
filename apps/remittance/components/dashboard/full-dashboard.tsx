@@ -120,8 +120,8 @@ export function FullDashboard({
     <div className="space-y-6 lg:space-y-8">
       {/* Welcome header - full width, above the two-column layout */}
       <div>
-        <h1 className="text-2xl font-bold text-(--widget-fg)">Welcome back</h1>
-        <p className="text-sm text-(--widget-muted) mt-1">
+        <h1 className="text-2xl font-bold text-(--brand-fg)">Welcome back</h1>
+        <p className="text-sm text-(--brand-muted) mt-1">
           Manage your funds and send money globally
         </p>
       </div>
@@ -221,15 +221,15 @@ function ActionTile({
       onClick={onClick}
       className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm ${
         muted
-          ? "bg-(--widget-row-bg) border-(--widget-border) text-(--widget-muted) hover:bg-(--widget-row-hover)"
-          : "bg-white border-(--widget-border) text-(--widget-fg) hover:border-(--widget-primary)/30 hover:bg-(--widget-primary)/5"
+          ? "bg-(--brand-row-bg) border-(--brand-border) text-(--brand-muted) hover:bg-(--brand-row-hover)"
+          : "bg-white border-(--brand-border) text-(--brand-fg) hover:border-(--brand-primary)/30 hover:bg-(--brand-primary)/5"
       }`}
     >
       <div
         className={`w-10 h-10 rounded-full flex items-center justify-center ${
           muted
-            ? "bg-(--widget-row-hover) text-(--widget-muted)"
-            : "bg-(--widget-primary)/10 text-(--widget-primary)"
+            ? "bg-(--brand-row-hover) text-(--brand-muted)"
+            : "bg-(--brand-primary)/10 text-(--brand-primary)"
         }`}
       >
         {icon}

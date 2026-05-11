@@ -72,7 +72,7 @@ export function BalanceCard({
   const breakdown = breakdownParts.join(" · ");
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-(--widget-card-gradient-start) to-(--widget-card-gradient-end) p-6 text-white shadow-lg shadow-black/10">
+    <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-(--brand-card-gradient-start) to-(--brand-card-gradient-end) p-6 text-white shadow-lg shadow-black/10">
       {/* Subtle circle overlay */}
       <div
         className="absolute inset-0 opacity-[0.06] pointer-events-none"

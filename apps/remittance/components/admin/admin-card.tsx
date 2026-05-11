@@ -13,14 +13,14 @@ export function AdminCard({ title, description, children, className }: AdminCard
   return (
     <div
       className={cn(
-        "bg-white rounded-(--widget-radius-lg) border border-(--widget-border) p-6",
+        "bg-white rounded-(--brand-radius-lg) border border-(--brand-border) p-6",
         className,
       )}
     >
       <div className="mb-4">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (
-          <p className="text-sm text-(--widget-muted) mt-1">{description}</p>
+          <p className="text-sm text-(--brand-muted) mt-1">{description}</p>
         )}
       </div>
       {children}

@@ -1,11 +1,12 @@
 /**
- * Characterization tests for apps/remittance/middleware.ts.
+ * Tests for apps/remittance/middleware.ts (post-Phase-4-app simplification).
  *
- * Locks down current pre-Phase-1D behavior. After Phase 1D rebases on top, these
- * tests gate whether the refactor preserved the contract.
- *
- * Notable: remittance does NOT set a config cookie — it only forwards
- * `x-remittance-config-id` (resolved from the /r/<id>/* path or ?theme= query).
+ * The middleware is now a thin createDemoMiddleware factory call with no
+ * path-based config extraction. Config id is sourced exclusively from
+ * `?theme=<configId>` (factory default `configIdSource: "query"`) and
+ * persisted in the `remittance_config_id` cookie (factory default
+ * `stickyConfigCookie: true`). Subsequent visits without `?theme=` reuse the
+ * cookie and forward the resolved id as `x-remittance-config-id`.
  */
 
 import { describe, expect, test } from "vitest";
@@ -13,21 +14,22 @@ import { middleware, config as middlewareConfig } from "../middleware";
 import { getForwardedRequestHeader, isRedirect, makeRequest } from "./_helpers";
 
 const HEADER = "x-remittance-config-id";
+const COOKIE = "remittance_config_id";
 const AUTH = { dynamic_jwt: "fake.jwt.token" };
 
 describe("remittance middleware — public route /login", () => {
-  test("A. unauthenticated GET /login -> NextResponse.next() (no redirect)", () => {
+  test("unauthenticated GET /login -> passthrough", () => {
     const res = middleware(makeRequest({ url: "/login" }));
     expect(isRedirect(res)).toBe(false);
   });
 
-  test("E. authenticated GET /login -> redirect to / (no returnTo, no config)", () => {
+  test("authenticated GET /login -> redirect to /", () => {
     const res = middleware(makeRequest({ url: "/login", cookies: AUTH }));
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get("location") as string).pathname).toBe("/");
   });
 
-  test("E. authenticated GET /login?returnTo=/dashboard -> redirect to /dashboard", () => {
+  test("authenticated GET /login?returnTo=/dashboard -> redirect to /dashboard", () => {
     const res = middleware(
       makeRequest({ url: "/login?returnTo=/dashboard", cookies: AUTH }),
     );
@@ -37,17 +39,7 @@ describe("remittance middleware — public route /login", () => {
     );
   });
 
-  test("E. authenticated GET /login?returnTo=foo (relative w/o leading slash) -> /foo", () => {
-    const res = middleware(
-      makeRequest({ url: "/login?returnTo=foo", cookies: AUTH }),
-    );
-    expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location") as string).pathname).toBe(
-      "/foo",
-    );
-  });
-
-  test("E. authenticated GET /login with sessionExpired -> passthrough and clear dynamic_jwt", () => {
+  test("authenticated GET /login with sessionExpired -> passthrough and clear dynamic_jwt", () => {
     const res = middleware(
       makeRequest({ url: "/login?sessionExpired=1", cookies: AUTH }),
     );
@@ -55,70 +47,16 @@ describe("remittance middleware — public route /login", () => {
     expect(res.cookies.get("dynamic_jwt")?.value).toBe("");
   });
 
-  test("E. OAuth callback (?dynamicOauthCode=...) on /login is NOT redirected", () => {
+  test("OAuth callback (?dynamicOauthCode=...) on /login is NOT redirected", () => {
     const res = middleware(
       makeRequest({ url: "/login?dynamicOauthCode=abc", cookies: AUTH }),
     );
     expect(isRedirect(res)).toBe(false);
   });
-
-  test("E. OAuth callback (?dynamicOauthCode=...&dynamicOauthState=...) on /login is NOT redirected", () => {
-    // Per docs/projects/demo-meta-system/research/dynamic-auth-patterns.md,
-    // Dynamic SDK uses `dynamicOauthCode`/`dynamicOauthState` (not `code`/`state`).
-    const res = middleware(
-      makeRequest({
-        url: "/login?dynamicOauthCode=abc&dynamicOauthState=xyz",
-        cookies: AUTH,
-      }),
-    );
-    expect(isRedirect(res)).toBe(false);
-  });
-});
-
-describe("remittance middleware — public config-route login /r/[id]/login", () => {
-  test("A. unauthenticated GET /r/abc/login -> passthrough; header forwarded", () => {
-    const res = middleware(makeRequest({ url: "/r/abc/login" }));
-    expect(isRedirect(res)).toBe(false);
-    expect(getForwardedRequestHeader(res, HEADER)).toBe("abc");
-  });
-
-  test("E. authenticated GET /r/abc/login -> redirect to /r/abc/dashboard", () => {
-    const res = middleware(
-      makeRequest({ url: "/r/abc/login", cookies: AUTH }),
-    );
-    expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location") as string).pathname).toBe(
-      "/r/abc/dashboard",
-    );
-  });
-
-  test("E. authenticated /r/abc/login?returnTo=/foo -> redirect to /foo", () => {
-    const res = middleware(
-      makeRequest({
-        url: "/r/abc/login?returnTo=/foo",
-        cookies: AUTH,
-      }),
-    );
-    expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location") as string).pathname).toBe(
-      "/foo",
-    );
-  });
-
-  test("E. authenticated /r/abc/login?sessionExpired -> passthrough; clear dynamic_jwt", () => {
-    const res = middleware(
-      makeRequest({
-        url: "/r/abc/login?sessionExpired=1",
-        cookies: AUTH,
-      }),
-    );
-    expect(isRedirect(res)).toBe(false);
-    expect(res.cookies.get("dynamic_jwt")?.value).toBe("");
-  });
 });
 
 describe("remittance middleware — auth gate on protected routes", () => {
-  test("B. unauthenticated GET /dashboard -> redirect to /login with returnTo=/dashboard", () => {
+  test("unauthenticated GET /dashboard -> redirect to /login with returnTo=/dashboard", () => {
     const res = middleware(makeRequest({ url: "/dashboard" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
@@ -126,14 +64,7 @@ describe("remittance middleware — auth gate on protected routes", () => {
     expect(loc.searchParams.get("returnTo")).toBe("/dashboard");
   });
 
-  test("B. unauthenticated GET /dashboard/ (trailing slash) -> returnTo strips trailing slash", () => {
-    const res = middleware(makeRequest({ url: "/dashboard/" }));
-    expect(res.status).toBe(307);
-    const loc = new URL(res.headers.get("location") as string);
-    expect(loc.searchParams.get("returnTo")).toBe("/dashboard");
-  });
-
-  test("B. unauthenticated GET / -> redirect to /login with returnTo=/", () => {
+  test("unauthenticated GET / -> redirect to /login with returnTo=/", () => {
     const res = middleware(makeRequest({ url: "/" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
@@ -141,25 +72,17 @@ describe("remittance middleware — auth gate on protected routes", () => {
     expect(loc.searchParams.get("returnTo")).toBe("/");
   });
 
-  test("B. unauthenticated GET /dashboard?theme=brandX -> returnTo carries the id query", () => {
+  test("unauthenticated GET /dashboard?theme=brandX -> returnTo carries the id query", () => {
     const res = middleware(makeRequest({ url: "/dashboard?theme=brandX" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
     expect(loc.pathname).toBe("/login");
     expect(loc.searchParams.get("returnTo")).toBe("/dashboard?theme=brandX");
   });
-
-  test("B. unauthenticated GET /r/abc/dashboard -> redirect to /r/abc/login with returnTo", () => {
-    const res = middleware(makeRequest({ url: "/r/abc/dashboard" }));
-    expect(res.status).toBe(307);
-    const loc = new URL(res.headers.get("location") as string);
-    expect(loc.pathname).toBe("/r/abc/login");
-    expect(loc.searchParams.get("returnTo")).toBe("/r/abc/dashboard");
-  });
 });
 
 describe("remittance middleware — authenticated request pass-through", () => {
-  test("C. authenticated GET /dashboard -> passthrough (no redirect)", () => {
+  test("authenticated GET /dashboard -> passthrough", () => {
     const res = middleware(makeRequest({ url: "/dashboard", cookies: AUTH }));
     expect(isRedirect(res)).toBe(false);
   });
@@ -170,33 +93,61 @@ describe("remittance middleware — authenticated request pass-through", () => {
   });
 });
 
-describe("remittance middleware — D. config-id header forwarding (path + query)", () => {
-  test("?theme=brandX on protected route -> forwards x-remittance-config-id", () => {
+describe("remittance middleware — config-id resolution (cookie + query only)", () => {
+  test("?theme=brandX on protected route -> sets cookie + forwards header", () => {
     const res = middleware(
       makeRequest({ url: "/dashboard?theme=brandX", cookies: AUTH }),
     );
     expect(isRedirect(res)).toBe(false);
     expect(getForwardedRequestHeader(res, HEADER)).toBe("brandX");
+    expect(res.cookies.get(COOKIE)?.value).toBe("brandX");
   });
 
-  test("/r/abc/* path -> forwards x-remittance-config-id=abc (path takes precedence)", () => {
+  test("cookie-only request (no ?theme=) -> forwards header from cookie", () => {
     const res = middleware(
-      makeRequest({ url: "/r/abc/dashboard?theme=other", cookies: AUTH }),
+      makeRequest({
+        url: "/dashboard",
+        cookies: { ...AUTH, [COOKIE]: "brandX" },
+      }),
     );
     expect(isRedirect(res)).toBe(false);
-    expect(getForwardedRequestHeader(res, HEADER)).toBe("abc");
+    expect(getForwardedRequestHeader(res, HEADER)).toBe("brandX");
   });
 
-  test("remittance does NOT set a config cookie (header-only forwarding)", () => {
+  test("?theme= (empty) clears the cookie", () => {
     const res = middleware(
-      makeRequest({ url: "/dashboard?theme=brandX", cookies: AUTH }),
+      makeRequest({
+        url: "/dashboard?theme=",
+        cookies: { ...AUTH, [COOKIE]: "brandX" },
+      }),
     );
-    // No remittance_config_id (or any other config) cookie is set by middleware.
-    expect(res.cookies.get("remittance_config_id")).toBeUndefined();
+    // `delete` writes a Set-Cookie with empty value.
+    expect(res.cookies.get(COOKIE)?.value).toBe("");
+  });
+
+  test("?theme=other overrides existing cookie", () => {
+    const res = middleware(
+      makeRequest({
+        url: "/dashboard?theme=other",
+        cookies: { ...AUTH, [COOKIE]: "brandX" },
+      }),
+    );
+    expect(getForwardedRequestHeader(res, HEADER)).toBe("other");
+    expect(res.cookies.get(COOKIE)?.value).toBe("other");
+  });
+
+  test("path-based /r/[id]/* is NOT extracted as a config id (path routing dropped)", () => {
+    // The middleware now lets next.config.ts handle the legacy /r/[id]/* shape
+    // via redirects. Even if a request reaches middleware, no header should be
+    // forwarded from the path.
+    const res = middleware(
+      makeRequest({ url: "/r/abc/dashboard", cookies: AUTH }),
+    );
+    expect(getForwardedRequestHeader(res, HEADER)).toBeNull();
   });
 });
 
-describe("remittance middleware — F. matcher", () => {
+describe("remittance middleware — matcher", () => {
   test("matcher excludes /api, _next, image extensions", () => {
     expect(middlewareConfig.matcher).toEqual([
       "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",

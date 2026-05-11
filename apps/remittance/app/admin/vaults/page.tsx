@@ -9,7 +9,7 @@ export default async function AdminVaultsPage() {
   if (!omnibusVaultId) {
     return (
       <Card title="Omnibus Vault">
-        <p className="text-sm text-(--widget-error) text-center py-8">
+        <p className="text-sm text-(--brand-error) text-center py-8">
           FIREBLOCKS_OMNIBUS_VAULT_ID is not configured
         </p>
       </Card>
@@ -35,7 +35,7 @@ export default async function AdminVaultsPage() {
   if (error || !vault) {
     return (
       <Card title="Omnibus Vault">
-        <p className="text-sm text-(--widget-error) text-center py-8">
+        <p className="text-sm text-(--brand-error) text-center py-8">
           {error ?? "Vault not found"}
         </p>
       </Card>
@@ -48,7 +48,7 @@ export default async function AdminVaultsPage() {
         <div>
           <h3 className="text-sm font-medium mb-2">Assets</h3>
           {vault.assets.length === 0 ? (
-            <p className="text-xs text-(--widget-muted)">
+            <p className="text-xs text-(--brand-muted)">
               No assets configured
             </p>
           ) : (
@@ -56,7 +56,7 @@ export default async function AdminVaultsPage() {
               {vault.assets.map((a) => (
                 <div
                   key={a.id}
-                  className="flex justify-between p-2 rounded bg-(--widget-row-bg) text-sm"
+                  className="flex justify-between p-2 rounded bg-(--brand-row-bg) text-sm"
                 >
                   <span className="font-mono">{a.id}</span>
                   <div className="text-right text-xs">
@@ -89,11 +89,11 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-(--widget-radius-lg) border border-(--widget-border) p-6">
+    <div className="bg-white rounded-(--brand-radius-lg) border border-(--brand-border) p-6">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description && (
-          <p className="text-sm text-(--widget-muted) mt-1">{description}</p>
+          <p className="text-sm text-(--brand-muted) mt-1">{description}</p>
         )}
       </div>
       {children}

@@ -34,7 +34,7 @@ export function TxTime({ timestamp }: { timestamp: string }) {
   }, []);
 
   const date = parseTxDate(timestamp);
-  if (!date) return <span className="text-(--widget-muted)">—</span>;
+  if (!date) return <span className="text-(--brand-muted)">—</span>;
 
   return <span title={date.toLocaleString()}>{formatTimeDisplay(date)}</span>;
 }

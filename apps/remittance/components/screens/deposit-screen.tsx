@@ -104,7 +104,7 @@ export function DepositScreen({
       <WidgetCard>
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <Spinner size="lg" />
-          <p className="text-sm text-(--widget-muted)">
+          <p className="text-sm text-(--brand-muted)">
             Adding funds to your card...
           </p>
         </div>
@@ -117,16 +117,16 @@ export function DepositScreen({
       <WidgetCard>
         <div className="flex flex-col items-center text-center py-6 px-6 gap-4">
           <div
-            className="w-20 h-20 rounded-full bg-(--widget-success)/10 flex items-center justify-center animate-in zoom-in-95 duration-300"
+            className="w-20 h-20 rounded-full bg-(--brand-success)/10 flex items-center justify-center animate-in zoom-in-95 duration-300"
             aria-hidden
           >
-            <CheckCircle className="w-10 h-10 text-(--widget-success)" />
+            <CheckCircle className="w-10 h-10 text-(--brand-success)" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-(--widget-fg)">
+            <h2 className="text-xl font-semibold text-(--brand-fg)">
               Funds Added
             </h2>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               {formatCurrency(effectiveAmount, { symbol: true })} added to your
               card
             </p>
@@ -137,7 +137,7 @@ export function DepositScreen({
                 href={`https://sepolia.basescan.org/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-(--widget-accent) bg-(--widget-accent)/5 rounded-(--widget-radius) hover:bg-(--widget-accent)/10 transition-colors"
+                className="flex flex-1 items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-(--brand-accent) bg-(--brand-accent)/5 rounded-(--brand-radius) hover:bg-(--brand-accent)/10 transition-colors"
               >
                 View on Explorer
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -160,7 +160,7 @@ export function DepositScreen({
     <WidgetCard
       icon={
         <ArrowDownToLine
-          className="w-[18px] h-[18px] text-(--widget-fg)"
+          className="w-[18px] h-[18px] text-(--brand-fg)"
           strokeWidth={1.5}
         />
       }
@@ -187,12 +187,12 @@ export function DepositScreen({
       >
         {step === "amount" && (
           <>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Available: {formatCurrency(max, { symbol: true })}
             </p>
             {presetOptions.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-(--widget-fg) mb-2">
+                <p className="text-sm font-medium text-(--brand-fg) mb-2">
                   Amount
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -207,8 +207,8 @@ export function DepositScreen({
                       disabled={sendTx.isPending}
                       className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                         selectedAmount === amount && customAmount === ""
-                          ? "border-(--widget-primary) bg-(--widget-primary)/10 text-(--widget-primary)"
-                          : "border-(--widget-border) hover:bg-(--widget-row-bg) text-(--widget-fg)"
+                          ? "border-(--brand-primary) bg-(--brand-primary)/10 text-(--brand-primary)"
+                          : "border-(--brand-border) hover:bg-(--brand-row-bg) text-(--brand-fg)"
                       }`}
                     >
                       {formatCurrency(amount, { symbol: true })}
@@ -247,9 +247,9 @@ export function DepositScreen({
 
         {step === "confirm" && (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-(--widget-row-bg)">
-              <p className="text-sm text-(--widget-muted) mb-1">Amount</p>
-              <p className="text-xl font-semibold text-(--widget-fg)">
+            <div className="p-4 rounded-lg bg-(--brand-row-bg)">
+              <p className="text-sm text-(--brand-muted) mb-1">Amount</p>
+              <p className="text-xl font-semibold text-(--brand-fg)">
                 {formatCurrency(effectiveAmount, { symbol: true })}
               </p>
             </div>

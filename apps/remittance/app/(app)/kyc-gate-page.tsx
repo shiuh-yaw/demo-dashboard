@@ -27,7 +27,7 @@ export function KycGatePage() {
             })
           }
           disabled={logoutMutation.isPending}
-          className="w-full text-xs text-(--widget-muted) hover:text-(--widget-fg) transition-colors disabled:opacity-50 cursor-pointer"
+          className="w-full text-xs text-(--brand-muted) hover:text-(--brand-fg) transition-colors disabled:opacity-50 cursor-pointer"
         >
           {logoutMutation.isPending ? "Logging out…" : "Log out"}
         </button>

@@ -394,7 +394,7 @@ export function UserList({ initialUsers, error }: UserListProps) {
     return (
       <div>
         <PageHeader title="Users" />
-        <p className="text-sm text-(--widget-error) text-center py-8">
+        <p className="text-sm text-(--brand-error) text-center py-8">
           {error}
         </p>
       </div>
@@ -411,25 +411,25 @@ export function UserList({ initialUsers, error }: UserListProps) {
           search={
             isMounted ? (
               <div className="relative w-64">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--widget-muted) pointer-events-none" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--brand-muted) pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by email..."
-                  className="w-full pl-9 pr-8 py-1.5 text-sm rounded-lg border border-(--widget-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--widget-primary)/20 focus:border-(--widget-primary)"
+                  className="w-full pl-9 pr-8 py-1.5 text-sm rounded-lg border border-(--brand-border) bg-white focus:outline-none focus:ring-2 focus:ring-(--brand-primary)/20 focus:border-(--brand-primary)"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--widget-muted) hover:text-(--widget-fg) cursor-pointer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--brand-muted) hover:text-(--brand-fg) cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
             ) : (
-              <div className="h-8 w-64 rounded-lg bg-(--widget-row-bg) animate-pulse" />
+              <div className="h-8 w-64 rounded-lg bg-(--brand-row-bg) animate-pulse" />
             )
           }
           action={
@@ -552,13 +552,13 @@ export function UserList({ initialUsers, error }: UserListProps) {
                 type="checkbox"
                 checked={createVaultToo}
                 onChange={(e) => setCreateVaultToo(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-(--widget-primary) focus:ring-(--widget-primary)/20 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 text-(--brand-primary) focus:ring-(--brand-primary)/20 cursor-pointer"
               />
               <div>
                 <span className="text-sm font-medium">
                   Also create Fireblocks vault
                 </span>
-                <p className="text-xs text-(--widget-muted)">
+                <p className="text-xs text-(--brand-muted)">
                   Provisions a deposit address for receiving funds
                 </p>
               </div>
@@ -612,8 +612,8 @@ function UserTable({
   onCreateUser: () => void;
 }) {
   return (
-    <div className="border border-(--widget-border) rounded-xl overflow-hidden">
-      <div className="grid grid-cols-[1fr_140px_80px_80px_28px] gap-x-3 bg-(--widget-row-bg) px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-(--widget-muted) border-b border-(--widget-border)">
+    <div className="border border-(--brand-border) rounded-xl overflow-hidden">
+      <div className="grid grid-cols-[1fr_140px_80px_80px_28px] gap-x-3 bg-(--brand-row-bg) px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-(--brand-muted) border-b border-(--brand-border)">
         <span>User</span>
         <span>Status</span>
         <span className="text-right">Wallet</span>
@@ -622,7 +622,7 @@ function UserTable({
       </div>
 
       {isSearching ? (
-        <div className="divide-y divide-(--widget-border)">
+        <div className="divide-y divide-(--brand-border)">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
@@ -638,7 +638,7 @@ function UserTable({
         </div>
       ) : users.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-sm text-(--widget-muted)">
+          <p className="text-sm text-(--brand-muted)">
             {searchQuery
               ? `No users found for "${searchQuery}"`
               : "No users yet"}
@@ -646,7 +646,7 @@ function UserTable({
           {!searchQuery && (
             <button
               onClick={onCreateUser}
-              className="mt-2 text-sm text-(--widget-primary) hover:underline cursor-pointer"
+              className="mt-2 text-sm text-(--brand-primary) hover:underline cursor-pointer"
             >
               Create your first user
             </button>
@@ -673,9 +673,9 @@ function UserTable({
               onClick={() => onSelectUser(user.id)}
               className={`w-full grid grid-cols-[1fr_140px_80px_80px_28px] gap-x-3 items-center px-4 py-2.5 text-left transition-colors cursor-pointer ${
                 isSelected
-                  ? "bg-(--widget-primary)/5 border-l-2 border-l-(--widget-primary)"
+                  ? "bg-(--brand-primary)/5 border-l-2 border-l-(--brand-primary)"
                   : "bg-white hover:bg-slate-50/80 border-l-2 border-l-transparent"
-              } ${!isLast ? "border-b border-(--widget-border)" : ""}`}
+              } ${!isLast ? "border-b border-(--brand-border)" : ""}`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm font-medium truncate">
@@ -686,14 +686,14 @@ function UserTable({
               <div>
                 {isFullySetUp ? (
                   <Tooltip content="KYC, Wallet, Vault">
-                    <span className="inline-flex items-center gap-1 text-xs text-(--widget-success)">
+                    <span className="inline-flex items-center gap-1 text-xs text-(--brand-success)">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span className="font-medium">Ready</span>
                     </span>
                   </Tooltip>
                 ) : (
                   <Tooltip content={`Missing: ${missing.join(", ")}`}>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-(--widget-muted)">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-(--brand-muted)">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                       <span className="truncate">{missing.join(", ")}</span>
                     </span>
@@ -705,7 +705,7 @@ function UserTable({
                 className={`text-sm tabular-nums text-right ${
                   walletBal > 0
                     ? "font-semibold"
-                    : "text-(--widget-muted)"
+                    : "text-(--brand-muted)"
                 }`}
               >
                 {walletBal > 0 ? fmt(walletBal) : "—"}
@@ -715,7 +715,7 @@ function UserTable({
                 className={`text-sm tabular-nums text-right ${
                   vaultBal > 0
                     ? "font-semibold"
-                    : "text-(--widget-muted)"
+                    : "text-(--brand-muted)"
                 }`}
               >
                 {vaultBal > 0 ? fmt(vaultBal) : "—"}
@@ -723,7 +723,7 @@ function UserTable({
 
               <ChevronRight
                 className={`w-4 h-4 ${
-                  isSelected ? "text-(--widget-primary)" : "text-(--widget-muted)"
+                  isSelected ? "text-(--brand-primary)" : "text-(--brand-muted)"
                 }`}
               />
             </button>
@@ -798,21 +798,21 @@ function UserDrawer({
       }`}
     >
       {user && flags && (
-        <div className="w-[380px] border border-(--widget-border) rounded-xl bg-white overflow-hidden shadow-lg">
+        <div className="w-[380px] border border-(--brand-border) rounded-xl bg-white overflow-hidden shadow-lg">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-(--widget-border) bg-(--widget-row-bg)/60">
+          <div className="px-5 py-4 border-b border-(--brand-border) bg-(--brand-row-bg)/60">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold truncate">
                   {user.email ?? user.phoneNumber ?? "Unknown"}
                 </h3>
-                <p className="text-[11px] text-(--widget-muted) font-mono mt-0.5 truncate">
+                <p className="text-[11px] text-(--brand-muted) font-mono mt-0.5 truncate">
                   {user.id}
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="p-1 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-slate-100 cursor-pointer transition-colors shrink-0"
+                className="p-1 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-slate-100 cursor-pointer transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -828,36 +828,36 @@ function UserDrawer({
           <div className="p-5 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
             {/* Balance breakdown */}
             <div>
-              <span className="text-xs font-medium text-(--widget-muted) uppercase tracking-wider">
+              <span className="text-xs font-medium text-(--brand-muted) uppercase tracking-wider">
                 Balance
               </span>
               <div className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-                <span className="text-(--widget-muted)">Wallet</span>
+                <span className="text-(--brand-muted)">Wallet</span>
                 <span className="text-right tabular-nums font-medium">
                   {walletBal > 0 ? fmt(walletBal) : "—"}{" "}
-                  <span className="text-[10px] font-normal text-(--widget-muted)">
+                  <span className="text-[10px] font-normal text-(--brand-muted)">
                     USDC
                   </span>
                 </span>
-                <span className="text-(--widget-muted)">Vault</span>
+                <span className="text-(--brand-muted)">Vault</span>
                 <span className="text-right tabular-nums font-medium">
                   {vaultBal > 0 ? fmt(vaultBal) : "—"}{" "}
-                  <span className="text-[10px] font-normal text-(--widget-muted)">
+                  <span className="text-[10px] font-normal text-(--brand-muted)">
                     USDC
                   </span>
                 </span>
-                <hr className="col-span-2 border-(--widget-border) my-1" />
+                <hr className="col-span-2 border-(--brand-border) my-1" />
                 <span className="font-semibold">Total</span>
                 <span className="text-right tabular-nums font-semibold">
                   {fmt(totalBal)}{" "}
-                  <span className="text-[10px] font-normal text-(--widget-muted)">
+                  <span className="text-[10px] font-normal text-(--brand-muted)">
                     USDC
                   </span>
                 </span>
               </div>
             </div>
 
-            <hr className="border-(--widget-border)" />
+            <hr className="border-(--brand-border)" />
 
             {/* Wallet section */}
             <DrawerCard title="Wallet" icon={<Wallet className="w-4 h-4" />}>
@@ -869,7 +869,7 @@ function UserDrawer({
                         href={getExplorerAddressUrl(flags.evmWallet.publicKey)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-xs text-(--widget-muted) hover:text-(--widget-primary) truncate transition-colors"
+                        className="font-mono text-xs text-(--brand-muted) hover:text-(--brand-primary) truncate transition-colors"
                         title={flags.evmWallet.publicKey}
                       >
                         {truncateAddress(flags.evmWallet.publicKey, 8, 6)}
@@ -883,14 +883,14 @@ function UserDrawer({
                         href={getExplorerAddressUrl(flags.evmWallet.publicKey)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-(--widget-muted) hover:text-(--widget-primary) transition-colors"
+                        className="text-(--brand-muted) hover:text-(--brand-primary) transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
                     <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
                       {fmt(walletBal)}{" "}
-                      <span className="text-[10px] font-normal text-(--widget-muted)">
+                      <span className="text-[10px] font-normal text-(--brand-muted)">
                         USDC
                       </span>
                     </span>
@@ -922,7 +922,7 @@ function UserDrawer({
                 </div>
               ) : user.email ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-(--widget-muted)">
+                  <span className="text-sm text-(--brand-muted)">
                     No wallet provisioned
                   </span>
                   <Button
@@ -936,7 +936,7 @@ function UserDrawer({
                   </Button>
                 </div>
               ) : (
-                <span className="text-sm text-(--widget-muted)">
+                <span className="text-sm text-(--brand-muted)">
                   No email on account
                 </span>
               )}
@@ -952,7 +952,7 @@ function UserDrawer({
                     type="button"
                     onClick={onDeleteVault}
                     disabled={isDeletingVault}
-                    className="p-1 rounded text-(--widget-muted) hover:text-red-500 hover:bg-red-50 cursor-pointer transition-colors disabled:opacity-50"
+                    className="p-1 rounded text-(--brand-muted) hover:text-red-500 hover:bg-red-50 cursor-pointer transition-colors disabled:opacity-50"
                     title="Remove vault"
                   >
                     {isDeletingVault ? (
@@ -972,7 +972,7 @@ function UserDrawer({
                         href={getExplorerAddressUrl(flags.vaultAddress)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-xs text-(--widget-muted) hover:text-(--widget-primary) truncate transition-colors"
+                        className="font-mono text-xs text-(--brand-muted) hover:text-(--brand-primary) truncate transition-colors"
                         title={flags.vaultAddress}
                       >
                         {truncateAddress(flags.vaultAddress, 8, 6)}
@@ -986,14 +986,14 @@ function UserDrawer({
                         href={getExplorerAddressUrl(flags.vaultAddress)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-(--widget-muted) hover:text-(--widget-primary) transition-colors"
+                        className="text-(--brand-muted) hover:text-(--brand-primary) transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
                     <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
                       {fmt(vaultBal)}{" "}
-                      <span className="text-[10px] font-normal text-(--widget-muted)">
+                      <span className="text-[10px] font-normal text-(--brand-muted)">
                         USDC
                       </span>
                     </span>
@@ -1014,7 +1014,7 @@ function UserDrawer({
                 </div>
               ) : user.email ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-(--widget-muted)">
+                  <span className="text-sm text-(--brand-muted)">
                     No vault provisioned
                   </span>
                   <Button
@@ -1028,7 +1028,7 @@ function UserDrawer({
                   </Button>
                 </div>
               ) : (
-                <span className="text-sm text-(--widget-muted)">
+                <span className="text-sm text-(--brand-muted)">
                   No email on account
                 </span>
               )}
@@ -1097,11 +1097,11 @@ function DrawerCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-(--widget-border) bg-(--widget-row-bg)/40 p-4">
+    <div className="rounded-lg border border-(--brand-border) bg-(--brand-row-bg)/40 p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-(--widget-muted)">{icon}</span>
-          <span className="text-xs font-semibold uppercase tracking-wider text-(--widget-muted)">
+          <span className="text-(--brand-muted)">{icon}</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-(--brand-muted)">
             {title}
           </span>
         </div>
@@ -1125,11 +1125,11 @@ function CopyBtn({
     <button
       type="button"
       onClick={(e) => onCopy(text, e)}
-      className="p-0.5 rounded text-(--widget-muted) hover:text-(--widget-fg) cursor-pointer transition-colors shrink-0"
+      className="p-0.5 rounded text-(--brand-muted) hover:text-(--brand-fg) cursor-pointer transition-colors shrink-0"
       title="Copy address"
     >
       {copied ? (
-        <Check className="w-3.5 h-3.5 text-(--widget-success)" />
+        <Check className="w-3.5 h-3.5 text-(--brand-success)" />
       ) : (
         <Copy className="w-3.5 h-3.5" />
       )}
@@ -1174,7 +1174,7 @@ function PageHeader({
         <div className="flex items-center gap-2.5">
           <h1 className="text-xl font-semibold">{title}</h1>
           {typeof count === "number" && (
-            <span className="text-xs font-medium tabular-nums px-2 py-0.5 rounded-full bg-(--widget-row-bg) text-(--widget-muted) border border-(--widget-border)">
+            <span className="text-xs font-medium tabular-nums px-2 py-0.5 rounded-full bg-(--brand-row-bg) text-(--brand-muted) border border-(--brand-border)">
               {count}
             </span>
           )}
@@ -1185,7 +1185,7 @@ function PageHeader({
         </div>
       </div>
       {description && (
-        <p className="text-sm text-(--widget-muted) mt-1">{description}</p>
+        <p className="text-sm text-(--brand-muted) mt-1">{description}</p>
       )}
     </div>
   );

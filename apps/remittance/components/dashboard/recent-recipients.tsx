@@ -43,7 +43,7 @@ export function RecentRecipients({
               variant="ghost"
               size="sm"
               onClick={onAddRecipient}
-              className="text-(--widget-primary) hover:text-(--widget-primary-hover)"
+              className="text-(--brand-primary) hover:text-(--brand-primary-hover)"
             >
               Add Contact
             </Button>
@@ -53,11 +53,11 @@ export function RecentRecipients({
       <CardContent className="p-0">
         {recipients.length === 0 ? (
           <div className="text-center px-4 py-8 sm:px-5">
-            <div className="w-12 h-12 rounded-full bg-(--widget-row-bg) flex items-center justify-center mx-auto mb-3">
-              <User className="w-6 h-6 text-(--widget-muted)" />
+            <div className="w-12 h-12 rounded-full bg-(--brand-row-bg) flex items-center justify-center mx-auto mb-3">
+              <User className="w-6 h-6 text-(--brand-muted)" />
             </div>
-            <p className="text-sm text-(--widget-muted)">No recipients yet</p>
-            <p className="text-xs text-(--widget-muted)/60 mt-1">
+            <p className="text-sm text-(--brand-muted)">No recipients yet</p>
+            <p className="text-xs text-(--brand-muted)/60 mt-1">
               Send money to add recipients to your list
             </p>
             {onAddRecipient && (
@@ -65,14 +65,14 @@ export function RecentRecipients({
                 variant="ghost"
                 size="sm"
                 onClick={onAddRecipient}
-                className="mt-3 text-(--widget-primary)"
+                className="mt-3 text-(--brand-primary)"
               >
                 Add
               </Button>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-(--widget-border)">
+          <div className="divide-y divide-(--brand-border)">
             {recipients.map((recipient, index) => (
               <div
                 key={recipient.email}
@@ -93,10 +93,10 @@ export function RecentRecipients({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-(--widget-fg) truncate">
+                  <p className="text-sm font-medium text-(--brand-fg) truncate">
                     {getRecipientDisplayName(recipient)}
                   </p>
-                  <p className="text-xs text-(--widget-muted) truncate">
+                  <p className="text-xs text-(--brand-muted) truncate">
                     {recipient.email}
                   </p>
                 </div>
@@ -107,7 +107,7 @@ export function RecentRecipients({
                       e.stopPropagation();
                       onSendToRecipient(recipient);
                     }}
-                    className="shrink-0 p-2 rounded-lg cursor-pointer text-(--widget-muted) hover:text-(--widget-primary) hover:bg-(--widget-primary)/5 transition-colors"
+                    className="shrink-0 p-2 rounded-lg cursor-pointer text-(--brand-muted) hover:text-(--brand-primary) hover:bg-(--brand-primary)/5 transition-colors"
                     aria-label={`Send to ${getRecipientDisplayName(recipient)}`}
                   >
                     <Send className="w-4 h-4" />

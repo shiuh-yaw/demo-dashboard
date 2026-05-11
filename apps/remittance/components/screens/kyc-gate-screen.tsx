@@ -90,7 +90,7 @@ export function KycGateScreen({ navigation }: KycGateScreenProps) {
               <p className="text-sm font-medium text-red-500">
                 Wallet creation failed
               </p>
-              <p className="text-xs text-(--widget-muted) text-center max-w-[240px]">
+              <p className="text-xs text-(--brand-muted) text-center max-w-[240px]">
                 {walletError}
               </p>
               <Button onClick={handleRetryWallet} className="mt-2">
@@ -100,7 +100,7 @@ export function KycGateScreen({ navigation }: KycGateScreenProps) {
           ) : (
             <>
               <Spinner size="lg" />
-              <p className="text-sm text-(--widget-muted)">
+              <p className="text-sm text-(--brand-muted)">
                 Setting up your wallet...
               </p>
             </>
@@ -115,12 +115,12 @@ export function KycGateScreen({ navigation }: KycGateScreenProps) {
       <WidgetCard>
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-(--widget-success)" />
+            <CheckCircle className="w-8 h-8 text-(--brand-success)" />
           </div>
-          <p className="text-sm font-medium text-(--widget-success)">
+          <p className="text-sm font-medium text-(--brand-success)">
             You&apos;re all set!
           </p>
-          <p className="text-xs text-(--widget-muted)">
+          <p className="text-xs text-(--brand-muted)">
             Redirecting to your dashboard...
           </p>
         </div>

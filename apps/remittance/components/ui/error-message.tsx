@@ -24,13 +24,13 @@ export function ErrorMessage({
   return (
     <div
       className={cn(
-        "flex gap-3 p-3 rounded-(--widget-radius) bg-red-50 border border-red-200",
+        "flex gap-3 p-3 rounded-(--brand-radius) bg-red-50 border border-red-200",
         className,
       )}
     >
-      <AlertCircle className="w-5 h-5 text-(--widget-error) flex-0 mt-0.5" />
+      <AlertCircle className="w-5 h-5 text-(--brand-error) flex-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-(--widget-error)">{title}</p>
+        <p className="text-sm font-medium text-(--brand-error)">{title}</p>
         {description && (
           <p className="text-xs text-red-600/80 mt-1">{description}</p>
         )}

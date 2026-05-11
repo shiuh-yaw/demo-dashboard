@@ -66,7 +66,7 @@ export function VaultAddresses({
       </div>
 
       {addresses.length === 0 ? (
-        <p className="text-xs text-(--widget-muted)">
+        <p className="text-xs text-(--brand-muted)">
           No deposit addresses. Create one to receive funds.
         </p>
       ) : (
@@ -74,29 +74,29 @@ export function VaultAddresses({
           {addresses.map((addr, i) => (
             <div
               key={i}
-              className="flex items-center justify-between p-2 rounded bg-(--widget-row-bg)"
+              className="flex items-center justify-between p-2 rounded bg-(--brand-row-bg)"
             >
               <div>
                 <p className="text-xs font-mono">
                   {truncateAddress(addr.address, 12, 8)}
                 </p>
                 {addr.description && (
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     {addr.description}
                   </p>
                 )}
                 {addr.customerRefId && (
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     User: {truncateAddress(addr.customerRefId)}
                   </p>
                 )}
               </div>
               <button
                 onClick={(e) => copy(addr.address, e)}
-                className="text-(--widget-muted) hover:text-(--widget-fg) p-1 cursor-pointer"
+                className="text-(--brand-muted) hover:text-(--brand-fg) p-1 cursor-pointer"
               >
                 {copied ? (
-                  <Check className="w-3.5 h-3.5 text-(--widget-success)" />
+                  <Check className="w-3.5 h-3.5 text-(--brand-success)" />
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}

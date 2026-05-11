@@ -365,13 +365,20 @@ export interface UpdateWalletConfigRequest {
 // =============================================================================
 
 /**
- * Remittance theme - minimal (primary + optional secondary)
- * Matches apps/remittance/lib/remittance-config.ts
+ * Remittance theme — the canonical `WidgetTheme` shape (D-008).
+ * Aliased so callsites can keep the demo-scoped name; downstream the
+ * remittance app projects this onto `Partial<BrandTheme>` for SSR
+ * injection via `<ThemeStyleTag>`, the same pipeline every other
+ * themed demo uses.
+ *
+ * Retains `secondaryColor` as a legacy companion to `primaryColor` —
+ * the remittance editor / projector use it to drive the card gradient
+ * when no explicit `gradientFrom`/`gradientTo` is set.
  */
-export interface RemittanceTheme {
-  primaryColor?: string;
+export type RemittanceTheme = Partial<WidgetTheme> & {
+  /** Optional secondary brand color — drives card gradient when set. */
   secondaryColor?: string;
-}
+};
 
 /**
  * Remittance branding
@@ -389,11 +396,12 @@ export interface RemittanceConfig {
 }
 
 /**
- * Default theme for Remittance
+ * Default theme for Remittance. Only the brand-defining colors are
+ * pinned; everything else is left undefined so it falls through to
+ * `@dynamic-demos/theme/defaults.css` at runtime.
  */
-export const DEFAULT_REMITTANCE_THEME: Required<RemittanceTheme> = {
+export const DEFAULT_REMITTANCE_THEME: RemittanceTheme = {
   primaryColor: "#1a56db",
-  secondaryColor: "#1e40af",
 };
 
 /**

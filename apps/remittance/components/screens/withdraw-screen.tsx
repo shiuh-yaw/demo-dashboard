@@ -197,7 +197,7 @@ export function WithdrawScreen({
       <WidgetCard>
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <Spinner size="lg" />
-          <p className="text-sm text-(--widget-muted)">
+          <p className="text-sm text-(--brand-muted)">
             Processing withdrawal...
           </p>
         </div>
@@ -210,16 +210,16 @@ export function WithdrawScreen({
       <WidgetCard>
         <div className="flex flex-col items-center text-center py-6 px-6 gap-4">
           <div
-            className="w-20 h-20 rounded-full bg-(--widget-success)/10 flex items-center justify-center animate-in zoom-in-95 duration-300"
+            className="w-20 h-20 rounded-full bg-(--brand-success)/10 flex items-center justify-center animate-in zoom-in-95 duration-300"
             aria-hidden
           >
-            <CheckCircle className="w-10 h-10 text-(--widget-success)" />
+            <CheckCircle className="w-10 h-10 text-(--brand-success)" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-(--widget-fg)">
+            <h2 className="text-xl font-semibold text-(--brand-fg)">
               Withdrawal Initiated
             </h2>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               {formatCurrency(amount)} withdrawal to your bank account has been
               initiated. Processing typically takes 1-3 business days.
             </p>
@@ -230,7 +230,7 @@ export function WithdrawScreen({
                 href={`https://sepolia.basescan.org/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-(--widget-accent) bg-(--widget-accent)/5 rounded-(--widget-radius) hover:bg-(--widget-accent)/10 transition-colors"
+                className="flex flex-1 items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-(--brand-accent) bg-(--brand-accent)/5 rounded-(--brand-radius) hover:bg-(--brand-accent)/10 transition-colors"
               >
                 View on Explorer
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export function WithdrawScreen({
     <WidgetCard
       icon={
         <ArrowDownToLine
-          className="w-[18px] h-[18px] text-(--widget-fg)"
+          className="w-[18px] h-[18px] text-(--brand-fg)"
           strokeWidth={1.5}
         />
       }
@@ -318,7 +318,7 @@ export function WithdrawScreen({
               placeholder="0.00"
               autoFocus
             />
-            <p className="text-xs text-(--widget-muted) mt-1">
+            <p className="text-xs text-(--brand-muted) mt-1">
               Available: {formatCurrency(usdcBalance)} USDC
             </p>
           </div>
@@ -336,27 +336,27 @@ export function WithdrawScreen({
 
       {step === "confirm" && (
         <div className="space-y-4">
-          <div className="space-y-2 p-3 rounded-(--widget-radius) bg-(--widget-row-bg)">
+          <div className="space-y-2 p-3 rounded-(--brand-radius) bg-(--brand-row-bg)">
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Amount</span>
+              <span className="text-(--brand-muted)">Amount</span>
               <span className="font-medium">{formatCurrency(amount)} USDC</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Destination</span>
+              <span className="text-(--brand-muted)">Destination</span>
               <span>Bank Account</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Network</span>
+              <span className="text-(--brand-muted)">Network</span>
               <span>Base Sepolia</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Gas Fee</span>
-              <span className={isSponsored ? "text-(--widget-success)" : ""}>
+              <span className="text-(--brand-muted)">Gas Fee</span>
+              <span className={isSponsored ? "text-(--brand-success)" : ""}>
                 {isSponsored ? "Sponsored" : "User pays"}
               </span>
             </div>
           </div>
-          <p className="text-xs text-(--widget-muted)">
+          <p className="text-xs text-(--brand-muted)">
             Your bank withdrawal will be processed in 1-3 business days.
           </p>
           <Button

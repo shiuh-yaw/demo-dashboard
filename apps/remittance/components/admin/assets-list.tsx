@@ -20,14 +20,14 @@ export function AssetsList({ assets, total, error }: AssetsListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-(--widget-border) bg-white overflow-hidden">
+      <div className="rounded-lg border border-(--brand-border) bg-white overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-(--widget-row-bg) border-b border-(--widget-border)">
+          <thead className="bg-(--brand-row-bg) border-b border-(--brand-border)">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-(--widget-fg)">
+              <th className="px-4 py-3 text-left font-medium text-(--brand-fg)">
                 Asset ID
               </th>
-              <th className="px-4 py-3 text-left font-medium text-(--widget-fg)">
+              <th className="px-4 py-3 text-left font-medium text-(--brand-fg)">
                 Name
               </th>
             </tr>
@@ -36,12 +36,12 @@ export function AssetsList({ assets, total, error }: AssetsListProps) {
             {assets.map((a) => (
               <tr
                 key={a.id}
-                className="border-b border-(--widget-border) last:border-0 hover:bg-(--widget-row-bg)"
+                className="border-b border-(--brand-border) last:border-0 hover:bg-(--brand-row-bg)"
               >
-                <td className="px-4 py-3 font-mono text-(--widget-fg)">
+                <td className="px-4 py-3 font-mono text-(--brand-fg)">
                   {a.id}
                 </td>
-                <td className="px-4 py-3 text-(--widget-muted)">
+                <td className="px-4 py-3 text-(--brand-muted)">
                   {a.name ?? "—"}
                 </td>
               </tr>
@@ -50,7 +50,7 @@ export function AssetsList({ assets, total, error }: AssetsListProps) {
         </table>
       </div>
       {total > assets.length && (
-        <p className="text-xs text-(--widget-muted)">
+        <p className="text-xs text-(--brand-muted)">
           Showing {assets.length} of {total} assets (filtered for USDC/Base/USD)
         </p>
       )}

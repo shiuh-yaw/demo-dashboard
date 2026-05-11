@@ -2,7 +2,7 @@
  * Remittance Config API Client
  *
  * Fetches remittance configurations from the dashboard API.
- * Used server-side in the root layout when ?id= is present.
+ * Used server-side in the root layout when ?theme= is present.
  */
 
 import { env } from "@/lib/env";

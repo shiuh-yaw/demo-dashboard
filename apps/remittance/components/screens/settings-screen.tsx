@@ -149,8 +149,8 @@ export function SettingsScreen({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-(--widget-fg)">Settings</h1>
-        <p className="text-sm text-(--widget-muted) mt-1">
+        <h1 className="text-2xl font-bold text-(--brand-fg)">Settings</h1>
+        <p className="text-sm text-(--brand-muted) mt-1">
           Manage your wallet and account preferences
         </p>
       </div>
@@ -161,28 +161,28 @@ export function SettingsScreen({
           className="px-5 pt-5 pb-2"
           title={
             <span className="flex items-center gap-2">
-              <User className="w-4 h-4 text-(--widget-muted)" />
+              <User className="w-4 h-4 text-(--brand-muted)" />
               Account
             </span>
           }
         />
         <CardContent className="space-y-4">
           <div>
-            <p className="text-xs font-medium text-(--widget-muted) mb-1.5">
+            <p className="text-xs font-medium text-(--brand-muted) mb-1.5">
               Wallet address
             </p>
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-(--widget-row-bg) border border-(--widget-border)">
-              <p className="flex-1 text-sm font-mono text-(--widget-fg) break-all">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-(--brand-row-bg) border border-(--brand-border)">
+              <p className="flex-1 text-sm font-mono text-(--brand-fg) break-all">
                 {walletAddress || "—"}
               </p>
               {walletAddress && (
                 <button
                   onClick={() => copy(walletAddress)}
-                  className="shrink-0 p-2 rounded-md hover:bg-(--widget-row-hover) text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                  className="shrink-0 p-2 rounded-md hover:bg-(--brand-row-hover) text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                   aria-label="Copy address"
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 text-(--widget-success)" />
+                    <Check className="w-4 h-4 text-(--brand-success)" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -193,15 +193,15 @@ export function SettingsScreen({
 
           <div className="flex flex-wrap gap-x-6 gap-y-4">
             <div>
-              <p className="text-xs font-medium text-(--widget-muted) mb-1.5">
+              <p className="text-xs font-medium text-(--brand-muted) mb-1.5">
                 KYC status
               </p>
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                     kycApproved
-                      ? "bg-(--widget-success)/10 text-(--widget-success)"
-                      : "bg-(--widget-muted)/10 text-(--widget-muted)"
+                      ? "bg-(--brand-success)/10 text-(--brand-success)"
+                      : "bg-(--brand-muted)/10 text-(--brand-muted)"
                   }`}
                 >
                   <Shield className="w-3.5 h-3.5" />
@@ -211,15 +211,15 @@ export function SettingsScreen({
             </div>
 
             <div>
-              <p className="text-xs font-medium text-(--widget-muted) mb-1.5">
+              <p className="text-xs font-medium text-(--brand-muted) mb-1.5">
                 Banking onboarding
               </p>
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                     bankingOnboardingComplete
-                      ? "bg-(--widget-success)/10 text-(--widget-success)"
-                      : "bg-(--widget-muted)/10 text-(--widget-muted)"
+                      ? "bg-(--brand-success)/10 text-(--brand-success)"
+                      : "bg-(--brand-muted)/10 text-(--brand-muted)"
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5" />
@@ -237,19 +237,19 @@ export function SettingsScreen({
           className="px-5 pt-5 pb-2"
           title={
             <span className="flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-(--widget-muted)" />
+              <Wallet className="w-4 h-4 text-(--brand-muted)" />
               Export Private Key
             </span>
           }
         />
         <CardContent className="space-y-4">
-          <p className="text-sm text-(--widget-muted)">
+          <p className="text-sm text-(--brand-muted)">
             Securely export your embedded wallet private key
           </p>
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-(--widget-row-bg) border border-(--widget-border)">
-            <AlertTriangle className="w-5 h-5 text-(--widget-warning) shrink-0 mt-0.5" />
-            <div className="text-sm text-(--widget-muted)">
-              <p className="font-medium text-(--widget-fg) mb-1">
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-(--brand-row-bg) border border-(--brand-border)">
+            <AlertTriangle className="w-5 h-5 text-(--brand-warning) shrink-0 mt-0.5" />
+            <div className="text-sm text-(--brand-muted)">
+              <p className="font-medium text-(--brand-fg) mb-1">
                 Keep your private key secure
               </p>
               <p>
@@ -267,12 +267,12 @@ export function SettingsScreen({
           )}
 
           {!primaryWallet ? (
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               You need an embedded wallet to export a private key. Create or
               connect a wallet first.
             </p>
           ) : !canExport ? (
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Private key export is only available for embedded (WaaS) wallets.
               Your connected wallet is not an embedded wallet.
             </p>
@@ -294,7 +294,7 @@ export function SettingsScreen({
               {(isExporting || hasExportedKey) && (
                 <div
                   ref={displayContainerRef}
-                  className="h-20 p-4 rounded-lg border border-(--widget-border) bg-(--widget-row-bg) overflow-auto"
+                  className="h-20 p-4 rounded-lg border border-(--brand-border) bg-(--brand-row-bg) overflow-auto"
                   aria-label="Private key display container"
                 />
               )}
@@ -309,19 +309,19 @@ export function SettingsScreen({
           className="px-5 pt-5 pb-2"
           title={
             <span className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-(--widget-muted)" />
+              <Users className="w-4 h-4 text-(--brand-muted)" />
               Contacts & Card
             </span>
           }
         />
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Contacts you&apos;ve added for sending USDC. Clearing removes all
               saved contacts; you can add them again when sending.
             </p>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-(--widget-fg)">
+              <span className="text-sm text-(--brand-fg)">
                 {recipients.length} contact
                 {recipients.length !== 1 ? "s" : ""} saved
               </span>
@@ -348,19 +348,19 @@ export function SettingsScreen({
             <ErrorMessage error={clearRecipients.error} />
           </div>
 
-          <div className="border-t border-(--widget-border) pt-6 space-y-4">
+          <div className="border-t border-(--brand-border) pt-6 space-y-4">
             <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-(--widget-muted)" />
-              <span className="text-sm font-medium text-(--widget-fg)">
+              <CreditCard className="w-4 h-4 text-(--brand-muted)" />
+              <span className="text-sm font-medium text-(--brand-fg)">
                 Stablecoin Card
               </span>
             </div>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Reset your stablecoin debit card metadata. This removes the card
               from your account; you can create a new one from the dashboard.
             </p>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-(--widget-fg)">
+              <span className="text-sm text-(--brand-fg)">
                 {hasStubCard ? "Card linked" : "No card"}
               </span>
               <Button
@@ -414,18 +414,18 @@ export function SettingsScreen({
             )}
           </div>
 
-          <div className="border-t border-(--widget-border) pt-6 space-y-4">
+          <div className="border-t border-(--brand-border) pt-6 space-y-4">
             <div className="flex items-center gap-2">
-              <RotateCcw className="w-4 h-4 text-(--widget-muted)" />
-              <span className="text-sm font-medium text-(--widget-fg)">
+              <RotateCcw className="w-4 h-4 text-(--brand-muted)" />
+              <span className="text-sm font-medium text-(--brand-fg)">
                 Card Balance
               </span>
             </div>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Reset your card balance (total deposits) back to $0.
             </p>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-(--widget-fg)">
+              <span className="text-sm text-(--brand-fg)">
                 Balance: ${cardBalance.toFixed(2)}
               </span>
               <Button
@@ -477,18 +477,18 @@ export function SettingsScreen({
             )}
           </div>
 
-          <div className="border-t border-(--widget-border) pt-6 space-y-4">
+          <div className="border-t border-(--brand-border) pt-6 space-y-4">
             <div className="flex items-center gap-2">
-              <PiggyBank className="w-4 h-4 text-(--widget-muted)" />
-              <span className="text-sm font-medium text-(--widget-fg)">
+              <PiggyBank className="w-4 h-4 text-(--brand-muted)" />
+              <span className="text-sm font-medium text-(--brand-fg)">
                 Save Balance
               </span>
             </div>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Reset your save balance (total save deposits) back to $0.
             </p>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-(--widget-fg)">
+              <span className="text-sm text-(--brand-fg)">
                 Balance: ${saveBalance.toFixed(2)}
               </span>
               <Button
@@ -542,19 +542,19 @@ export function SettingsScreen({
             )}
           </div>
 
-          <div className="border-t border-(--widget-border) pt-6 space-y-4">
+          <div className="border-t border-(--brand-border) pt-6 space-y-4">
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-(--widget-muted)" />
-              <span className="text-sm font-medium text-(--widget-fg)">
+              <Shield className="w-4 h-4 text-(--brand-muted)" />
+              <span className="text-sm font-medium text-(--brand-fg)">
                 KYC Verification
               </span>
             </div>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               Reset your KYC verification status. This will require you to
               complete identity verification again.
             </p>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-(--widget-fg)">
+              <span className="text-sm text-(--brand-fg)">
                 {kycApproved ? "Verified" : "Not verified"}
               </span>
               <Button

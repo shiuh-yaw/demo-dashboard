@@ -36,22 +36,22 @@ export function StableCoinDebitCard({
     return (
       <Card>
         <CardContent className="flex flex-col py-6">
-          <h3 className="text-base font-medium text-(--widget-fg) mb-2">
+          <h3 className="text-base font-medium text-(--brand-fg) mb-2">
             Bank cards
           </h3>
-          <p className="text-sm text-(--widget-muted) mb-6">
+          <p className="text-sm text-(--brand-muted) mb-6">
             Create a stablecoin debit card to spend your USDC
           </p>
           <div className="flex flex-col items-center">
-            <div className="w-16 h-12 rounded-lg border-2 border-(--widget-border) border-dashed flex items-center justify-center mb-6 bg-(--widget-row-bg)/50">
-              <CreditCard className="w-8 h-8 text-(--widget-muted)" />
+            <div className="w-16 h-12 rounded-lg border-2 border-(--brand-border) border-dashed flex items-center justify-center mb-6 bg-(--brand-row-bg)/50">
+              <CreditCard className="w-8 h-8 text-(--brand-muted)" />
             </div>
             <Button
               size="sm"
               onClick={onCreateCard}
               disabled={isCreating}
               loading={isCreating}
-              className="bg-(--widget-primary) hover:bg-(--widget-primary-hover) text-white"
+              className="bg-(--brand-primary) hover:bg-(--brand-primary-hover) text-white"
             >
               <Plus className="w-4 h-4" />
               Add new card

@@ -3,21 +3,20 @@
 /**
  * Remittance Config Context
  *
- * Provides branding and theme configuration to header and card components.
- * Reuses the same logo for both, following earn/wallet/checkouts patterns.
+ * Provides the resolved branding for header / card components on the
+ * client. Theme tokens are NOT exposed here — they're injected as
+ * `--brand-*` CSS variables at SSR via `<ThemeStyleTag overridesOnly>`
+ * in `app/layout.tsx`. Components consume `var(--brand-*)` directly.
  */
 
 import { createContext, useContext, type ReactNode } from "react";
-import {
-  type RemittanceConfig,
-  type RemittanceBranding,
-  type RemittanceTheme,
-  DEFAULT_REMITTANCE_THEME,
+import type {
+  RemittanceConfig,
+  RemittanceBranding,
 } from "@/lib/remittance-config";
 
 interface RemittanceConfigContextValue {
   config: RemittanceConfig;
-  theme: Required<RemittanceTheme>;
   branding: RemittanceBranding;
 }
 
@@ -34,14 +33,9 @@ export function RemittanceConfigProvider({
   config,
 }: RemittanceConfigProviderProps) {
   const branding: RemittanceBranding = config?.branding ?? {};
-  const theme: Required<RemittanceTheme> = {
-    ...DEFAULT_REMITTANCE_THEME,
-    ...config?.theme,
-  };
 
   const value: RemittanceConfigContextValue = {
-    config: { theme, branding },
-    theme,
+    config: config ?? { branding },
     branding,
   };
 
@@ -56,8 +50,7 @@ export function useRemittanceConfig(): RemittanceConfigContextValue {
   const context = useContext(RemittanceConfigContext);
   if (!context) {
     return {
-      config: { theme: DEFAULT_REMITTANCE_THEME, branding: {} },
-      theme: DEFAULT_REMITTANCE_THEME,
+      config: { branding: {} },
       branding: {},
     };
   }

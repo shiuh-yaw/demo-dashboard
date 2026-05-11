@@ -241,6 +241,12 @@ async function createBrandDemoConfigs(
   // Create Remittance config with brand settings
   if (createRemittance) {
     const remittanceId = createId();
+    // Carry the full brand theme through to the remittance config so
+    // pageBackground / surface / foreground / muted / border / etc.
+    // flow into the remittance app's `<ThemeStyleTag>` overrides. Until
+    // this widening, remittance only got primary + secondary and every
+    // other token snapped back to the static defaults in globals.css.
+    const remittanceTheme: Partial<BrandTheme> = brand.theme || {};
     const remittanceConfig: StoredRemittanceConfig = {
       id: remittanceId,
       name: `${brandName} - Remittance`,
@@ -249,7 +255,18 @@ async function createBrandDemoConfigs(
         theme: {
           ...DEFAULT_REMITTANCE_CONFIG.theme,
           primaryColor: brand.primaryColor,
+          primaryHoverColor: remittanceTheme.primaryHoverColor,
+          accentColor: brand.accentColor || brand.primaryColor,
           secondaryColor: brand.accentColor || brand.primaryColor,
+          pageBackground: remittanceTheme.pageBackground,
+          background: remittanceTheme.background,
+          foregroundColor: remittanceTheme.foreground,
+          mutedTextColor: remittanceTheme.mutedTextColor,
+          borderColor: remittanceTheme.borderColor,
+          rowBackground: remittanceTheme.rowBackground,
+          rowHoverBackground: remittanceTheme.rowHoverBackground,
+          gradientFrom: remittanceTheme.gradientFrom,
+          gradientTo: remittanceTheme.gradientTo,
         },
         branding: {
           logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,
@@ -414,19 +431,34 @@ async function updateBrandDemoConfigs(
     }
   }
 
-  // Update Remittance config if it exists
+  // Update Remittance config if it exists. Carry the full brand theme
+  // through so the remittance app receives pageBackground / surface /
+  // foreground / muted / border / row* / gradient* — not just primary
+  // + secondary like it used to.
   if (profile.demos.remittance) {
     const remittanceConfig = await redis.get<StoredRemittanceConfig>(
       REDIS_KEYS.remittanceConfig(profile.demos.remittance),
     );
     if (remittanceConfig) {
+      const remittanceTheme: Partial<BrandTheme> = brand.theme || {};
       const updated: StoredRemittanceConfig = {
         ...remittanceConfig,
         config: {
           theme: {
             ...remittanceConfig.config.theme,
             primaryColor: brand.primaryColor,
+            primaryHoverColor: remittanceTheme.primaryHoverColor,
+            accentColor: brand.accentColor || brand.primaryColor,
             secondaryColor: brand.accentColor || brand.primaryColor,
+            pageBackground: remittanceTheme.pageBackground,
+            background: remittanceTheme.background,
+            foregroundColor: remittanceTheme.foreground,
+            mutedTextColor: remittanceTheme.mutedTextColor,
+            borderColor: remittanceTheme.borderColor,
+            rowBackground: remittanceTheme.rowBackground,
+            rowHoverBackground: remittanceTheme.rowHoverBackground,
+            gradientFrom: remittanceTheme.gradientFrom,
+            gradientTo: remittanceTheme.gradientTo,
           },
           branding: {
             logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,

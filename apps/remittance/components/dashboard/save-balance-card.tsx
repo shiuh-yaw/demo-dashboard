@@ -16,29 +16,29 @@ export function SaveBalanceCard({ balance, onClick }: SaveBalanceCardProps) {
     <Card
       className={
         onClick
-          ? "cursor-pointer hover:border-(--widget-primary)/30 transition-colors"
+          ? "cursor-pointer hover:border-(--brand-primary)/30 transition-colors"
           : undefined
       }
       onClick={onClick}
     >
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-(--widget-primary)/10 flex items-center justify-center shrink-0">
-            <PiggyBank className="w-5 h-5 text-(--widget-primary)" />
+          <div className="w-10 h-10 rounded-full bg-(--brand-primary)/10 flex items-center justify-center shrink-0">
+            <PiggyBank className="w-5 h-5 text-(--brand-primary)" />
           </div>
           <div>
-            <p className="text-sm font-medium text-(--widget-fg)">Save</p>
-            <p className="text-xs text-(--widget-muted)">{SAVE_APY}% APY</p>
+            <p className="text-sm font-medium text-(--brand-fg)">Save</p>
+            <p className="text-xs text-(--brand-muted)">{SAVE_APY}% APY</p>
           </div>
         </div>
-        <p className="text-xl font-semibold text-(--widget-fg)">
+        <p className="text-xl font-semibold text-(--brand-fg)">
           {formatCurrency(balance, { symbol: true })}
         </p>
         <div onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
             disabled
-            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-(--widget-row-bg) border border-(--widget-border) text-(--widget-muted) cursor-not-allowed text-sm font-medium"
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-(--brand-row-bg) border border-(--brand-border) text-(--brand-muted) cursor-not-allowed text-sm font-medium"
           >
             <ArrowDownToLine className="w-4 h-4" />
             Withdraw

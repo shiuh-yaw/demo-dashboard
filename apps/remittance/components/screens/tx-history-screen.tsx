@@ -99,10 +99,10 @@ export function TxHistoryScreen({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-(--widget-fg) sm:text-2xl">
+          <h1 className="text-xl font-bold text-(--brand-fg) sm:text-2xl">
             Transaction History
           </h1>
-          <p className="text-sm text-(--widget-muted) mt-1">
+          <p className="text-sm text-(--brand-muted) mt-1">
             Recent Base Sepolia transactions
           </p>
         </div>
@@ -127,19 +127,19 @@ export function TxHistoryScreen({
             </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm text-(--widget-muted)">
+              <p className="text-sm text-(--brand-muted)">
                 No transactions found
               </p>
             </div>
           ) : (
             <>
-              <div className="divide-y divide-(--widget-border)">
+              <div className="divide-y divide-(--brand-border)">
                 {grouped.map(([dateLabel, txs]) => (
                   <div key={dateLabel}>
-                    <h2 className="px-4 pt-4 pb-2 text-sm font-semibold text-(--widget-fg) sm:px-5">
+                    <h2 className="px-4 pt-4 pb-2 text-sm font-semibold text-(--brand-fg) sm:px-5">
                       {dateLabel}
                     </h2>
-                    <div className="divide-y divide-(--widget-border)/80">
+                    <div className="divide-y divide-(--brand-border)/80">
                       {txs.map((tx) => (
                         <TxRow
                           key={tx.hash}
@@ -155,7 +155,7 @@ export function TxHistoryScreen({
               </div>
               <div
                 ref={loadMoreRef}
-                className="flex flex-col items-center gap-2 py-4 border-t border-(--widget-border)"
+                className="flex flex-col items-center gap-2 py-4 border-t border-(--brand-border)"
               >
                 {hasNextPage ? (
                   <Button
@@ -174,7 +174,7 @@ export function TxHistoryScreen({
                     )}
                   </Button>
                 ) : (
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     Showing all {transactions.length} transaction
                     {transactions.length !== 1 ? "s" : ""}
                   </p>
@@ -211,7 +211,7 @@ function TxRow({
       href={`https://sepolia.basescan.org/tx/${tx.hash}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col gap-3 px-4 py-3.5 hover:bg-(--widget-row-hover) transition-colors group sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+      className="flex flex-col gap-3 px-4 py-3.5 hover:bg-(--brand-row-hover) transition-colors group sm:flex-row sm:items-center sm:gap-4 sm:px-5"
     >
       {/* Top row (mobile) / Left + Middle (desktop) */}
       <div className="flex items-center justify-between gap-3 min-w-0 sm:flex-1 sm:justify-start">
@@ -219,8 +219,8 @@ function TxRow({
           <div
             className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center sm:w-10 sm:h-10 ${
               isSent
-                ? "bg-red-50 text-(--widget-error)"
-                : "bg-green-50 text-(--widget-success)"
+                ? "bg-red-50 text-(--brand-error)"
+                : "bg-green-50 text-(--brand-success)"
             }`}
           >
             {isSent ? (
@@ -230,21 +230,21 @@ function TxRow({
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-(--widget-fg)">
+            <p className="text-sm font-medium text-(--brand-fg)">
               {isSent ? "Sent" : "Received"}
             </p>
-            <p className="text-xs text-(--widget-muted)">
+            <p className="text-xs text-(--brand-muted)">
               <TxTime timestamp={tx.timestamp} />
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 sm:flex-1 sm:justify-center">
-          <span className="inline-flex items-center rounded-md bg-(--widget-row-bg) px-2 py-0.5 text-xs font-medium text-(--widget-muted)">
+          <span className="inline-flex items-center rounded-md bg-(--brand-row-bg) px-2 py-0.5 text-xs font-medium text-(--brand-muted)">
             {tx.asset}
           </span>
           <span
             className={`text-sm font-semibold tabular-nums ${
-              isSent ? "text-(--widget-error)" : "text-(--widget-success)"
+              isSent ? "text-(--brand-error)" : "text-(--brand-success)"
             }`}
           >
             {isSent ? "-" : "+"}
@@ -256,14 +256,14 @@ function TxRow({
       {/* Bottom row (mobile) / Right (desktop) */}
       <div className="flex items-center justify-between gap-2 sm:flex-1 sm:justify-end">
         <div className="min-w-0">
-          <p className="text-xs text-(--widget-muted)">
+          <p className="text-xs text-(--brand-muted)">
             {isSent ? "To" : "From"}
           </p>
-          <p className="text-sm font-mono text-(--widget-fg) truncate">
+          <p className="text-sm font-mono text-(--brand-fg) truncate">
             {label ?? truncateAddress(counterparty)}
           </p>
         </div>
-        <ExternalLink className="w-4 h-4 shrink-0 text-(--widget-muted) transition-colors group-hover:text-(--widget-accent)" />
+        <ExternalLink className="w-4 h-4 shrink-0 text-(--brand-muted) transition-colors group-hover:text-(--brand-accent)" />
       </div>
     </a>
   );

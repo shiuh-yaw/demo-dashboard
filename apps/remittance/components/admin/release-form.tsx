@@ -111,7 +111,7 @@ export function ReleaseForm({
             <span className="text-sm font-medium">Transaction Created</span>
             <TxStatusBadge status={result.status} />
           </div>
-          <p className="text-xs font-mono text-(--widget-muted)">
+          <p className="text-xs font-mono text-(--brand-muted)">
             ID: {result.id}
           </p>
           {result.txHash && (
@@ -119,7 +119,7 @@ export function ReleaseForm({
               href={`https://sepolia.basescan.org/tx/${result.txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-(--widget-accent) hover:underline"
+              className="text-xs text-(--brand-accent) hover:underline"
             >
               View on Explorer
             </a>

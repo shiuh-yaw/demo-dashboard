@@ -22,7 +22,7 @@ export function DashboardHeader({
   navItems: navItemsProp,
   walletAddress,
   brandHref,
-  brandLabel = "Remittance",
+  brandLabel,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const configMatch = pathname.match(/^\/r\/([^/]+)/);
@@ -33,27 +33,29 @@ export function DashboardHeader({
   const { branding } = useRemittanceConfig();
 
   return (
-    <header className="border-b border-(--widget-border) bg-(--widget-bg)/80 backdrop-blur-sm sticky top-0 z-40">
+    <header className="border-b border-(--brand-border) bg-(--brand-surface)/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
           <div className="flex items-center gap-2">
             <AppLogo
-              className="h-7 w-auto text-(--widget-fg)"
+              className="h-7 w-auto text-(--brand-fg)"
               logoUrl={branding.logoUrl}
             />
-            {brandHref ? (
-              <Link
-                href={brandHref}
-                className="text-sm font-medium text-(--widget-muted) hover:text-(--widget-primary) transition-colors"
-              >
-                {brandLabel}
-              </Link>
-            ) : (
-              <span className="text-sm font-medium text-(--widget-muted)">
-                {brandLabel}
-              </span>
-            )}
+            {brandLabel ? (
+              brandHref ? (
+                <Link
+                  href={brandHref}
+                  className="text-sm font-medium text-(--brand-muted) hover:text-(--brand-primary) transition-colors"
+                >
+                  {brandLabel}
+                </Link>
+              ) : (
+                <span className="text-sm font-medium text-(--brand-muted)">
+                  {brandLabel}
+                </span>
+              )
+            ) : null}
           </div>
 
           {/* Nav links — hidden on small screens */}
@@ -71,8 +73,8 @@ export function DashboardHeader({
                   href={item.href}
                   className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                     isActive
-                      ? "bg-(--widget-primary)/10 text-(--widget-primary) font-medium cursor-pointer"
-                      : "text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) cursor-pointer"
+                      ? "bg-(--brand-primary)/10 text-(--brand-primary) font-medium cursor-pointer"
+                      : "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) cursor-pointer"
                   }`}
                 >
                   {item.label}
@@ -84,15 +86,15 @@ export function DashboardHeader({
           {/* Right: address pill + sign out */}
           <div className="flex items-center gap-3">
             {walletAddress && (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-(--widget-row-bg) text-(--widget-muted) border border-(--widget-border)">
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-(--brand-row-bg) text-(--brand-muted) border border-(--brand-border)">
                 <span>{truncateAddress(walletAddress)}</span>
                 <button
                   onClick={() => copy(walletAddress)}
-                  className="p-0.5 rounded hover:bg-(--widget-row-hover) text-(--widget-muted) hover:text-(--widget-fg) transition-colors cursor-pointer"
+                  className="p-0.5 rounded hover:bg-(--brand-row-hover) text-(--brand-muted) hover:text-(--brand-fg) transition-colors cursor-pointer"
                   aria-label="Copy address"
                 >
                   {copied ? (
-                    <Check className="w-3 h-3 text-(--widget-success)" />
+                    <Check className="w-3 h-3 text-(--brand-success)" />
                   ) : (
                     <Copy className="w-3 h-3" />
                   )}

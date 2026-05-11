@@ -43,7 +43,7 @@ export function AddRecipientScreen({
     <WidgetCard
       icon={
         <UserPlus
-          className="w-[18px] h-[18px] text-(--widget-fg)"
+          className="w-[18px] h-[18px] text-(--brand-fg)"
           strokeWidth={1.5}
         />
       }

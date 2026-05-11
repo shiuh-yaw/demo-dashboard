@@ -8,12 +8,12 @@ interface DashboardLayoutProps {
 
 /** Placeholder matching header height to prevent layout shift during deferred render. */
 const HEADER_PLACEHOLDER = (
-  <div className="h-16 border-b border-(--widget-border) bg-(--widget-bg)/80" />
+  <div className="h-16 border-b border-(--brand-border) bg-(--brand-surface)/80" />
 );
 
 export function DashboardLayout({ header, children }: DashboardLayoutProps) {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-(--widget-page-bg)">
+    <div className="h-screen flex flex-col overflow-hidden bg-(--brand-page-bg)">
       {header && (
         <div className="shrink-0">
           <ClientOnlySlot placeholder={HEADER_PLACEHOLDER}>

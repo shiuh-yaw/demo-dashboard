@@ -1,25 +1,23 @@
 import { createDemoMiddleware } from "@dynamic-demos/dynamic/demo-middleware";
 
 /**
- * All routes are protected except /login (and /r/[id]/login config-route).
+ * Remittance middleware — flat routes only.
  *
- * - `?id=<configId>` (or `/r/[id]/...` path) → set `remittance_config_id`
- *   cookie + forward as `x-remittance-config-id` header.
- * - `?id=` (empty) → clear cookie.
- * - Authed user on login (no OAuth params) → redirect to returnTo or
- *   `/r/[id]/dashboard` (when on a config route) or `/`.
- * - Unauthed on protected route → redirect to `/login` (or `/r/[id]/login`).
+ * URL contract (post-Phase-4-app):
+ *   - `?theme=<configId>` sets the `remittance_config_id` cookie (factory default
+ *     `stickyConfigCookie: true`) + forwards `x-remittance-config-id`.
+ *   - `?theme=` (empty) clears the cookie.
+ *   - Subsequent visits without `?theme=` reuse the cookie.
+ *   - There are no path-based config routes. Legacy `/r/[id]/*` URLs are
+ *     redirected to `/?theme=[id]` via `next.config.ts` for back-compat.
+ *
+ * The factory's defaults handle everything else (`configIdSource: "query"`,
+ * `oauthCallbackParams: ["dynamicOauthCode"]`, returnTo round-trip, etc.).
  */
 export const middleware = createDemoMiddleware({
   demoType: "remittance",
-  publicRoutes: ["/login", /^\/r\/[^/]+\/login(\/|$)/],
-  loginPath: (configId) => (configId ? `/r/${configId}/login` : "/login"),
-  defaultReturnPath: (configId) => (configId ? `/r/${configId}/dashboard` : "/"),
-  // Header-only forwarding (no Set-Cookie). Deep-links honor URL state, not
-  // cookie state — see docs/projects/demo-meta-system/research/dynamic-auth-patterns.md.
-  stickyConfigCookie: false,
-  configIdSource: "both",
-  getConfigIdFromPath: (path) => path.match(/^\/r\/([^/]+)/)?.[1] ?? null,
+  publicRoutes: ["/login"],
+  defaultReturnPath: "/",
 });
 
 export const config = {

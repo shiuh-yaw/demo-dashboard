@@ -43,12 +43,18 @@ App routes:
 - `/(auth)/login` — auth.
 - `/(app)/...` — main authenticated surface (send, history).
 - `/admin` — operator inspector.
-- `/r/<id>` — branded short link.
 - `/api/handlers/transactions-history` — server-only Alchemy proxy.
 
-Cookie / header contract (D-008):
+URL contract (post-Phase-4-app simplification):
 
-- Query `?id=<configId>` → cookie `remittance_config_id` → header `x-remittance-config-id` → dashboard config fetch.
+- Routes are flat. There are no path-based config routes. Branded entry is via
+  `?theme=<configId>` on any URL.
+- Cookie / header contract (D-008): `?theme=<configId>` → cookie
+  `remittance_config_id` → header `x-remittance-config-id` → dashboard config
+  fetch. Subsequent visits without `?theme=` reuse the cookie. `?theme=` (empty)
+  clears the cookie.
+- Legacy `/r/[id]/*` URLs redirect to `/?theme=[id]` (and subpath equivalents) via
+  `next.config.ts` for back-compat with bookmarked links.
 
 ## Required environment
 
@@ -63,7 +69,9 @@ Sandbox-by-default (D-005).
 
 ## Theming
 
-`createDemoMiddleware` from `@dynamic-demos/dynamic/demo-middleware` + SSR `<ThemeStyleTag>` from `@dynamic-demos/theme` (Phase 4). No client-side theme fetch.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020) — `app/globals.css` is now thin: it imports the shared defaults, declares the remittance-only `overflow-hidden` rule, the dark-variant override, and a small set of `--widget-*` → `--brand-*` compat aliases for shared `packages/ui` components (e.g. `AuthLayout`) that haven't migrated yet. The aliases retire when the brand cutover phase migrates `packages/ui` to read `--brand-*` directly.
+
+Per-config theming is wired SSR via `<ThemeStyleTag>` (D-008): `createDemoMiddleware` (factory defaults — `configIdSource: "query"`, `stickyConfigCookie: true`) forwards `x-remittance-config-id` resolved from `?theme=` or the `remittance_config_id` cookie, the root layout fetches the config from the dashboard, projects it through `themeToBrandTheme(...)` (which derives `primaryHover`, `accent`, and the card gradient via HSL math from `primaryColor` + optional `secondaryColor`), and emits an `overridesOnly` `<style>` block in `<head>` so the operator's brand colors paint on first byte — zero FOUC, zero hydration mismatch. `ThemeWrapper` (client `useEffect` reapplying the same vars) remains as a safety net during client navigations.
 
 ## Credentials
 
@@ -119,6 +127,7 @@ export const middleware = createDemoMiddleware({ demoType: "remittance" });
 
 ## Open questions / known gaps
 
-- Phase 4 migrates the per-screen `--widget-*` variables to `--brand-*` (D-007 / D-020).
+- Phase 4-app remittance completed: components consume `--brand-*`; `app/globals.css` keeps remittance-only chrome (overflow rule, dark override) plus `--widget-*` shims for shared `packages/ui` consumers. Shims retire in the brand cutover phase.
+- Path-based config routing (`/r/[id]/*`) was removed in the Phase-4-app middleware-simplification follow-up — middleware uses cookie + query only. Legacy URLs redirect via `next.config.ts`.
 - The `/admin` surface predates the dashboard's operator UI; folds into dashboard once Phase 5C lands.
 - No real-network E2E tests in CI (D-023).

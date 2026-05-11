@@ -207,7 +207,7 @@ export function SendScreen({
       <WidgetCard>
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <Spinner size="lg" />
-          <p className="text-sm text-(--widget-muted)">Sending USDC...</p>
+          <p className="text-sm text-(--brand-muted)">Sending USDC...</p>
         </div>
       </WidgetCard>
     );
@@ -218,16 +218,16 @@ export function SendScreen({
       <WidgetCard>
         <div className="flex flex-col items-center text-center py-6 px-6 gap-4">
           <div
-            className="w-20 h-20 rounded-full bg-(--widget-success)/10 flex items-center justify-center animate-in zoom-in-95 duration-300"
+            className="w-20 h-20 rounded-full bg-(--brand-success)/10 flex items-center justify-center animate-in zoom-in-95 duration-300"
             aria-hidden
           >
-            <CheckCircle className="w-10 h-10 text-(--widget-success)" />
+            <CheckCircle className="w-10 h-10 text-(--brand-success)" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-(--widget-fg)">
+            <h2 className="text-xl font-semibold text-(--brand-fg)">
               Transfer Complete
             </h2>
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               {formatCurrency(amount, { symbol: true })} USDC sent
             </p>
           </div>
@@ -237,7 +237,7 @@ export function SendScreen({
                 href={`https://sepolia.basescan.org/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-(--widget-accent) bg-(--widget-accent)/5 rounded-(--widget-radius) hover:bg-(--widget-accent)/10 transition-colors"
+                className="flex flex-1 items-center justify-center gap-2 h-10 px-3 text-sm font-medium text-(--brand-accent) bg-(--brand-accent)/5 rounded-(--brand-radius) hover:bg-(--brand-accent)/10 transition-colors"
               >
                 View on Explorer
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -260,7 +260,7 @@ export function SendScreen({
     <WidgetCard
       icon={
         <Send
-          className="w-[18px] h-[18px] text-(--widget-fg)"
+          className="w-[18px] h-[18px] text-(--brand-fg)"
           strokeWidth={1.5}
         />
       }
@@ -298,27 +298,27 @@ export function SendScreen({
                       type="button"
                       onClick={() => setContactSelectOpen((open) => !open)}
                       disabled={resolveRecipient.isPending}
-                      className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-(--widget-border) bg-white text-left cursor-pointer hover:bg-(--widget-row-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-(--brand-border) bg-white text-left cursor-pointer hover:bg-(--brand-row-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span className="text-sm text-(--widget-muted)">
+                      <span className="text-sm text-(--brand-muted)">
                         Select a contact
                       </span>
                       <ChevronDown
-                        className={`w-4 h-4 shrink-0 text-(--widget-muted) transition-transform ${
+                        className={`w-4 h-4 shrink-0 text-(--brand-muted) transition-transform ${
                           contactSelectOpen ? "rotate-180" : ""
                         }`}
                       />
                     </button>
                     {contactSelectOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 z-10 rounded-lg border border-(--widget-border) bg-white shadow-lg overflow-hidden">
-                        <div className="max-h-48 overflow-y-auto divide-y divide-(--widget-border)">
+                      <div className="absolute top-full left-0 right-0 mt-1 z-10 rounded-lg border border-(--brand-border) bg-white shadow-lg overflow-hidden">
+                        <div className="max-h-48 overflow-y-auto divide-y divide-(--brand-border)">
                           {recipients.map((contact, index) => (
                             <button
                               key={contact.email}
                               type="button"
                               onClick={() => handleSelectContact(contact.email)}
                               disabled={resolveRecipient.isPending}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer hover:bg-(--widget-row-hover) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer hover:bg-(--brand-row-hover) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <div
                                 className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -337,10 +337,10 @@ export function SendScreen({
                                 )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-(--widget-fg) truncate">
+                                <p className="text-sm font-medium text-(--brand-fg) truncate">
                                   {getRecipientDisplayName(contact)}
                                 </p>
-                                <p className="text-xs text-(--widget-muted) truncate">
+                                <p className="text-xs text-(--brand-muted) truncate">
                                   {contact.email}
                                 </p>
                               </div>
@@ -380,11 +380,11 @@ export function SendScreen({
 
               {/* Or separator */}
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-(--widget-border)" />
-                <span className="text-sm text-(--widget-muted) font-medium">
+                <div className="flex-1 h-px bg-(--brand-border)" />
+                <span className="text-sm text-(--brand-muted) font-medium">
                   or
                 </span>
-                <div className="flex-1 h-px bg-(--widget-border)" />
+                <div className="flex-1 h-px bg-(--brand-border)" />
               </div>
 
               {/* Wallet address */}
@@ -413,11 +413,11 @@ export function SendScreen({
 
       {step === "amount" && (
         <form onSubmit={handleAmountSubmit} className="space-y-4">
-          <div className="flex justify-between items-center p-2.5 rounded-lg bg-(--widget-row-bg)">
-            <span className="text-xs font-medium text-(--widget-muted)">
+          <div className="flex justify-between items-center p-2.5 rounded-lg bg-(--brand-row-bg)">
+            <span className="text-xs font-medium text-(--brand-muted)">
               To
             </span>
-            <span className="text-sm text-(--widget-fg) font-mono truncate">
+            <span className="text-sm text-(--brand-fg) font-mono truncate">
               {recipientLabel}
             </span>
           </div>
@@ -430,7 +430,7 @@ export function SendScreen({
               placeholder="0.00"
               autoFocus
             />
-            <p className="text-xs text-(--widget-muted) mt-1">
+            <p className="text-xs text-(--brand-muted) mt-1">
               Available: {formatCurrency(usdcBalance)} USDC
             </p>
           </div>
@@ -446,24 +446,24 @@ export function SendScreen({
 
       {step === "confirm" && (
         <div className="space-y-4">
-          <div className="space-y-2 p-3 rounded-(--widget-radius) bg-(--widget-row-bg)">
+          <div className="space-y-2 p-3 rounded-(--brand-radius) bg-(--brand-row-bg)">
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">To</span>
-              <span className="text-(--widget-fg) font-mono truncate">
+              <span className="text-(--brand-muted)">To</span>
+              <span className="text-(--brand-fg) font-mono truncate">
                 {recipientLabel}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Amount</span>
+              <span className="text-(--brand-muted)">Amount</span>
               <span className="font-medium">{formatCurrency(amount)} USDC</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Network</span>
+              <span className="text-(--brand-muted)">Network</span>
               <span>Base Sepolia</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-(--widget-muted)">Gas Fee</span>
-              <span className={isSponsored ? "text-(--widget-success)" : ""}>
+              <span className="text-(--brand-muted)">Gas Fee</span>
+              <span className={isSponsored ? "text-(--brand-success)" : ""}>
                 {isSponsored ? "Sponsored" : "User pays"}
               </span>
             </div>
