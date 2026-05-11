@@ -37,7 +37,23 @@ This app uses the `autoInitialize: false` + explicit `initializeClient()` flow w
 
 ## Theming
 
-Uses `next-themes` for dark-mode toggle and `@dynamic-demos/theme` types. Phase 4 migrates to the visa-direct cookie + `<ThemeStyleTag>` pattern (D-008) once the canonical `--brand-*` overlay lands.
+Phase 4 migrates shop to the unified theme injection pattern (D-008):
+
+- `middleware.ts` runs `createDemoMiddleware` (`demoType: "shop"`,
+  query-source, header-only) and forwards `?theme=<configId>` as
+  `x-shop-config-id` to `app/layout.tsx`.
+- `app/layout.tsx` reads the header server-side, fetches via
+  `getShopConfig`, projects `WidgetTheme` → `Partial<BrandTheme>` with
+  `lib/shop-brand.ts`, and emits `<ThemeStyleTag overridesOnly>` in
+  `<head>` — zero FOUC, zero hydration mismatch.
+- `globals.css` declares static `--brand-*` overrides as shop's design
+  language plus `--widget-*` compat aliases for `packages/ui`
+  consumers that haven't migrated yet (retire when packages/ui does).
+- `next-themes` still drives the dark-mode toggle; the dark `.dark`
+  scope overrides the brand contract for dark surfaces.
+- The dashboard does not yet expose `/api/shops/[id]`; `getShopConfig`
+  returns `null` gracefully so the static defaults render. Wire the
+  endpoint up in a follow-up phase.
 
 ## Credentials
 
@@ -69,7 +85,7 @@ Uses `next-themes` for dark-mode toggle and `@dynamic-demos/theme` types. Phase 
 - **Root dir:** `apps/shop`.
 - **Required env:** see above.
 - **Owner:** demos team.
-- **Dev port:** 4007.
+- **Dev port:** 4008.
 
 ## Integration map
 
@@ -96,6 +112,6 @@ export function Providers({ children }) {
 
 ## Open questions / known gaps
 
-- Phase 4 migrates dark-mode + brand overlay onto the visa-direct cookie + SSR theme pattern (D-008).
+- Dashboard `/api/shops/[id]` endpoint is not yet implemented — `getShopConfig` returns null and shop renders static defaults. Add the endpoint when the dashboard surfaces shop configs to operators.
 - Future work: extend `createDynamicClientSingleton` with an explicit-initialize knob and migrate this app off the bespoke `initializeDynamicClient()`. Until a third app needs `autoInitialize: false`, the bespoke initializer is correct.
 - Order history is not persisted today; would require either local store or dashboard event emission.

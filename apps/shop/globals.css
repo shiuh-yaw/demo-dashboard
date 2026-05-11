@@ -50,22 +50,51 @@
 :root {
   --radius: 0.625rem;
 
-  /* Widget Theme Variables (defaults) */
-  --widget-page-bg: #f6f8fa;
-  --widget-bg: #ffffff;
-  --widget-fg: #000000;
-  --widget-primary: #121212;
-  --widget-primary-hover: #2a2a2a;
-  --widget-accent: #4779ff;
-  --widget-row-bg: #f6f8f8;
-  --widget-row-hover: #eef1f1;
-  --widget-muted: #9a9a9a;
-  --widget-border: #e7e8ed;
-  --widget-gradient-from: #daffff;
-  --widget-gradient-to: rgba(218, 255, 255, 0.15);
-  --widget-radius-sm: 6px;
-  --widget-radius: 10px;
-  --widget-radius-lg: 22px;
+  /*
+   * Brand contract (--brand-*) — shop's static design language.
+   * Per-config overrides (when an `?id=<configId>` resolves a stored
+   * brand theme) are layered on top via <ThemeStyleTag overridesOnly>
+   * in app/layout.tsx (D-008).
+   */
+  --brand-page-bg: #f6f8fa;
+  --brand-surface: #ffffff;
+  --brand-fg: #000000;
+  --brand-primary: #121212;
+  --brand-primary-hover: #2a2a2a;
+  --brand-accent: #4779ff;
+  --brand-row-bg: #f6f8f8;
+  --brand-row-hover: #eef1f1;
+  --brand-muted: #9a9a9a;
+  --brand-border: #e7e8ed;
+  --brand-card-gradient-start: #daffff;
+  --brand-card-gradient-end: rgba(218, 255, 255, 0.15);
+  --brand-radius-sm: 6px;
+  --brand-radius: 10px;
+  --brand-radius-lg: 22px;
+
+  /*
+   * `--widget-*` compat aliases — shared `packages/ui` components
+   * (AuthLayout, etc.) and any other consumer that hasn't migrated to
+   * `--brand-*` yet still resolves through these. They track the brand
+   * contract above, so per-config <ThemeStyleTag> overrides cascade
+   * cleanly. Retire once packages/ui finishes the brand migration.
+   */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface);
+  --widget-fg: var(--brand-fg);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
+  --widget-gradient-from: var(--brand-card-gradient-start);
+  --widget-gradient-to: var(--brand-card-gradient-end);
+  --widget-radius-sm: var(--brand-radius-sm);
+  --widget-radius: var(--brand-radius);
+  --widget-radius-lg: var(--brand-radius-lg);
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -132,17 +161,29 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
 
-  /* Widget theme overrides for dark mode (used by Dialog, ListRow, WidgetCard) */
-  --widget-page-bg: oklch(0 0 0);
-  --widget-bg: oklch(0.145 0 0);
-  --widget-fg: oklch(0.984 0.003 247.858);
-  --widget-primary: oklch(0.35 0.02 260);
-  --widget-primary-hover: oklch(0.45 0.02 260);
-  --widget-accent: #4779ff;
-  --widget-row-bg: oklch(0.2 0 0);
-  --widget-row-hover: oklch(0.25 0 0);
-  --widget-muted: oklch(0.554 0.046 257.417);
-  --widget-border: oklch(1 0 0 / 10%);
+  /* Brand overrides for dark mode (consumed by Dialog, ListRow, WidgetCard, cart-icon, ...) */
+  --brand-page-bg: oklch(0 0 0);
+  --brand-surface: oklch(0.145 0 0);
+  --brand-fg: oklch(0.984 0.003 247.858);
+  --brand-primary: oklch(0.35 0.02 260);
+  --brand-primary-hover: oklch(0.45 0.02 260);
+  --brand-accent: #4779ff;
+  --brand-row-bg: oklch(0.2 0 0);
+  --brand-row-hover: oklch(0.25 0 0);
+  --brand-muted: oklch(0.554 0.046 257.417);
+  --brand-border: oklch(1 0 0 / 10%);
+
+  /* --widget-* compat aliases (track --brand-* in dark mode too) */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface);
+  --widget-fg: var(--brand-fg);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
 }
 
 @layer base {
