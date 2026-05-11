@@ -181,7 +181,7 @@ export function DepositScreen() {
     <WidgetCard title="Deposit" trailing={logoutTrailing}>
       <div className="space-y-4">
         {walletNetworkMismatch && mismatchMessage && (
-          <div className="flex items-start gap-2 rounded-(--widget-radius) border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <div className="flex items-start gap-2 rounded-(--brand-radius) border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
             <span>{mismatchMessage}</span>
           </div>
@@ -190,11 +190,11 @@ export function DepositScreen() {
           <div className="flex items-center justify-between gap-2">
             <label
               htmlFor="deposit-amount"
-              className="text-xs font-medium text-(--widget-muted)"
+              className="text-xs font-medium text-(--brand-muted)"
             >
               Send {DEPOSIT_ASSETS.USDC.symbol}
             </label>
-            <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-(--widget-muted)">
+            <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-(--brand-muted)">
               {externalBalanceLoading ? (
                 <Loader2
                   className="size-3 animate-spin opacity-70"
@@ -203,7 +203,7 @@ export function DepositScreen() {
               ) : externalUsdcBalance != null ? (
                 <>
                   <span>Balance</span>
-                  <span className="tabular-nums text-(--widget-fg) font-medium">
+                  <span className="tabular-nums text-(--brand-fg) font-medium">
                     {externalUsdcBalance}
                   </span>
                   <button
@@ -217,7 +217,7 @@ export function DepositScreen() {
                       setAmount(externalUsdcBalance);
                       clearSendError();
                     }}
-                    className="rounded px-1 py-0.5 text-[10px] font-semibold uppercase text-(--widget-accent) hover:bg-(--widget-accent)/10 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                    className="rounded px-1 py-0.5 text-[10px] font-semibold uppercase text-(--brand-accent) hover:bg-(--brand-accent)/10 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                   >
                     Max
                   </button>
@@ -242,9 +242,9 @@ export function DepositScreen() {
                   }
                 }}
                 disabled={isSending}
-                className="w-full rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-row-bg) px-3 py-2.5 pr-16 text-sm tabular-nums outline-none transition-colors focus:border-(--widget-accent) disabled:opacity-50"
+                className="w-full rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) px-3 py-2.5 pr-16 text-sm tabular-nums outline-none transition-colors focus:border-(--brand-accent) disabled:opacity-50"
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-(--widget-muted)">
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-(--brand-muted)">
                 {DEPOSIT_ASSETS.USDC.symbol}
               </span>
             </div>
@@ -264,7 +264,7 @@ export function DepositScreen() {
                   setTimeout(() => void refetchDepositStatus(), 8000);
                 })
               }
-              className="flex shrink-0 items-center gap-1.5 rounded-(--widget-radius) bg-(--widget-primary) px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-(--widget-primary-hover) disabled:opacity-50 disabled:pointer-events-none"
+              className="flex shrink-0 items-center gap-1.5 rounded-(--brand-radius) bg-(--brand-primary) px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-(--brand-primary-hover) disabled:opacity-50 disabled:pointer-events-none"
             >
               {isSending ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -279,7 +279,7 @@ export function DepositScreen() {
             <ErrorBanner message={sendError} onDismiss={clearSendError} />
           )}
           {sendTxHash && (
-            <p className="flex items-center gap-1 text-xs text-(--widget-success)">
+            <p className="flex items-center gap-1 text-xs text-(--brand-success)">
               <Check
                 className="size-3.5 shrink-0"
                 strokeWidth={2}
@@ -293,13 +293,13 @@ export function DepositScreen() {
             <button
               type="button"
               onClick={copyDepositAddress}
-              className="inline-flex items-center gap-1 text-[11px] text-(--widget-muted) transition-colors hover:text-(--widget-fg)"
+              className="inline-flex items-center gap-1 text-[11px] text-(--brand-muted) transition-colors hover:text-(--brand-fg)"
               title="Copy deposit address to clipboard"
             >
               {depositAddrCopied ? (
                 <>
                   <Check
-                    className="size-3 shrink-0 text-(--widget-success)"
+                    className="size-3 shrink-0 text-(--brand-success)"
                     strokeWidth={2}
                     aria-hidden
                   />
@@ -320,11 +320,11 @@ export function DepositScreen() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-(--widget-muted)">
+          <label className="text-xs font-medium text-(--brand-muted)">
             Funds will be forwarded to
           </label>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-            <code className="flex-1 min-w-0 text-xs font-mono text-(--widget-muted) truncate">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+            <code className="flex-1 min-w-0 text-xs font-mono text-(--brand-muted) truncate">
               {embeddedWalletAddress}
             </code>
             <a
@@ -339,11 +339,11 @@ export function DepositScreen() {
             </a>
           </div>
           <p
-            className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] text-(--widget-muted)"
+            className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] text-(--brand-muted)"
             role="status"
             aria-live="polite"
           >
-            <span className="font-medium text-(--widget-muted)">
+            <span className="font-medium text-(--brand-muted)">
               Wallet balance
             </span>
             {forwardBalanceLoading ? (
@@ -356,7 +356,7 @@ export function DepositScreen() {
               </>
             ) : forwardUsdcBalance != null ? (
               <>
-                <span className="tabular-nums text-(--widget-fg)">
+                <span className="tabular-nums text-(--brand-fg)">
                   {forwardUsdcBalance} {DEPOSIT_ASSETS.USDC.symbol}
                 </span>
                 <span className="opacity-80">on {networkLabel}</span>
@@ -370,11 +370,11 @@ export function DepositScreen() {
         <div className="space-y-1.5">
           <div className="flex items-start justify-between gap-2">
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-xs font-medium text-(--widget-muted)">
+              <span className="text-xs font-medium text-(--brand-muted)">
                 Deposits
               </span>
               {deposits.length > 0 ? (
-                <span className="text-[11px] text-(--widget-muted) opacity-80">
+                <span className="text-[11px] text-(--brand-muted) opacity-80">
                   Tap a row for details and progress.
                 </span>
               ) : null}
@@ -394,10 +394,10 @@ export function DepositScreen() {
               />
             </button>
           </div>
-          <ul className="max-h-52 list-none overflow-y-auto rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-row-bg)/50 p-0 m-0 [scrollbar-gutter:stable] divide-y divide-(--widget-border)">
+          <ul className="max-h-52 list-none overflow-y-auto rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg)/50 p-0 m-0 [scrollbar-gutter:stable] divide-y divide-(--brand-border)">
             {deposits.length === 0 ? (
               <li
-                className="flex items-center gap-2.5 px-3 py-4 text-sm text-(--widget-muted)"
+                className="flex items-center gap-2.5 px-3 py-4 text-sm text-(--brand-muted)"
                 role="status"
               >
                 <Loader2
@@ -411,7 +411,7 @@ export function DepositScreen() {
                 <li key={d.incomingTxId}>
                   <button
                     type="button"
-                    className="group flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-(--widget-row-hover) cursor-pointer"
+                    className="group flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-(--brand-row-hover) cursor-pointer"
                     onClick={() => setSelectedIncomingId(d.incomingTxId)}
                   >
                     <span className="shrink-0">
@@ -425,7 +425,7 @@ export function DepositScreen() {
                         {DEPOSIT_ROW_STATUS_LABELS[d.status]}
                       </p>
                       {d.createdAt ? (
-                        <div className="mt-0.5 text-[11px] leading-snug text-(--widget-muted)">
+                        <div className="mt-0.5 text-[11px] leading-snug text-(--brand-muted)">
                           <time
                             dateTime={new Date(d.createdAt).toISOString()}
                             title={new Date(d.createdAt).toLocaleString()}
@@ -437,14 +437,14 @@ export function DepositScreen() {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2 self-center">
-                      <p className="max-w-28 text-right text-sm font-semibold tabular-nums text-(--widget-foreground)">
+                      <p className="max-w-28 text-right text-sm font-semibold tabular-nums text-(--brand-fg)">
                         <span className="break-all">{d.amount}</span>{" "}
-                        <span className="text-[11px] font-medium text-(--widget-muted)">
+                        <span className="text-[11px] font-medium text-(--brand-muted)">
                           {DEPOSIT_ASSETS.USDC.symbol}
                         </span>
                       </p>
                       <ChevronRight
-                        className="size-4 shrink-0 text-(--widget-muted) opacity-50 transition-opacity group-hover:opacity-80"
+                        className="size-4 shrink-0 text-(--brand-muted) opacity-50 transition-opacity group-hover:opacity-80"
                         strokeWidth={2}
                         aria-hidden
                       />

@@ -8,7 +8,7 @@ export function DepositRowIcon({ status }: { status: DepositItem["status"] }) {
   if (!isDepositStatusTerminal(status)) {
     return (
       <Loader2
-        className="size-4 shrink-0 animate-spin text-(--widget-accent)"
+        className="size-4 shrink-0 animate-spin text-(--brand-accent)"
         aria-hidden
       />
     );
@@ -16,7 +16,7 @@ export function DepositRowIcon({ status }: { status: DepositItem["status"] }) {
   if (status === "complete") {
     return (
       <Check
-        className="size-4 shrink-0 text-(--widget-success)"
+        className="size-4 shrink-0 text-(--brand-success)"
         strokeWidth={2}
         aria-hidden
       />
@@ -24,7 +24,7 @@ export function DepositRowIcon({ status }: { status: DepositItem["status"] }) {
   }
   return (
     <AlertCircle
-      className="size-4 shrink-0 text-(--widget-error)"
+      className="size-4 shrink-0 text-(--brand-error)"
       strokeWidth={2}
       aria-hidden
     />

@@ -13,11 +13,11 @@ export const DEPOSIT_ROW_STATUS_LABELS: Record<DepositItem["status"], string> =
 
 export const DEPOSIT_ROW_STATUS_COLORS: Record<DepositItem["status"], string> =
   {
-    received: "text-(--widget-muted)",
-    screening: "text-(--widget-accent)",
-    transferring: "text-(--widget-accent)",
-    complete: "text-(--widget-success)",
-    screening_failed: "text-(--widget-error)",
+    received: "text-(--brand-muted)",
+    screening: "text-(--brand-accent)",
+    transferring: "text-(--brand-accent)",
+    complete: "text-(--brand-success)",
+    screening_failed: "text-(--brand-error)",
   };
 
 const DEPOSIT_TERMINAL_STATUSES: DepositItem["status"][] = [

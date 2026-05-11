@@ -19,10 +19,10 @@ export function NetworkBar() {
           onChange={(e) =>
             void setNetworkAndSync(e.target.value as DepositNetwork)
           }
-          className={`appearance-none rounded-lg border bg-(--widget-bg) px-3 py-1.5 pr-8 text-xs font-medium shadow-sm outline-none transition-colors hover:bg-(--widget-row-hover) cursor-pointer ${
+          className={`appearance-none rounded-lg border bg-(--brand-surface) px-3 py-1.5 pr-8 text-xs font-medium shadow-sm outline-none transition-colors hover:bg-(--brand-row-hover) cursor-pointer ${
             walletNetworkMismatch
               ? "border-amber-400 text-amber-600"
-              : "border-(--widget-border) text-(--widget-fg) focus:border-(--widget-accent)"
+              : "border-(--brand-border) text-(--brand-fg) focus:border-(--brand-accent)"
           }`}
           aria-label="Network"
         >
@@ -40,7 +40,7 @@ export function NetworkBar() {
           />
         ) : (
           <ChevronDown
-            className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-(--widget-muted)"
+            className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-(--brand-muted)"
             strokeWidth={2}
             aria-hidden
           />

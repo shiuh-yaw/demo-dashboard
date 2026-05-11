@@ -143,24 +143,24 @@ function shortTxHash(hash: string): string {
 }
 
 function stepTitleClass(state: StepUi): string {
-  if (state === "error") return "text-(--widget-error)";
-  if (state === "upcoming") return "text-(--widget-muted)";
-  return "text-(--widget-foreground)";
+  if (state === "error") return "text-(--brand-error)";
+  if (state === "upcoming") return "text-(--brand-muted)";
+  return "text-(--brand-fg)";
 }
 
 function stepBadgeClass(state: StepUi): string {
   const base =
     "flex size-7 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[10px] font-medium transition-colors";
   if (state === "done") {
-    return `${base} border-(--widget-success) bg-(--widget-success) text-white`;
+    return `${base} border-(--brand-success) bg-(--brand-success) text-white`;
   }
   if (state === "current") {
-    return `${base} border-(--widget-accent) bg-(--widget-accent)/[0.08] text-(--widget-accent)`;
+    return `${base} border-(--brand-accent) bg-(--brand-accent)/[0.08] text-(--brand-accent)`;
   }
   if (state === "error") {
-    return `${base} border-(--widget-error) bg-(--widget-error) text-white`;
+    return `${base} border-(--brand-error) bg-(--brand-error) text-white`;
   }
-  return `${base} border-(--widget-border) bg-(--widget-row-bg) text-(--widget-muted) opacity-80`;
+  return `${base} border-(--brand-border) bg-(--brand-row-bg) text-(--brand-muted) opacity-80`;
 }
 
 function stepDescription(
@@ -196,10 +196,10 @@ export function DepositTransactionDetail({
 }: DepositTransactionDetailProps) {
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="space-y-1 rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-row-bg)/50 px-3 py-2 text-xs text-(--widget-muted)">
+      <div className="space-y-1 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg)/50 px-3 py-2 text-xs text-(--brand-muted)">
         <div className="flex justify-between gap-3">
           <span className="shrink-0">Amount</span>
-          <span className="font-semibold tabular-nums text-(--widget-foreground) text-right">
+          <span className="font-semibold tabular-nums text-(--brand-fg) text-right">
             {deposit.amount} {DEPOSIT_ASSETS.USDC.symbol}
           </span>
         </div>
@@ -216,7 +216,7 @@ export function DepositTransactionDetail({
               href={getBaseTxExplorerUrl(network, deposit.txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-w-0 font-mono truncate text-right underline-offset-2 hover:text-(--widget-accent) hover:underline"
+              className="min-w-0 font-mono truncate text-right underline-offset-2 hover:text-(--brand-accent) hover:underline"
             >
               {shortTxHash(deposit.txHash)}
             </a>
@@ -230,7 +230,7 @@ export function DepositTransactionDetail({
                 href={getBaseTxExplorerUrl(network, deposit.forwardTxHash)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-w-0 font-mono truncate text-right underline-offset-2 hover:text-(--widget-accent) hover:underline"
+                className="min-w-0 font-mono truncate text-right underline-offset-2 hover:text-(--brand-accent) hover:underline"
               >
                 {shortTxHash(deposit.forwardTxHash)}
               </a>
@@ -261,7 +261,7 @@ export function DepositTransactionDetail({
         <div className="flex items-center justify-between gap-2">
           <h3
             id="deposit-progress-heading"
-            className="m-0 min-w-0 truncate text-xs font-medium text-(--widget-muted)"
+            className="m-0 min-w-0 truncate text-xs font-medium text-(--brand-muted)"
           >
             Progress
           </h3>
@@ -325,7 +325,7 @@ export function DepositTransactionDetail({
                   >
                     {step.title}
                   </p>
-                  <p className="mt-1 text-[11px] leading-snug text-(--widget-muted)">
+                  <p className="mt-1 text-[11px] leading-snug text-(--brand-muted)">
                     {description}
                   </p>
                 </div>

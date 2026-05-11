@@ -414,6 +414,9 @@ importers:
       '@dynamic-demos/fireblocks':
         specifier: workspace:*
         version: link:../../packages/fireblocks
+      '@dynamic-demos/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@dynamic-demos/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -25,7 +25,7 @@ App routes:
 - `/` — landing + network selector + deposit address card.
 - `/api/...` — server-only deposit-address allocation, balance reads.
 
-This app is one of the **non-consumers** of `@dynamic-demos/dynamic`'s middleware/sync-cookie/`<DynamicInit />` primitives. Phase 1D consolidated client-singleton helpers; the cookie/middleware pattern hasn't been added because the demo doesn't need JWT-protected SSR routes.
+Phase 1D consolidated client-singleton helpers; Phase 4 added `middleware.ts` (minimal config-id forwarder) for theme-config forwarding. Authentication remains client-side via the Dynamic SDK widget — there are no JWT-protected SSR routes; deposit's `app/api/*` routes verify JWTs themselves via `requireUserId`.
 
 ## Required environment
 
@@ -35,10 +35,11 @@ This app is one of the **non-consumers** of `@dynamic-demos/dynamic`'s middlewar
 - `FIREBLOCKS_API_SECRET` — server-only PEM — required.
 - `FIREBLOCKS_API_BASE_URL` — defaults to sandbox (D-005).
 - `FIREBLOCKS_VAULT_ACCOUNT_ID` — root vault id used for sub-account allocation.
+- `NEXT_PUBLIC_DASHBOARD_API_URL` — base URL for dashboard wallet config API (defaults to `http://localhost:4000` in dev).
 
 ## Theming
 
-Currently consumes `@dynamic-demos/ui` + `@dynamic-demos/utils` directly. Theme migration to the visa-direct cookie + `<ThemeStyleTag>` pattern lands in Phase 4 (D-008).
+Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?theme=<configId>` as the `x-deposit-config-id` header; `app/layout.tsx` reads it server-side, fetches the wallet config from the dashboard `/api/wallets/[id]` endpoint (deposit shares the wallet flow_role), projects `WidgetTheme` → `Partial<BrandTheme>` via `lib/deposit-brand.ts`, and emits the per-brand `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`. Static deposit defaults live in `app/globals.css` (with `--widget-*` compat aliases for shared `packages/ui` components). Header-only forwarding — no `Set-Cookie` (deep-links honor URL state).
 
 ## Credentials
 
@@ -101,6 +102,6 @@ export async function POST(req: Request) {
 
 ## Open questions / known gaps
 
-- Phase 4 migrates this app onto the visa-direct cookie + SSR theme pattern (D-008) and the `--brand-*` contract.
+- `--widget-*` compat aliases in `globals.css` retire when shared `packages/ui` components migrate to `--brand-*`.
 - The 12 existing characterization tests cover the Phase 1D client-singleton migration; expand with deposit-address fixtures next.
 - Fireblocks deposit-address creation takes a few seconds first time; consider an inline status state machine.

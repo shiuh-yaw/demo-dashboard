@@ -1,34 +1,65 @@
 @import "tailwindcss";
+@import "@dynamic-demos/theme/defaults.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/ui/src/**/*.ts";
 
+/*
+ * Class-based dark mode (opt out of Tailwind v4's default media-query
+ * dark mode). Deposit is light-only today. A future iteration may
+ * deliver real dark mode. Without this, system dark mode triggers
+ * `dark:` variants in shared `packages/ui` components while the page
+ * chrome remains light — producing low-contrast bugs.
+ */
+@variant dark (&:where(.dark, .dark *));
+
+/*
+ * Deposit-brand override of the canonical --brand-* contract (D-007).
+ * These values match deposit's existing widget defaults, so the default
+ * route renders byte-identical pre/post migration. Per-config theming
+ * via <ThemeStyleTag> (in app/layout.tsx) layers on top of these.
+ */
 :root {
-  /* Widget Theme Variables */
-  --widget-page-bg: #f6f8fa;
-  --widget-bg: #ffffff;
-  --widget-fg: #000000;
-  --widget-primary: #121212;
-  --widget-primary-hover: #2a2a2a;
-  --widget-accent: #4779ff;
-  --widget-row-bg: #f6f8f8;
-  --widget-row-hover: #eef1f1;
-  --widget-muted: #9a9a9a;
-  --widget-border: #e7e8ed;
-  --widget-success: #22c55e;
-  --widget-error: #ef4444;
-  --widget-radius-sm: 6px;
-  --widget-radius: 10px;
-  --widget-radius-lg: 22px;
+  --brand-page-bg: #f6f8fa;
+  --brand-fg: #000000;
+  --brand-primary: #121212;
+  --brand-primary-hover: #2a2a2a;
+  --brand-accent: #4779ff;
+  --brand-row-bg: #f6f8f8;
+  --brand-row-hover: #eef1f1;
+  --brand-muted: #9a9a9a;
+  --brand-border: #e7e8ed;
+  --brand-success: #22c55e;
+  --brand-error: #ef4444;
+  --brand-radius-sm: 6px;
+  --brand-radius: 10px;
+  --brand-radius-lg: 22px;
+
+  /*
+   * `--widget-*` compat aliases for shared `packages/ui` components
+   * (WidgetCard, etc.) that haven't migrated to `--brand-*` yet. These
+   * track the brand contract above so per-config <ThemeStyleTag>
+   * overrides cascade through cleanly. Retire when packages/ui migrates.
+   */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface, #ffffff);
+  --widget-fg: var(--brand-fg);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
 }
 
 @layer base {
   * {
-    @apply border-(--widget-border);
+    @apply border-(--brand-border);
   }
   body {
-    @apply bg-(--widget-page-bg) text-(--widget-fg);
+    @apply bg-(--brand-page-bg) text-(--brand-fg);
     font-family:
       system-ui,
       -apple-system,
@@ -38,4 +69,3 @@
       sans-serif;
   }
 }
-

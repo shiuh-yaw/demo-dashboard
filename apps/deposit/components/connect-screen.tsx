@@ -133,7 +133,7 @@ export function ConnectScreen() {
                 type="button"
                 onClick={() => void handleRetryProvision()}
                 disabled={retryingProvision || connecting !== null}
-                className="w-full text-sm font-medium rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-row-bg) py-2 px-3 hover:bg-(--widget-row-hover) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full text-sm font-medium rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) py-2 px-3 hover:bg-(--brand-row-hover) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {retryingProvision ? "Retrying…" : "Try again"}
               </button>
@@ -146,7 +146,7 @@ export function ConnectScreen() {
             <Spinner size="lg" className={depositWidgetLargeSpinnerClassName} />
           </div>
         ) : walletGroups.length === 0 ? (
-          <p className="text-sm text-(--widget-muted) text-center py-8">
+          <p className="text-sm text-(--brand-muted) text-center py-8">
             No wallets detected. Install MetaMask or another EVM wallet.
           </p>
         ) : (
@@ -157,7 +157,7 @@ export function ConnectScreen() {
                 type="button"
                 onClick={() => handleConnect(wallet.key)}
                 disabled={connecting !== null}
-                className="flex items-center gap-3 p-3 rounded-(--widget-radius) border border-(--widget-border) hover:bg-(--widget-row-hover) transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-3 p-3 rounded-(--brand-radius) border border-(--brand-border) hover:bg-(--brand-row-hover) transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="w-7 h-7 shrink-0">
                   {wallet.iconUrl ? (
@@ -167,7 +167,7 @@ export function ConnectScreen() {
                       className="w-full h-full object-contain rounded"
                     />
                   ) : (
-                    <div className="w-full h-full rounded-full bg-(--widget-row-bg)" />
+                    <div className="w-full h-full rounded-full bg-(--brand-row-bg)" />
                   )}
                 </div>
                 <span className="flex-1 text-left text-sm font-medium">

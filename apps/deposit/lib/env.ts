@@ -35,6 +35,16 @@ export const env = createEnv({
     NEXT_PUBLIC_NETWORK: z
       .enum(["base", "base-sepolia"])
       .default("base-sepolia"),
+    /**
+     * Dashboard API URL — base URL for the demo-dashboard API
+     * (handles per-config wallet/deposit configurations consumed by
+     * `app/layout.tsx` for SSR theme injection). Defaults to
+     * http://localhost:4000 in development.
+     */
+    NEXT_PUBLIC_DASHBOARD_API_URL: z
+      .string()
+      .url()
+      .default("http://localhost:4000"),
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -47,5 +57,6 @@ export const env = createEnv({
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
+    NEXT_PUBLIC_DASHBOARD_API_URL: process.env.NEXT_PUBLIC_DASHBOARD_API_URL,
   },
 });
