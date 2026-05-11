@@ -54,7 +54,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 4-app. Theme migration: wallet | 🟢 done | [#61](https://github.com/dynamic-labs/demo-dashboard/pull/61) | Migrated to `@dynamic-demos/theme/defaults.css`; `--brand-*` namespace adopted with wallet's brand encoded as value overrides in `app/globals.css`; `<ThemeStyleTag>` not wired (no per-config theming today — wallet has no middleware). |
 | 4-app. Theme migration: remittance | ⚪️ pending | — | — |
 | 4-app. Theme migration: visa-direct | ⚪️ pending | — | Reference implementation; do last |
-| 4-app. Theme migration: cross-border-ap-ar | ⚪️ pending | — | — |
+| 4-app. Theme migration: cross-border-ap-ar | 🟢 done | [#62](https://github.com/dynamic-labs/demo-dashboard/pull/62) | Migrated to `@dynamic-demos/theme/defaults.css`; no `--widget-*` tokens existed (sweep was a no-op); `--brand-page-bg` / `--brand-fg` overridden app-locally to preserve byte-identical Etsy operator surface; `--etsy-*` identity tokens retained outside the `--brand-*` contract. No `<ThemeStyleTag>` (no middleware / per-config theming). |
 | 4-app. Theme migration: proceeds | 🟢 done | [#57](https://github.com/dynamic-labs/demo-dashboard/pull/57) | Migrated to `@dynamic-demos/theme/defaults.css`; `--brand-*` namespace adopted; `--proceeds-*` chrome tokens retained app-locally. |
 | 4-app. Theme migration: earn | ⚪️ pending | — | Hardest (RGB conversion) |
 | 5A. Webhook framework | 🟡 in-flight | — | Framework + BlindPay reference wired. alfredpay/iron/coinbase/lifi receivers follow as separate small PRs. Transaction resolution from upstream resource ids deferred (events currently persist as `ignored` until a `(provider, providerResourceId) → transactionId` index lands). |

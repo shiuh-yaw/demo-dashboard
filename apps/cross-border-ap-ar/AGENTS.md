@@ -41,7 +41,7 @@ Sandbox-by-default (D-005). Production opt-in requires `[prod-creds]` PR title.
 
 ## Theming
 
-The app currently uses bespoke styling. Phase 4 migrates onto the visa-direct cookie + `<ThemeStyleTag>` pattern (D-008) and the `--brand-*` contract.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source. App-local overrides in `app/globals.css` reset `--brand-page-bg` (`#f9fafb`) and `--brand-fg` (`#222222`) to preserve the existing Etsy operator surface byte-for-byte; `--etsy-orange` / `--etsy-dark` remain as app-local identity tokens (top-bar chrome + accent), outside the `--brand-*` contract by design. The app has no Dynamic middleware and no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if cross-border-ap-ar gains per-tenant theming via dashboard config.
 
 ## Credentials
 
@@ -73,7 +73,7 @@ The app currently uses bespoke styling. Phase 4 migrates onto the visa-direct co
 - **Root dir:** `apps/cross-border-ap-ar`.
 - **Required env:** see above.
 - **Owner:** demos team.
-- **Dev port:** 4007 (note: same port as `apps/shop` — only one runs at a time locally).
+- **Dev port:** 4009.
 
 ## Integration map
 
@@ -101,7 +101,6 @@ export async function POST() {
 
 ## Open questions / known gaps
 
-- Phase 4 migrates onto the visa-direct cookie + SSR theme pattern (D-008) once the operator surface is themable per dashboard config.
+- Phase 4-app cross-border-ap-ar completed: `globals.css` is now thin, importing `@dynamic-demos/theme/defaults.css` and keeping only the `--brand-page-bg` / `--brand-fg` overrides plus the `--etsy-*` identity tokens. No `<ThemeStyleTag>` is wired — the app has no middleware / per-config theming today; that lands when the operator surface becomes themable per dashboard config.
 - Phase 5B routes payout creation through dashboard `/api/orchestrate/payouts` — drop the per-app `FIREBLOCKS_*` env vars then.
 - No real-network E2E tests in CI (D-023).
-- The 4007 port collision with `apps/shop` is a dev-time annoyance only.
