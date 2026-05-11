@@ -115,7 +115,7 @@ Fireblocks source is always `{ type: "VAULT_ACCOUNT", id: FIREBLOCKS_VAULT_ACCOU
    pnpm dev
    ```
 
-   The app runs on [http://localhost:4006](http://localhost:4006).
+   The app runs on [http://localhost:4007](http://localhost:4007).
 
 ## Environment variables
 
@@ -157,7 +157,7 @@ Never hardcode hex colors in components — always consume via `--widget-*` vari
 
 | Script           | Description                                    |
 | ---------------- | ---------------------------------------------- |
-| `pnpm dev`       | Start Next.js dev server on port **4006**      |
+| `pnpm dev`       | Start Next.js dev server on port **4007**      |
 | `pnpm build`     | Production build                               |
 | `pnpm start`     | Start the production server                    |
 | `pnpm lint`      | Run ESLint                                     |
@@ -167,7 +167,7 @@ Never hardcode hex colors in components — always consume via `--widget-*` vari
 
 - **pnpm only** — never `npm` or `yarn`
 - **Package name:** `@dynamic-demos/visa-direct`
-- **Dev port:** `4006`
+- **Dev port:** `4007`
 - Mirror [`apps/remittance`](../remittance) for patterns (hooks, layouts, contexts, config)
 - TypeScript strict — zero errors, zero warnings
 - One component per file; sentence case in UI text

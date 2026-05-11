@@ -372,13 +372,13 @@ export function ConnectExternalWalletModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="connect-external-wallet-title"
       >
         {step !== "connecting" && (
-          <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+          <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
             <div className="flex items-center gap-2">
               {showBack && (
                 <button
@@ -387,7 +387,7 @@ export function ConnectExternalWalletModal({
                     setConnectedAddress("");
                     setSelected(null);
                   }}
-                  className="p-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                  className="p-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -398,14 +398,14 @@ export function ConnectExternalWalletModal({
                   className={cn(
                     "w-4 h-4",
                     step === "done"
-                      ? "text-(--widget-success)"
-                      : "text-(--widget-primary)",
+                      ? "text-(--brand-success)"
+                      : "text-(--brand-primary)",
                   )}
                 />
               )}
               <h2
                 id="connect-external-wallet-title"
-                className="text-base font-semibold text-(--widget-fg)"
+                className="text-base font-semibold text-(--brand-fg)"
               >
                 {step === "screening"
                   ? "Screening"
@@ -421,7 +421,7 @@ export function ConnectExternalWalletModal({
             {step !== "screening" && step !== "done" && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+                className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -449,11 +449,11 @@ export function ConnectExternalWalletModal({
               >
                 Connecting to {selected.displayName}
               </h2>
-              <div className="w-10 h-10 border-2 border-(--widget-primary) border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-(--widget-fg)">
+              <div className="w-10 h-10 border-2 border-(--brand-primary) border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-(--brand-fg)">
                 Approve in {selected.displayName}…
               </p>
-              <p className="text-xs text-(--widget-muted) text-center max-w-[280px]">
+              <p className="text-xs text-(--brand-muted) text-center max-w-[280px]">
                 We&apos;ll ask your wallet to sign a one-time message to prove
                 you own this address. No funds will move.
               </p>
@@ -462,40 +462,40 @@ export function ConnectExternalWalletModal({
 
           {step === "verify" && selected && connectedAddress && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
+              <div className="flex items-center gap-3 p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
                 <WalletBadge group={selected} size="sm" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-(--widget-fg) truncate">
+                  <p className="text-sm font-medium text-(--brand-fg) truncate">
                     {selected.displayName}
                   </p>
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     External wallet linked
                   </p>
                 </div>
-                <Check className="w-4 h-4 text-(--widget-success) flex-shrink-0" />
+                <Check className="w-4 h-4 text-(--brand-success) flex-shrink-0" />
               </div>
 
-              <div className="p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                <p className="text-xs font-medium text-(--widget-muted) mb-1">
+              <div className="p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                <p className="text-xs font-medium text-(--brand-muted) mb-1">
                   Wallet address
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-mono text-(--widget-fg) break-all">
+                  <p className="text-sm font-mono text-(--brand-fg) break-all">
                     {truncate(connectedAddress)}
                   </p>
                   <button
                     onClick={handleCopy}
-                    className="ml-2 p-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors flex-shrink-0"
+                    className="ml-2 p-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors flex-shrink-0"
                     aria-label="Copy address"
                   >
                     {copied ? (
-                      <Check className="w-4 h-4 text-(--widget-success)" />
+                      <Check className="w-4 h-4 text-(--brand-success)" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-(--widget-muted) mt-0.5">
+                <p className="text-xs text-(--brand-muted) mt-0.5">
                   via {selected.displayName} · Ethereum · USDC
                 </p>
               </div>
@@ -508,7 +508,7 @@ export function ConnectExternalWalletModal({
 
           {(step === "screening" || step === "done") && (
             <div className="space-y-5 py-2">
-              <p className="text-xs text-(--widget-muted) text-center">
+              <p className="text-xs text-(--brand-muted) text-center">
                 {step === "done" && selected
                   ? `${selected.displayName} connected · all checks passed`
                   : "Running compliance checks on your wallet…"}
@@ -530,22 +530,22 @@ export function ConnectExternalWalletModal({
                     <div key={s.id} className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
                         {isDone ? (
-                          <div className="w-6 h-6 rounded-full bg-(--widget-success) flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-(--brand-success) flex items-center justify-center">
                             <Check className="w-3.5 h-3.5 text-white" />
                           </div>
                         ) : isActive ? (
-                          <Loader2 className="w-5 h-5 text-(--widget-primary) animate-spin" />
+                          <Loader2 className="w-5 h-5 text-(--brand-primary) animate-spin" />
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-(--widget-border)" />
+                          <div className="w-5 h-5 rounded-full border-2 border-(--brand-border)" />
                         )}
                       </div>
                       <span
                         className={`text-sm ${
                           isDone
-                            ? "text-(--widget-fg) font-medium"
+                            ? "text-(--brand-fg) font-medium"
                             : isActive
-                              ? "text-(--widget-fg)"
-                              : "text-(--widget-muted)"
+                              ? "text-(--brand-fg)"
+                              : "text-(--brand-muted)"
                         }`}
                       >
                         {s.label}
@@ -583,8 +583,8 @@ function SelectStep({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center py-8 gap-3">
-        <div className="w-8 h-8 border-2 border-(--widget-primary) border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-(--widget-muted)">Detecting wallets…</p>
+        <div className="w-8 h-8 border-2 border-(--brand-primary) border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-(--brand-muted)">Detecting wallets…</p>
       </div>
     );
   }
@@ -592,7 +592,7 @@ function SelectStep({
   if (providers.length === 0) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-(--widget-muted)">
+        <p className="text-sm text-(--brand-muted)">
           No compatible wallets detected. Install MetaMask, Coinbase Wallet,
           or another crypto wallet and try again.
         </p>
@@ -602,12 +602,12 @@ function SelectStep({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-(--widget-muted)">
+      <p className="text-sm text-(--brand-muted)">
         Link your wallet to receive USDC payouts directly.
       </p>
 
       {errorMessage && (
-        <div className="p-3 rounded-(--widget-radius) bg-amber-50 border border-amber-200">
+        <div className="p-3 rounded-(--brand-radius) bg-amber-50 border border-amber-200">
           <div className="flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">
@@ -636,12 +636,12 @@ function SelectStep({
             onClick={() => onPick(group)}
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors",
-              "border-(--widget-border) bg-(--widget-row-bg) hover:bg-(--widget-row-hover)",
+              "border-(--brand-border) bg-(--brand-row-bg) hover:bg-(--brand-row-hover)",
             )}
           >
             <WalletBadge group={group} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-(--widget-fg) truncate">
+              <p className="text-sm font-medium text-(--brand-fg) truncate">
                 {group.displayName}
               </p>
             </div>
@@ -673,7 +673,7 @@ function WalletBadge({
     <div
       className={cn(
         sizeClass,
-        "flex items-center justify-center flex-shrink-0 bg-(--widget-bg) border border-(--widget-border) p-1 overflow-hidden",
+        "flex items-center justify-center flex-shrink-0 bg-(--brand-bg) border border-(--brand-border) p-1 overflow-hidden",
       )}
     >
       {group.iconUrl ? (
@@ -684,7 +684,7 @@ function WalletBadge({
           className="w-full h-full object-contain"
         />
       ) : (
-        <Wallet className="w-4 h-4 text-(--widget-muted)" />
+        <Wallet className="w-4 h-4 text-(--brand-muted)" />
       )}
     </div>
   );

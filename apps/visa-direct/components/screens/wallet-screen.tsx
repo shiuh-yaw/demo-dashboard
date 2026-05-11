@@ -144,43 +144,43 @@ export function WalletScreen() {
       <div className="space-y-6">
         {/* Heading */}
         <div>
-          <h1 className="text-xl font-semibold text-(--widget-fg)">
+          <h1 className="text-xl font-semibold text-(--brand-fg)">
             My wallet
           </h1>
-          <p className="text-sm text-(--widget-muted) mt-1">
+          <p className="text-sm text-(--brand-muted) mt-1">
             Send and earn on your stablecoin payouts
           </p>
         </div>
 
         {/* Balance hero */}
-        <section className="relative overflow-hidden rounded-(--widget-radius-lg) border border-(--widget-border) bg-(--widget-bg) p-6">
+        <section className="relative overflow-hidden rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) p-6">
           <div
             aria-hidden="true"
-            className="absolute -top-20 -right-24 w-72 h-72 rounded-full blur-3xl opacity-10 bg-(--widget-primary)"
+            className="absolute -top-20 -right-24 w-72 h-72 rounded-full blur-3xl opacity-10 bg-(--brand-primary)"
           />
           <div className="relative flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-xs text-(--widget-muted)">
+              <div className="flex items-center gap-2 text-xs text-(--brand-muted)">
                 <Wallet className="w-3.5 h-3.5" />
                 <span>Embedded wallet</span>
                 {networkLabel && (
                   <>
-                    <span className="text-(--widget-border)">·</span>
+                    <span className="text-(--brand-border)">·</span>
                     <span>{networkLabel}</span>
                   </>
                 )}
               </div>
-              <p className="mt-3 text-3xl font-semibold text-(--widget-fg) tabular-nums">
+              <p className="mt-3 text-3xl font-semibold text-(--brand-fg) tabular-nums">
                 {usdcBalance.isLoading && onchainBalance === 0
                   ? "—"
                   : formattedAvailable}
               </p>
-              <p className="text-xs text-(--widget-muted) mt-1 tabular-nums">
+              <p className="text-xs text-(--brand-muted) mt-1 tabular-nums">
                 {totalDeposited > 0
                   ? `${formattedTotal} total · ${formatUsdc(totalDeposited)} earning`
                   : `≈ ${formatUsd(availableBalance)} available`}
               </p>
-              <p className="mt-3 text-xs font-mono text-(--widget-muted)">
+              <p className="mt-3 text-xs font-mono text-(--brand-muted)">
                 {truncateAddress(walletAddress)}
               </p>
             </div>
@@ -188,7 +188,7 @@ export function WalletScreen() {
               type="button"
               onClick={() => usdcBalance.refetch()}
               disabled={usdcBalance.isFetching}
-              className="shrink-0 p-2 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors disabled:opacity-50"
+              className="shrink-0 p-2 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors disabled:opacity-50"
               aria-label="Refresh balance"
             >
               <RefreshCw
@@ -203,7 +203,7 @@ export function WalletScreen() {
 
         {/* Actions grid */}
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-(--widget-muted) mb-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-(--brand-muted) mb-2">
             Quick actions
           </h2>
           <div className="grid grid-cols-3 gap-3">
@@ -232,11 +232,11 @@ export function WalletScreen() {
         {/* Yield positions */}
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-(--widget-muted)">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-(--brand-muted)">
               Earning
             </h2>
             {totalDeposited > 0 && (
-              <span className="text-xs text-(--widget-muted) tabular-nums">
+              <span className="text-xs text-(--brand-muted) tabular-nums">
                 {formatUsdc(totalDeposited)} deposited
               </span>
             )}
@@ -248,7 +248,7 @@ export function WalletScreen() {
               onStart={() => setYieldOpen(true)}
             />
           ) : (
-            <div className="rounded-(--widget-radius-lg) border border-(--widget-border) bg-(--widget-bg) divide-y divide-(--widget-border)">
+            <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) divide-y divide-(--brand-border)">
               {positions.map((p) => {
                 const s = strategyById.get(p.strategyId);
                 if (!s) return null;
@@ -262,23 +262,23 @@ export function WalletScreen() {
                     key={p.strategyId}
                     className="flex items-center gap-3 px-4 py-3.5"
                   >
-                    <div className="w-9 h-9 rounded-full bg-(--widget-row-bg) border border-(--widget-border) flex items-center justify-center shrink-0">
-                      <TrendingUp className="w-4 h-4 text-(--widget-primary)" />
+                    <div className="w-9 h-9 rounded-full bg-(--brand-row-bg) border border-(--brand-border) flex items-center justify-center shrink-0">
+                      <TrendingUp className="w-4 h-4 text-(--brand-primary)" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-(--widget-fg)">
+                        <p className="text-sm font-semibold text-(--brand-fg)">
                           {s.protocol}
                         </p>
-                        <p className="text-sm font-semibold text-(--widget-fg) tabular-nums">
+                        <p className="text-sm font-semibold text-(--brand-fg) tabular-nums">
                           {formatUsdc(p.amount)}
                         </p>
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
-                        <p className="text-xs text-(--widget-muted)">
+                        <p className="text-xs text-(--brand-muted)">
                           {s.apy.toFixed(2)}% APY · {s.network}
                         </p>
-                        <p className="text-xs text-(--widget-success) tabular-nums">
+                        <p className="text-xs text-(--brand-success) tabular-nums">
                           +{earnings} earned
                         </p>
                       </div>
@@ -286,7 +286,7 @@ export function WalletScreen() {
                     <button
                       type="button"
                       onClick={() => withdraw(p.strategyId)}
-                      className="shrink-0 text-xs font-medium text-(--widget-primary) hover:underline"
+                      className="shrink-0 text-xs font-medium text-(--brand-primary) hover:underline"
                     >
                       Withdraw
                     </button>
@@ -301,17 +301,17 @@ export function WalletScreen() {
         <section>
           <Link
             href="/transactions"
-            className="flex items-center justify-between p-4 rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-bg) hover:bg-(--widget-row-hover) transition-colors"
+            className="flex items-center justify-between p-4 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-bg) hover:bg-(--brand-row-hover) transition-colors"
           >
             <div>
-              <p className="text-sm font-semibold text-(--widget-fg)">
+              <p className="text-sm font-semibold text-(--brand-fg)">
                 Recent payouts
               </p>
-              <p className="text-xs text-(--widget-muted) mt-0.5">
+              <p className="text-xs text-(--brand-muted) mt-0.5">
                 See every Visa Direct push into this wallet
               </p>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-(--widget-muted)" />
+            <ArrowUpRight className="w-4 h-4 text-(--brand-muted)" />
           </Link>
         </section>
       </div>
@@ -364,25 +364,25 @@ function ActionTile({
       disabled={disabled}
       title={disabled ? disabledReason : undefined}
       className={cn(
-        "group flex flex-col items-start gap-2 p-4 rounded-(--widget-radius) border text-left transition-all",
+        "group flex flex-col items-start gap-2 p-4 rounded-(--brand-radius) border text-left transition-all",
         disabled
-          ? "border-(--widget-border) bg-(--widget-row-bg) opacity-60"
-          : "border-(--widget-border) bg-(--widget-bg) hover:bg-(--widget-row-hover) hover:border-(--widget-primary)/40 hover:-translate-y-0.5",
+          ? "border-(--brand-border) bg-(--brand-row-bg) opacity-60"
+          : "border-(--brand-border) bg-(--brand-bg) hover:bg-(--brand-row-hover) hover:border-(--brand-primary)/40 hover:-translate-y-0.5",
       )}
     >
       <div
         className={cn(
           "w-9 h-9 rounded-full flex items-center justify-center",
           accent
-            ? "bg-(--widget-primary) text-white"
-            : "bg-(--widget-row-bg) border border-(--widget-border) text-(--widget-fg)",
+            ? "bg-(--brand-primary) text-white"
+            : "bg-(--brand-row-bg) border border-(--brand-border) text-(--brand-fg)",
         )}
       >
         {icon}
       </div>
       <div>
-        <p className="text-sm font-semibold text-(--widget-fg)">{label}</p>
-        <p className="text-xs text-(--widget-muted) mt-0.5">{description}</p>
+        <p className="text-sm font-semibold text-(--brand-fg)">{label}</p>
+        <p className="text-xs text-(--brand-muted) mt-0.5">{description}</p>
       </div>
     </button>
   );
@@ -397,18 +397,18 @@ function YieldPreview({
 }) {
   const bestApy = Math.max(...strategies.map((s) => s.apy));
   return (
-    <div className="rounded-(--widget-radius-lg) border border-(--widget-border) bg-(--widget-bg) p-5">
+    <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) p-5">
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-full bg-(--widget-primary)/10 flex items-center justify-center text-(--widget-primary) shrink-0">
+        <div className="w-9 h-9 rounded-full bg-(--brand-primary)/10 flex items-center justify-center text-(--brand-primary) shrink-0">
           <Sparkles className="w-4 h-4" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-(--widget-fg)">
+          <p className="text-sm font-semibold text-(--brand-fg)">
             Put idle USDC to work
           </p>
-          <p className="text-xs text-(--widget-muted) mt-0.5">
+          <p className="text-xs text-(--brand-muted) mt-0.5">
             Park idle payouts and earn up to{" "}
-            <span className="font-semibold text-(--widget-success)">
+            <span className="font-semibold text-(--brand-success)">
               {bestApy.toFixed(2)}% APY
             </span>{" "}
             on the same wallet.
@@ -416,8 +416,8 @@ function YieldPreview({
           <div className="mt-3 flex items-center gap-4">
             {strategies.slice(0, 3).map((s) => (
               <div key={s.id} className="text-xs">
-                <p className="font-medium text-(--widget-fg)">{s.protocol}</p>
-                <p className="text-(--widget-success) tabular-nums">
+                <p className="font-medium text-(--brand-fg)">{s.protocol}</p>
+                <p className="text-(--brand-success) tabular-nums">
                   {s.apy.toFixed(2)}% APY
                 </p>
               </div>
@@ -445,13 +445,13 @@ function EmptyState({
 }) {
   return (
     <div className="max-w-md mx-auto py-16 text-center">
-      <div className="w-12 h-12 mx-auto rounded-full bg-(--widget-row-bg) border border-(--widget-border) flex items-center justify-center">
-        <Wallet className="w-5 h-5 text-(--widget-muted)" />
+      <div className="w-12 h-12 mx-auto rounded-full bg-(--brand-row-bg) border border-(--brand-border) flex items-center justify-center">
+        <Wallet className="w-5 h-5 text-(--brand-muted)" />
       </div>
-      <h1 className="mt-4 text-lg font-semibold text-(--widget-fg)">{title}</h1>
-      <p className="mt-2 text-sm text-(--widget-muted)">{body}</p>
+      <h1 className="mt-4 text-lg font-semibold text-(--brand-fg)">{title}</h1>
+      <p className="mt-2 text-sm text-(--brand-muted)">{body}</p>
       {address && (
-        <p className="mt-3 text-xs font-mono text-(--widget-muted)">
+        <p className="mt-3 text-xs font-mono text-(--brand-muted)">
           {truncateAddress(address)}
         </p>
       )}

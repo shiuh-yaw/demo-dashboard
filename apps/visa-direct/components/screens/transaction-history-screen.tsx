@@ -33,8 +33,8 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
       style={{
-        backgroundColor: `var(--widget-status-${v.variant}-bg)`,
-        color: `var(--widget-status-${v.variant}-fg)`,
+        backgroundColor: `var(--brand-status-${v.variant}-bg)`,
+        color: `var(--brand-status-${v.variant}-fg)`,
       }}
     >
       {v.label}
@@ -64,12 +64,12 @@ function TransactionRow({ tx, onViewPayload }: TransactionRowProps) {
   const amountDisplay = isNaN(amountNum) ? tx.amount : amountNum.toLocaleString();
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3.5 hover:bg-(--widget-row-hover) transition-colors">
+    <div className="flex items-center gap-4 px-4 py-3.5 hover:bg-(--brand-row-hover) transition-colors">
       <div className="w-28 shrink-0">
-        <p className="text-sm font-semibold text-(--widget-fg)">
+        <p className="text-sm font-semibold text-(--brand-fg)">
           {amountDisplay} {tx.asset}
         </p>
-        <p className="text-xs text-(--widget-muted)">{tx.blockchain}</p>
+        <p className="text-xs text-(--brand-muted)">{tx.blockchain}</p>
       </div>
 
       <div className="w-24 shrink-0">
@@ -77,29 +77,29 @@ function TransactionRow({ tx, onViewPayload }: TransactionRowProps) {
       </div>
 
       <div className="flex-1 min-w-0 hidden sm:block">
-        <p className="text-xs text-(--widget-muted) truncate">
-          <span className="font-medium text-(--widget-fg)">VD</span>{" "}
+        <p className="text-xs text-(--brand-muted) truncate">
+          <span className="font-medium text-(--brand-fg)">VD</span>{" "}
           {tx.visaDirectTxId}
         </p>
-        <p className="text-xs text-(--widget-muted) truncate">
-          <span className="font-medium text-(--widget-fg)">FB</span>{" "}
+        <p className="text-xs text-(--brand-muted) truncate">
+          <span className="font-medium text-(--brand-fg)">FB</span>{" "}
           {truncateAddress(tx.fireblocksId)}
         </p>
       </div>
 
       <div className="w-24 shrink-0 hidden md:block">
-        <p className="text-xs font-mono text-(--widget-muted)">
+        <p className="text-xs font-mono text-(--brand-muted)">
           {truncateAddress(tx.recipientWallet)}
         </p>
       </div>
 
       <div className="w-24 shrink-0 text-right hidden sm:block">
-        <p className="text-xs text-(--widget-muted)">{formatDate(tx.timestamp)}</p>
+        <p className="text-xs text-(--brand-muted)">{formatDate(tx.timestamp)}</p>
       </div>
 
       <button
         onClick={() => onViewPayload(tx)}
-        className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--widget-radius) border border-(--widget-border) text-xs text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-bg) transition-colors"
+        className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--brand-radius) border border-(--brand-border) text-xs text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-bg) transition-colors"
         aria-label="View API payload"
       >
         <FileCode className="w-3.5 h-3.5" />
@@ -165,10 +165,10 @@ export function TransactionHistoryScreen({
         {/* Page heading */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold text-(--widget-fg)">
+            <h1 className="text-xl font-semibold text-(--brand-fg)">
               Transaction history
             </h1>
-            <p className="text-sm text-(--widget-muted) mt-1">
+            <p className="text-sm text-(--brand-muted) mt-1">
               {walletAddress
                 ? `Payouts to ${truncateAddress(walletAddress)}`
                 : "Past payouts processed via Visa Direct and Fireblocks"}
@@ -178,7 +178,7 @@ export function TransactionHistoryScreen({
             type="button"
             onClick={handleRefresh}
             disabled={!canRefresh}
-            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--widget-radius) border border-(--widget-border) text-xs text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--brand-radius) border border-(--brand-border) text-xs text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Refresh transactions"
             title={
               lastUpdatedLabel ? `Last updated ${lastUpdatedLabel}` : "Refresh"
@@ -194,9 +194,9 @@ export function TransactionHistoryScreen({
         {/* No wallet configured */}
         {!walletAddress && transactions.length === 0 && (
           <div className="flex flex-col items-center py-16 gap-3 text-center">
-            <Wallet className="w-8 h-8 text-(--widget-muted)" />
-            <p className="text-sm font-medium text-(--widget-fg)">No wallet connected</p>
-            <p className="text-xs text-(--widget-muted)">
+            <Wallet className="w-8 h-8 text-(--brand-muted)" />
+            <p className="text-sm font-medium text-(--brand-fg)">No wallet connected</p>
+            <p className="text-xs text-(--brand-muted)">
               Connect or create a stablecoin wallet to see your payout history.
             </p>
           </div>
@@ -205,9 +205,9 @@ export function TransactionHistoryScreen({
         {/* Empty — wallet connected but no matching orders */}
         {walletAddress && transactions.length === 0 && (
           <div className="flex flex-col items-center py-16 gap-3 text-center">
-            <FileCode className="w-8 h-8 text-(--widget-muted)" />
-            <p className="text-sm font-medium text-(--widget-fg)">No transactions yet</p>
-            <p className="text-xs text-(--widget-muted)">
+            <FileCode className="w-8 h-8 text-(--brand-muted)" />
+            <p className="text-sm font-medium text-(--brand-fg)">No transactions yet</p>
+            <p className="text-xs text-(--brand-muted)">
               Payouts sent to your wallet will appear here.
             </p>
           </div>
@@ -215,42 +215,42 @@ export function TransactionHistoryScreen({
 
         {/* Table */}
         {transactions.length > 0 && (
-          <div className="rounded-(--widget-radius-lg) border border-(--widget-border) bg-(--widget-bg) overflow-hidden">
+          <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) overflow-hidden">
             {/* Column headers */}
-            <div className="flex items-center gap-4 px-4 py-2.5 border-b border-(--widget-border) bg-(--widget-row-bg)">
+            <div className="flex items-center gap-4 px-4 py-2.5 border-b border-(--brand-border) bg-(--brand-row-bg)">
               <div className="w-28 shrink-0">
-                <span className="text-[11px] font-semibold text-(--widget-muted) uppercase tracking-wide">Amount</span>
+                <span className="text-[11px] font-semibold text-(--brand-muted) uppercase tracking-wide">Amount</span>
               </div>
               <div className="w-24 shrink-0">
-                <span className="text-[11px] font-semibold text-(--widget-muted) uppercase tracking-wide">Status</span>
+                <span className="text-[11px] font-semibold text-(--brand-muted) uppercase tracking-wide">Status</span>
               </div>
               <div className="flex-1 min-w-0 hidden sm:block">
-                <span className="text-[11px] font-semibold text-(--widget-muted) uppercase tracking-wide whitespace-nowrap">Reference IDs</span>
+                <span className="text-[11px] font-semibold text-(--brand-muted) uppercase tracking-wide whitespace-nowrap">Reference IDs</span>
               </div>
               <div className="w-24 shrink-0 hidden md:block">
-                <span className="text-[11px] font-semibold text-(--widget-muted) uppercase tracking-wide">Wallet</span>
+                <span className="text-[11px] font-semibold text-(--brand-muted) uppercase tracking-wide">Wallet</span>
               </div>
               <div className="w-24 shrink-0 text-right hidden sm:block">
-                <span className="text-[11px] font-semibold text-(--widget-muted) uppercase tracking-wide">Date</span>
+                <span className="text-[11px] font-semibold text-(--brand-muted) uppercase tracking-wide">Date</span>
               </div>
               <div className="shrink-0 w-[105px]" />
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-(--widget-border)">
+            <div className="divide-y divide-(--brand-border)">
               {transactions.map((tx) => (
                 <TransactionRow key={tx.id} tx={tx} onViewPayload={setSelectedTx} />
               ))}
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-(--widget-border) bg-(--widget-row-bg) flex items-center justify-between gap-2">
-              <p className="text-xs text-(--widget-muted)">
+            <div className="px-4 py-3 border-t border-(--brand-border) bg-(--brand-row-bg) flex items-center justify-between gap-2">
+              <p className="text-xs text-(--brand-muted)">
                 {transactions.length} transaction{transactions.length !== 1 ? "s" : ""}
                 {source === "live" ? " · Live from Fireblocks" : " · Demo data"}
               </p>
               {lastUpdatedLabel && (
-                <p className="text-xs text-(--widget-muted)">
+                <p className="text-xs text-(--brand-muted)">
                   Updated {lastUpdatedLabel}
                 </p>
               )}

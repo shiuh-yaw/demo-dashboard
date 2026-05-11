@@ -17,7 +17,7 @@ const NAV_LINKS = [
 /**
  * Dashboard header for the Visa Direct demo.
  * Logo + optional banner come from config resolved at the root layout via
- * `?id=` / cookie. Defaults to the Dynamic wordmark.
+ * `?theme=` / cookie. Defaults to the Dynamic wordmark.
  */
 export function DashboardHeader() {
   const logoutMutation = useLogout();
@@ -34,7 +34,7 @@ export function DashboardHeader() {
       )}
 
       {/* Main header */}
-      <header className="border-b border-(--widget-border) bg-(--widget-bg)/95 backdrop-blur-sm sticky top-0 z-40">
+      <header className="border-b border-(--brand-border) bg-(--brand-bg)/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <Link
@@ -72,8 +72,8 @@ export function DashboardHeader() {
                   href={link.href}
                   className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
                     isActive
-                      ? "border-(--widget-primary) text-(--widget-primary)"
-                      : "border-transparent text-(--widget-muted) hover:text-(--widget-fg) hover:border-(--widget-border)"
+                      ? "border-(--brand-primary) text-(--brand-primary)"
+                      : "border-transparent text-(--brand-muted) hover:text-(--brand-fg) hover:border-(--brand-border)"
                   }`}
                 >
                   {link.label}

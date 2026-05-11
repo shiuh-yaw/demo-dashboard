@@ -111,19 +111,19 @@ export function SendUsdcModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md">
+      <div className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
         {/* Header */}
         {step === "form" && (
-          <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+          <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-(--widget-row-bg) flex items-center justify-center">
-                <ArrowUpRight className="w-4 h-4 text-(--widget-primary)" />
+              <div className="w-9 h-9 rounded-full bg-(--brand-row-bg) flex items-center justify-center">
+                <ArrowUpRight className="w-4 h-4 text-(--brand-primary)" />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-(--widget-fg)">
+                <h2 className="text-base font-semibold text-(--brand-fg)">
                   Send USDC
                 </h2>
-                <p className="text-xs text-(--widget-muted)">
+                <p className="text-xs text-(--brand-muted)">
                   {networkLabel ? `${networkLabel} · ` : ""}
                   Direct from your embedded wallet
                 </p>
@@ -132,7 +132,7 @@ export function SendUsdcModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+              className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -152,7 +152,7 @@ export function SendUsdcModal({
                   onChange={(e) => setRecipient(e.target.value.trim())}
                 />
                 {recipient && !isValidAddress && (
-                  <p className="text-xs text-(--widget-error) mt-1">
+                  <p className="text-xs text-(--brand-error) mt-1">
                     Enter a valid Ethereum address
                   </p>
                 )}
@@ -160,13 +160,13 @@ export function SendUsdcModal({
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     Amount
                   </span>
                   <button
                     type="button"
                     onClick={() => setAmount(balance.toString())}
-                    className="text-xs text-(--widget-primary) hover:underline"
+                    className="text-xs text-(--brand-primary) hover:underline"
                     disabled={balance <= 0}
                   >
                     Max
@@ -183,11 +183,11 @@ export function SendUsdcModal({
                   }}
                 />
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-xs text-(--widget-muted)">
+                  <span className="text-xs text-(--brand-muted)">
                     Available: {formattedBalance}
                   </span>
                   {amount && numericAmount > balance && (
-                    <span className="text-xs text-(--widget-error)">
+                    <span className="text-xs text-(--brand-error)">
                       Exceeds balance
                     </span>
                   )}
@@ -195,7 +195,7 @@ export function SendUsdcModal({
               </div>
 
               {errorMessage && (
-                <p className="text-xs text-(--widget-error)">{errorMessage}</p>
+                <p className="text-xs text-(--brand-error)">{errorMessage}</p>
               )}
 
               <Button
@@ -213,10 +213,10 @@ export function SendUsdcModal({
             <div className="flex flex-col items-center py-12 gap-4">
               <Spinner size="lg" />
               <div className="text-center">
-                <p className="text-base font-medium text-(--widget-fg)">
+                <p className="text-base font-medium text-(--brand-fg)">
                   Sending {amount} USDC
                 </p>
-                <p className="text-sm text-(--widget-muted) mt-1">
+                <p className="text-sm text-(--brand-muted) mt-1">
                   Waiting for onchain confirmation…
                 </p>
               </div>
@@ -229,10 +229,10 @@ export function SendUsdcModal({
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                 <Check className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">
+              <p className="text-lg font-semibold text-(--brand-fg)">
                 Transfer sent
               </p>
-              <p className="text-sm text-(--widget-muted) text-center">
+              <p className="text-sm text-(--brand-muted) text-center">
                 {amount} USDC sent to {truncateAddress(recipient)}
               </p>
               {explorerUrl && (
@@ -240,7 +240,7 @@ export function SendUsdcModal({
                   href={explorerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-(--widget-primary) hover:underline"
+                  className="text-sm text-(--brand-primary) hover:underline"
                 >
                   View transaction →
                 </a>
@@ -257,10 +257,10 @@ export function SendUsdcModal({
               <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">
+              <p className="text-lg font-semibold text-(--brand-fg)">
                 Transfer failed
               </p>
-              <p className="text-xs text-(--widget-muted) text-center max-w-[340px]">
+              <p className="text-xs text-(--brand-muted) text-center max-w-[340px]">
                 {errorMessage}
               </p>
               <div className="flex gap-3 w-full mt-2">

@@ -169,10 +169,10 @@ export function PaymentMethodsScreen() {
       <div>
         {/* Page heading */}
         <div className="mb-6">
-          <h1 className="text-xl font-semibold text-(--widget-fg)">
+          <h1 className="text-xl font-semibold text-(--brand-fg)">
             Payout methods
           </h1>
-          <p className="text-sm text-(--widget-muted) mt-1">
+          <p className="text-sm text-(--brand-muted) mt-1">
             Choose how you'd like to receive your Airbnb earnings
           </p>
         </div>
@@ -192,29 +192,29 @@ export function PaymentMethodsScreen() {
           >
             {walletAddress ? (
               /* Phase 2: wallet connected — show address + balance */
-              <div className="p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                <p className="text-xs font-medium text-(--widget-muted) mb-1">
+              <div className="p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                <p className="text-xs font-medium text-(--brand-muted) mb-1">
                   Connected wallet
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-mono text-(--widget-fg)">
+                  <p className="text-sm font-mono text-(--brand-fg)">
                     {truncateAddress(walletAddress)}
                   </p>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={handleCopyAddress}
-                      className="p-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                      className="p-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                       aria-label="Copy wallet address"
                     >
                       {copied ? (
-                        <Check className="w-4 h-4 text-(--widget-success)" />
+                        <Check className="w-4 h-4 text-(--brand-success)" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
                     </button>
                     <button
                       onClick={clearWallet}
-                      className="p-1 text-(--widget-muted) hover:text-(--widget-error) transition-colors"
+                      className="p-1 text-(--brand-muted) hover:text-(--brand-error) transition-colors"
                       aria-label="Remove wallet"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -225,12 +225,12 @@ export function PaymentMethodsScreen() {
                 {/* Balance row — only rendered for embedded wallets where we
                     know the chain from Dynamic and can query the indexer. */}
                 {walletProvider === "embedded" && (
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-(--widget-border)">
-                    <span className="text-xs text-(--widget-muted)">
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-(--brand-border)">
+                    <span className="text-xs text-(--brand-muted)">
                       Balance
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-(--widget-fg) tabular-nums">
+                      <span className="text-sm font-medium text-(--brand-fg) tabular-nums">
                         {usdcBalance.isLoading
                           ? "Loading…"
                           : availableFormatted}
@@ -238,7 +238,7 @@ export function PaymentMethodsScreen() {
                       <button
                         onClick={() => usdcBalance.refetch()}
                         disabled={usdcBalance.isFetching}
-                        className="p-1 -mr-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors disabled:opacity-50"
+                        className="p-1 -mr-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors disabled:opacity-50"
                         aria-label="Refresh balance"
                       >
                         <RefreshCw
@@ -251,7 +251,7 @@ export function PaymentMethodsScreen() {
                   </div>
                 )}
 
-                <p className="text-xs text-(--widget-muted) mt-1.5">
+                <p className="text-xs text-(--brand-muted) mt-1.5">
                   {walletProvider === "embedded"
                     ? `Embedded wallet · USDC · ${embeddedNetworkLabel}`
                     : `via ${providerLabel(walletProvider ?? "", externalWalletLabel)} · USDC · ${cefiNetworkLabel}`}

@@ -482,12 +482,13 @@ export interface VisaDirectBranding {
 }
 
 /**
- * Visa Direct theme — maps 1:1 to --widget-* CSS custom properties.
- * Matches apps/visa-direct/lib/visa-direct-config.ts VisaDirectTheme
+ * Visa Direct theme — the canonical `WidgetTheme` shape (D-008).
+ * Aliased so callsites keep the demo-scoped name. By design Visa Direct
+ * only consumes `primaryColor` (its surfaces/text stay neutral across
+ * brands), but the type matches every other themed demo so brand-side
+ * data flows through unchanged.
  */
-export interface VisaDirectTheme {
-  primaryColor: string;
-}
+export type VisaDirectTheme = Partial<WidgetTheme>;
 
 /**
  * Full Visa Direct configuration

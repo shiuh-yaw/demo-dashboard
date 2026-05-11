@@ -81,22 +81,22 @@ export function YieldModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md">
+      <div className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+        <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
           <div className="flex items-center gap-3">
             {step === "amount" && (
               <button
                 type="button"
                 onClick={() => setStep("select")}
-                className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+                className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
                 aria-label="Back"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
             <div>
-              <h2 className="text-base font-semibold text-(--widget-fg)">
+              <h2 className="text-base font-semibold text-(--brand-fg)">
                 {step === "select"
                   ? "Earn yield on USDC"
                   : step === "amount" && selected
@@ -104,7 +104,7 @@ export function YieldModal({
                     : "Deposit submitted"}
               </h2>
               {step === "select" && (
-                <p className="text-xs text-(--widget-muted) mt-0.5">
+                <p className="text-xs text-(--brand-muted) mt-0.5">
                   Put idle payouts to work
                 </p>
               )}
@@ -113,7 +113,7 @@ export function YieldModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+            className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -124,7 +124,7 @@ export function YieldModal({
           {/* Step — select */}
           {step === "select" && (
             <div className="space-y-3">
-              <div className="flex items-start gap-2 px-3 py-2 rounded-(--widget-radius) bg-amber-50 border border-amber-200 text-amber-800">
+              <div className="flex items-start gap-2 px-3 py-2 rounded-(--brand-radius) bg-amber-50 border border-amber-200 text-amber-800">
                 <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                 <p className="text-[11px] leading-relaxed">
                   Demo rates. Production would fetch live APYs and
@@ -140,24 +140,24 @@ export function YieldModal({
                     setSelected(s);
                     setStep("amount");
                   }}
-                  className="w-full flex items-center gap-3 p-4 rounded-(--widget-radius) border border-(--widget-border) bg-(--widget-row-bg) hover:bg-(--widget-row-hover) hover:border-(--widget-primary)/40 transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-4 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) hover:bg-(--brand-row-hover) hover:border-(--brand-primary)/40 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-(--widget-bg) border border-(--widget-border) flex items-center justify-center shrink-0">
-                    <TrendingUp className="w-5 h-5 text-(--widget-primary)" />
+                  <div className="w-10 h-10 rounded-full bg-(--brand-bg) border border-(--brand-border) flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-5 h-5 text-(--brand-primary)" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-(--widget-fg)">
+                      <p className="text-sm font-semibold text-(--brand-fg)">
                         {s.protocol}
                       </p>
-                      <span className="text-sm font-semibold text-(--widget-success) tabular-nums">
+                      <span className="text-sm font-semibold text-(--brand-success) tabular-nums">
                         {s.apy.toFixed(2)}% APY
                       </span>
                     </div>
-                    <p className="text-xs text-(--widget-muted) mt-0.5 truncate">
+                    <p className="text-xs text-(--brand-muted) mt-0.5 truncate">
                       {s.tagline}
                     </p>
-                    <p className="text-[11px] text-(--widget-muted) mt-1">
+                    <p className="text-[11px] text-(--brand-muted) mt-1">
                       {s.asset} · {s.network}
                     </p>
                   </div>
@@ -169,29 +169,29 @@ export function YieldModal({
           {/* Step — amount */}
           {step === "amount" && selected && (
             <div className="space-y-4">
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) p-4">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-(--widget-fg)">
+                  <p className="text-sm font-medium text-(--brand-fg)">
                     {selected.protocol}
                   </p>
-                  <span className="text-sm font-semibold text-(--widget-success) tabular-nums">
+                  <span className="text-sm font-semibold text-(--brand-success) tabular-nums">
                     {selected.apy.toFixed(2)}% APY
                   </span>
                 </div>
-                <p className="text-xs text-(--widget-muted) mt-1">
+                <p className="text-xs text-(--brand-muted) mt-1">
                   {selected.tagline}
                 </p>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     Amount to deposit
                   </span>
                   <button
                     type="button"
                     onClick={() => setAmount(balance.toString())}
-                    className="text-xs text-(--widget-primary) hover:underline"
+                    className="text-xs text-(--brand-primary) hover:underline"
                     disabled={balance <= 0}
                   >
                     Max
@@ -208,18 +208,18 @@ export function YieldModal({
                   }}
                 />
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-xs text-(--widget-muted)">
+                  <span className="text-xs text-(--brand-muted)">
                     Available: {formattedBalance}
                   </span>
                   {amount && numericAmount > balance && (
-                    <span className="text-xs text-(--widget-error)">
+                    <span className="text-xs text-(--brand-error)">
                       Exceeds balance
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-(--widget-radius) border border-(--widget-border) divide-y divide-(--widget-border) text-xs">
+              <div className="rounded-(--brand-radius) border border-(--brand-border) divide-y divide-(--brand-border) text-xs">
                 <Row
                   label="Projected annual earnings"
                   value={formatUsd(
@@ -253,10 +253,10 @@ export function YieldModal({
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                 <Check className="w-6 h-6 text-green-600" />
               </div>
-              <p className="text-lg font-semibold text-(--widget-fg)">
+              <p className="text-lg font-semibold text-(--brand-fg)">
                 Earning started
               </p>
-              <p className="text-sm text-(--widget-muted) text-center">
+              <p className="text-sm text-(--brand-muted) text-center">
                 {formatUsd(numericAmount)} deposited into{" "}
                 {selected.protocol} at {selected.apy.toFixed(2)}% APY
               </p>
@@ -279,13 +279,13 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between px-3 py-2.5">
-      <span className="text-(--widget-muted)">{label}</span>
+      <span className="text-(--brand-muted)">{label}</span>
       <span
         className={cn(
           "tabular-nums",
           highlight
-            ? "font-semibold text-(--widget-success)"
-            : "font-medium text-(--widget-fg)",
+            ? "font-semibold text-(--brand-success)"
+            : "font-medium text-(--brand-fg)",
         )}
       >
         {value}

@@ -3,9 +3,9 @@ import { createDemoMiddleware } from "@dynamic-demos/dynamic/demo-middleware";
 /**
  * All routes are protected except /login.
  *
- * - `?id=<configId>` → set `visa_direct_config_id` cookie + forward as
+ * - `?theme=<configId>` → set `visa_direct_config_id` cookie + forward as
  *   `x-visa-direct-config-id` header.
- * - `?id=` (empty) → clear cookie.
+ * - `?theme=` (empty) → clear cookie.
  * - Authed user on login → redirect to returnTo or `/payment-methods`.
  * - Authed user on `/` → redirect to `/payment-methods` landing.
  * - Unauthed on protected route → redirect to `/login` with `returnTo`.

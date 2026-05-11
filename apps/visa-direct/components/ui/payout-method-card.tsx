@@ -42,8 +42,8 @@ export function PayoutMethodCard({
   return (
     <div
       className={cn(
-        "bg-(--widget-bg) rounded-(--widget-radius) border border-(--widget-border) p-5",
-        isDefault && "border-(--widget-primary)/40 shadow-sm",
+        "bg-(--brand-bg) rounded-(--brand-radius) border border-(--brand-border) p-5",
+        isDefault && "border-(--brand-primary)/40 shadow-sm",
         className,
       )}
     >
@@ -51,13 +51,13 @@ export function PayoutMethodCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           {/* Icon */}
-          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-(--widget-row-bg) border border-(--widget-border) text-(--widget-muted) flex-shrink-0">
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-(--brand-row-bg) border border-(--brand-border) text-(--brand-muted) flex-shrink-0">
             {icon}
           </div>
           {/* Title + description */}
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-(--widget-fg)">
+              <h3 className="text-sm font-semibold text-(--brand-fg)">
                 {title}
               </h3>
               {badge && (
@@ -65,16 +65,16 @@ export function PayoutMethodCard({
                   className={cn(
                     "text-[11px] font-semibold rounded-full px-2.5 py-0.5",
                     badge.variant === "default" &&
-                      "bg-(--widget-primary) text-white",
+                      "bg-(--brand-primary) text-white",
                     badge.variant === "configured" &&
-                      "bg-(--widget-status-info-bg) text-(--widget-status-info-fg)",
+                      "bg-(--brand-status-info-bg) text-(--brand-status-info-fg)",
                   )}
                 >
                   {badge.label}
                 </span>
               )}
             </div>
-            <p className="text-sm text-(--widget-muted) mt-0.5 truncate">
+            <p className="text-sm text-(--brand-muted) mt-0.5 truncate">
               {description}
             </p>
           </div>
@@ -95,12 +95,12 @@ export function PayoutMethodCard({
 
       {/* Detail row */}
       {(detailLeft ?? detailRight) && (
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-(--widget-border)">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-(--brand-border)">
           {detailLeft && (
-            <span className="text-xs text-(--widget-muted)">{detailLeft}</span>
+            <span className="text-xs text-(--brand-muted)">{detailLeft}</span>
           )}
           {detailRight && (
-            <span className="text-xs text-(--widget-muted)">{detailRight}</span>
+            <span className="text-xs text-(--brand-muted)">{detailRight}</span>
           )}
         </div>
       )}

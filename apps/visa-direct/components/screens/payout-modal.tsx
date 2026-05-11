@@ -236,7 +236,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="payout-modal-title"
@@ -246,21 +246,21 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
             "Close" button; dropping it saves a meaningful chunk of
             vertical space. */}
         {step !== "done" && (
-          <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+          <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
             <div className="flex items-center gap-2">
               {step === "confirm" && (
                 <button
                   onClick={() => setStep("amount")}
-                  className="p-1 rounded-md text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                  className="p-1 rounded-md text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                   aria-label="Back"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
-              <Zap className="w-4 h-4 text-(--widget-primary)" />
+              <Zap className="w-4 h-4 text-(--brand-primary)" />
               <h2
                 id="payout-modal-title"
-                className="text-base font-semibold text-(--widget-fg)"
+                className="text-base font-semibold text-(--brand-fg)"
               >
                 {step === "amount" && "Simulate payout"}
                 {step === "confirm" && "Confirm payout"}
@@ -271,7 +271,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
             {canClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+                className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -287,7 +287,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     Amount (USD)
                   </span>
                   <button
@@ -295,7 +295,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                     onClick={() =>
                       setAmount(PAYOUT_SIMULATION_MAX_USD.toFixed(2))
                     }
-                    className="text-xs text-(--widget-primary) hover:underline"
+                    className="text-xs text-(--brand-primary) hover:underline"
                   >
                     Max
                   </button>
@@ -310,12 +310,12 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                   step="0.01"
                 />
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-xs text-(--widget-muted)">
+                  <span className="text-xs text-(--brand-muted)">
                     Demo limit: ${PAYOUT_SIMULATION_MAX_USD.toFixed(2)} USDC per
                     payout
                   </span>
                   {exceedsLimit && (
-                    <span className="text-xs text-(--widget-error)">
+                    <span className="text-xs text-(--brand-error)">
                       Exceeds demo limit
                     </span>
                   )}
@@ -323,9 +323,9 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
               </div>
 
               {/* Payout to */}
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) p-3">
-                <p className="text-xs text-(--widget-muted) mb-1">Payout to</p>
-                <p className="text-sm font-medium text-(--widget-fg)">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) p-3">
+                <p className="text-xs text-(--brand-muted) mb-1">Payout to</p>
+                <p className="text-sm font-medium text-(--brand-fg)">
                   {methodLabel(
                     defaultMethod,
                     walletAddress,
@@ -337,9 +337,9 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
 
               {/* No wallet warning — only shown when wallet is the selected method */}
               {isWalletPayout && !hasWallet && (
-                <div className="flex gap-2 p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                  <AlertCircle className="w-4 h-4 text-(--widget-muted) flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-(--widget-muted)">
+                <div className="flex gap-2 p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                  <AlertCircle className="w-4 h-4 text-(--brand-muted) flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-(--brand-muted)">
                     Set up a stablecoin wallet on the Payment methods page to
                     receive USDC payouts.
                   </p>
@@ -360,15 +360,15 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
           {step === "confirm" && (
             <div className="space-y-4">
               {!isWalletPayout && (
-                <p className="text-xs text-(--widget-muted)">
+                <p className="text-xs text-(--brand-muted)">
                   {`Review the ${defaultMethod === "bank" ? "ACH transfer" : "push-to-card"} details before sending.`}
                 </p>
               )}
 
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border) text-xs">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border) text-xs">
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Amount</span>
-                  <span className="font-medium text-(--widget-fg)">
+                  <span className="text-(--brand-muted)">Amount</span>
+                  <span className="font-medium text-(--brand-fg)">
                     ${amountNum.toFixed(2)} USD
                   </span>
                 </div>
@@ -376,20 +376,20 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                 {isWalletPayout ? (
                   <>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Asset</span>
-                      <span className="font-medium text-(--widget-fg)">
+                      <span className="text-(--brand-muted)">Asset</span>
+                      <span className="font-medium text-(--brand-fg)">
                         USDC · {walletNetworkLabel}
                       </span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Recipient wallet</span>
-                      <span className="font-mono font-medium text-(--widget-fg)">
+                      <span className="text-(--brand-muted)">Recipient wallet</span>
+                      <span className="font-mono font-medium text-(--brand-fg)">
                         {walletAddress ? truncateAddress(walletAddress) : "—"}
                       </span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Payout method</span>
-                      <span className="font-medium text-(--widget-fg)">
+                      <span className="text-(--brand-muted)">Payout method</span>
+                      <span className="font-medium text-(--brand-fg)">
                         {walletProvider === "embedded"
                           ? "Embedded Wallet"
                           : isExternalWallet
@@ -401,45 +401,45 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                 ) : defaultMethod === "bank" ? (
                   <>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Destination</span>
-                      <span className="font-medium text-(--widget-fg)">
+                      <span className="text-(--brand-muted)">Destination</span>
+                      <span className="font-medium text-(--brand-fg)">
                         {MOCK_BANK_ACCOUNT.bank} {MOCK_BANK_ACCOUNT.accountMasked}
                       </span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Routing</span>
-                      <span className="font-medium text-(--widget-fg)">
+                      <span className="text-(--brand-muted)">Routing</span>
+                      <span className="font-medium text-(--brand-fg)">
                         {MOCK_BANK_ACCOUNT.routingMasked}
                       </span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Method</span>
-                      <span className="font-medium text-(--widget-fg)">ACH transfer</span>
+                      <span className="text-(--brand-muted)">Method</span>
+                      <span className="font-medium text-(--brand-fg)">ACH transfer</span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Settlement</span>
-                      <span className="font-medium text-(--widget-fg)">1–2 business days</span>
+                      <span className="text-(--brand-muted)">Settlement</span>
+                      <span className="font-medium text-(--brand-fg)">1–2 business days</span>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Destination</span>
-                      <span className="font-medium text-(--widget-fg)">
+                      <span className="text-(--brand-muted)">Destination</span>
+                      <span className="font-medium text-(--brand-fg)">
                         {MOCK_CARD.network} {MOCK_CARD.cardMasked}
                       </span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Card type</span>
-                      <span className="font-medium text-(--widget-fg)">{MOCK_CARD.type}</span>
+                      <span className="text-(--brand-muted)">Card type</span>
+                      <span className="font-medium text-(--brand-fg)">{MOCK_CARD.type}</span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Method</span>
-                      <span className="font-medium text-(--widget-fg)">Push to card</span>
+                      <span className="text-(--brand-muted)">Method</span>
+                      <span className="font-medium text-(--brand-fg)">Push to card</span>
                     </div>
                     <div className="flex justify-between px-3 py-2.5">
-                      <span className="text-(--widget-muted)">Settlement</span>
-                      <span className="font-medium text-(--widget-fg)">Instant</span>
+                      <span className="text-(--brand-muted)">Settlement</span>
+                      <span className="font-medium text-(--brand-fg)">Instant</span>
                     </div>
                   </>
                 )}
@@ -454,7 +454,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
           {/* ── Step 3: Processing ── */}
           {step === "processing" && (
             <div className="space-y-5 py-2">
-              <p className="text-xs text-(--widget-muted) text-center">
+              <p className="text-xs text-(--brand-muted) text-center">
                 {isWalletPayout
                   ? "Running compliance checks and submitting to Fireblocks…"
                   : defaultMethod === "bank"
@@ -473,22 +473,22 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                     <div key={s.id} className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
                         {isDone ? (
-                          <div className="w-6 h-6 rounded-full bg-(--widget-success) flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-(--brand-success) flex items-center justify-center">
                             <Check className="w-3.5 h-3.5 text-white" />
                           </div>
                         ) : isActive ? (
-                          <Loader2 className="w-5 h-5 text-(--widget-primary) animate-spin" />
+                          <Loader2 className="w-5 h-5 text-(--brand-primary) animate-spin" />
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-(--widget-border)" />
+                          <div className="w-5 h-5 rounded-full border-2 border-(--brand-border)" />
                         )}
                       </div>
                       <span
                         className={`text-sm ${
                           isDone
-                            ? "text-(--widget-fg) font-medium"
+                            ? "text-(--brand-fg) font-medium"
                             : isActive
-                              ? "text-(--widget-fg)"
-                              : "text-(--widget-muted)"
+                              ? "text-(--brand-fg)"
+                              : "text-(--brand-muted)"
                         }`}
                       >
                         {s.label}
@@ -498,7 +498,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                 })}
               </div>
 
-              <p className="text-xs text-(--widget-muted) text-center pt-2">
+              <p className="text-xs text-(--brand-muted) text-center pt-2">
                 {isWalletPayout
                   ? "Powered by Visa Direct × Fireblocks"
                   : "Powered by Visa Direct"}
@@ -520,10 +520,10 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                   <Clock className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-(--widget-fg)">
+                  <p className="text-sm font-semibold text-(--brand-fg)">
                     Payout initiated
                   </p>
-                  <p className="text-xs text-(--widget-muted) mt-0.5">
+                  <p className="text-xs text-(--brand-muted) mt-0.5">
                     {isWalletPayout
                       ? `$${amountNum.toFixed(2)} USDC · ${walletNetworkLabel}`
                       : `$${amountNum.toFixed(2)} USD · ${defaultMethod === "bank" ? "ACH transfer" : "Push to card"}`}
@@ -532,7 +532,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
               </div>
 
               {/* Pending-checks explainer */}
-              <div className="rounded-(--widget-radius) bg-blue-50 border border-blue-200 p-3">
+              <div className="rounded-(--brand-radius) bg-blue-50 border border-blue-200 p-3">
                 <div className="flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="min-w-0">
@@ -548,18 +548,18 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
                 </div>
               </div>
 
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border) text-xs">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border) text-xs">
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">Visa Direct TX</span>
-                  <span className="font-mono text-(--widget-fg) text-right max-w-40 truncate">
+                  <span className="text-(--brand-muted)">Visa Direct TX</span>
+                  <span className="font-mono text-(--brand-fg) text-right max-w-40 truncate">
                     {payoutResult.visaDirectTxId}
                   </span>
                 </div>
                 <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--widget-muted)">
+                  <span className="text-(--brand-muted)">
                     {isWalletPayout ? "Fireblocks TX" : "Reference"}
                   </span>
-                  <span className="font-mono text-(--widget-fg) text-right max-w-40 truncate">
+                  <span className="font-mono text-(--brand-fg) text-right max-w-40 truncate">
                     {payoutResult.fireblocksId}
                   </span>
                 </div>
@@ -575,16 +575,16 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
           {step === "error" && (
             <div className="space-y-4">
               <div className="flex flex-col items-center gap-3 py-2">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--widget-status-failed-bg)" }}>
-                  <AlertCircle className="w-6 h-6" style={{ color: "var(--widget-status-failed-fg)" }} />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--brand-status-failed-bg)" }}>
+                  <AlertCircle className="w-6 h-6" style={{ color: "var(--brand-status-failed-fg)" }} />
                 </div>
-                <p className="text-sm font-medium text-(--widget-fg) text-center">
+                <p className="text-sm font-medium text-(--brand-fg) text-center">
                   Something went wrong
                 </p>
               </div>
 
-              <div className="p-3 rounded-(--widget-radius) border border-(--widget-error)/30" style={{ backgroundColor: "var(--widget-status-failed-bg)" }}>
-                <p className="text-xs" style={{ color: "var(--widget-status-failed-fg)" }}>{errorMessage}</p>
+              <div className="p-3 rounded-(--brand-radius) border border-(--brand-error)/30" style={{ backgroundColor: "var(--brand-status-failed-bg)" }}>
+                <p className="text-xs" style={{ color: "var(--brand-status-failed-fg)" }}>{errorMessage}</p>
               </div>
 
               <div className="flex gap-2">

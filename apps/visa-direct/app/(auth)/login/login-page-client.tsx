@@ -53,9 +53,6 @@ export function LoginPageClient() {
     <WidgetLayout>
       <div className="mb-6 flex flex-col items-center text-center">
         <AppLogo logoUrl={branding.logoUrl} size={40} className="mb-3" />
-        <p className="text-sm text-(--widget-muted)">
-          Sign in to manage your payout methods
-        </p>
       </div>
 
       {!isClientReady ? (

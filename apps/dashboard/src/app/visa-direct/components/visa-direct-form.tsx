@@ -92,7 +92,7 @@ export function VisaDirectForm({
         <div className="space-y-3">
           <ColorField
             label="Primary color"
-            value={theme.primaryColor}
+            value={theme.primaryColor ?? ""}
             onChange={(v) => updateTheme("primaryColor", v)}
           />
         </div>

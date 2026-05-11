@@ -141,7 +141,7 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-wallet-title"
@@ -150,17 +150,17 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
             hero spinner / success check can own the vertical space.
             Accessible title is rendered sr-only on those steps below. */}
         {step !== "creating" && step !== "done" && (
-          <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+          <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
             <h2
               id="create-wallet-title"
-              className="text-base font-semibold text-(--widget-fg)"
+              className="text-base font-semibold text-(--brand-fg)"
             >
               Create your wallet
             </h2>
             {canClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+                className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -174,29 +174,29 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
           {/* Step 1 — confirm */}
           {step === "confirm" && (
             <div className="space-y-4">
-              <p className="text-sm text-(--widget-muted)">
+              <p className="text-sm text-(--brand-muted)">
                 We&apos;ll provision a secure wallet linked to your account,
                 ready to receive USDC payouts instantly. Nothing to install,
                 nothing to remember.
               </p>
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border)">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border)">
                 <div className="flex justify-between items-center px-3 py-2.5">
-                  <span className="text-xs text-(--widget-muted)">Network</span>
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                  <span className="text-xs text-(--brand-muted)">Network</span>
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     {networkLabel ?? "Detecting…"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center px-3 py-2.5">
-                  <span className="text-xs text-(--widget-muted)">Asset</span>
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                  <span className="text-xs text-(--brand-muted)">Asset</span>
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     USDC
                   </span>
                 </div>
                 <div className="flex justify-between items-center px-3 py-2.5">
-                  <span className="text-xs text-(--widget-muted)">
+                  <span className="text-xs text-(--brand-muted)">
                     Wallet type
                   </span>
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     Embedded
                   </span>
                 </div>
@@ -213,8 +213,8 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
               <h2 id="create-wallet-title" className="sr-only">
                 Creating your wallet
               </h2>
-              <div className="w-10 h-10 border-2 border-(--widget-primary) border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-(--widget-fg)">
+              <div className="w-10 h-10 border-2 border-(--brand-primary) border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-(--brand-fg)">
                 Creating your wallet…
               </p>
             </div>
@@ -229,7 +229,7 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="absolute top-0 right-0 p-1 rounded-full text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                className="absolute top-0 right-0 p-1 rounded-full text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
               >
                 <CountdownRing durationMs={DONE_AUTOCLOSE_MS} />
               </button>
@@ -241,11 +241,11 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                   <Check className="w-6 h-6 text-green-600" />
                 </div>
-                <p className="text-sm font-medium text-(--widget-fg)">
+                <p className="text-sm font-medium text-(--brand-fg)">
                   Wallet created
                 </p>
                 {createdAddress && (
-                  <p className="text-sm font-mono text-(--widget-muted)">
+                  <p className="text-sm font-mono text-(--brand-muted)">
                     {truncate(createdAddress)}
                   </p>
                 )}
@@ -256,7 +256,7 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
           {/* Error state */}
           {step === "error" && (
             <div className="space-y-4">
-              <div className="p-3 rounded-(--widget-radius) bg-red-50 border border-red-200">
+              <div className="p-3 rounded-(--brand-radius) bg-red-50 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
                   Wallet creation failed
                 </p>

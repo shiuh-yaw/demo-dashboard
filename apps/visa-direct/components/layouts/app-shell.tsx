@@ -39,7 +39,7 @@ function AppShellInner({ children }: AppShellProps) {
       {/* Fixed "Simulate payout" button — always visible inside (app) layout */}
       <button
         onClick={openModal}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-(--widget-primary) text-white text-sm font-semibold shadow-lg transition-all hover:opacity-90 active:scale-95"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-(--brand-primary) text-white text-sm font-semibold shadow-lg transition-all hover:opacity-90 active:scale-95"
         aria-label="Simulate payout"
       >
         <Zap className="w-4 h-4" />

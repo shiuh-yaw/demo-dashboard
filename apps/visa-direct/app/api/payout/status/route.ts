@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getOrderStatus } from "@/lib/api/fireblocks";
 
 export async function GET(req: NextRequest) {
-  const id = req.nextUrl.searchParams.get("id");
+  const id = req.nextUrl.searchParams.get("theme");
 
   if (!id) {
     return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });

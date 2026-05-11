@@ -27,16 +27,16 @@ export function WalletOptionCard({
       className={cn(
         "w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors",
         selected
-          ? "border-(--widget-primary) bg-(--widget-primary)/5"
-          : "border-(--widget-border) bg-(--widget-row-bg) hover:bg-(--widget-row-hover)",
+          ? "border-(--brand-primary) bg-(--brand-primary)/5"
+          : "border-(--brand-border) bg-(--brand-row-bg) hover:bg-(--brand-row-hover)",
       )}
     >
       <div
         className={cn(
           "w-8 h-8 flex items-center justify-center rounded-md border flex-shrink-0 mt-0.5 transition-colors",
           selected
-            ? "bg-(--widget-primary)/10 border-(--widget-primary)/30 text-(--widget-primary)"
-            : "bg-(--widget-bg) border-(--widget-border) text-(--widget-muted)",
+            ? "bg-(--brand-primary)/10 border-(--brand-primary)/30 text-(--brand-primary)"
+            : "bg-(--brand-bg) border-(--brand-border) text-(--brand-muted)",
         )}
       >
         {icon}
@@ -45,12 +45,12 @@ export function WalletOptionCard({
         <p
           className={cn(
             "text-sm font-medium",
-            selected ? "text-(--widget-primary)" : "text-(--widget-fg)",
+            selected ? "text-(--brand-primary)" : "text-(--brand-fg)",
           )}
         >
           {title}
         </p>
-        <p className="text-xs text-(--widget-muted) mt-0.5">{description}</p>
+        <p className="text-xs text-(--brand-muted) mt-0.5">{description}</p>
       </div>
     </button>
   );

@@ -307,7 +307,7 @@ export function ConnectWalletModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--widget-bg) rounded-(--widget-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="connect-wallet-title"
@@ -317,7 +317,7 @@ export function ConnectWalletModal({
             expected). Accessible title is rendered sr-only on those
             steps below. */}
         {step !== "done" && step !== "redirecting" && (
-          <div className="flex items-center justify-between p-6 border-b border-(--widget-border)">
+          <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
             <div className="flex items-center gap-2">
               {showBack && (
                 <button
@@ -326,7 +326,7 @@ export function ConnectWalletModal({
                     else if (step === "enter-address") setStep("connected");
                     else if (step === "intro") setStep("select");
                   }}
-                  className="p-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                  className="p-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -334,14 +334,14 @@ export function ConnectWalletModal({
               )}
               <h2
                 id="connect-wallet-title"
-                className="text-base font-semibold text-(--widget-fg)"
+                className="text-base font-semibold text-(--brand-fg)"
               >
                 Connect your Exchange Wallet
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-(--widget-muted) hover:text-(--widget-fg) hover:bg-(--widget-row-hover) transition-colors"
+              className="p-1.5 rounded-md text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -366,16 +366,16 @@ export function ConnectWalletModal({
                   size="md"
                 />
                 <div>
-                  <p className="text-sm font-medium text-(--widget-fg)">
+                  <p className="text-sm font-medium text-(--brand-fg)">
                     {selectedName}
                   </p>
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     {selectedDisplay.tagline}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border)">
+              <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border)">
                 <NumberedStep
                   n={1}
                   label={`Sign in to ${selectedName} to verify you own the account`}
@@ -395,11 +395,11 @@ export function ConnectWalletModal({
               </div>
 
               {connectError && (
-                <p className="text-xs text-(--widget-error)">{connectError}</p>
+                <p className="text-xs text-(--brand-error)">{connectError}</p>
               )}
 
               {linkConflict && linkConflict.exchange === selectedKey && (
-                <div className="p-3 rounded-(--widget-radius) bg-amber-50 border border-amber-200">
+                <div className="p-3 rounded-(--brand-radius) bg-amber-50 border border-amber-200">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div className="min-w-0 flex-1">
@@ -425,7 +425,7 @@ export function ConnectWalletModal({
                 Continue with {selectedName}
                 <ExternalLink className="w-3.5 h-3.5" />
               </Button>
-              <p className="text-[11px] text-(--widget-muted) text-center">
+              <p className="text-[11px] text-(--brand-muted) text-center">
                 You&apos;ll be redirected to authorize on the exchange.
               </p>
             </div>
@@ -433,8 +433,8 @@ export function ConnectWalletModal({
 
           {step === "redirecting" && (
             <div className="flex flex-col items-center py-8 gap-3">
-              <div className="w-10 h-10 border-2 border-(--widget-primary) border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-(--widget-fg)">
+              <div className="w-10 h-10 border-2 border-(--brand-primary) border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-(--brand-fg)">
                 Redirecting to {selectedName}…
               </p>
             </div>
@@ -442,7 +442,7 @@ export function ConnectWalletModal({
 
           {step === "connected" && selectedDisplay && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
+              <div className="flex items-center gap-3 p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
                 <ExchangeLogo
                   display={selectedDisplay}
                   socialProvider={selectedSocialProvider}
@@ -450,12 +450,12 @@ export function ConnectWalletModal({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-(--widget-fg) truncate">
+                    <p className="text-sm font-medium text-(--brand-fg) truncate">
                       {krakenDisplayName}
                     </p>
-                    <Check className="w-3.5 h-3.5 text-(--widget-success) flex-shrink-0" />
+                    <Check className="w-3.5 h-3.5 text-(--brand-success) flex-shrink-0" />
                   </div>
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     {selectedName} account linked
                   </p>
                 </div>
@@ -463,7 +463,7 @@ export function ConnectWalletModal({
                   <button
                     onClick={refetchAccounts}
                     disabled={isLoadingAccounts}
-                    className="p-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors disabled:opacity-50"
+                    className="p-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors disabled:opacity-50"
                     aria-label="Refresh balances"
                   >
                     <RefreshCw
@@ -476,20 +476,20 @@ export function ConnectWalletModal({
               </div>
 
               {showBalanceStrip && (
-                <div className="rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border) divide-y divide-(--widget-border)">
+                <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border)">
                   <div className="flex justify-between items-center px-3 py-2.5">
-                    <span className="text-xs text-(--widget-muted)">
+                    <span className="text-xs text-(--brand-muted)">
                       Accounts
                     </span>
-                    <span className="text-xs font-medium text-(--widget-fg)">
+                    <span className="text-xs font-medium text-(--brand-fg)">
                       {isLoadingAccounts ? "Loading…" : krakenAccounts.length}
                     </span>
                   </div>
                   <div className="flex justify-between items-center px-3 py-2.5">
-                    <span className="text-xs text-(--widget-muted)">
+                    <span className="text-xs text-(--brand-muted)">
                       USDC balance
                     </span>
-                    <span className="text-xs font-medium text-(--widget-fg) tabular-nums">
+                    <span className="text-xs font-medium text-(--brand-fg) tabular-nums">
                       {isLoadingAccounts
                         ? "Loading…"
                         : `${totalUsdc.toLocaleString(undefined, {
@@ -502,35 +502,35 @@ export function ConnectWalletModal({
               )}
 
               {isFetchingDepositAddress && !depositInfo && (
-                <div className="flex items-center gap-3 p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                  <div className="w-4 h-4 border-2 border-(--widget-primary) border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                  <p className="text-xs text-(--widget-muted)">
+                <div className="flex items-center gap-3 p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                  <div className="w-4 h-4 border-2 border-(--brand-primary) border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                  <p className="text-xs text-(--brand-muted)">
                     Fetching your USDC deposit address from {selectedName}…
                   </p>
                 </div>
               )}
 
               {depositInfo && (
-                <div className="p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
+                <div className="p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-medium text-(--widget-muted)">
+                    <p className="text-xs font-medium text-(--brand-muted)">
                       USDC deposit address
                     </p>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-800 font-medium">
                       From {selectedName}
                     </span>
                   </div>
-                  <p className="text-sm font-mono text-(--widget-fg) break-all">
+                  <p className="text-sm font-mono text-(--brand-fg) break-all">
                     {depositInfo.address}
                   </p>
-                  <p className="text-xs text-(--widget-muted) mt-1">
+                  <p className="text-xs text-(--brand-muted) mt-1">
                     {depositInfo.method} · {depositInfo.asset}
                   </p>
                 </div>
               )}
 
               {depositAddressError && !depositInfo && (
-                <div className="p-3 rounded-(--widget-radius) bg-amber-50 border border-amber-200">
+                <div className="p-3 rounded-(--brand-radius) bg-amber-50 border border-amber-200">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div className="min-w-0">
@@ -564,13 +564,13 @@ export function ConnectWalletModal({
 
           {step === "enter-address" && selectedDisplay && (
             <div className="space-y-4">
-              <div className="flex items-start gap-2 p-2.5 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
+              <div className="flex items-start gap-2 p-2.5 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
                 <ExchangeLogo
                   display={selectedDisplay}
                   socialProvider={selectedSocialProvider}
                   size="xs"
                 />
-                <p className="text-xs text-(--widget-muted)">
+                <p className="text-xs text-(--brand-muted)">
                   In {selectedName}: Funding → Deposit → USDC → Ethereum network
                   → copy the deposit address.
                 </p>
@@ -586,7 +586,7 @@ export function ConnectWalletModal({
                 placeholder="0x..."
               />
               {addressError && (
-                <p className="text-xs text-(--widget-error)">{addressError}</p>
+                <p className="text-xs text-(--brand-error)">{addressError}</p>
               )}
               <Button className="w-full" onClick={handleVerifyAddress}>
                 Verify address
@@ -596,44 +596,44 @@ export function ConnectWalletModal({
 
           {step === "verify" && selectedDisplay && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
+              <div className="flex items-center gap-3 p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
                 <ExchangeLogo
                   display={selectedDisplay}
                   socialProvider={selectedSocialProvider}
                   size="sm"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-(--widget-fg) truncate">
+                  <p className="text-sm font-medium text-(--brand-fg) truncate">
                     {krakenDisplayName}
                   </p>
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     {selectedName} account linked
                   </p>
                 </div>
-                <Check className="w-4 h-4 text-(--widget-success) flex-shrink-0" />
+                <Check className="w-4 h-4 text-(--brand-success) flex-shrink-0" />
               </div>
 
-              <div className="p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-                <p className="text-xs font-medium text-(--widget-muted) mb-1">
+              <div className="p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+                <p className="text-xs font-medium text-(--brand-muted) mb-1">
                   Wallet address
                 </p>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-mono text-(--widget-fg) break-all">
+                  <p className="text-sm font-mono text-(--brand-fg) break-all">
                     {truncate(address.trim())}
                   </p>
                   <button
                     onClick={handleCopy}
-                    className="ml-2 p-1 text-(--widget-muted) hover:text-(--widget-fg) transition-colors flex-shrink-0"
+                    className="ml-2 p-1 text-(--brand-muted) hover:text-(--brand-fg) transition-colors flex-shrink-0"
                     aria-label="Copy address"
                   >
                     {copied ? (
-                      <Check className="w-4 h-4 text-(--widget-success)" />
+                      <Check className="w-4 h-4 text-(--brand-success)" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-(--widget-muted) mt-0.5">
+                <p className="text-xs text-(--brand-muted) mt-0.5">
                   via {selectedName} · Ethereum · USDC
                 </p>
               </div>
@@ -652,7 +652,7 @@ export function ConnectWalletModal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="absolute top-0 right-0 p-1 rounded-full text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                className="absolute top-0 right-0 p-1 rounded-full text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
               >
                 <CountdownRing durationMs={DONE_AUTOCLOSE_MS} />
               </button>
@@ -664,7 +664,7 @@ export function ConnectWalletModal({
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                   <Check className="w-6 h-6 text-green-600" />
                 </div>
-                <p className="text-sm font-medium text-(--widget-fg)">
+                <p className="text-sm font-medium text-(--brand-fg)">
                   {selectedName} wallet connected
                 </p>
               </div>
@@ -689,11 +689,11 @@ function SelectStep({
 }) {
   if (availableExchanges.length === 0) {
     return (
-      <div className="p-3 rounded-(--widget-radius) bg-(--widget-row-bg) border border-(--widget-border)">
-        <p className="text-sm text-(--widget-fg) font-medium mb-1">
+      <div className="p-3 rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border)">
+        <p className="text-sm text-(--brand-fg) font-medium mb-1">
           No exchanges configured
         </p>
-        <p className="text-xs text-(--widget-muted)">
+        <p className="text-xs text-(--brand-muted)">
           Enable an exchange (Kraken, Coinbase…) in the Dynamic dashboard under
           Log-in Methods and Funding for this environment.
         </p>
@@ -703,7 +703,7 @@ function SelectStep({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-(--widget-muted)">
+      <p className="text-sm text-(--brand-muted)">
         Choose an exchange to link your USDC deposit address.
       </p>
       {availableExchanges.map((ex) => {
@@ -714,7 +714,7 @@ function SelectStep({
             onClick={() => onPick(ex.exchange)}
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors",
-              "border-(--widget-border) bg-(--widget-row-bg) hover:bg-(--widget-row-hover)",
+              "border-(--brand-border) bg-(--brand-row-bg) hover:bg-(--brand-row-hover)",
             )}
           >
             <ExchangeLogo
@@ -723,12 +723,12 @@ function SelectStep({
               size="sm"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-(--widget-fg)">{d.name}</p>
-              <p className="text-xs text-(--widget-muted) truncate">
+              <p className="text-sm font-medium text-(--brand-fg)">{d.name}</p>
+              <p className="text-xs text-(--brand-muted) truncate">
                 {d.tagline}
               </p>
             </div>
-            <Link2 className="w-4 h-4 text-(--widget-muted) flex-shrink-0" />
+            <Link2 className="w-4 h-4 text-(--brand-muted) flex-shrink-0" />
           </button>
         );
       })}
@@ -739,10 +739,10 @@ function SelectStep({
 function NumberedStep({ n, label }: { n: number; label: string }) {
   return (
     <div className="flex items-start gap-3 px-3 py-2.5">
-      <span className="mt-0.5 w-5 h-5 rounded-full bg-(--widget-primary)/10 text-(--widget-primary) text-[11px] font-semibold flex items-center justify-center flex-shrink-0">
+      <span className="mt-0.5 w-5 h-5 rounded-full bg-(--brand-primary)/10 text-(--brand-primary) text-[11px] font-semibold flex items-center justify-center flex-shrink-0">
         {n}
       </span>
-      <p className="text-xs text-(--widget-muted)">{label}</p>
+      <p className="text-xs text-(--brand-muted)">{label}</p>
     </div>
   );
 }
@@ -817,7 +817,7 @@ function MonogramAvatar({
   return (
     <div
       className={cn(
-        "flex items-center justify-center flex-shrink-0 font-semibold bg-(--widget-primary)/10 text-(--widget-primary) border border-(--widget-border)",
+        "flex items-center justify-center flex-shrink-0 font-semibold bg-(--brand-primary)/10 text-(--brand-primary) border border-(--brand-border)",
         dim,
       )}
     >
@@ -867,7 +867,7 @@ function ExchangeLogo({
       <div
         className={cn(
           sizeClass,
-          "flex-shrink-0 flex items-center justify-center bg-(--widget-row-bg) border border-(--widget-border) p-1",
+          "flex-shrink-0 flex items-center justify-center bg-(--brand-row-bg) border border-(--brand-border) p-1",
         )}
       >
         <SocialIcon name={socialProvider} className="w-full h-full" />
