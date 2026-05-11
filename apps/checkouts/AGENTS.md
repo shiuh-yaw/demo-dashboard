@@ -42,11 +42,13 @@ LI.FI API key + Coinbase + Iron credentials live at the **dashboard** (D-003) �
 
 Adopts the unified theme injection pattern (D-007/D-008):
 
-- `middleware.ts` resolves the config id from `/w/[id]/...` (path) or `?theme=` (query fallback) and forwards it as `x-checkouts-config-id` (header-only — no Set-Cookie).
-- `app/layout.tsx` reads the header server-side, fetches the config via `getCheckoutConfig` (wrapped in React `cache()` so nested layouts dedupe), projects the stored `WidgetTheme` onto a `Partial<BrandTheme>` overlay via `lib/checkouts-brand.ts#themeToBrandTheme`, and emits `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`.
+- `middleware.ts` resolves the config id from `?theme=<id>` (or the sticky `checkouts_config_id` cookie) and forwards it as `x-checkouts-config-id` (header + cookie via the shared `createConfigForwardingMiddleware` factory).
+- `app/(widget)/page.tsx` is the canonical entry point: it reads `x-checkouts-config-id`, fetches the stored config, parses any `externalId` / `metadata` query params, and routes to the completion / pending / payment screen. With no id it falls back to the unbranded demo.
+- `app/(widget)/wallet/page.tsx` is the embedded-wallet view (active when `depositDestination === "embedded"`); it reads the same header to resolve the brand.
+- `app/layout.tsx` reads the header, fetches the config via `getCheckoutConfig`, projects the stored `WidgetTheme` onto a `Partial<BrandTheme>` overlay via `lib/checkouts-brand.ts#themeToBrandTheme`, and emits `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`.
 - `globals.css` declares checkouts' static `--brand-*` overrides (charcoal-on-near-white, blue accent, tighter radii) on top of `@dynamic-demos/theme/defaults.css`, plus a `--widget-*` compat alias block kept until the shared `packages/ui` consumers migrate.
 - Components consume `var(--brand-*)` directly. The `themeToCssVars` helper (legacy `--widget-*` projector) is removed from `lib/widget-config.ts`.
-- The nested `app/(widget)/w/[id]/layout.tsx` only validates the id (`notFound()`) and contributes per-brand `<title>` metadata — no second fetch, no second provider.
+- Legacy `/w/:id/...` URLs are kept working via `next.config.ts` redirects → `/?theme=:id` (or `/wallet?theme=:id`). The path tree itself is removed.
 
 Storage prefix in dashboard remains `payment-widget:` (legacy quirk — kept for backwards compatibility with the original nextjs-payment-widget project). Internal abstractions in this app follow the unified `checkouts` naming.
 

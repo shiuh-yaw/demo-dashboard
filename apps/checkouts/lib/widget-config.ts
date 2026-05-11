@@ -235,7 +235,7 @@ export type WidgetMode = "payment" | "deposit";
  * When `"embedded"` is selected:
  * - The widget creates/retrieves the user's embedded wallet automatically
  * - A navigation pill appears to switch between Deposit and Wallet views
- * - The EmbeddedWalletWidget is accessible at `/w/[id]/wallet`
+ * - The EmbeddedWalletWidget is accessible at `/wallet`
  */
 export type DepositDestination = "fixed" | "embedded";
 

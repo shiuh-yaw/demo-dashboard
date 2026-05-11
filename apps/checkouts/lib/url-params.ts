@@ -24,7 +24,7 @@ export interface TransactionUrlParams {
  * - metadata: URL-encoded JSON object
  *
  * @example
- * // URL: /w/abc123?externalId=order-456&metadata=%7B%22customerId%22%3A%22789%22%7D
+ * // URL: /?theme=abc123&externalId=order-456&metadata=%7B%22customerId%22%3A%22789%22%7D
  * parseTransactionParams(searchParams)
  * // Returns: { externalId: "order-456", metadata: { customerId: "789" } }
  */

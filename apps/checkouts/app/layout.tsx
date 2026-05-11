@@ -39,8 +39,10 @@ interface RootLayoutProps {
  * Root Layout (server component)
  *
  * Per the unified theme injection pattern (D-008):
- * - `middleware.ts` resolves the config id from `/w/[id]/...` (or `?theme=`)
- *   and forwards it as `x-checkouts-config-id`.
+ * - `middleware.ts` resolves the config id from `?theme=` (or the
+ *   sticky `checkouts_config_id` cookie) and forwards it as
+ *   `x-checkouts-config-id`. Legacy `/w/:id/...` URLs are redirected
+ *   to `/?theme=:id` by `next.config.ts`.
  * - This layout reads the header, fetches the brand config server-side,
  *   and emits per-brand `--brand-*` overrides via `<ThemeStyleTag
  *   overridesOnly>` in `<head>`. SSR injection beats client paint —

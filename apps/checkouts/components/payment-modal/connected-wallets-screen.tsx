@@ -76,7 +76,7 @@ export default function ConnectedWalletsScreen({
         const primaryAccount = getPrimaryWalletAccount();
 
         // Filter out embedded wallets from the payment widget's wallet list.
-        // Embedded wallets are managed separately via EmbeddedWalletWidget at /w/[id]/wallet.
+        // Embedded wallets are managed separately via EmbeddedWalletWidget at /wallet.
         // This ensures users only see external wallets (MetaMask, Phantom, etc.) when
         // selecting a source wallet for deposits/payments.
         const externalAccounts = (accounts || []).filter(

@@ -20,13 +20,12 @@
  * @example
  * ```tsx
  * // Default navigation
- * <WidgetNav widgetId="abc123" />
+ * <WidgetNav />
  *
  * // Custom navigation items
  * <WidgetNav
- *   widgetId="abc123"
  *   items={[
- *     { label: "Deposit", path: "" },
+ *     { label: "Deposit", path: "/" },
  *     { label: "Wallet", path: "/wallet" },
  *     { label: "History", path: "/history" },
  *   ]}
@@ -49,23 +48,26 @@ import { cn } from "@dynamic-demos/utils";
 export interface NavItem {
   /** Display label shown in the navigation */
   label: string;
-  /** URL path relative to widget base (e.g., "" for main, "/wallet" for wallet) */
+  /** Absolute URL path (e.g., "/" for main, "/wallet" for wallet) */
   path: string;
 }
 
 /**
  * Default navigation items for embedded wallet-enabled widgets.
- * - Deposit: Main widget view at `/w/[id]`
- * - Wallet: Embedded wallet view at `/w/[id]/wallet`
+ * - Deposit: main widget at `/`
+ * - Wallet: embedded wallet at `/wallet`
+ *
+ * The active brand config id rides on the sticky `checkouts_config_id`
+ * cookie (set by middleware on first hit), so nav links don't need to
+ * embed it — every same-origin navigation still resolves to the right
+ * config.
  */
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
-  { label: "Deposit", path: "" },
+  { label: "Deposit", path: "/" },
   { label: "Wallet", path: "/wallet" },
 ];
 
 interface WidgetNavProps {
-  /** Widget ID for building navigation URLs */
-  widgetId: string;
   /** Custom navigation items (defaults to Deposit/Wallet) */
   items?: NavItem[];
 }
@@ -73,12 +75,8 @@ interface WidgetNavProps {
 // =============================================================================
 // COMPONENT
 // =============================================================================
-export default function WidgetNav({
-  widgetId,
-  items = DEFAULT_NAV_ITEMS,
-}: WidgetNavProps) {
+export default function WidgetNav({ items = DEFAULT_NAV_ITEMS }: WidgetNavProps) {
   const pathname = usePathname();
-  const basePath = `/w/${widgetId}`;
 
   return (
     <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
@@ -89,11 +87,8 @@ export default function WidgetNav({
         )}
       >
         {items.map((item) => {
-          const href = `${basePath}${item.path}`;
-          const isActive =
-            item.path === ""
-              ? pathname === basePath
-              : pathname.endsWith(item.path);
+          const href = item.path || "/";
+          const isActive = pathname === href;
 
           return (
             <Link

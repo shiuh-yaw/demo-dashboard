@@ -22,13 +22,14 @@
  *
  * ## Route
  *
- * This widget is rendered at `/w/[id]/wallet` when embedded wallet
- * is enabled for the widget (`depositDestination === "embedded"`).
+ * This widget is rendered at `/wallet` when embedded wallet is enabled
+ * for the active config (`depositDestination === "embedded"`). The
+ * brand id flows in via the `x-checkouts-config-id` header — the
+ * widget itself doesn't need it.
  *
  * @example
  * ```tsx
  * <EmbeddedWalletWidget
- *   widgetId="abc123"
  *   settlementChainId={8453}  // Base
  *   settlementTokenAddress="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"  // USDC
  * />
@@ -57,8 +58,6 @@ import ConnectWalletScreen, { type WalletGroup } from "./connect-wallet-screen";
 // =============================================================================
 
 interface EmbeddedWalletWidgetProps {
-  /** Widget ID for navigation back to main deposit widget */
-  widgetId: string;
   /** Chain type for embedded wallet ("EVM" or "SOL") - defaults to "EVM" */
   settlementChainType?: Chain;
   /** Chain ID to fetch balance for (e.g., 8453 for Base, 101 for Solana) */
@@ -107,7 +106,6 @@ type ConnectScreen =
   | { type: "chain-select"; wallet: WalletGroup };
 
 export default function EmbeddedWalletWidget({
-  widgetId,
   settlementChainType = "EVM",
   settlementChainId,
   settlementTokenAddress,
@@ -217,8 +215,8 @@ export default function EmbeddedWalletWidget({
   }, [walletAddress]);
 
   const handleDeposit = useCallback(() => {
-    router.push(`/w/${widgetId}`);
-  }, [router, widgetId]);
+    router.push("/");
+  }, [router]);
 
   const handleLogout = useCallback(() => {
     logout();
