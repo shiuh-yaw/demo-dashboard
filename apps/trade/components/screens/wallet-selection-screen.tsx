@@ -45,7 +45,7 @@ export function WalletSelectionScreen({ onComplete }: WalletSelectionScreenProps
       <WidgetCard>
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <Spinner size="lg" />
-          <p className="text-sm text-(--widget-muted)">{message}</p>
+          <p className="text-sm text-(--brand-muted)">{message}</p>
         </div>
       </WidgetCard>
     );

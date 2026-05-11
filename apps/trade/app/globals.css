@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@dynamic-demos/theme/defaults.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../packages/ui/src/**/*.tsx";
@@ -27,17 +28,43 @@
 
 /* ===== LIGHT THEME (default) ===== */
 :root {
-  /* Widget theme (auth screen, login form) - matches trade palette */
-  --widget-page-bg: #f6f8fa;
-  --widget-bg: #ffffff;
-  --widget-fg: #151618;
-  --widget-muted: #9CA3AF;
-  --widget-border: #E5E7EB;
-  --widget-primary: #4779FF;
-  --widget-row-bg: #f6f8f8;
-  --widget-row-hover: #eef1f1;
-  --widget-radius: 12px;
-  --widget-radius-lg: 22px;
+  /*
+   * Trade-brand override of the canonical --brand-* contract (D-007).
+   * Mirrors the values the legacy --widget-* block carried so default
+   * (un-themed) routes render byte-identically to pre-Phase-4. Per-config
+   * overrides land via <ThemeStyleTag overridesOnly> in app/layout.tsx
+   * and cascade through the compat aliases below.
+   */
+  --brand-page-bg: #f6f8fa;
+  --brand-surface: #ffffff;
+  --brand-fg: #151618;
+  --brand-muted: #9CA3AF;
+  --brand-border: #E5E7EB;
+  --brand-primary: #4779FF;
+  --brand-accent: #4779FF;
+  --brand-row-bg: #f6f8f8;
+  --brand-row-hover: #eef1f1;
+  --brand-radius: 12px;
+  --brand-radius-lg: 22px;
+
+  /*
+   * `--widget-*` compat aliases for shared `packages/ui` components
+   * (AuthLayout, etc.) that haven't migrated to `--brand-*` yet. These
+   * track the brand contract above so per-config <ThemeStyleTag>
+   * overrides cascade through cleanly. Retire when packages/ui migrates.
+   */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface);
+  --widget-fg: var(--brand-fg);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-radius: var(--brand-radius);
+  --widget-radius-lg: var(--brand-radius-lg);
 
   /* Backgrounds */
   --trade-bg: #F7F8FA;
@@ -76,17 +103,22 @@
 
 /* ===== DARK THEME ===== */
 .dark {
-  /* Widget theme (auth screen, login form) */
-  --widget-page-bg: #0A0A0A;
-  --widget-bg: #161618;
-  --widget-fg: #ffffff;
-  --widget-muted: #636366;
-  --widget-border: #2C2C30;
-  --widget-primary: #6B93FF;
-  --widget-row-bg: #1C1C1E;
-  --widget-row-hover: #2C2C30;
-  --widget-radius: 12px;
-  --widget-radius-lg: 22px;
+  /*
+   * Dark-mode --brand-* override block. Same values the legacy --widget-*
+   * dark block carried, so dark-mode default routes are byte-identical.
+   * Compat aliases below resolve via the var(--brand-*) chain in :root.
+   */
+  --brand-page-bg: #0A0A0A;
+  --brand-surface: #161618;
+  --brand-fg: #ffffff;
+  --brand-muted: #636366;
+  --brand-border: #2C2C30;
+  --brand-primary: #6B93FF;
+  --brand-accent: #6B93FF;
+  --brand-row-bg: #1C1C1E;
+  --brand-row-hover: #2C2C30;
+  --brand-radius: 12px;
+  --brand-radius-lg: 22px;
 
   --trade-bg: #0A0A0A;
   --trade-surface: #161618;

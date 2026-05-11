@@ -29,7 +29,7 @@ App routes:
 - `/(app)/portfolio` — unified positions across earn/trade/predict (mock + real).
 - `/api/trade/{historical,market,metadata,prices,token-stats}/...` — server-only Alchemy/CoinGecko/Polymarket proxies.
 
-Cookie / header contract (D-008): `?id=<configId>` → cookie `trade_config_id` → header `x-trade-config-id` → dashboard config fetch.
+Cookie / header contract (D-008): `?theme=<configId>` → cookie `trade_config_id` → header `x-trade-config-id` → dashboard config fetch. URLs are flat — there is no `/t/[id]/<rest>` prefix. Legacy `/t/[id]/<rest>` deep links are handled by a `next.config.ts` redirect that rewrites them to `/<rest>?theme=[id]`.
 
 ## Required environment
 
@@ -44,7 +44,14 @@ Polymarket public API needs no key.
 
 ## Theming
 
-`createDemoMiddleware` + SSR `<ThemeStyleTag>` per D-008.
+Unified D-008 pattern. `middleware.ts` (`createDemoMiddleware`) reads `?theme=<configId>` from the query, persists it as the `trade_config_id` cookie, and forwards it as `x-trade-config-id`. The root `app/layout.tsx` reads the header, fetches the brand config server-side, and injects per-brand `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>` — zero FOUC, zero hydration mismatch.
+
+Token contract:
+- `@dynamic-demos/theme/defaults.css` — canonical `--brand-*` defaults.
+- `apps/trade/app/globals.css` — trade's static `--brand-*` value overrides + `--widget-*` compat aliases for legacy `packages/ui` consumers (`AuthLayout`, etc.). Retire the aliases when `packages/ui` migrates.
+- `--trade-*` namespace — trade's app-specific design language (chrome, surfaces, gradients). Distinct from the brand contract; not affected by per-config theme injection.
+
+`themeToBrandTheme(theme)` in `lib/trade-brand.ts` projects the dashboard's stored `WidgetTheme` shape onto `Partial<BrandTheme>`. `TradeConfig.theme` is optional; an empty config emits an empty `:root {}` block, so default routes render trade's static palette.
 
 ## Credentials
 
@@ -126,4 +133,4 @@ if (isMockMode) {
 
 - Real swap execution still needs Phase 5B's dashboard `/api/orchestrate/swap` to land. Until then, swap actions are mock-mode only.
 - `MockTradeMetadata` and `MockPredictMetadata` shapes are still maturing as new actions land; expect minor additive changes per PR.
-- Phase 4 migrates leftover `--widget-*` to `--brand-*`.
+- `--widget-*` compat aliases in `globals.css` are temporary; retire when `packages/ui` (`AuthLayout`, `WalletSelectionScreen`, etc.) migrates to `--brand-*`.

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { headers } from "next/headers";
+import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { Providers } from "./providers";
 import { getTradeConfig } from "@/lib/api/trade-config";
 import { TradeConfigProvider } from "@/contexts/trade-config-context";
+import { themeToBrandTheme } from "@/lib/trade-brand";
 
 import "./globals.css";
 
@@ -34,12 +36,22 @@ export default async function RootLayout({
   const configId = headersList.get("x-trade-config-id");
   const stored = configId ? await getTradeConfig(configId) : null;
 
+  // SSR theme injection (D-008): emit only the `--brand-*` overrides for the
+  // tokens trade personalizes per brand. Everything else falls through to
+  // trade's static `--brand-*` overrides in globals.css and the canonical
+  // defaults in @dynamic-demos/theme/defaults.css. Zero FOUC, zero hydration
+  // mismatch — the inline <style> beats client paint.
+  const brandTheme = themeToBrandTheme(stored?.config?.theme ?? {});
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${dmSans.variable} ${inter.variable}`}
     >
+      <head>
+        <ThemeStyleTag theme={brandTheme} overridesOnly />
+      </head>
       <body className="bg-trade-bg text-trade-text-primary font-sans antialiased">
         <Providers>
           <TradeConfigProvider config={stored?.config}>
