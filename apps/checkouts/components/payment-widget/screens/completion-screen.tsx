@@ -94,20 +94,20 @@ export function CompletionScreen({
         <div className="p-3 space-y-3">
           {/* Transaction ID */}
           {transactionId && (
-            <div className="p-3 bg-(--widget-row-bg) rounded-(--widget-radius)">
+            <div className="p-3 bg-(--brand-row-bg) rounded-(--brand-radius)">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-(--widget-muted) tracking-[-0.12px] mb-1">
+                  <p className="text-xs text-(--brand-muted) tracking-[-0.12px] mb-1">
                     Transaction ID
                   </p>
-                  <p className="text-sm font-mono text-(--widget-fg) truncate">
+                  <p className="text-sm font-mono text-(--brand-fg) truncate">
                     {truncatedId}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="p-2 rounded-full hover:bg-black/5 text-(--widget-muted) hover:text-(--widget-fg) transition-colors cursor-pointer shrink-0"
+                  className="p-2 rounded-full hover:bg-black/5 text-(--brand-muted) hover:text-(--brand-fg) transition-colors cursor-pointer shrink-0"
                   aria-label="Copy transaction ID"
                 >
                   {copied ? (
@@ -127,7 +127,7 @@ export function CompletionScreen({
                 href={explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium text-(--widget-accent) bg-(--widget-accent)/5 rounded-(--widget-radius) hover:bg-(--widget-accent)/10 transition-colors"
+                className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium text-(--brand-accent) bg-(--brand-accent)/5 rounded-(--brand-radius) hover:bg-(--brand-accent)/10 transition-colors"
               >
                 View on Explorer
                 <ExternalLink className="w-3.5 h-3.5" />

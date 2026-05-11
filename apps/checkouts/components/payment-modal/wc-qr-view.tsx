@@ -89,15 +89,15 @@ export default function WcQrView({ wallet, uri }: WcQrViewProps) {
         )}
 
         <div className="text-center space-y-1">
-          <p className="text-sm font-medium text-(--widget-fg)">
+          <p className="text-sm font-medium text-(--brand-fg)">
             Continue in {wallet.name}
           </p>
-          <p className="text-xs text-(--widget-muted)">
+          <p className="text-xs text-(--brand-muted)">
             Approve the connection in your wallet app
           </p>
         </div>
 
-        <Loader2 className="w-5 h-5 text-(--widget-muted) animate-spin" />
+        <Loader2 className="w-5 h-5 text-(--brand-muted) animate-spin" />
 
         {deepLink && (
           <button
@@ -108,10 +108,10 @@ export default function WcQrView({ wallet, uri }: WcQrViewProps) {
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
               "text-xs font-medium",
-              "bg-(--widget-row-bg) hover:bg-(--widget-row-hover)",
-              "text-(--widget-muted) hover:text-(--widget-fg)",
+              "bg-(--brand-row-bg) hover:bg-(--brand-row-hover)",
+              "text-(--brand-muted) hover:text-(--brand-fg)",
               "transition-all duration-150 cursor-pointer",
-              "border border-(--widget-border)",
+              "border border-(--brand-border)",
             )}
           >
             Open {wallet.name}
@@ -141,10 +141,10 @@ export default function WcQrView({ wallet, uri }: WcQrViewProps) {
       </div>
 
       <div className="text-center space-y-1">
-        <p className="text-sm font-medium text-(--widget-fg)">
+        <p className="text-sm font-medium text-(--brand-fg)">
           Scan with {wallet.name}
         </p>
-        <p className="text-xs text-(--widget-muted)">
+        <p className="text-xs text-(--brand-muted)">
           Open {wallet.name} and scan this code
         </p>
       </div>
@@ -155,10 +155,10 @@ export default function WcQrView({ wallet, uri }: WcQrViewProps) {
         className={cn(
           "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
           "text-xs font-medium",
-          "bg-(--widget-row-bg) hover:bg-(--widget-row-hover)",
-          "text-(--widget-muted) hover:text-(--widget-fg)",
+          "bg-(--brand-row-bg) hover:bg-(--brand-row-hover)",
+          "text-(--brand-muted) hover:text-(--brand-fg)",
           "transition-all duration-150 cursor-pointer",
-          "border border-(--widget-border)",
+          "border border-(--brand-border)",
         )}
       >
         {copied ? (

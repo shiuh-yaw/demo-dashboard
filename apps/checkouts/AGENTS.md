@@ -40,7 +40,15 @@ LI.FI API key + Coinbase + Iron credentials live at the **dashboard** (D-003) �
 
 ## Theming
 
-Currently uses `next-themes` for dark-mode toggle plus `@dynamic-demos/theme` types. Phase 4 migrates the brand-color overlay onto the visa-direct cookie + `<ThemeStyleTag>` pattern (D-008).
+Adopts the unified theme injection pattern (D-007/D-008):
+
+- `middleware.ts` resolves the config id from `/w/[id]/...` (path) or `?theme=` (query fallback) and forwards it as `x-checkouts-config-id` (header-only — no Set-Cookie).
+- `app/layout.tsx` reads the header server-side, fetches the config via `getCheckoutConfig` (wrapped in React `cache()` so nested layouts dedupe), projects the stored `WidgetTheme` onto a `Partial<BrandTheme>` overlay via `lib/checkouts-brand.ts#themeToBrandTheme`, and emits `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`.
+- `globals.css` declares checkouts' static `--brand-*` overrides (charcoal-on-near-white, blue accent, tighter radii) on top of `@dynamic-demos/theme/defaults.css`, plus a `--widget-*` compat alias block kept until the shared `packages/ui` consumers migrate.
+- Components consume `var(--brand-*)` directly. The `themeToCssVars` helper (legacy `--widget-*` projector) is removed from `lib/widget-config.ts`.
+- The nested `app/(widget)/w/[id]/layout.tsx` only validates the id (`notFound()`) and contributes per-brand `<title>` metadata — no second fetch, no second provider.
+
+Storage prefix in dashboard remains `payment-widget:` (legacy quirk — kept for backwards compatibility with the original nextjs-payment-widget project). Internal abstractions in this app follow the unified `checkouts` naming.
 
 ## Credentials
 
@@ -97,6 +105,6 @@ configureLifi(/* providers */, { integrator: process.env.LIFI_INTEGRATOR ?? "dem
 
 ## Open questions / known gaps
 
-- Phase 4 migrates dark-mode + brand overlay onto the visa-direct cookie + SSR theme pattern (D-008).
 - 30+ inline SSR-safe wrappers (`getKrakenAccounts`, etc.) retain bespoke shapes; consolidate when a third app needs the same wrappers.
+- `--widget-*` compat aliases in `globals.css` retained until `packages/ui` shared components migrate to `--brand-*`.
 - No real-network E2E in CI (D-023).

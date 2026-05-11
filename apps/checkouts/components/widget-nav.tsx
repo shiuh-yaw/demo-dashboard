@@ -102,8 +102,8 @@ export default function WidgetNav({
               className={cn(
                 "px-2.5 py-1 rounded-md text-xs transition-all",
                 isActive
-                  ? "bg-white/60 text-(--widget-muted) font-medium"
-                  : "text-(--widget-muted)/60 hover:text-(--widget-muted)",
+                  ? "bg-white/60 text-(--brand-muted) font-medium"
+                  : "text-(--brand-muted)/60 hover:text-(--brand-muted)",
               )}
             >
               {item.label}

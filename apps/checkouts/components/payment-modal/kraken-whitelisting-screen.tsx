@@ -107,13 +107,13 @@ export default function KrakenWhitelistingScreen({
   return (
     <div
       className={cn(
-        "bg-(--widget-bg) text-(--widget-fg) rounded-(--widget-radius-lg) overflow-hidden",
-        "border border-(--widget-border)",
+        "bg-(--brand-surface) text-(--brand-fg) rounded-(--brand-radius-lg) overflow-hidden",
+        "border border-(--brand-border)",
         "shadow-[0px_8px_8px_-4px_rgba(10,13,18,0.03),0px_3px_3px_-1.5px_rgba(10,13,18,0.04)]",
       )}
     >
       {/* Section 1: Header — Icon + Title + Close */}
-      <div className="flex items-start justify-between p-3 border-b border-(--widget-border)">
+      <div className="flex items-start justify-between p-3 border-b border-(--brand-border)">
         <div className="flex flex-col gap-3 items-start">
           <KrakenLogo
             className={cn(
@@ -123,10 +123,10 @@ export default function KrakenWhitelistingScreen({
             )}
           />
           <div className="flex flex-col gap-0.5 max-w-[316px]">
-            <p className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px] leading-5">
+            <p className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5">
               Whitelisting Required
             </p>
-            <p className="text-xs font-medium text-(--widget-muted) tracking-[-0.12px] leading-[18px]">
+            <p className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
               To complete your first transfer with kraken, please follow these
               steps:
             </p>
@@ -141,7 +141,7 @@ export default function KrakenWhitelistingScreen({
             aria-label="Close"
           >
             <X
-              className="w-full h-full text-(--widget-muted)"
+              className="w-full h-full text-(--brand-muted)"
               strokeWidth={2}
             />
           </button>
@@ -149,9 +149,9 @@ export default function KrakenWhitelistingScreen({
       </div>
 
       {/* Section 2: Steps + Wallet Address */}
-      <div className="flex flex-col gap-2 p-3 border-b border-(--widget-border)">
+      <div className="flex flex-col gap-2 p-3 border-b border-(--brand-border)">
         {/* Numbered Steps Card */}
-        <div className="border border-(--widget-border) rounded-[10px] flex flex-col gap-3.5 pl-3 pr-2.5 py-3">
+        <div className="border border-(--brand-border) rounded-[10px] flex flex-col gap-3.5 pl-3 pr-2.5 py-3">
           {WHITELISTING_STEPS.map((step, index) => (
             <div key={index} className="flex items-center gap-3">
               <div className="w-[18px] h-[18px] shrink-0 rounded-full border border-[#e1e1e1] flex items-center justify-center">
@@ -159,7 +159,7 @@ export default function KrakenWhitelistingScreen({
                   {index + 1}
                 </span>
               </div>
-              <span className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px] leading-normal">
+              <span className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-normal">
                 {step}
               </span>
             </div>
@@ -167,21 +167,21 @@ export default function KrakenWhitelistingScreen({
         </div>
 
         {/* Wallet Address Card */}
-        <div className="border border-(--widget-border) rounded-[10px] flex items-center justify-between pl-3 pr-2 py-2">
+        <div className="border border-(--brand-border) rounded-[10px] flex items-center justify-between pl-3 pr-2 py-2">
           <div className="flex flex-col min-w-0 flex-1 text-xs font-medium tracking-[-0.12px] leading-normal">
-            <span className="text-(--widget-muted)">Wallet Address</span>
-            <span className="text-(--widget-fg) truncate">{walletAddress}</span>
+            <span className="text-(--brand-muted)">Wallet Address</span>
+            <span className="text-(--brand-fg) truncate">{walletAddress}</span>
           </div>
           <button
             type="button"
             onClick={handleCopy}
-            className="p-1.5 rounded-[10px] shrink-0 ml-2 shadow-[0px_1px_2px_0px_rgba(24,39,75,0.04)] hover:bg-(--widget-row-hover) transition-colors duration-150 cursor-pointer"
+            className="p-1.5 rounded-[10px] shrink-0 ml-2 shadow-[0px_1px_2px_0px_rgba(24,39,75,0.04)] hover:bg-(--brand-row-hover) transition-colors duration-150 cursor-pointer"
             aria-label="Copy wallet address"
           >
             {copied ? (
               <Check className="w-4 h-4 text-green-500" />
             ) : (
-              <Copy className="w-4 h-4 text-(--widget-muted)" />
+              <Copy className="w-4 h-4 text-(--brand-muted)" />
             )}
           </button>
         </div>

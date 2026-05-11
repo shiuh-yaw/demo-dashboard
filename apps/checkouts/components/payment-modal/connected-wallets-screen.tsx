@@ -176,7 +176,7 @@ export default function ConnectedWalletsScreen({
   return (
     <div className="flex flex-col">
       <ScreenHeader
-        icon={<WalletIcon size={18} className="text-(--widget-fg)" />}
+        icon={<WalletIcon size={18} className="text-(--brand-fg)" />}
         title="Your Wallets"
         subtitle="Select a wallet or connect a new one"
         onClose={onClose}
@@ -194,7 +194,7 @@ export default function ConnectedWalletsScreen({
               key={wallet.address}
               className={cn(
                 "w-full h-[46px] flex items-center justify-between",
-                "bg-(--widget-row-bg) rounded-(--widget-radius)",
+                "bg-(--brand-row-bg) rounded-(--brand-radius)",
                 "pl-3 pr-2.5 py-1.5",
                 "transition-all duration-150",
                 (isSelecting === wallet.address ||
@@ -222,15 +222,15 @@ export default function ConnectedWalletsScreen({
                     className="w-7 h-7 object-contain rounded"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-(--widget-row-hover)" />
+                  <div className="w-7 h-7 rounded-full bg-(--brand-row-hover)" />
                 )}
 
                 {/* Wallet Name & Address */}
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px]">
+                  <span className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px]">
                     {wallet.name}
                   </span>
-                  <span className="text-xs text-(--widget-muted) tracking-[-0.12px]">
+                  <span className="text-xs text-(--brand-muted) tracking-[-0.12px]">
                     {truncateAddress(wallet.address)}
                   </span>
                 </div>
@@ -253,7 +253,7 @@ export default function ConnectedWalletsScreen({
                     disabled={isRemoving !== null || isSelecting !== null}
                     className={cn(
                       "p-1.5 rounded-full cursor-pointer",
-                      "text-(--widget-muted) hover:text-red-500",
+                      "text-(--brand-muted) hover:text-red-500",
                       "hover:bg-red-50 dark:hover:bg-red-500/10",
                       "transition-colors duration-150",
                       "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -281,7 +281,7 @@ export default function ConnectedWalletsScreen({
               onClick={() => onSelectExchange?.(exchange.key)}
               className={cn(
                 "w-full h-[46px] flex items-center justify-between",
-                "bg-(--widget-row-bg) rounded-(--widget-radius)",
+                "bg-(--brand-row-bg) rounded-(--brand-radius)",
                 "pl-3 pr-2.5 py-1.5",
                 "transition-all duration-150",
                 "hover:opacity-80 active:opacity-60",
@@ -298,9 +298,9 @@ export default function ConnectedWalletsScreen({
                     className="w-7 h-7 object-contain rounded"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-(--widget-row-hover)" />
+                  <div className="w-7 h-7 rounded-full bg-(--brand-row-hover)" />
                 )}
-                <span className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px]">
+                <span className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px]">
                   {exchange.name}
                 </span>
               </div>
@@ -320,7 +320,7 @@ export default function ConnectedWalletsScreen({
         {/* Empty state */}
         {walletsWithInfo.length === 0 && connectedExchanges.length === 0 && (
           <div className="py-4 text-center">
-            <p className="text-sm text-(--widget-muted)">
+            <p className="text-sm text-(--brand-muted)">
               No wallets connected
             </p>
           </div>
@@ -328,7 +328,7 @@ export default function ConnectedWalletsScreen({
 
         {/* Divider */}
         {(walletsWithInfo.length > 0 || connectedExchanges.length > 0) && (
-          <div className="h-px bg-(--widget-border) my-1" />
+          <div className="h-px bg-(--brand-border) my-1" />
         )}
 
         {/* Add New Wallet + Logout Row */}
@@ -338,11 +338,11 @@ export default function ConnectedWalletsScreen({
             onClick={onAddNewWallet}
             className={cn(
               "flex-1 h-[43px] flex items-center justify-center gap-2",
-              "bg-(--widget-row-bg) rounded-(--widget-radius)",
-              "text-sm font-medium text-(--widget-muted)",
-              "hover:bg-(--widget-row-hover) active:opacity-80",
+              "bg-(--brand-row-bg) rounded-(--brand-radius)",
+              "text-sm font-medium text-(--brand-muted)",
+              "hover:bg-(--brand-row-hover) active:opacity-80",
               "transition-all duration-150 cursor-pointer",
-              "border border-dashed border-(--widget-border)",
+              "border border-dashed border-(--brand-border)",
             )}
           >
             <Plus className="w-4 h-4" />
@@ -356,10 +356,10 @@ export default function ConnectedWalletsScreen({
             disabled={isLoggingOut}
             className={cn(
               "h-[43px] w-[43px] flex items-center justify-center",
-              "rounded-(--widget-radius)",
-              "border border-(--widget-border)",
-              "bg-(--widget-row-bg) hover:bg-red-50 dark:hover:bg-red-500/10",
-              "text-(--widget-muted) hover:text-red-500 hover:border-red-200",
+              "rounded-(--brand-radius)",
+              "border border-(--brand-border)",
+              "bg-(--brand-row-bg) hover:bg-red-50 dark:hover:bg-red-500/10",
+              "text-(--brand-muted) hover:text-red-500 hover:border-red-200",
               "transition-all duration-150 cursor-pointer",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               isLoggingOut && "animate-pulse",
@@ -378,7 +378,7 @@ export default function ConnectedWalletsScreen({
             onClick={onDeleteAccount}
             className={cn(
               "py-1 w-full text-center",
-              "text-xs text-(--widget-muted) hover:text-red-500",
+              "text-xs text-(--brand-muted) hover:text-red-500",
               "transition-colors duration-150 cursor-pointer",
             )}
           >

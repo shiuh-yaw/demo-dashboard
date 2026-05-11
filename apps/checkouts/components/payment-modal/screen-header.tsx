@@ -35,19 +35,19 @@ export default function ScreenHeader({
     <div
       className={cn(
         "flex items-start justify-between p-3",
-        !noBorder && "border-b border-(--widget-border)",
+        !noBorder && "border-b border-(--brand-border)",
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="w-[38px] h-[38px] min-w-[38px] flex items-center justify-center rounded-[9px] bg-(--widget-bg) border border-(--widget-border) shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)]">
+        <div className="w-[38px] h-[38px] min-w-[38px] flex items-center justify-center rounded-[9px] bg-(--brand-surface) border border-(--brand-border) shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)]">
           {icon}
         </div>
         <div className="flex flex-col">
-          <h2 className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px] leading-5">
+          <h2 className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-xs text-(--widget-muted) tracking-[-0.12px] leading-5">
+            <p className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-5">
               {subtitle}
             </p>
           )}
@@ -57,9 +57,9 @@ export default function ScreenHeader({
         <button
           type="button"
           onClick={onClose}
-          className="p-1 hover:bg-(--widget-row-hover) rounded transition-colors cursor-pointer"
+          className="p-1 hover:bg-(--brand-row-hover) rounded transition-colors cursor-pointer"
         >
-          <X className="w-4 h-4 text-(--widget-muted)" />
+          <X className="w-4 h-4 text-(--brand-muted)" />
         </button>
       ) : showClosePlaceholder ? (
         <div className="w-6 h-6" />

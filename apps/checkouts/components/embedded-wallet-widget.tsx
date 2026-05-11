@@ -91,11 +91,11 @@ function WalletSkeleton() {
           </div>
         </div>
       </div>
-      <div className="p-2 border-t border-(--widget-border) flex gap-2">
+      <div className="p-2 border-t border-(--brand-border) flex gap-2">
         {/* Deposit button placeholder */}
-        <div className="flex-1 h-8 bg-gray-200 rounded-(--widget-radius)" />
+        <div className="flex-1 h-8 bg-gray-200 rounded-(--brand-radius)" />
         {/* Logout button placeholder */}
-        <div className="w-10 h-8 bg-gray-100 rounded-(--widget-radius)" />
+        <div className="w-10 h-8 bg-gray-100 rounded-(--brand-radius)" />
       </div>
     </WidgetCard>
   );
@@ -284,7 +284,7 @@ export default function EmbeddedWalletWidget({
       {/* Wallet Header with Balance */}
       <div className="p-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-(--widget-row) border border-(--widget-border)">
+          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-(--brand-row-bg) border border-(--brand-border)">
             <img
               src={DYNAMIC_ICON_URL}
               alt="Embedded Wallet"
@@ -292,7 +292,7 @@ export default function EmbeddedWalletWidget({
             />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-(--widget-fg)">
+            <p className="text-sm font-medium text-(--brand-fg)">
               Embedded Wallet
             </p>
             <button
@@ -300,41 +300,41 @@ export default function EmbeddedWalletWidget({
               onClick={handleCopyAddress}
               className="flex items-center gap-1 group cursor-pointer"
             >
-              <span className="text-xs text-(--widget-muted) font-mono">
+              <span className="text-xs text-(--brand-muted) font-mono">
                 {truncateAddress(walletAddress, 6, 4)}
               </span>
               {copied ? (
                 <Check className="w-3 h-3 text-green-500" />
               ) : (
-                <Copy className="w-3 h-3 text-(--widget-muted) opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Copy className="w-3 h-3 text-(--brand-muted) opacity-0 group-hover:opacity-100 transition-opacity" />
               )}
             </button>
           </div>
           <div className="text-right">
             {isLoadingBalance ? (
-              <div className="w-4 h-4 border-2 border-(--widget-muted) border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-(--brand-muted) border-t-transparent rounded-full animate-spin" />
             ) : tokenBalance ? (
               <div>
-                <p className="text-lg font-semibold text-(--widget-fg)">
+                <p className="text-lg font-semibold text-(--brand-fg)">
                   {formatUsd(tokenBalance.marketValue)}
                 </p>
               </div>
             ) : (
-              <p className="text-lg font-semibold text-(--widget-fg)">$0.00</p>
+              <p className="text-lg font-semibold text-(--brand-fg)">$0.00</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="p-2 border-t border-(--widget-border) flex gap-2">
+      <div className="p-2 border-t border-(--brand-border) flex gap-2">
         <button
           type="button"
           onClick={handleDeposit}
           className={cn(
-            "flex-1 py-2 rounded-(--widget-radius) text-xs font-medium",
-            "bg-(--widget-primary) text-white",
-            "hover:bg-(--widget-primary-hover) transition-colors cursor-pointer",
+            "flex-1 py-2 rounded-(--brand-radius) text-xs font-medium",
+            "bg-(--brand-primary) text-white",
+            "hover:bg-(--brand-primary-hover) transition-colors cursor-pointer",
             "flex items-center justify-center gap-1.5",
           )}
         >
@@ -345,9 +345,9 @@ export default function EmbeddedWalletWidget({
           type="button"
           onClick={handleLogout}
           className={cn(
-            "py-2 px-3 rounded-(--widget-radius) text-xs font-medium",
-            "bg-white text-(--widget-muted) border border-(--widget-border)",
-            "hover:bg-(--widget-row) hover:text-(--widget-fg) transition-colors cursor-pointer",
+            "py-2 px-3 rounded-(--brand-radius) text-xs font-medium",
+            "bg-white text-(--brand-muted) border border-(--brand-border)",
+            "hover:bg-(--brand-row-bg) hover:text-(--brand-fg) transition-colors cursor-pointer",
             "flex items-center justify-center gap-1.5",
           )}
         >

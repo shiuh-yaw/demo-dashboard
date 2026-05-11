@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { PoweredByFooter } from "@dynamic-demos/ui";
 import PaymentPageLayout from "@/components/payment-page-layout";
-import { type WidgetConfig, themeToCssVars } from "@/lib/widget-config";
+import type { WidgetConfig } from "@/lib/widget-config";
 
 interface WidgetLayoutProps {
   /** Widget configuration */
@@ -18,7 +18,15 @@ interface WidgetLayoutProps {
 
 /**
  * Shared layout component for widget pages.
- * Handles both payment (split-screen) and deposit (centered) layouts.
+ *
+ * Theme tokens (`--brand-*`) are injected at the document level by
+ * `<ThemeStyleTag>` in `app/layout.tsx` (the unified pattern shared with
+ * wallet, remittance, and visa-direct). This component is responsible for
+ * the per-mode chrome: split-screen for payment, centered card for deposit.
+ *
+ * Background colors are sourced from `--brand-page-bg` / `--brand-surface`
+ * — automatically picking up per-config overrides via the inline `<style>`
+ * emitted by `<ThemeStyleTag overridesOnly>` in the root layout.
  */
 export default function WidgetLayout({
   config,
@@ -27,22 +35,19 @@ export default function WidgetLayout({
   footer,
   style,
 }: WidgetLayoutProps) {
-  const themeStyles = themeToCssVars(config.theme ?? {});
   const branding = config.branding;
   const showPoweredBy = branding?.showPoweredBy !== false;
 
   // Payment mode - split screen layout
   if (config.mode === "payment") {
     return (
-      <div style={{ ...themeStyles, ...style } as React.CSSProperties}>
+      <div style={style}>
         <PaymentPageLayout
           paymentAmount={paymentAmount}
           branding={branding}
           paymentPage={config.paymentPage}
         >
-          <div className="w-full max-w-[385px]" style={themeStyles}>
-            {children}
-          </div>
+          <div className="w-full max-w-[385px]">{children}</div>
         </PaymentPageLayout>
         {footer}
       </div>
@@ -53,11 +58,7 @@ export default function WidgetLayout({
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6 gap-2"
-      style={{
-        backgroundColor: config.theme?.pageBackground || "#f6f8fa",
-        ...themeStyles,
-        ...style,
-      }}
+      style={{ backgroundColor: "var(--brand-page-bg)", ...style }}
     >
       {/* Brand Logo */}
       {branding?.logo && (
@@ -69,9 +70,7 @@ export default function WidgetLayout({
       )}
 
       {/* Main Content */}
-      <div className="w-full max-w-[385px]" style={themeStyles}>
-        {children}
-      </div>
+      <div className="w-full max-w-[385px]">{children}</div>
 
       {/* Powered by Dynamic */}
       {showPoweredBy && <PoweredByFooter />}

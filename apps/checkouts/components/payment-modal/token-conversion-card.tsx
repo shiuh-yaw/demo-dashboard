@@ -40,7 +40,7 @@ export default function TokenConversionCard({
       {/* Arrow + Destination Token */}
       {showConversion && destinationToken && (
         <>
-          <div className="w-4 h-4 flex items-center justify-center shrink-0 text-(--widget-muted)">
+          <div className="w-4 h-4 flex items-center justify-center shrink-0 text-(--brand-muted)">
             <ArrowRightIcon />
           </div>
           <TokenDisplay token={destinationToken} gradientDirection="to-l" />
@@ -69,9 +69,9 @@ function TokenDisplay({
   return (
     <div
       className={cn(
-        "flex-1 p-3 rounded-(--widget-radius)",
+        "flex-1 p-3 rounded-(--brand-radius)",
         gradientClass,
-        "from-(--widget-gradient-from) to-(--widget-gradient-to)",
+        "from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)",
       )}
     >
       <div className="flex flex-col items-center gap-1.5">
@@ -85,13 +85,13 @@ function TokenDisplay({
           <div className="w-7 h-7 rounded-full bg-linear-to-br from-purple-400 to-blue-500" />
         )}
         <div className="flex flex-col items-center text-center">
-          <span className="text-xs text-(--widget-muted) tracking-[-0.12px]">
+          <span className="text-xs text-(--brand-muted) tracking-[-0.12px]">
             {token.name}
           </span>
-          <span className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px]">
+          <span className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px]">
             {token.amount} {token.symbol}
           </span>
-          <span className="text-xs text-(--widget-muted) tracking-[-0.12px]">
+          <span className="text-xs text-(--brand-muted) tracking-[-0.12px]">
             {token.usdValue}
           </span>
         </div>

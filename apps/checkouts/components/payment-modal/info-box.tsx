@@ -18,7 +18,7 @@ interface InfoBoxProps {
 
 export default function InfoBox({ iconUrl, iconAlt, message }: InfoBoxProps) {
   return (
-    <div className="bg-linear-to-b from-(--widget-gradient-from) to-(--widget-gradient-to) rounded-(--widget-radius) p-3">
+    <div className="bg-linear-to-b from-(--brand-card-gradient-start) to-(--brand-card-gradient-end) rounded-(--brand-radius) p-3">
       <div className="flex flex-col items-center gap-1.5">
         {iconUrl && (
           <div className="w-7 h-7 shrink-0">
@@ -29,7 +29,7 @@ export default function InfoBox({ iconUrl, iconAlt, message }: InfoBoxProps) {
             />
           </div>
         )}
-        <p className="text-xs text-(--widget-muted) text-center tracking-[-0.12px] leading-4">
+        <p className="text-xs text-(--brand-muted) text-center tracking-[-0.12px] leading-4">
           {message}
         </p>
       </div>

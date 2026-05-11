@@ -53,7 +53,7 @@ function FeeRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs font-medium text-(--widget-muted) tracking-[-0.12px] leading-[18px]">
+      <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
         {label}
       </span>
       <button
@@ -62,7 +62,7 @@ function FeeRow({
         className={cn(
           "text-xs font-medium tracking-[-0.12px] leading-[18px]",
           "hover:opacity-80 transition-colors cursor-pointer",
-          isTotal ? "text-(--widget-fg)" : "text-(--widget-muted)",
+          isTotal ? "text-(--brand-fg)" : "text-(--brand-muted)",
         )}
         title="Click to toggle USD/token view"
       >
@@ -107,7 +107,7 @@ export default function ReviewPaymentScreen({
   return (
     <div className="flex flex-col">
       <ScreenHeader
-        icon={<ThumbsUpIcon size={18} className="text-(--widget-fg)" />}
+        icon={<ThumbsUpIcon size={18} className="text-(--brand-fg)" />}
         title={`Review your ${actionLabel}`}
         subtitle={
           showConversion
@@ -122,7 +122,7 @@ export default function ReviewPaymentScreen({
       />
 
       {/* Token Conversion Section */}
-      <div className="p-3 border-b border-(--widget-border)">
+      <div className="p-3 border-b border-(--brand-border)">
         <TokenConversionCard
           sourceToken={sourceToken}
           destinationToken={destinationToken}
@@ -131,9 +131,9 @@ export default function ReviewPaymentScreen({
 
       {/* Destination Address (for embedded wallet deposits) */}
       {destinationAddress && (
-        <div className="p-3 border-b border-(--widget-border)">
+        <div className="p-3 border-b border-(--brand-border)">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-(--widget-muted) tracking-[-0.12px] leading-[18px]">
+            <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
               Destination
             </span>
             <div className="flex items-center gap-1.5">
@@ -142,7 +142,7 @@ export default function ReviewPaymentScreen({
                 alt="Embedded Wallet"
                 className="w-4 h-4"
               />
-              <span className="text-xs font-medium text-(--widget-fg) tracking-[-0.12px] leading-[18px]">
+              <span className="text-xs font-medium text-(--brand-fg) tracking-[-0.12px] leading-[18px]">
                 {truncateAddress(destinationAddress)}
               </span>
             </div>
@@ -151,7 +151,7 @@ export default function ReviewPaymentScreen({
       )}
 
       {/* Fee Breakdown - click any amount to toggle USD/token view */}
-      <div className="p-3 border-b border-(--widget-border)">
+      <div className="p-3 border-b border-(--brand-border)">
         <div className="flex flex-col gap-[7px]">
           <FeeRow
             label="Item total"
@@ -163,7 +163,7 @@ export default function ReviewPaymentScreen({
             value={displayNetworkFee}
             onToggle={() => setShowTokenAmounts(!showTokenAmounts)}
           />
-          <div className="border-t border-dashed border-(--widget-border)" />
+          <div className="border-t border-dashed border-(--brand-border)" />
           <FeeRow
             label={mode === "deposit" ? "Total" : "Payment fee"}
             value={displayTotalAmount}
@@ -176,7 +176,7 @@ export default function ReviewPaymentScreen({
       {/* Error Message */}
       {error && (
         <div className="px-3 pt-3">
-          <div className="flex items-center justify-between gap-3 p-3 bg-red-50 border border-red-200 rounded-(--widget-radius)">
+          <div className="flex items-center justify-between gap-3 p-3 bg-red-50 border border-red-200 rounded-(--brand-radius)">
             <span className="text-sm text-red-600">{error}</span>
             {onClearError && (
               <button

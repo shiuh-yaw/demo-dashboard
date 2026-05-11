@@ -52,20 +52,6 @@ export const DYNAMIC_SOLANA_NETWORK_ID = 101;
 export type BorderRadiusSize = "xs" | "sm" | "md" | "lg";
 
 /**
- * Border radius scale configuration
- * Each size defines the sm, md (base), and lg (container) radius
- */
-const BORDER_RADIUS_SCALE: Record<
-  BorderRadiusSize,
-  { sm: string; md: string; lg: string }
-> = {
-  xs: { sm: "2px", md: "4px", lg: "6px" },
-  sm: { sm: "4px", md: "6px", lg: "10px" },
-  md: { sm: "6px", md: "10px", lg: "16px" },
-  lg: { sm: "10px", md: "16px", lg: "22px" },
-};
-
-/**
  * Widget theme configuration.
  * All colors should be valid CSS color values (hex, rgb, hsl, etc.)
  */
@@ -375,36 +361,12 @@ export function createWidgetConfig(
   };
 }
 
-/**
- * Converts theme config to CSS custom properties
- *
- * Border radius uses size tokens (sm, md, lg) that map to a scale:
- * - sm: compact/sharp corners
- * - md: default balanced corners
- * - lg: rounded/soft corners
- */
-export function themeToCssVars(theme: WidgetTheme): Record<string, string> {
-  const merged = { ...DEFAULT_THEME, ...theme };
-  const radiusScale = BORDER_RADIUS_SCALE[merged.borderRadius];
-
-  return {
-    "--widget-page-bg": merged.pageBackground,
-    "--widget-bg": merged.background,
-    "--widget-fg": merged.foreground,
-    "--widget-primary": merged.primaryColor,
-    "--widget-primary-hover": merged.primaryHoverColor,
-    "--widget-accent": merged.accentColor,
-    "--widget-row-bg": merged.rowBackground,
-    "--widget-row-hover": merged.rowHoverBackground,
-    "--widget-muted": merged.mutedTextColor,
-    "--widget-border": merged.borderColor,
-    "--widget-gradient-from": merged.gradientFrom,
-    "--widget-gradient-to": merged.gradientTo,
-    "--widget-radius-sm": radiusScale.sm,
-    "--widget-radius": radiusScale.md,
-    "--widget-radius-lg": radiusScale.lg,
-  };
-}
+// Legacy `themeToCssVars` removed in Phase 4 — theme tokens are now injected
+// at the document level via `<ThemeStyleTag>` in `app/layout.tsx` using the
+// `--brand-*` token contract (D-007/D-008). The `themeToBrandTheme` helper
+// in `lib/checkouts-brand.ts` projects the dashboard's stored `WidgetTheme`
+// onto a `Partial<BrandTheme>` overlay consumed by `<ThemeStyleTag
+// overridesOnly>`.
 
 // =============================================================================
 // SWAP CALCULATION HELPERS

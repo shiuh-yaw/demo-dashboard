@@ -61,7 +61,7 @@ export default function WcCatalogList({
 
       {/* Search input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-(--widget-muted)" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-(--brand-muted)" />
         <input
           type="text"
           value={search}
@@ -69,10 +69,10 @@ export default function WcCatalogList({
           placeholder="Search wallets"
           className={cn(
             "w-full h-[38px] pl-8.5 pr-3",
-            "bg-(--widget-row-bg) rounded-(--widget-radius)",
-            "text-sm text-(--widget-fg) placeholder:text-(--widget-muted)",
-            "border border-(--widget-border)",
-            "outline-none focus:border-(--widget-accent)",
+            "bg-(--brand-row-bg) rounded-(--brand-radius)",
+            "text-sm text-(--brand-fg) placeholder:text-(--brand-muted)",
+            "border border-(--brand-border)",
+            "outline-none focus:border-(--brand-accent)",
             "transition-colors",
           )}
         />
@@ -80,7 +80,7 @@ export default function WcCatalogList({
 
       {/* Wallet list */}
       {filteredWallets.length === 0 ? (
-        <p className="text-xs text-(--widget-muted) text-center py-4">
+        <p className="text-xs text-(--brand-muted) text-center py-4">
           {search
             ? "No wallets match your search."
             : "No wallets found for this network."}

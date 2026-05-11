@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*
+ * Canonical `--brand-*` token contract (D-007). Establishes default values
+ * for every `--brand-*` variable consumed by `@dynamic-demos/ui` shared
+ * components. Per-config overrides are layered on top via
+ * `<ThemeStyleTag overridesOnly>` in `app/layout.tsx` (D-008).
+ */
+@import "@dynamic-demos/theme/defaults.css";
+
 /* Include shared packages for Tailwind class scanning */
 @source "../../packages/ui/src/**/*.tsx";
 @source "../../packages/ui/src/**/*.ts";
@@ -47,25 +55,55 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/*
+ * Checkouts-brand override of the canonical --brand-* contract (D-007).
+ * Checkouts' design language is charcoal-on-near-white with a blue accent
+ * and tighter radii — distinct from the proceeds-sourced defaults shipped
+ * by @dynamic-demos/theme/defaults.css. We keep the contract (--brand-*
+ * names) and only diverge on values, so per-config theming via
+ * <ThemeStyleTag> in `app/layout.tsx` can layer cleanly on top.
+ */
 :root {
   --radius: 0.625rem;
 
-  /* Widget Theme Variables (defaults) */
-  --widget-page-bg: #f6f8fa;
-  --widget-bg: #ffffff;
-  --widget-fg: #000000;
-  --widget-primary: #121212;
-  --widget-primary-hover: #2a2a2a;
-  --widget-accent: #4779ff;
-  --widget-row-bg: #f6f8f8;
-  --widget-row-hover: #eef1f1;
-  --widget-muted: #9a9a9a;
-  --widget-border: #e7e8ed;
-  --widget-gradient-from: #daffff;
-  --widget-gradient-to: rgba(218, 255, 255, 0.15);
-  --widget-radius-sm: 6px;
-  --widget-radius: 10px;
-  --widget-radius-lg: 22px;
+  --brand-page-bg: #f6f8fa;
+  --brand-surface: #ffffff;
+  --brand-fg: #000000;
+  --brand-primary: #121212;
+  --brand-primary-hover: #2a2a2a;
+  --brand-accent: #4779ff;
+  --brand-row-bg: #f6f8f8;
+  --brand-row-hover: #eef1f1;
+  --brand-muted: #9a9a9a;
+  --brand-border: #e7e8ed;
+  --brand-card-gradient-start: #daffff;
+  --brand-card-gradient-end: rgba(218, 255, 255, 0.15);
+  --brand-radius-sm: 6px;
+  --brand-radius: 10px;
+  --brand-radius-lg: 22px;
+
+  /*
+   * `--widget-*` compat aliases for shared `packages/ui` components
+   * (AuthLayout, etc.) that haven't migrated to `--brand-*` yet. These
+   * track the brand contract above so per-config <ThemeStyleTag>
+   * overrides cascade through cleanly. Retire when packages/ui migrates.
+   */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface);
+  --widget-fg: var(--brand-fg);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
+  --widget-gradient-from: var(--brand-card-gradient-start);
+  --widget-gradient-to: var(--brand-card-gradient-end);
+  --widget-radius-sm: var(--brand-radius-sm);
+  --widget-radius: var(--brand-radius);
+  --widget-radius-lg: var(--brand-radius-lg);
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);

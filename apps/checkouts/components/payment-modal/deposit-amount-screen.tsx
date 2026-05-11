@@ -94,7 +94,7 @@ export default function DepositAmountScreen({
   return (
     <div className="flex flex-col">
       <ScreenHeader
-        icon={<DollarCircleIcon size={18} className="text-(--widget-fg)" />}
+        icon={<DollarCircleIcon size={18} className="text-(--brand-fg)" />}
         title="Deposit from wallet"
         subtitle="Enter an amount you want to deposit"
       />
@@ -105,7 +105,7 @@ export default function DepositAmountScreen({
           onClick={handleContainerClick}
           className={cn(
             "w-full h-[127px] flex items-center justify-center",
-            "bg-(--widget-row-bg) rounded-(--widget-radius)",
+            "bg-(--brand-row-bg) rounded-(--brand-radius)",
             "relative cursor-text",
           )}
         >
@@ -130,12 +130,12 @@ export default function DepositAmountScreen({
           <span
             className={cn(
               "text-[31px] font-medium tracking-[-0.31px] flex items-center pointer-events-none",
-              amount ? "text-(--widget-fg)" : "text-(--widget-muted)",
+              amount ? "text-(--brand-fg)" : "text-(--brand-muted)",
             )}
           >
             {formatDisplayAmount()}
             {isFocused && (
-              <span className="w-[2px] h-8 bg-(--widget-accent) ml-0.5 animate-pulse" />
+              <span className="w-[2px] h-8 bg-(--brand-accent) ml-0.5 animate-pulse" />
             )}
           </span>
         </div>
@@ -151,8 +151,8 @@ export default function DepositAmountScreen({
                 "px-2 py-1 rounded-[30px] text-[11px] font-medium leading-4",
                 "transition-colors cursor-pointer",
                 selectedPreset === preset
-                  ? "bg-(--widget-row-hover) text-(--widget-primary)"
-                  : "bg-(--widget-row-bg) text-(--widget-muted) hover:bg-(--widget-row-hover)",
+                  ? "bg-(--brand-row-hover) text-(--brand-primary)"
+                  : "bg-(--brand-row-bg) text-(--brand-muted) hover:bg-(--brand-row-hover)",
               )}
             >
               ${preset.toLocaleString()}
@@ -169,7 +169,7 @@ export default function DepositAmountScreen({
       </div>
 
       {/* Footer Button */}
-      <div className="p-3 border-t border-(--widget-border)">
+      <div className="p-3 border-t border-(--brand-border)">
         <Button
           onClick={handleConfirm}
           disabled={!canConfirm}

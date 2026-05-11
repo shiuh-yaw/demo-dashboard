@@ -105,7 +105,7 @@ export function PendingScreen({
     <WidgetCard isTransitioning={isTransitioning}>
       <div className="flex flex-col">
         <ScreenHeader
-          icon={<CashIcon size={18} className="text-(--widget-fg)" />}
+          icon={<CashIcon size={18} className="text-(--brand-fg)" />}
           title={`${actionLabel} Pending`}
           onClose={onClose}
         />
@@ -117,10 +117,10 @@ export function PendingScreen({
           </div>
 
           <div className="text-center">
-            <p className="text-sm font-medium text-(--widget-fg) mb-1">
+            <p className="text-sm font-medium text-(--brand-fg) mb-1">
               Transaction pending confirmation
             </p>
-            <p className="text-xs text-(--widget-muted)">
+            <p className="text-xs text-(--brand-muted)">
               Your {actionLabel.toLowerCase()} is being processed on the
               blockchain
             </p>
@@ -130,12 +130,12 @@ export function PendingScreen({
         {/* Transaction Info */}
         {transactionId && (
           <div className="px-3 pb-3">
-            <div className="border border-(--widget-border) rounded-(--widget-radius) p-3">
+            <div className="border border-(--brand-border) rounded-(--brand-radius) p-3">
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-(--widget-muted)">
+                <span className="text-xs text-(--brand-muted)">
                   Transaction ID
                 </span>
-                <span className="text-xs font-mono text-(--widget-fg) break-all">
+                <span className="text-xs font-mono text-(--brand-fg) break-all">
                   {transactionId}
                 </span>
               </div>
@@ -144,7 +144,7 @@ export function PendingScreen({
         )}
 
         {/* Footer Actions */}
-        <div className="p-3 border-t border-(--widget-border)">
+        <div className="p-3 border-t border-(--brand-border)">
           <div className="flex gap-2">
             {explorerUrl && (
               <Button

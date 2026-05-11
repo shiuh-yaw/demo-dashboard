@@ -275,13 +275,13 @@ export default function AssetSelectorScreen({
   return (
     <div className="flex flex-col">
       {/* Header Section (includes wallet switcher) */}
-      <div className="border-b border-(--widget-border)">
+      <div className="border-b border-(--brand-border)">
         <ScreenHeader
-          icon={<DollarCircleIcon size={18} className="text-(--widget-fg)" />}
+          icon={<DollarCircleIcon size={18} className="text-(--brand-fg)" />}
           title={
             <>
               {actionLabel}{" "}
-              <span className="text-(--widget-accent)">
+              <span className="text-(--brand-accent)">
                 {formattedPaymentAmount}
               </span>
             </>
@@ -299,10 +299,10 @@ export default function AssetSelectorScreen({
               onClick={onSwitchWallet}
               className={cn(
                 "w-full h-[46px] flex items-center justify-between",
-                "bg-(--widget-row-bg) rounded-(--widget-radius)",
+                "bg-(--brand-row-bg) rounded-(--brand-radius)",
                 "pl-3 pr-2.5 py-1.5",
                 "transition-all duration-150",
-                "hover:bg-(--widget-row-hover) active:opacity-80",
+                "hover:bg-(--brand-row-hover) active:opacity-80",
                 "cursor-pointer",
               )}
             >
@@ -316,25 +316,25 @@ export default function AssetSelectorScreen({
                     className="w-7 h-7 object-contain rounded"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-(--widget-row-hover)" />
+                  <div className="w-7 h-7 rounded-full bg-(--brand-row-hover)" />
                 )}
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px]">
+                  <span className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px]">
                     {walletInfo.name}
                   </span>
                   {walletInfo.address && (
-                    <span className="text-xs text-(--widget-muted) tracking-[-0.12px]">
+                    <span className="text-xs text-(--brand-muted) tracking-[-0.12px]">
                       {truncateAddress(walletInfo.address)}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 px-2 py-1 rounded-[30px] bg-(--widget-row-hover)">
-                <span className="text-[11px] font-medium text-(--widget-muted) leading-4">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-[30px] bg-(--brand-row-hover)">
+                <span className="text-[11px] font-medium text-(--brand-muted) leading-4">
                   Switch
                 </span>
-                <ChevronDown className="w-3 h-3 text-(--widget-muted)" />
+                <ChevronDown className="w-3 h-3 text-(--brand-muted)" />
               </div>
             </button>
           </div>
@@ -358,7 +358,7 @@ export default function AssetSelectorScreen({
             {[1, 2].map((i) => (
               <div
                 key={i}
-                className="w-full h-[46px] flex items-center justify-between bg-(--widget-row-bg) rounded-(--widget-radius) pl-3 pr-2.5"
+                className="w-full h-[46px] flex items-center justify-between bg-(--brand-row-bg) rounded-(--brand-radius) pl-3 pr-2.5"
               >
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-7 h-7 rounded-full" />
@@ -412,7 +412,7 @@ export default function AssetSelectorScreen({
                 }
                 onClick={() => handleTokenSelect(token)}
                 rightContent={
-                  <span className="text-sm font-medium text-(--widget-fg,#000) tracking-[-0.14px]">
+                  <span className="text-sm font-medium text-(--brand-fg,#000) tracking-[-0.14px]">
                     {token.usdValue}
                   </span>
                 }
@@ -425,8 +425,8 @@ export default function AssetSelectorScreen({
                 onClick={() => setShowAllTokens(!showAllTokens)}
                 className={cn(
                   "w-full py-2 mt-1",
-                  "text-xs font-medium text-(--widget-muted)",
-                  "hover:text-(--widget-accent) transition-colors",
+                  "text-xs font-medium text-(--brand-muted)",
+                  "hover:text-(--brand-accent) transition-colors",
                   "cursor-pointer",
                 )}
               >
@@ -441,7 +441,7 @@ export default function AssetSelectorScreen({
         {/* Empty State */}
         {!isLoadingBalances && !balanceError && tokens.length === 0 && (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-(--widget-muted) text-center px-4">
+            <p className="text-sm text-(--brand-muted) text-center px-4">
               No tokens with sufficient balance to {actionLabel.toLowerCase()}{" "}
               {formattedPaymentAmount}
             </p>

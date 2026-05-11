@@ -101,7 +101,7 @@ export default function TransactionProgressScreen({
   return (
     <div className="flex flex-col">
       <ScreenHeader
-        icon={<CashIcon size={18} className="text-(--widget-fg)" />}
+        icon={<CashIcon size={18} className="text-(--brand-fg)" />}
         title={
           isCompleted
             ? `${actionLabel} Complete`
@@ -122,11 +122,11 @@ export default function TransactionProgressScreen({
       </div>
 
       {/* Divider */}
-      <div className="border-t border-(--widget-border)" />
+      <div className="border-t border-(--brand-border)" />
 
       {/* Progress Steps */}
       <div className="p-3">
-        <div className="border border-(--widget-border) rounded-(--widget-radius) p-3">
+        <div className="border border-(--brand-border) rounded-(--brand-radius) p-3">
           <div className="flex flex-col">
             {steps.map((step, index) => {
               const isLast = index === steps.length - 1;
@@ -145,7 +145,7 @@ export default function TransactionProgressScreen({
                       <div
                         className={cn(
                           "w-0.5 flex-1 my-1 min-h-[16px] rounded-full",
-                          lineIsGreen ? "bg-[#46B463]" : "bg-(--widget-border)",
+                          lineIsGreen ? "bg-[#46B463]" : "bg-(--brand-border)",
                         )}
                       />
                     )}
@@ -154,10 +154,10 @@ export default function TransactionProgressScreen({
                   <div
                     className={cn("flex flex-col gap-0.5", !isLast && "pb-4")}
                   >
-                    <span className="text-sm font-medium tracking-[-0.14px] leading-5 text-(--widget-fg)">
+                    <span className="text-sm font-medium tracking-[-0.14px] leading-5 text-(--brand-fg)">
                       {step.title}
                     </span>
-                    <span className="text-xs text-(--widget-muted) tracking-[-0.12px] leading-4">
+                    <span className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-4">
                       {step.description}
                     </span>
                   </div>
@@ -170,7 +170,7 @@ export default function TransactionProgressScreen({
 
       {/* Error Message */}
       {error && (
-        <div className="mx-3 mb-3 p-3 bg-red-50 border border-red-200 rounded-(--widget-radius) flex items-center gap-2">
+        <div className="mx-3 mb-3 p-3 bg-red-50 border border-red-200 rounded-(--brand-radius) flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
           <p className="text-xs text-red-800 flex-1">{error}</p>
         </div>
@@ -178,7 +178,7 @@ export default function TransactionProgressScreen({
 
       {/* Footer - only show when completed or failed */}
       {(isCompleted || hasFailed) && (
-        <div className="p-3 border-t border-(--widget-border)">
+        <div className="p-3 border-t border-(--brand-border)">
           {hasFailed && onRetry ? (
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose} className="flex-1">

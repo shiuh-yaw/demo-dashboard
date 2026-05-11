@@ -26,7 +26,7 @@ export default function ErrorBanner({ error, onDismiss }: ErrorBannerProps) {
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 p-2.5 rounded-(--widget-radius) mb-1.5",
+        "flex items-start gap-2.5 p-2.5 rounded-(--brand-radius) mb-1.5",
         error.type === "error"
           ? "bg-red-50 border border-red-100"
           : "bg-amber-50 border border-amber-100",

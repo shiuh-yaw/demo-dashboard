@@ -1,30 +1,13 @@
+import { headers } from "next/headers";
 import PaymentWidget from "@/components/payment-widget";
 import WidgetLayout from "@/components/widget-layout";
 import {
   type WidgetConfig,
-  type WidgetMode,
   type TransactionConfig,
   DEPOSIT_CONFIG,
-  PAYMENT_CONFIG,
+  createWidgetConfig,
 } from "@/lib/widget-config";
-
-/**
- * Server-side config fetch simulation.
- * In production, this would fetch from your API:
- *   const config = await fetch('/api/widget-config').then(r => r.json());
- */
-async function getWidgetConfig(mode: WidgetMode): Promise<WidgetConfig> {
-  const baseConfig = mode === "deposit" ? DEPOSIT_CONFIG : PAYMENT_CONFIG;
-
-  // Apply appropriate theme based on mode
-  // Payment mode uses light theme to match Figma design
-  return {
-    ...baseConfig,
-    // theme: mode === "payment" ? lightTheme : darkTheme,
-    // branding: customBranding,
-    // paymentPage: mode === "payment" ? customPaymentPage : undefined,
-  };
-}
+import { getCheckoutConfig } from "@/lib/api/checkouts";
 
 export default async function Page({
   searchParams,
@@ -32,23 +15,31 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const query = await searchParams;
+  const headersList = await headers();
+  const configId = headersList.get("x-checkouts-config-id");
 
-  // Change to "payment" for fixed amount mode
-  const config = await getWidgetConfig("deposit");
+  // When a brand config is selected (via `?theme=`, sticky cookie, or
+  // legacy `/w/[id]` path) the middleware forwards its id as
+  // `x-checkouts-config-id`. Fetch the full WidgetConfig so the
+  // merchant logo + name + settlement chain render correctly. The root
+  // layout fetches the same id; Next.js dedupes the round-trip via the
+  // `revalidate: 60` data cache. With no id we fall back to the
+  // unbranded demo deposit config.
+  const stored = configId ? await getCheckoutConfig(configId) : null;
+  const config: WidgetConfig = stored
+    ? createWidgetConfig(stored.config)
+    : { ...DEPOSIT_CONFIG };
 
-  // Detect OAuth redirect (exchange connection returning from provider)
   const isOAuthRedirect = !!(query.dynamicOauthCode && query.dynamicOauthState);
 
-  // Per-transaction values - in a real app, these would come from your checkout flow
   const transaction: TransactionConfig = {
-    // Payment amount for this specific order (payment mode only)
-    paymentAmount: 19.0,
+    paymentAmount: config.defaultPaymentAmount ?? 19.0,
   };
 
   return (
     <WidgetLayout config={config} paymentAmount={transaction.paymentAmount}>
       <PaymentWidget
-        checkoutId="demo-checkout-id"
+        checkoutId={configId ?? "demo-checkout-id"}
         config={config}
         transaction={transaction}
         isOAuthRedirect={isOAuthRedirect}

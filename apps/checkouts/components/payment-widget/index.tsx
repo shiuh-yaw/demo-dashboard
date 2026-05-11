@@ -347,8 +347,8 @@ export default function PaymentWidget({
       {screen.type === "exchange-connecting" && (
         <WidgetCard isTransitioning={isTransitioning}>
           <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <div className="w-8 h-8 border-2 border-(--widget-accent) border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-(--widget-muted)">
+            <div className="w-8 h-8 border-2 border-(--brand-accent) border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-(--brand-muted)">
               Completing sign-in...
             </p>
           </div>

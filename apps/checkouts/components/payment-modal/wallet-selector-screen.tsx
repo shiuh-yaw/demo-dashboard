@@ -428,8 +428,8 @@ export default function WalletSelectorScreen({
   if (loading) {
     return (
       <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-[43px] w-full rounded-(--widget-radius)" />
-        <Skeleton className="h-[43px] w-full rounded-(--widget-radius)" />
+        <Skeleton className="h-[43px] w-full rounded-(--brand-radius)" />
+        <Skeleton className="h-[43px] w-full rounded-(--brand-radius)" />
       </div>
     );
   }
@@ -457,9 +457,9 @@ export default function WalletSelectorScreen({
     if (catalogLoading) {
       return (
         <div className="flex flex-col gap-1.5">
-          <Skeleton className="h-[70px] w-full rounded-(--widget-radius)" />
-          <Skeleton className="h-[43px] w-full rounded-(--widget-radius)" />
-          <Skeleton className="h-[43px] w-full rounded-(--widget-radius)" />
+          <Skeleton className="h-[70px] w-full rounded-(--brand-radius)" />
+          <Skeleton className="h-[43px] w-full rounded-(--brand-radius)" />
+          <Skeleton className="h-[43px] w-full rounded-(--brand-radius)" />
         </div>
       );
     }
@@ -511,11 +511,11 @@ export default function WalletSelectorScreen({
         {renderExchangeRows()}
 
         <div className="flex items-center gap-2 my-1">
-          <div className="flex-1 h-px bg-(--widget-border)" />
-          <span className="text-[10px] text-(--widget-muted) uppercase tracking-wider">
+          <div className="flex-1 h-px bg-(--brand-border)" />
+          <span className="text-[10px] text-(--brand-muted) uppercase tracking-wider">
             or install
           </span>
-          <div className="flex-1 h-px bg-(--widget-border)" />
+          <div className="flex-1 h-px bg-(--brand-border)" />
         </div>
 
         {POPULAR_WALLETS.map((wallet) => (
@@ -526,10 +526,10 @@ export default function WalletSelectorScreen({
             rel="noopener noreferrer"
             className={cn(
               "w-full h-[43px] flex items-center justify-between",
-              "bg-(--widget-row-bg) rounded-(--widget-radius)",
+              "bg-(--brand-row-bg) rounded-(--brand-radius)",
               "pl-3 pr-2.5 py-1",
               "transition-all duration-150",
-              "hover:bg-(--widget-row-hover) active:opacity-80",
+              "hover:bg-(--brand-row-hover) active:opacity-80",
               "cursor-pointer no-underline",
             )}
           >
@@ -541,11 +541,11 @@ export default function WalletSelectorScreen({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px] leading-5">
+              <span className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5">
                 {wallet.name}
               </span>
             </div>
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-(--widget-accent)/10 text-(--widget-accent)">
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-(--brand-accent)/10 text-(--brand-accent)">
               Install
             </span>
           </a>
@@ -609,9 +609,9 @@ export default function WalletSelectorScreen({
             disabled={connecting !== null}
             onClick={() => handleWalletSelect(wallet)}
             rightContent={
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-[30px] bg-(--widget-row-hover,#eef1f1)">
-                <div className="w-1.5 h-1.5 rounded-full bg-(--widget-accent,#4779ff)" />
-                <span className="text-[11px] font-medium text-(--widget-muted,#9a9a9a) leading-4">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-[30px] bg-(--brand-row-hover,#eef1f1)">
+                <div className="w-1.5 h-1.5 rounded-full bg-(--brand-accent,#4779ff)" />
+                <span className="text-[11px] font-medium text-(--brand-muted,#9a9a9a) leading-4">
                   Installed
                 </span>
               </div>
@@ -625,11 +625,11 @@ export default function WalletSelectorScreen({
 
       {(walletGroups.length > 0 || exchanges.length > 0) && (
         <div className="flex items-center gap-2 my-1">
-          <div className="flex-1 h-px bg-(--widget-border)" />
-          <span className="text-[10px] text-(--widget-muted) uppercase tracking-wider">
+          <div className="flex-1 h-px bg-(--brand-border)" />
+          <span className="text-[10px] text-(--brand-muted) uppercase tracking-wider">
             or
           </span>
-          <div className="flex-1 h-px bg-(--widget-border)" />
+          <div className="flex-1 h-px bg-(--brand-border)" />
         </div>
       )}
 

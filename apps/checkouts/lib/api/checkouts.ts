@@ -5,6 +5,7 @@
  * This runs server-side for SSR/SSG checkout pages.
  */
 
+import { cache } from "react";
 import {
   Status,
   type StoredCheckoutConfig,
@@ -16,9 +17,17 @@ import { serverPost } from "./server-client";
 const DASHBOARD_API_URL = env.NEXT_PUBLIC_DASHBOARD_API_URL;
 
 /**
- * Fetch a checkout configuration by ID from the dashboard API
+ * Fetch a checkout configuration by ID from the dashboard API.
+ *
+ * Wrapped in React `cache()` so the root layout, the `[id]` validation
+ * layout, and per-page fetches dedupe within a single render — a key
+ * piece of the unified theme injection pattern (the layout needs the
+ * config for `<ThemeStyleTag>`, while pages still need the full stored
+ * record for transaction logic).
  */
-export async function getCheckoutConfig(
+export const getCheckoutConfig = cache(_getCheckoutConfig);
+
+async function _getCheckoutConfig(
   id: string,
 ): Promise<StoredCheckoutConfig | null> {
   try {
