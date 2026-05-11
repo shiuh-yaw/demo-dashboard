@@ -206,3 +206,25 @@ The team has access to Dynamic SDK source. Where AGENTS.md or skill scaffolding 
 `packages/dynamic/AGENTS.md` includes a `provider.source: <repo-path>` field pointing at the SDK source. Phase 6 skill includes SDK source as reference when generating Dynamic-related code (verifies methods/types exist before emitting). Phase 1D wraps SDK primitives mirroring the SDK's actual API surface, not docs reconstruction.
 
 Optional Phase 8: publish authoritative `llms.txt` for the Dynamic SDK so external AI consumers benefit from the same authority.
+
+---
+
+## D-028 — Brand is the source of truth for theme; demos may carry per-config overrides
+
+Per-demo-type config tables (`CheckoutConfig`, `EarnConfig`, `WalletConfig`, `RemittanceConfig`, `TradeConfig`, `VisaDirectConfig`, `DepositConfig`, `ShopConfig`, `SandwichConfig`) reference `Brand` via a `brandId` foreign key and **do not** carry their own copies of the visual theme columns. The legacy "every demo embeds its own theme" shape (pre-Phase 2) is retired.
+
+Each demo config table additionally carries an optional `themeOverrides Json?` column. When non-null, the rendered theme is the merge `brand.theme ⊕ themeOverrides` (overrides win per token). When null, the demo renders the brand's theme as-is. Default behavior is no override.
+
+**Why:**
+- Single source of truth: editing a brand's primary color updates every demo for that brand. Pre-Phase 2 required editing each demo separately.
+- Matches operator mental model: "create brand X, spin up demos using it." `brandId` references make that flow first-class.
+- Eliminates duplication: the Phase 2-brand-cutover backfill collapsed 115 legacy demo records onto ~95 deduped Brand rows, proving the embedded theme was redundant copy-paste in the common case.
+- Preserves flexibility for the rare case (e.g., "Amex Earn wants a premium dark variant of the standard Amex blue") via `themeOverrides` without another schema migration.
+
+**How to apply (per-demo-type cutover migrations):**
+1. Add `brandId String` FK + nullable `themeOverrides Json?` to the demo config table (already structurally true for `RemittanceConfig` from PR #59 — `config: Json` becomes the override carrier; embedded theme columns never landed there).
+2. Backfill: hash each legacy demo's embedded theme via the same `(ownerId, primaryColor, logoUrl)` derivation used in `apps/dashboard/scripts/backfill-brands/`. Match to existing `bf_<24-hex>` Brand row; upsert one if absent. Set `brandId`. If the demo's full theme exactly matches the brand's, leave `themeOverrides` null. If it diverges, capture the deltas as `themeOverrides`.
+3. Drop the embedded theme columns from the demo config table in a follow-up migration once the new `brandId` reference is verified in production.
+4. Service abstraction: each demo config service fetches the joined `Brand` (or its bundle of theme tokens) when assembling the payload returned to the demo app.
+5. Frontend: `<ThemeStyleTag>` already takes a fetched theme — no signature change. The fetch call swaps from "read demo config's embedded theme" to "fetch brand by id, apply overrides."
+6. Spark26 zero-touch (D-006): no migration touches `apps/spark26/`.

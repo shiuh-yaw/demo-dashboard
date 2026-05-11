@@ -271,9 +271,22 @@ Repeat the PR 2-remittance pattern for each:
 
 One PR per type. Or batch 2-3 if extremely small. Spark26 has no dashboard config and is excluded.
 
+### D-028 — brand reference + theme overrides (mandatory shape for every per-demo cutover)
+
+Every demo config table created in this batch follows the D-028 contract:
+
+- **Schema:** `brandId String` FK to `Brand` (NOT NULL — every demo belongs to a brand) plus `themeOverrides Json?` (nullable). Demo-specific config (rails, supported tokens, settlement) lives alongside as first-class columns or in a `config: Json` carrier.
+- **No embedded theme columns.** The visual theme tokens stay on `Brand`. Don't copy `primaryColor`/`pageBackground`/etc. onto the demo config table.
+- **Backfill:** hash each legacy demo's embedded theme via the same `(ownerId, primaryColor, logoUrl)` derivation used in `apps/dashboard/scripts/backfill-brands/`. Match to existing `bf_<24-hex>` Brand row; upsert if absent. Set `brandId`. If the demo's theme exactly matches the brand's, leave `themeOverrides` null. If it diverges, capture deltas as `themeOverrides`.
+- **Service abstraction:** each demo config service joins to `Brand` (or hydrates with `services.brands.get(brandId)`) when assembling the payload returned to the demo app. The merge `brand.theme ⊕ themeOverrides` happens at the service boundary so consumers receive a single resolved theme.
+- **Frontend:** `<ThemeStyleTag>` already takes a fetched theme — no signature change. The per-config theme fetch swaps from "read demo's embedded theme" to "fetch brand + apply overrides."
+- **Embedded-theme cleanup migration:** dropping legacy embedded theme columns from the Postgres table is a separate **follow-up** migration after the new `brandId` reference is verified in production. Don't drop in the same PR that adds the FK.
+
+`RemittanceConfig` (PR #59) is already structurally aligned — it has `brandId` FK and `config: Json` (no embedded theme columns). Its cutover is the smallest delta; remaining demo types follow this same shape.
+
 ### Acceptance criteria (per PR)
 
-Same shape as 2-remittance. Each migration is independently shippable.
+Same shape as 2-remittance, plus the D-028 contract above. Each migration is independently shippable.
 
 ---
 
