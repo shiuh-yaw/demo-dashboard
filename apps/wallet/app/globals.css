@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@dynamic-demos/theme/defaults.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../packages/ui/src/**/*.tsx";
@@ -6,67 +7,50 @@
 
 /*
  * Class-based dark mode (opt out of Tailwind v4's default media-query dark mode).
- * Wallet is light-only today. Phase 4 (theming) will deliver real dark mode.
+ * Wallet is light-only today. A future iteration will deliver real dark mode.
  * Without this, system dark mode triggers `dark:` variants in shared components
  * (e.g. <DynamicLogo>'s wordmark `dark:fill-[#E5E5E7]`) while the page chrome
  * remains light — producing invisible-logo / low-contrast bugs.
  */
 @variant dark (&:where(.dark, .dark *));
 
+/*
+ * Wallet-brand override of the canonical --brand-* contract (D-007).
+ * Wallet's design language is charcoal-on-light with a blue accent and
+ * tighter radii — distinct from the proceeds-sourced defaults. We keep
+ * the contract (--brand-* names) and only diverge on values, so future
+ * per-config theming via <ThemeStyleTag> can layer cleanly on top.
+ */
 :root {
-  /* Widget Theme Variables */
-  --widget-page-bg: #f6f8fa;
-  --widget-bg: #ffffff;
-  --widget-fg: #000000;
-  --widget-primary: #121212;
-  --widget-primary-hover: #2a2a2a;
-  --widget-accent: #4779ff;
-  --widget-row-bg: #f6f8f8;
-  --widget-row-hover: #eef1f1;
-  --widget-muted: #9a9a9a;
-  --widget-border: #e7e8ed;
-  --widget-success: #22c55e;
-  --widget-error: #ef4444;
-  --widget-radius-sm: 6px;
-  --widget-radius: 10px;
-  --widget-radius-lg: 22px;
-}
+  --brand-page-bg: #f6f8fa;
+  --brand-fg: #000000;
+  --brand-primary: #121212;
+  --brand-primary-hover: #2a2a2a;
+  --brand-accent: #4779ff;
+  --brand-row-bg: #f6f8f8;
+  --brand-row-hover: #eef1f1;
+  --brand-muted: #9a9a9a;
+  --brand-border: #e7e8ed;
+  --brand-success: #22c55e;
+  --brand-error: #ef4444;
+  --brand-radius-sm: 6px;
+  --brand-radius: 10px;
+  --brand-radius-lg: 22px;
 
-@layer base {
-  * {
-    @apply border-(--widget-border);
-  }
-  body {
-    @apply bg-(--widget-page-bg) text-(--widget-fg);
-    font-family:
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      Roboto,
-      sans-serif;
-  }
-}
-
-/* Custom scrollbar styles */
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--widget-border) transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: var(--widget-border);
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: var(--widget-muted);
+  /*
+   * `--widget-*` compat aliases for shared `packages/ui` components
+   * (AuthLayout, etc.) that haven't migrated to `--brand-*` yet. These
+   * track the brand contract above so per-config <ThemeStyleTag>
+   * overrides cascade through cleanly. Retire when packages/ui migrates.
+   */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface, #ffffff);
+  --widget-fg: var(--brand-fg);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+  --widget-row-bg: var(--brand-row-bg);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-muted: var(--brand-muted);
+  --widget-border: var(--brand-border);
 }

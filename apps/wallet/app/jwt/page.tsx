@@ -104,7 +104,7 @@ export default function JwtGeneratorPage() {
 
   return (
     <>
-      <div className="min-h-screen flex w-full bg-(--widget-page-bg)">
+      <div className="min-h-screen flex w-full bg-(--brand-page-bg)">
         {/* Left: card (pushed left when panel open) */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4 min-w-0">
           <div className="w-full max-w-[400px]">
@@ -125,7 +125,7 @@ export default function JwtGeneratorPage() {
                     label={
                       <span className="flex items-center gap-1">
                         Email
-                        <span className="text-(--widget-muted) font-normal">
+                        <span className="text-(--brand-muted) font-normal">
                           (optional)
                         </span>
                       </span>
@@ -157,13 +157,13 @@ export default function JwtGeneratorPage() {
                     </Button>
                   </div>
                   {error && (
-                    <div className="text-xs text-(--widget-error) bg-red-50 rounded-(--widget-radius) px-3 py-2 space-y-1">
+                    <div className="text-xs text-(--brand-error) bg-red-50 rounded-(--brand-radius) px-3 py-2 space-y-1">
                       <p>{error}</p>
                       {isConfigError && (
                         <button
                           type="button"
                           onClick={() => setShowSetup(true)}
-                          className="text-(--widget-primary) hover:underline cursor-pointer"
+                          className="text-(--brand-primary) hover:underline cursor-pointer"
                         >
                           View setup instructions
                         </button>
@@ -175,46 +175,46 @@ export default function JwtGeneratorPage() {
                 {/* Token output */}
                 {token && (
                   <>
-                    <div className="h-px bg-(--widget-border)" />
+                    <div className="h-px bg-(--brand-border)" />
 
                     <div className="space-y-3">
                       <div className="relative">
-                        <pre className="text-[11px] font-mono leading-relaxed bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius) p-3 pr-10 overflow-x-auto whitespace-pre-wrap break-all text-(--widget-fg) max-h-24 overflow-y-auto">
+                        <pre className="text-[11px] font-mono leading-relaxed bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius) p-3 pr-10 overflow-x-auto whitespace-pre-wrap break-all text-(--brand-fg) max-h-24 overflow-y-auto">
                           {token}
                         </pre>
                         <button
                           type="button"
                           onClick={handleCopy}
-                          className="absolute top-2 right-2 p-1.5 rounded-(--widget-radius) bg-(--widget-bg) border border-(--widget-border) hover:bg-(--widget-row-hover) transition-colors cursor-pointer"
+                          className="absolute top-2 right-2 p-1.5 rounded-(--brand-radius) bg-(--brand-surface) border border-(--brand-border) hover:bg-(--brand-row-hover) transition-colors cursor-pointer"
                           aria-label="Copy token"
                         >
                           {copied ? (
                             <Check className="w-3.5 h-3.5 text-green-500" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5 text-(--widget-muted)" />
+                            <Copy className="w-3.5 h-3.5 text-(--brand-muted)" />
                           )}
                         </button>
                       </div>
 
                       {decoded && (
                         <details className="group">
-                          <summary className="text-[11px] text-(--widget-muted) cursor-pointer hover:text-(--widget-fg) transition-colors">
+                          <summary className="text-[11px] text-(--brand-muted) cursor-pointer hover:text-(--brand-fg) transition-colors">
                             View decoded payload
                           </summary>
                           <div className="mt-2 space-y-2">
                             <div>
-                              <p className="text-[10px] font-medium text-(--widget-muted) uppercase tracking-wider mb-1">
+                              <p className="text-[10px] font-medium text-(--brand-muted) uppercase tracking-wider mb-1">
                                 Header
                               </p>
-                              <pre className="text-[11px] font-mono bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius) p-2 overflow-x-auto text-(--widget-fg)">
+                              <pre className="text-[11px] font-mono bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius) p-2 overflow-x-auto text-(--brand-fg)">
                                 {JSON.stringify(decoded.header, null, 2)}
                               </pre>
                             </div>
                             <div>
-                              <p className="text-[10px] font-medium text-(--widget-muted) uppercase tracking-wider mb-1">
+                              <p className="text-[10px] font-medium text-(--brand-muted) uppercase tracking-wider mb-1">
                                 Payload
                               </p>
-                              <pre className="text-[11px] font-mono bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius) p-2 overflow-x-auto text-(--widget-fg)">
+                              <pre className="text-[11px] font-mono bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius) p-2 overflow-x-auto text-(--brand-fg)">
                                 {JSON.stringify(decoded.payload, null, 2)}
                               </pre>
                             </div>
@@ -223,11 +223,11 @@ export default function JwtGeneratorPage() {
                       )}
                     </div>
 
-                    <div className="h-px bg-(--widget-border)" />
+                    <div className="h-px bg-(--brand-border)" />
 
                     <Link
                       href="/"
-                      className="flex items-center justify-center gap-1 text-[11px] text-(--widget-muted) hover:text-(--widget-fg) transition-colors"
+                      className="flex items-center justify-center gap-1 text-[11px] text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
                     >
                       Go to Sign In
                       <ArrowRight className="w-3 h-3" />
@@ -242,7 +242,7 @@ export default function JwtGeneratorPage() {
 
         {/* Setup panel: full-page overlay on mobile, inline side panel on md+ */}
         {showSetup && (
-          <div className="fixed inset-0 z-40 flex flex-col bg-(--widget-bg) md:static md:inset-auto md:z-auto md:w-full md:max-w-[420px] md:min-w-[320px] md:border-l md:border-(--widget-border)">
+          <div className="fixed inset-0 z-40 flex flex-col bg-(--brand-surface) md:static md:inset-auto md:z-auto md:w-full md:max-w-[420px] md:min-w-[320px] md:border-l md:border-(--brand-border)">
             <SetupFlyout onClose={() => setShowSetup(false)} />
           </div>
         )}
@@ -253,7 +253,7 @@ export default function JwtGeneratorPage() {
         <button
           type="button"
           onClick={() => setShowSetup(true)}
-          className="fixed top-4 right-4 flex items-center gap-2 rounded-lg border border-(--widget-border) bg-(--widget-bg) px-3 py-2 text-xs font-medium text-(--widget-muted) shadow-sm hover:text-(--widget-fg) hover:bg-(--widget-muted) transition-colors cursor-pointer"
+          className="fixed top-4 right-4 flex items-center gap-2 rounded-lg border border-(--brand-border) bg-(--brand-surface) px-3 py-2 text-xs font-medium text-(--brand-muted) shadow-sm hover:text-(--brand-fg) hover:bg-(--brand-muted) transition-colors cursor-pointer"
           aria-label="Open setup guide"
         >
           <BookOpen className="h-3.5 w-3.5" />
@@ -302,41 +302,41 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
   return (
     <div className="h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-(--widget-border) shrink-0 bg-(--widget-bg)">
+      <div className="flex items-center justify-between p-4 border-b border-(--brand-border) shrink-0 bg-(--brand-surface)">
         <div>
-          <h2 className="text-sm font-medium text-(--widget-fg)">
+          <h2 className="text-sm font-medium text-(--brand-fg)">
             Setup Instructions
           </h2>
-          <p className="text-xs text-(--widget-muted)">
+          <p className="text-xs text-(--brand-muted)">
             Configure external JWT authentication
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="p-1.5 rounded-(--widget-radius) hover:bg-(--widget-row-hover) transition-colors cursor-pointer"
+          className="p-1.5 rounded-(--brand-radius) hover:bg-(--brand-row-hover) transition-colors cursor-pointer"
           aria-label="Close"
         >
-          <X className="w-4 h-4 text-(--widget-muted)" />
+          <X className="w-4 h-4 text-(--brand-muted)" />
         </button>
       </div>
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-4 space-y-5">
           {/* Docs link */}
-          <p className="text-xs text-(--widget-muted) leading-relaxed">
+          <p className="text-xs text-(--brand-muted) leading-relaxed">
             For the full guide, see{" "}
             <a
               href="https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-overview"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-(--widget-primary) hover:underline inline-flex items-center gap-0.5"
+              className="text-(--brand-primary) hover:underline inline-flex items-center gap-0.5"
             >
               Dynamic docs
               <ExternalLink className="w-3 h-3" />
             </a>{" "}
             or{" "}
-            <code className="text-[11px] font-mono bg-(--widget-row-bg) px-1 py-0.5 rounded text-(--widget-fg)">
+            <code className="text-[11px] font-mono bg-(--brand-row-bg) px-1 py-0.5 rounded text-(--brand-fg)">
               docs/external-jwt-auth.md
             </code>
           </p>
@@ -346,9 +346,9 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
             <StepHeader number={1} title="Generate keys" />
             <div className="pl-7 space-y-1.5">
               <CodeBlock>npx tsx scripts/generate-keypair.ts</CodeBlock>
-              <p className="text-xs text-(--widget-muted)">
+              <p className="text-xs text-(--brand-muted)">
                 Copy the output into{" "}
-                <code className="text-[11px] font-mono bg-(--widget-row-bg) px-1 py-0.5 rounded text-(--widget-fg)">
+                <code className="text-[11px] font-mono bg-(--brand-row-bg) px-1 py-0.5 rounded text-(--brand-fg)">
                   .env.local
                 </code>{" "}
                 and restart the dev server.
@@ -356,7 +356,7 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="h-px bg-(--widget-border)" />
+          <div className="h-px bg-(--brand-border)" />
 
           {/* Step 2 */}
           <div className="space-y-2">
@@ -373,11 +373,11 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <p className="text-xs text-(--widget-muted)">
+                  <p className="text-xs text-(--brand-muted)">
                     Dynamic must reach your JWKS endpoint publicly.
                   </p>
                   {ngrokError && (
-                    <div className="flex items-center gap-1.5 text-xs text-(--widget-muted)">
+                    <div className="flex items-center gap-1.5 text-xs text-(--brand-muted)">
                       <WifiOff className="w-3.5 h-3.5" />
                       <span>{ngrokError}</span>
                     </div>
@@ -396,19 +396,19 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="h-px bg-(--widget-border)" />
+          <div className="h-px bg-(--brand-border)" />
 
           {/* Step 3 */}
           <div className="space-y-2">
             <StepHeader number={3} title="Configure Dynamic dashboard" />
             <div className="pl-7 space-y-2">
-              <p className="text-xs text-(--widget-muted)">
+              <p className="text-xs text-(--brand-muted)">
                 Go to{" "}
                 <a
                   href="https://app.dynamic.xyz/dashboard/developer/third-party-auth"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-(--widget-primary) hover:underline inline-flex items-center gap-0.5"
+                  className="text-(--brand-primary) hover:underline inline-flex items-center gap-0.5"
                 >
                   External Authentication
                   <ExternalLink className="w-3 h-3" />
@@ -434,12 +434,12 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="h-px bg-(--widget-border)" />
+          <div className="h-px bg-(--brand-border)" />
 
           {/* Step 4 */}
           <div className="space-y-2">
             <StepHeader number={4} title="Enable the toggle" />
-            <p className="pl-7 text-xs text-(--widget-muted)">
+            <p className="pl-7 text-xs text-(--brand-muted)">
               Turn on the <strong>External Authentication</strong> toggle in the
               dashboard, then restart your dev server.
             </p>
@@ -457,17 +457,17 @@ function SetupFlyout({ onClose }: { onClose: () => void }) {
 function StepHeader({ number, title }: { number: number; title: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="w-5 h-5 flex items-center justify-center rounded-full bg-(--widget-primary) text-white text-[10px] font-bold shrink-0">
+      <span className="w-5 h-5 flex items-center justify-center rounded-full bg-(--brand-primary) text-white text-[10px] font-bold shrink-0">
         {number}
       </span>
-      <h3 className="text-xs font-medium text-(--widget-fg)">{title}</h3>
+      <h3 className="text-xs font-medium text-(--brand-fg)">{title}</h3>
     </div>
   );
 }
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="text-[11px] font-mono bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius) px-3 py-2 text-(--widget-fg) overflow-x-auto">
+    <pre className="text-[11px] font-mono bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius) px-3 py-2 text-(--brand-fg) overflow-x-auto">
       {children}
     </pre>
   );
@@ -485,15 +485,15 @@ function DashboardField({
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-baseline gap-2">
-        <span className="text-[11px] font-mono font-medium text-(--widget-fg) shrink-0 w-14">
+        <span className="text-[11px] font-mono font-medium text-(--brand-fg) shrink-0 w-14">
           {label}
         </span>
-        <code className="text-[11px] font-mono bg-(--widget-row-bg) border border-(--widget-border) rounded px-1.5 py-0.5 text-(--widget-fg) break-all">
+        <code className="text-[11px] font-mono bg-(--brand-row-bg) border border-(--brand-border) rounded px-1.5 py-0.5 text-(--brand-fg) break-all">
           {value}
         </code>
       </div>
       {note && (
-        <p className="text-[10px] text-(--widget-muted) pl-16">{note}</p>
+        <p className="text-[10px] text-(--brand-muted) pl-16">{note}</p>
       )}
     </div>
   );

@@ -57,7 +57,7 @@ export function SetupMfaScreen({ onSuccess, onCancel }: SetupMfaScreenProps) {
 
   const shieldIcon = (
     <Shield
-      className="w-[18px] h-[18px] text-(--widget-accent)"
+      className="w-[18px] h-[18px] text-(--brand-accent)"
       strokeWidth={1.5}
     />
   );
@@ -152,7 +152,7 @@ export function SetupMfaScreen({ onSuccess, onCancel }: SetupMfaScreenProps) {
       <ErrorCard
         icon={
           <Shield
-            className="w-[18px] h-[18px] text-(--widget-error)"
+            className="w-[18px] h-[18px] text-(--brand-error)"
             strokeWidth={1.5}
           />
         }
@@ -172,7 +172,7 @@ export function SetupMfaScreen({ onSuccess, onCancel }: SetupMfaScreenProps) {
     >
       <form onSubmit={handleVerify} className="space-y-4">
         {/* QR Code with instructions */}
-        <div className="flex flex-col items-center gap-3 p-4 bg-(--widget-row-bg) rounded-(--widget-radius)">
+        <div className="flex flex-col items-center gap-3 p-4 bg-(--brand-row-bg) rounded-(--brand-radius)">
           <div className="bg-white p-3 rounded-lg">
             <QRCodeSVG
               value={qrUri}
@@ -181,21 +181,21 @@ export function SetupMfaScreen({ onSuccess, onCancel }: SetupMfaScreenProps) {
               includeMargin={false}
             />
           </div>
-          <p className="text-xs text-(--widget-muted) text-center">
+          <p className="text-xs text-(--brand-muted) text-center">
             Scan with Google Authenticator, Authy, or similar app
           </p>
         </div>
 
         {/* Secret key fallback - collapsible */}
         <details className="group">
-          <summary className="flex items-center justify-between cursor-pointer text-xs text-(--widget-muted) hover:text-(--widget-fg) transition-colors">
+          <summary className="flex items-center justify-between cursor-pointer text-xs text-(--brand-muted) hover:text-(--brand-fg) transition-colors">
             <span>Can&apos;t scan? Enter key manually</span>
             <span className="text-[10px] group-open:hidden">Show</span>
             <span className="text-[10px] hidden group-open:inline">Hide</span>
           </summary>
-          <div className="mt-2 p-2.5 bg-(--widget-row-bg) rounded-(--widget-radius)">
+          <div className="mt-2 p-2.5 bg-(--brand-row-bg) rounded-(--brand-radius)">
             <div className="flex items-center justify-between gap-2">
-              <code className="text-xs font-mono text-(--widget-fg) break-all flex-1">
+              <code className="text-xs font-mono text-(--brand-fg) break-all flex-1">
                 {secret}
               </code>
               <CopyButton

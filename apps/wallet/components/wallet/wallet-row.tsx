@@ -106,15 +106,15 @@ export function WalletRow({
       className={cn(
         "flex items-center justify-between",
         "px-3 py-2.5",
-        "bg-(--widget-row-bg) rounded-(--widget-radius)",
-        "transition-colors hover:bg-(--widget-row-hover)",
+        "bg-(--brand-row-bg) rounded-(--brand-radius)",
+        "transition-colors hover:bg-(--brand-row-hover)",
         isRowClickable && "cursor-pointer",
       )}
     >
       {/* Left: Chain icon + Address */}
       <div className="flex items-center gap-3 min-w-0">
         {/* Network icon from SDK */}
-        <div className="w-8 h-8 shrink-0 rounded-lg overflow-hidden bg-(--widget-bg) border border-(--widget-border) flex items-center justify-center">
+        <div className="w-8 h-8 shrink-0 rounded-lg overflow-hidden bg-(--brand-surface) border border-(--brand-border) flex items-center justify-center">
           {networkData?.iconUrl ? (
             <img
               src={networkData.iconUrl}
@@ -122,17 +122,17 @@ export function WalletRow({
               className="w-5 h-5 object-contain"
             />
           ) : (
-            <span className="text-[10px] font-medium text-(--widget-muted)">
+            <span className="text-[10px] font-medium text-(--brand-muted)">
               {walletAccount.chain}
             </span>
           )}
         </div>
 
         <div className="min-w-0">
-          <p className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px] leading-5 truncate">
+          <p className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5 truncate">
             {truncateAddress(walletAccount.address)}
           </p>
-          <p className="text-xs text-(--widget-muted) tracking-[-0.12px] leading-4">
+          <p className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-4">
             {walletAccount.chain}
             {networkData?.displayName && ` · ${networkData.displayName}`}
           </p>
@@ -162,7 +162,7 @@ export function WalletRow({
               onClick={() => onSetupMfa?.(walletAccount.address, chain)}
               className={cn(
                 "p-2 rounded-full transition-colors cursor-pointer",
-                "text-(--widget-accent) hover:bg-(--widget-accent)/10",
+                "text-(--brand-accent) hover:bg-(--brand-accent)/10",
               )}
               aria-label="Set up authenticator"
             >
@@ -176,7 +176,7 @@ export function WalletRow({
               onClick={onAuthorize}
               className={cn(
                 "p-2 rounded-full transition-colors cursor-pointer",
-                "text-(--widget-accent) hover:bg-(--widget-accent)/10",
+                "text-(--brand-accent) hover:bg-(--brand-accent)/10",
               )}
               aria-label="Enable smart account"
             >
@@ -190,7 +190,7 @@ export function WalletRow({
               onClick={onSend}
               className={cn(
                 "p-2 rounded-full transition-colors cursor-pointer",
-                "text-(--widget-muted) hover:text-(--widget-fg) hover:bg-black/5",
+                "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
               )}
               aria-label="Send transaction"
             >

@@ -107,9 +107,9 @@ export function NetworkSelector({
           disabled={isLoading}
           className={cn(
             "flex items-center gap-1.5 px-2 py-1.5 text-xs cursor-pointer",
-            "bg-(--widget-bg) rounded-(--widget-radius)",
-            "border border-(--widget-border)",
-            "hover:bg-(--widget-row-hover) transition-colors",
+            "bg-(--brand-surface) rounded-(--brand-radius)",
+            "border border-(--brand-border)",
+            "hover:bg-(--brand-row-hover) transition-colors",
             "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
         >
@@ -120,12 +120,12 @@ export function NetworkSelector({
               className="w-3.5 h-3.5 rounded"
             />
           )}
-          <span className="text-(--widget-fg)">
+          <span className="text-(--brand-fg)">
             {networkData?.displayName || "Select Network"}
           </span>
           <ChevronDown
             className={cn(
-              "w-3 h-3 text-(--widget-muted) transition-transform",
+              "w-3 h-3 text-(--brand-muted) transition-transform",
               isOpen && "rotate-180",
             )}
           />
@@ -136,8 +136,8 @@ export function NetworkSelector({
             className={cn(
               "absolute top-full mt-1 z-10 min-w-full w-max",
               align === "right" ? "right-0" : "left-0",
-              "bg-(--widget-bg) border border-(--widget-border)",
-              "rounded-(--widget-radius) shadow-lg overflow-hidden",
+              "bg-(--brand-surface) border border-(--brand-border)",
+              "rounded-(--brand-radius) shadow-lg overflow-hidden",
             )}
           >
             {availableNetworks.map((network) => (
@@ -147,9 +147,9 @@ export function NetworkSelector({
                 onClick={() => handleSelectNetwork(network.networkId)}
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-2 text-sm text-left cursor-pointer whitespace-nowrap",
-                  "hover:bg-(--widget-row-hover) transition-colors",
+                  "hover:bg-(--brand-row-hover) transition-colors",
                   network.networkId === networkData?.networkId &&
-                    "bg-(--widget-row-bg)",
+                    "bg-(--brand-row-bg)",
                 )}
               >
                 {network.iconUrl && (
@@ -159,7 +159,7 @@ export function NetworkSelector({
                     className="w-4 h-4 rounded shrink-0"
                   />
                 )}
-                <span className="text-(--widget-fg)">
+                <span className="text-(--brand-fg)">
                   {network.displayName}
                 </span>
               </button>
@@ -168,7 +168,7 @@ export function NetworkSelector({
         )}
       </div>
 
-      {error && <p className="text-xs text-(--widget-error)">{error}</p>}
+      {error && <p className="text-xs text-(--brand-error)">{error}</p>}
     </div>
   );
 }

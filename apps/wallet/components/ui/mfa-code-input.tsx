@@ -64,15 +64,15 @@ export function MfaCodeInput({
 
   // Contained box style
   return (
-    <div className="p-3 bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius)">
+    <div className="p-3 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
       <div className="flex items-center gap-2 mb-2">
-        <Shield className="w-4 h-4 text-(--widget-accent)" />
-        <span className="text-xs font-medium text-(--widget-fg)">
+        <Shield className="w-4 h-4 text-(--brand-accent)" />
+        <span className="text-xs font-medium text-(--brand-fg)">
           Security Verification
         </span>
       </div>
       {helperMessage && (
-        <p className="text-xs text-(--widget-muted) mb-2">{helperMessage}</p>
+        <p className="text-xs text-(--brand-muted) mb-2">{helperMessage}</p>
       )}
       <input
         type="text"
@@ -84,7 +84,7 @@ export function MfaCodeInput({
         placeholder="Enter 6-digit code"
         disabled={disabled}
         autoFocus={autoFocus}
-        className="w-full px-3 py-2 text-sm bg-(--widget-bg) border border-(--widget-border) rounded-(--widget-radius) text-(--widget-fg) placeholder:text-(--widget-muted) focus:outline-none focus:ring-2 focus:ring-(--widget-accent)/20 focus:border-(--widget-accent) disabled:opacity-50"
+        className="w-full px-3 py-2 text-sm bg-(--brand-surface) border border-(--brand-border) rounded-(--brand-radius) text-(--brand-fg) placeholder:text-(--brand-muted) focus:outline-none focus:ring-2 focus:ring-(--brand-accent)/20 focus:border-(--brand-accent) disabled:opacity-50"
       />
     </div>
   );

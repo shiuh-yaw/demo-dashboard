@@ -49,7 +49,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
     <WidgetCard
       icon={
         <Wallet
-          className="w-[18px] h-[18px] text-(--widget-fg)"
+          className="w-[18px] h-[18px] text-(--brand-fg)"
           strokeWidth={1.5}
         />
       }
@@ -71,7 +71,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
           />
         )}
 
-        <div className="h-px bg-(--widget-border)" />
+        <div className="h-px bg-(--brand-border)" />
 
         <div className="flex items-center gap-2">
           <CreateWalletButtons className="flex-1" />

@@ -51,7 +51,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | Phase | Status | PR | Notes |
 |---|---|---|---|
 | 4-defaults. Default theme extracted from proceeds | ⚪️ pending | — | — |
-| 4-app. Theme migration: wallet | ⚪️ pending | — | — |
+| 4-app. Theme migration: wallet | 🟢 done | [#61](https://github.com/dynamic-labs/demo-dashboard/pull/61) | Migrated to `@dynamic-demos/theme/defaults.css`; `--brand-*` namespace adopted with wallet's brand encoded as value overrides in `app/globals.css`; `<ThemeStyleTag>` not wired (no per-config theming today — wallet has no middleware). |
 | 4-app. Theme migration: remittance | ⚪️ pending | — | — |
 | 4-app. Theme migration: visa-direct | ⚪️ pending | — | Reference implementation; do last |
 | 4-app. Theme migration: cross-border-ap-ar | ⚪️ pending | — | — |

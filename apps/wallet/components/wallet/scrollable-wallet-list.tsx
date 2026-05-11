@@ -61,10 +61,10 @@ export function ScrollableWalletList({
     return (
       <div className="text-center py-8">
         <Wallet
-          className="w-12 h-12 mx-auto text-(--widget-muted) mb-3"
+          className="w-12 h-12 mx-auto text-(--brand-muted) mb-3"
           strokeWidth={1.5}
         />
-        <p className="text-sm text-(--widget-muted)">
+        <p className="text-sm text-(--brand-muted)">
           No wallets yet. Create one below.
         </p>
       </div>
@@ -75,7 +75,7 @@ export function ScrollableWalletList({
     <div className="space-y-3">
       {/* Chain filter tabs - only shown when wallets exist on multiple chains */}
       {showTabs && (
-        <div className="flex gap-1 p-1 bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius)">
+        <div className="flex gap-1 p-1 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
           <FilterTab
             active={filter === "all"}
             onClick={() => setFilter("all")}
@@ -135,17 +135,17 @@ function FilterTab({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 px-3 py-1.5 text-xs font-medium rounded-[calc(var(--widget-radius)-4px)] transition-colors cursor-pointer",
+        "flex-1 px-3 py-1.5 text-xs font-medium rounded-[calc(var(--brand-radius)-4px)] transition-colors cursor-pointer",
         active
-          ? "bg-(--widget-bg) text-(--widget-fg) shadow-sm border border-(--widget-border)"
-          : "text-(--widget-muted) hover:text-(--widget-fg) border border-transparent",
+          ? "bg-(--brand-surface) text-(--brand-fg) shadow-sm border border-(--brand-border)"
+          : "text-(--brand-muted) hover:text-(--brand-fg) border border-transparent",
       )}
     >
       {children}
       <span
         className={cn(
           "ml-1.5 text-[10px]",
-          active ? "text-(--widget-muted)" : "text-(--widget-muted)/60",
+          active ? "text-(--brand-muted)" : "text-(--brand-muted)/60",
         )}
       >
         {count}

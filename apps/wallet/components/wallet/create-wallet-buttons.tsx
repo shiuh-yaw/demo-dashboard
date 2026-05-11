@@ -54,10 +54,10 @@ export function CreateWalletButtons({ className }: CreateWalletButtonsProps) {
           disabled={isPending}
           className={cn(
             "w-full flex items-center justify-center gap-1.5 px-3 h-9",
-            "bg-(--widget-row-bg) rounded-(--widget-radius)",
-            "border border-(--widget-border)",
-            "text-xs font-medium text-(--widget-muted)",
-            "hover:bg-(--widget-row-hover) hover:text-(--widget-fg)",
+            "bg-(--brand-row-bg) rounded-(--brand-radius)",
+            "border border-(--brand-border)",
+            "text-xs font-medium text-(--brand-muted)",
+            "hover:bg-(--brand-row-hover) hover:text-(--brand-fg)",
             "transition-all cursor-pointer",
             "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
@@ -88,8 +88,8 @@ export function CreateWalletButtons({ className }: CreateWalletButtonsProps) {
           <div
             className={cn(
               "absolute bottom-full left-0 right-0 mb-2 z-10",
-              "bg-(--widget-bg) border border-(--widget-border)",
-              "rounded-(--widget-radius) shadow-lg overflow-hidden",
+              "bg-(--brand-surface) border border-(--brand-border)",
+              "rounded-(--brand-radius) shadow-lg overflow-hidden",
             )}
           >
             {chainOptions.map((chain) => (
@@ -99,7 +99,7 @@ export function CreateWalletButtons({ className }: CreateWalletButtonsProps) {
                 onClick={() => handleCreateWallet(chain.id)}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 text-left",
-                  "hover:bg-(--widget-row-hover) transition-colors cursor-pointer",
+                  "hover:bg-(--brand-row-hover) transition-colors cursor-pointer",
                 )}
               >
                 {chain.icon ? (
@@ -109,21 +109,21 @@ export function CreateWalletButtons({ className }: CreateWalletButtonsProps) {
                     className="w-7 h-7 rounded-lg"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-lg bg-(--widget-row-bg) border border-(--widget-border) flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-(--widget-muted)">
+                  <div className="w-7 h-7 rounded-lg bg-(--brand-row-bg) border border-(--brand-border) flex items-center justify-center">
+                    <span className="text-[10px] font-medium text-(--brand-muted)">
                       {chain.id.slice(0, 3)}
                     </span>
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px] leading-5">
+                  <p className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5">
                     {chain.name}
                   </p>
-                  <p className="text-xs text-(--widget-muted) tracking-[-0.12px] leading-4">
+                  <p className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-4">
                     {chain.description}
                   </p>
                 </div>
-                <Plus className="w-3.5 h-3.5 text-(--widget-muted)" />
+                <Plus className="w-3.5 h-3.5 text-(--brand-muted)" />
               </button>
             ))}
           </div>

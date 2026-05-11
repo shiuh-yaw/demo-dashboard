@@ -38,7 +38,7 @@ No provider keys today — wallet is Dynamic-only.
 
 ## Theming
 
-The app currently consumes `@dynamic-demos/theme` types but predates the visa-direct cookie + `<ThemeStyleTag>` pattern (D-008). Phase 4 migrates this app onto the SSR theme-injection flow with the rest of the demos.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; wallet overrides token *values* in `app/globals.css` (`:root`) — its design language is charcoal-on-light with a blue accent and tighter radii — but never adds new namespaces. Wallet has no `middleware.ts` and no per-config theme overlay today, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired; it would land if wallet ever gains per-tenant theming. The class-based dark-mode `@variant dark` rule lives in wallet's `globals.css` since the app opts out of Tailwind v4's media-query default; it is not part of the shared theme.
 
 ## Credentials
 
@@ -98,6 +98,6 @@ export async function GET() {
 
 ## Open questions / known gaps
 
-- Phase 4 migrates this app onto the visa-direct cookie + SSR theme pattern (D-008).
+- Phase 4-app wallet completed: `globals.css` is now thin, importing `@dynamic-demos/theme/defaults.css` and overriding only the `--brand-*` token values that encode wallet's brand. All component refs use the `--brand-*` namespace (D-007). SSR `<ThemeStyleTag>` is intentionally not wired — wallet has no `middleware.ts` and no per-config theme overlay today; it would land if wallet ever gains per-tenant theming.
 - Multi-chain support today is whatever Dynamic env allows; Solana extension landed in Phase 1D.
 - No tests in CI today. Add at least smoke coverage for the JWT-protected route in a follow-up.

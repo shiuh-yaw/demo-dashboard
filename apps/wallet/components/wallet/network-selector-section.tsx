@@ -50,33 +50,33 @@ export function NetworkSelectorSection({
     switch (sponsorship.type) {
       case "loading":
         return (
-          <span className="text-[10px] text-(--widget-muted)">
+          <span className="text-[10px] text-(--brand-muted)">
             Checking gas...
           </span>
         );
       case "sponsored":
         return (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-(--widget-accent)">
+          <span className="flex items-center gap-1 text-[10px] font-medium text-(--brand-accent)">
             <Zap className="w-3 h-3" />
             Gas Sponsored
           </span>
         );
       case "available":
         return (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-(--widget-accent)">
+          <span className="flex items-center gap-1 text-[10px] font-medium text-(--brand-accent)">
             <Zap className="w-3 h-3" />
             {sponsorship.message ?? "Sponsorship available"}
           </span>
         );
       case "unavailable":
         return (
-          <span className="text-[10px] text-(--widget-muted)">
+          <span className="text-[10px] text-(--brand-muted)">
             {sponsorship.message ?? "No sponsorship"}
           </span>
         );
       case "standard":
         return (
-          <span className="text-[10px] text-(--widget-muted)">
+          <span className="text-[10px] text-(--brand-muted)">
             Standard transaction
           </span>
         );
@@ -86,10 +86,10 @@ export function NetworkSelectorSection({
   };
 
   return (
-    <div className="p-3 bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius)">
+    <div className="p-3 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-(--widget-fg) tracking-[-0.14px]">
+          <span className="text-xs font-medium text-(--brand-fg) tracking-[-0.14px]">
             Network
           </span>
           {renderSponsorshipBadge()}
@@ -111,7 +111,7 @@ export function NetworkSelectorSection({
                   className="w-5 h-5 rounded"
                 />
               )}
-              <span className="text-sm font-medium text-(--widget-fg)">
+              <span className="text-sm font-medium text-(--brand-fg)">
                 {networkData.displayName}
               </span>
             </div>

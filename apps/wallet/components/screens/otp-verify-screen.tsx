@@ -67,12 +67,12 @@ export function OtpVerifyScreen({
 
         <ErrorMessage error={verifyOTP.error} />
 
-        <p className="text-xs text-center text-(--widget-muted)">
+        <p className="text-xs text-center text-(--brand-muted)">
           Didn't receive the code?{" "}
           <button
             type="button"
             onClick={navigation.goToAuth}
-            className="text-(--widget-accent) hover:underline"
+            className="text-(--brand-accent) hover:underline"
           >
             Try again
           </button>

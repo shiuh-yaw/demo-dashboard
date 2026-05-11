@@ -127,7 +127,7 @@ export function Authorize7702Screen({
 
   const shieldIcon = (
     <Shield
-      className="w-[18px] h-[18px] text-(--widget-accent)"
+      className="w-[18px] h-[18px] text-(--brand-accent)"
       strokeWidth={1.5}
     />
   );
@@ -152,7 +152,7 @@ export function Authorize7702Screen({
         onClose={onCancel}
       >
         <div className="space-y-4">
-          <p className="text-sm text-(--widget-muted)">
+          <p className="text-sm text-(--brand-muted)">
             You need to set up an authenticator app before enabling your smart
             account.
           </p>
@@ -176,7 +176,7 @@ export function Authorize7702Screen({
       <ErrorCard
         icon={
           <Shield
-            className="w-[18px] h-[18px] text-(--widget-error)"
+            className="w-[18px] h-[18px] text-(--brand-error)"
             strokeWidth={1.5}
           />
         }
@@ -221,10 +221,10 @@ export function Authorize7702Screen({
 
         {/* Network doesn't support sponsorship */}
         {!isSponsored && (
-          <div className="p-3 bg-(--widget-row-bg) rounded-(--widget-radius)">
-            <p className="text-sm text-(--widget-muted)">
+          <div className="p-3 bg-(--brand-row-bg) rounded-(--brand-radius)">
+            <p className="text-sm text-(--brand-muted)">
               Gas sponsorship is not available on{" "}
-              <span className="font-medium text-(--widget-fg)">
+              <span className="font-medium text-(--brand-fg)">
                 {networkData?.displayName ?? "this network"}
               </span>
               . Select a supported network above.
@@ -234,7 +234,7 @@ export function Authorize7702Screen({
 
         {/* Already authorized on-chain */}
         {isSponsored && isAuthorized && (
-          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-(--widget-radius)">
+          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-(--brand-radius)">
             <p className="text-sm text-green-600 dark:text-green-400">
               Smart account is already enabled on{" "}
               <span className="font-medium">
@@ -251,22 +251,22 @@ export function Authorize7702Screen({
             {/* Feature highlights */}
             <div className="space-y-2">
               <div className="flex gap-3">
-                <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-(--widget-accent)/5 rounded-(--widget-radius)">
-                  <Zap className="w-4 h-4 text-(--widget-accent)" />
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-(--brand-accent)/5 rounded-(--brand-radius)">
+                  <Zap className="w-4 h-4 text-(--brand-accent)" />
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     Gas-free transactions
                   </span>
                 </div>
-                <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-(--widget-accent)/5 rounded-(--widget-radius)">
-                  <Sparkles className="w-4 h-4 text-(--widget-accent)" />
-                  <span className="text-xs font-medium text-(--widget-fg)">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-(--brand-accent)/5 rounded-(--brand-radius)">
+                  <Sparkles className="w-4 h-4 text-(--brand-accent)" />
+                  <span className="text-xs font-medium text-(--brand-fg)">
                     Smart account
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-(--widget-muted) text-center">
+              <p className="text-xs text-(--brand-muted) text-center">
                 One-time setup for{" "}
-                <span className="font-medium text-(--widget-fg)">
+                <span className="font-medium text-(--brand-fg)">
                   {networkData?.displayName ?? "this network"}
                 </span>
               </p>
@@ -275,7 +275,7 @@ export function Authorize7702Screen({
             {isMfaEnabled && hasDevice ? (
               <div className="space-y-2">
                 {fromMfaSetup && (
-                  <p className="text-xs text-(--widget-muted) text-center">
+                  <p className="text-xs text-(--brand-muted) text-center">
                     Wait for a new code from your authenticator app before
                     continuing.
                   </p>
@@ -288,7 +288,7 @@ export function Authorize7702Screen({
                 />
               </div>
             ) : !isMfaEnabled ? (
-              <p className="text-xs text-(--widget-muted)">
+              <p className="text-xs text-(--brand-muted)">
                 MFA not enabled for this environment.
               </p>
             ) : null}

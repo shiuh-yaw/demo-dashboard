@@ -72,7 +72,7 @@ function TransactionResultView({
     <WidgetCard
       icon={
         <CheckCircle
-          className="w-[18px] h-[18px] text-(--widget-success)"
+          className="w-[18px] h-[18px] text-(--brand-success)"
           strokeWidth={1.5}
         />
       }
@@ -82,7 +82,7 @@ function TransactionResultView({
     >
       <div className="space-y-3">
         {/* Network info */}
-        <div className="flex items-center gap-2 p-3 bg-(--widget-row-bg) rounded-(--widget-radius)">
+        <div className="flex items-center gap-2 p-3 bg-(--brand-row-bg) rounded-(--brand-radius)">
           {networkData.iconUrl && (
             <img
               src={networkData.iconUrl}
@@ -91,23 +91,23 @@ function TransactionResultView({
             />
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-(--widget-muted) tracking-[-0.12px]">
+            <p className="text-xs text-(--brand-muted) tracking-[-0.12px]">
               Network
             </p>
-            <p className="text-sm font-medium text-(--widget-fg) tracking-[-0.14px]">
+            <p className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px]">
               {networkData.displayName}
             </p>
           </div>
         </div>
 
         {/* Transaction hash */}
-        <div className="p-3 bg-(--widget-row-bg) rounded-(--widget-radius)">
+        <div className="p-3 bg-(--brand-row-bg) rounded-(--brand-radius)">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-(--widget-muted) tracking-[-0.12px] mb-1">
+              <p className="text-xs text-(--brand-muted) tracking-[-0.12px] mb-1">
                 Transaction Hash
               </p>
-              <p className="text-sm font-mono text-(--widget-fg) truncate">
+              <p className="text-sm font-mono text-(--brand-fg) truncate">
                 {truncatedHash}
               </p>
             </div>
@@ -126,7 +126,7 @@ function TransactionResultView({
               href={buildExplorerTxUrl(explorerUrl, txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium text-(--widget-accent) bg-(--widget-accent)/5 rounded-(--widget-radius) hover:bg-(--widget-accent)/10 transition-colors"
+              className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium text-(--brand-accent) bg-(--brand-accent)/5 rounded-(--brand-radius) hover:bg-(--brand-accent)/10 transition-colors"
             >
               View on Explorer
               <ExternalLink className="w-3.5 h-3.5" />
@@ -435,7 +435,7 @@ export function SendTxScreen({
         <LoadingCard
           icon={
             <Send
-              className="w-[18px] h-[18px] text-(--widget-fg)"
+              className="w-[18px] h-[18px] text-(--brand-fg)"
               strokeWidth={1.5}
             />
           }
@@ -487,7 +487,7 @@ export function SendTxScreen({
         <ErrorCard
           icon={
             <Send
-              className="w-[18px] h-[18px] text-(--widget-error)"
+              className="w-[18px] h-[18px] text-(--brand-error)"
               strokeWidth={1.5}
             />
           }
@@ -501,7 +501,7 @@ export function SendTxScreen({
         <WidgetCard
           icon={
             <Send
-              className="w-[18px] h-[18px] text-(--widget-fg)"
+              className="w-[18px] h-[18px] text-(--brand-fg)"
               strokeWidth={1.5}
             />
           }
@@ -532,7 +532,7 @@ export function SendTxScreen({
             {/* Amount + inline asset selector */}
             {!useManualEntry ? (
               <div className="flex flex-col gap-1.5">
-                <label className="flex items-center justify-between text-xs font-medium text-(--widget-muted) tracking-[-0.12px]">
+                <label className="flex items-center justify-between text-xs font-medium text-(--brand-muted) tracking-[-0.12px]">
                   <span>Amount</span>
                   {selectedToken && (
                     <span className="font-normal">
@@ -550,10 +550,10 @@ export function SendTxScreen({
                     disabled={sendTx.isPending}
                     className={cn(
                       "w-full h-10 pl-3 pr-30 text-sm",
-                      "bg-(--widget-bg) text-(--widget-fg)",
-                      "border border-(--widget-border) rounded-(--widget-radius)",
-                      "placeholder:text-(--widget-muted)",
-                      "focus:outline-none focus:ring-2 focus:ring-(--widget-accent) focus:border-transparent",
+                      "bg-(--brand-surface) text-(--brand-fg)",
+                      "border border-(--brand-border) rounded-(--brand-radius)",
+                      "placeholder:text-(--brand-muted)",
+                      "focus:outline-none focus:ring-2 focus:ring-(--brand-accent) focus:border-transparent",
                       "disabled:opacity-50 disabled:cursor-not-allowed",
                     )}
                   />
@@ -574,7 +574,7 @@ export function SendTxScreen({
               </div>
             ) : (
               /* Manual token entry — replaces the amount row */
-              <div className="space-y-3 p-3 bg-(--widget-row-bg) border border-(--widget-border) rounded-(--widget-radius)">
+              <div className="space-y-3 p-3 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
                 <Input
                   label="Token Address"
                   type="text"
@@ -608,7 +608,7 @@ export function SendTxScreen({
                     setTokenAddress("");
                     setTokenDecimals("");
                   }}
-                  className="flex items-center gap-1 text-[10px] text-(--widget-muted) hover:text-(--widget-fg) transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-[10px] text-(--brand-muted) hover:text-(--brand-fg) transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-3 h-3" />
                   Back to asset list

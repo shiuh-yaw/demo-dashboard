@@ -120,7 +120,7 @@ export function TxHistoryScreen({
           />
         ) : (
           <Wallet
-            className="w-[18px] h-[18px] text-(--widget-fg)"
+            className="w-[18px] h-[18px] text-(--brand-fg)"
             strokeWidth={1.5}
           />
         )
@@ -149,7 +149,7 @@ export function TxHistoryScreen({
                   className="w-4 h-4 rounded"
                 />
               )}
-              <span className="text-xs font-medium text-(--widget-fg)">
+              <span className="text-xs font-medium text-(--brand-fg)">
                 {networkData?.displayName ?? chain}
               </span>
             </div>
@@ -172,7 +172,7 @@ export function TxHistoryScreen({
                     networkId: activeNetworkId,
                   })
                 }
-                className="p-2 rounded-full transition-colors cursor-pointer text-(--widget-muted) hover:text-(--widget-fg) hover:bg-black/5"
+                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
                 aria-label="Send transaction"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -184,7 +184,7 @@ export function TxHistoryScreen({
                 type="button"
                 onClick={handleRefresh}
                 disabled={isFetching}
-                className="p-2 rounded-full transition-colors cursor-pointer text-(--widget-muted) hover:text-(--widget-fg) hover:bg-black/5 disabled:opacity-50"
+                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5 disabled:opacity-50"
                 aria-label="Refresh transactions"
               >
                 <RefreshCw
@@ -205,7 +205,7 @@ export function TxHistoryScreen({
         {/* Error state */}
         {error && !isLoading && (
           <div className="flex flex-col items-center py-5 gap-2">
-            <p className="text-sm text-(--widget-error)">
+            <p className="text-sm text-(--brand-error)">
               Failed to load transactions
             </p>
             <Button variant="secondary" size="sm" onClick={() => refetch()}>
@@ -217,16 +217,16 @@ export function TxHistoryScreen({
         {/* Empty state */}
         {!isLoading && !error && transactions.length === 0 && (
           <div className="flex flex-col items-center py-6 gap-1.5">
-            <div className="w-10 h-10 rounded-full bg-(--widget-row-bg) flex items-center justify-center mb-1">
+            <div className="w-10 h-10 rounded-full bg-(--brand-row-bg) flex items-center justify-center mb-1">
               <History
-                className="w-5 h-5 text-(--widget-muted)"
+                className="w-5 h-5 text-(--brand-muted)"
                 strokeWidth={1.5}
               />
             </div>
-            <p className="text-sm font-medium text-(--widget-fg)">
+            <p className="text-sm font-medium text-(--brand-fg)">
               No transactions yet
             </p>
-            <p className="text-xs text-(--widget-muted) text-center max-w-[220px]">
+            <p className="text-xs text-(--brand-muted) text-center max-w-[220px]">
               Transactions will appear here once this wallet has activity.
             </p>
           </div>
@@ -301,26 +301,26 @@ function TransactionRow({ tx, chain }: TransactionRowProps) {
       rel="noopener noreferrer"
       className={cn(
         "flex items-center gap-2.5 px-2.5 py-2",
-        "bg-(--widget-row-bg) rounded-(--widget-radius)",
-        "transition-colors hover:bg-(--widget-row-hover)",
+        "bg-(--brand-row-bg) rounded-(--brand-radius)",
+        "transition-colors hover:bg-(--brand-row-hover)",
         explorerUrl ? "cursor-pointer" : "cursor-default",
       )}
     >
       {/* Direction icon */}
-      <div className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center bg-(--widget-bg) border border-(--widget-border)">
+      <div className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center bg-(--brand-surface) border border-(--brand-border)">
         {isSent ? (
-          <ArrowUpRight className="w-3.5 h-3.5 text-(--widget-error)" />
+          <ArrowUpRight className="w-3.5 h-3.5 text-(--brand-error)" />
         ) : isReceived ? (
-          <ArrowDownLeft className="w-3.5 h-3.5 text-(--widget-success)" />
+          <ArrowDownLeft className="w-3.5 h-3.5 text-(--brand-success)" />
         ) : (
-          <History className="w-3.5 h-3.5 text-(--widget-muted)" />
+          <History className="w-3.5 h-3.5 text-(--brand-muted)" />
         )}
       </div>
 
       {/* Transaction details */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-medium text-(--widget-fg) tracking-[-0.12px]">
+          <p className="text-xs font-medium text-(--brand-fg) tracking-[-0.12px]">
             {isSent ? "Sent" : isReceived ? "Received" : "Transaction"}
           </p>
           {amount != null && (
@@ -328,10 +328,10 @@ function TransactionRow({ tx, chain }: TransactionRowProps) {
               className={cn(
                 "text-xs font-medium tracking-[-0.12px] tabular-nums",
                 isSent
-                  ? "text-(--widget-error)"
+                  ? "text-(--brand-error)"
                   : isReceived
-                    ? "text-(--widget-success)"
-                    : "text-(--widget-fg)",
+                    ? "text-(--brand-success)"
+                    : "text-(--brand-fg)",
               )}
             >
               {isSent ? "-" : isReceived ? "+" : ""}
@@ -343,7 +343,7 @@ function TransactionRow({ tx, chain }: TransactionRowProps) {
           )}
         </div>
         <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className="text-xs text-(--widget-muted) tracking-[-0.12px] truncate">
+          <p className="text-xs text-(--brand-muted) tracking-[-0.12px] truncate">
             {isSent
               ? `To ${truncateAddress(tx.toAddress)}`
               : isReceived
@@ -351,11 +351,11 @@ function TransactionRow({ tx, chain }: TransactionRowProps) {
                 : truncateAddress(tx.transactionHash)}
           </p>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] text-(--widget-muted) tabular-nums">
+            <span className="text-[11px] text-(--brand-muted) tabular-nums">
               {formatRelativeTime(timestamp)}
             </span>
             {explorerUrl && (
-              <ExternalLink className="w-3 h-3 text-(--widget-muted)" />
+              <ExternalLink className="w-3 h-3 text-(--brand-muted)" />
             )}
           </div>
         </div>
