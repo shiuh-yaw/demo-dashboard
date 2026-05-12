@@ -13,7 +13,11 @@
 //   - `prisma db push` is forbidden in production. Only `prisma migrate deploy`.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // `native` = local dev. `rhel-openssl-3.0.x` = Vercel serverless
+  // runtime. Without the linux target, Vercel functions fail at runtime
+  // with "Prisma Client could not locate the Query Engine".
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
