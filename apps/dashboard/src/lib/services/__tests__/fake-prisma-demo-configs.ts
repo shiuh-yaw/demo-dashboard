@@ -1,7 +1,7 @@
 /**
  * Minimal in-memory fake for the `prisma.demoConfig` delegate used by
- * `PostgresDemoConfigService`. Mirrors the pattern from
- * `fake-prisma-remittance.ts`, widened with the `kind` discriminator.
+ * `PostgresDemoConfigService`. Carries every demo kind (earn, wallet,
+ * trade, visa-direct, checkout, remittance) on the unified table.
  *
  * Hand-rolled rather than the real PrismaClient because the service
  * only depends on a small slice of the delegate (create, findUnique,

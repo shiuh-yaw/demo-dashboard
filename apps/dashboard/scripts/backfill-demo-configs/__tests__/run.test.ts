@@ -1,7 +1,6 @@
 /**
  * Tests for the unified-DemoConfig backfill orchestrator.
  *
- * Mirrors the shape of `backfill-remittance/__tests__/run.test.ts`:
  *   - happy path (each kind round-trips into a Brand + DemoConfig row).
  *   - skipped records (orphan owner, malformed theme, missing record).
  *   - idempotency (re-running yields zero new rows; second pass dedupes).
@@ -21,6 +20,7 @@ import { createFakeRedis } from "@/lib/services/__tests__/fake-redis";
 import type {
   StoredCheckoutConfig,
   StoredEarnConfig,
+  StoredRemittanceConfig,
   StoredTradeConfig,
   StoredVisaDirectConfig,
   StoredWalletConfig,
@@ -123,6 +123,24 @@ function makeCheckout(
   } as StoredCheckoutConfig;
 }
 
+function makeRemittance(
+  over: Partial<StoredRemittanceConfig> = {},
+): StoredRemittanceConfig {
+  return {
+    id: "rem_1",
+    name: "US to BR",
+    description: "Stablecoin remittance",
+    config: {
+      theme: { primaryColor: "#1a56db", secondaryColor: "#1e40af" },
+      branding: { logoUrl: "https://example.com/logo.png" },
+    },
+    ownerId: "owner-1",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    ...over,
+  };
+}
+
 async function seedEarn(redis: RedisClient, c: StoredEarnConfig) {
   await redis.set(REDIS_KEYS.earnConfig(c.id), c);
   await redis.sadd(REDIS_KEYS.earnConfigList, c.id);
@@ -148,6 +166,13 @@ async function seedCheckout(
 ) {
   await redis.set(REDIS_KEYS.checkoutConfig(c.id), c);
   await redis.sadd(REDIS_KEYS.checkoutConfigList, c.id);
+}
+async function seedRemittance(
+  redis: RedisClient,
+  c: StoredRemittanceConfig,
+) {
+  await redis.set(REDIS_KEYS.remittanceConfig(c.id), c);
+  await redis.sadd(REDIS_KEYS.remittanceConfigList, c.id);
 }
 
 describe("runDemoConfigsBackfill — happy path (each kind)", () => {
@@ -235,24 +260,53 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     expect(all[0]!.id).toBe("checkout_1");
   });
 
+  it("creates Brand + DemoConfig for a remittance record and preserves the legacy id (Q-014)", async () => {
+    await seedRemittance(redis, makeRemittance());
+    const report = await runDemoConfigsBackfill({
+      redis,
+      brands,
+      demoConfigs,
+      kinds: ["remittance"],
+    });
+    expect(report.totals.created).toBe(1);
+    expect(report.totals.failed).toBe(0);
+    const all = await demoConfigs.list({ kind: "remittance" });
+    expect(all).toHaveLength(1);
+    expect(all[0]!.id).toBe("rem_1"); // Q-014: legacy id preserved
+    expect(all[0]!.kind).toBe("remittance");
+    expect(all[0]!.ownerId).toBe("owner-1");
+    expect(all[0]!.brandId).toMatch(/^bf_[a-f0-9]{24}$/);
+    expect(all[0]!.themeOverrides).toBeNull();
+    expect(all[0]!.config).toEqual({
+      theme: { primaryColor: "#1a56db", secondaryColor: "#1e40af" },
+      branding: { logoUrl: "https://example.com/logo.png" },
+    });
+    const allBrands = await brands.list();
+    expect(allBrands).toHaveLength(1);
+    expect(allBrands[0]!.id).toBe(all[0]!.brandId);
+    expect(allBrands[0]!.primaryColor).toBe("#1a56db");
+  });
+
   it("walks every kind in one run and reports per-kind totals", async () => {
     await seedEarn(redis, makeEarn());
     await seedWallet(redis, makeWallet());
     await seedTrade(redis, makeTrade());
     await seedVisaDirect(redis, makeVisaDirect());
     await seedCheckout(redis, makeCheckout());
+    await seedRemittance(redis, makeRemittance());
     const report = await runDemoConfigsBackfill({
       redis,
       brands,
       demoConfigs,
     });
-    expect(report.totals.created).toBe(5);
+    expect(report.totals.created).toBe(6);
     expect(report.totals.failed).toBe(0);
     expect(report.byKind.earn.created).toBe(1);
     expect(report.byKind.wallet.created).toBe(1);
     expect(report.byKind.trade.created).toBe(1);
     expect(report.byKind["visa-direct"].created).toBe(1);
     expect(report.byKind.checkout.created).toBe(1);
+    expect(report.byKind.remittance.created).toBe(1);
   });
 });
 
@@ -311,6 +365,40 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
     expect(report.totals.skipped).toBe(1);
     expect(report.results[0]!.source.id).toBe("ghost");
     expect(report.results[0]!.reason).toMatch(/missing/i);
+  });
+
+  it("skips a remittance record with no ownerId (orphan)", async () => {
+    await seedRemittance(
+      redis,
+      makeRemittance({ id: "orph_rem", ownerId: undefined }),
+    );
+    const report = await runDemoConfigsBackfill({
+      redis,
+      brands,
+      demoConfigs,
+      kinds: ["remittance"],
+    });
+    expect(report.totals.skipped).toBe(1);
+    expect(report.results[0]!.reason).toMatch(/ownerId/);
+    expect(await demoConfigs.list({ kind: "remittance" })).toHaveLength(0);
+  });
+
+  it("skips a remittance record with no theme.primaryColor", async () => {
+    await seedRemittance(
+      redis,
+      makeRemittance({
+        id: "rem_no_theme",
+        config: { theme: undefined, branding: { logoUrl: undefined } },
+      }),
+    );
+    const report = await runDemoConfigsBackfill({
+      redis,
+      brands,
+      demoConfigs,
+      kinds: ["remittance"],
+    });
+    expect(report.totals.skipped).toBe(1);
+    expect(report.results[0]!.reason).toMatch(/primaryColor/);
   });
 });
 
@@ -382,6 +470,27 @@ describe("runDemoConfigsBackfill — idempotency", () => {
       before.updatedAt.getTime(),
     );
   });
+
+  it("re-running a remittance backfill dedupes the existing row", async () => {
+    await seedRemittance(redis, makeRemittance());
+    const first = await runDemoConfigsBackfill({
+      redis,
+      brands,
+      demoConfigs,
+      kinds: ["remittance"],
+    });
+    expect(first.totals.created).toBe(1);
+    const second = await runDemoConfigsBackfill({
+      redis,
+      brands,
+      demoConfigs,
+      kinds: ["remittance"],
+    });
+    expect(second.totals.created).toBe(0);
+    expect(second.totals.deduped).toBe(1);
+    expect(await demoConfigs.list({ kind: "remittance" })).toHaveLength(1);
+    expect(await brands.list()).toHaveLength(1);
+  });
 });
 
 describe("runDemoConfigsBackfill — partial failure", () => {
@@ -422,5 +531,34 @@ describe("runDemoConfigsBackfill — partial failure", () => {
     expect(calls).toHaveLength(2);
     const failure = report.results.find((r) => r.outcome === "failed");
     expect(failure?.reason).toMatch(/simulated/);
+  });
+
+  it("keeps going when one remittance record's upsertWithId throws", async () => {
+    await seedRemittance(redis, makeRemittance({ id: "rem_ok" }));
+    await seedRemittance(redis, makeRemittance({ id: "rem_bad" }));
+    const calls: string[] = [];
+    const failing: DemoConfigService = {
+      create: demoConfigs.create.bind(demoConfigs),
+      get: demoConfigs.get.bind(demoConfigs),
+      list: demoConfigs.list.bind(demoConfigs),
+      update: demoConfigs.update.bind(demoConfigs),
+      delete: demoConfigs.delete.bind(demoConfigs),
+      upsertWithId: async (id, input) => {
+        calls.push(id);
+        if (id === "rem_bad") throw new Error("simulated rem");
+        return demoConfigs.upsertWithId(id, input);
+      },
+    };
+    const report = await runDemoConfigsBackfill({
+      redis,
+      brands,
+      demoConfigs: failing,
+      kinds: ["remittance"],
+    });
+    expect(report.totals.created).toBe(1);
+    expect(report.totals.failed).toBe(1);
+    expect(calls).toHaveLength(2);
+    const failure = report.results.find((r) => r.outcome === "failed");
+    expect(failure?.reason).toMatch(/simulated rem/);
   });
 });

@@ -150,24 +150,6 @@ export const env = createEnv({
       .default("false")
       .transform((v) => v === "true"),
     /**
-     * Phase 2-remittance cutover flag.
-     * When "true", the dashboard reads/writes RemittanceConfig records
-     * via Postgres (`@dynamic-demos/db`). When "false" (default), the
-     * Redis-backed implementation handles them. Both implementations
-     * satisfy the same `RemittanceConfigService` contract (see
-     * lib/services/__tests__/remittance.parity.test.ts).
-     *
-     * Note: this flag governs the new first-class `RemittanceConfig`
-     * record. The legacy `StoredRemittanceConfig` shape used by
-     * `lib/actions/remittance.ts` is unaffected and stays on Redis until
-     * the actions layer migrates to the service in a follow-up PR.
-     */
-    USE_POSTGRES_REMITTANCE: z
-      .enum(["true", "false"])
-      .optional()
-      .default("false")
-      .transform((v) => v === "true"),
-    /**
      * Phase 2 unified `DemoConfig` cutover flag.
      * When "true", the dashboard reads/writes `DemoConfig` records
      * (every demo kind — earn, wallet, trade, visa-direct, checkout,
@@ -176,9 +158,9 @@ export const env = createEnv({
      * implementations satisfy the same `DemoConfigService` contract
      * (see lib/services/__tests__/demo-configs.parity.test.ts).
      *
-     * Independent of `USE_POSTGRES_REMITTANCE` — the legacy
-     * `RemittanceConfig` table will be folded into `DemoConfig` in a
-     * follow-up PR; until then the two coexist.
+     * The legacy `RemittanceConfig` table has been folded into
+     * `DemoConfig` with `kind="remittance"`; remittance rows now route
+     * through this flag too.
      */
     USE_POSTGRES_DEMO_CONFIGS: z
       .enum(["true", "false"])
@@ -283,7 +265,6 @@ export const env = createEnv({
     DIRECT_URL: process.env.DIRECT_URL,
     USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
     USE_POSTGRES_TRANSACTIONS: process.env.USE_POSTGRES_TRANSACTIONS,
-    USE_POSTGRES_REMITTANCE: process.env.USE_POSTGRES_REMITTANCE,
     USE_POSTGRES_DEMO_CONFIGS: process.env.USE_POSTGRES_DEMO_CONFIGS,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,

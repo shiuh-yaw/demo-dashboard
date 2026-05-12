@@ -25,14 +25,13 @@ datasource db {
 // Models added incrementally — one PR per migration.
 //
 // Landed:
-//   PR 2-brands (Part A):    Brand.
-//   PR 2-transactions:       Transaction, WebhookEvent.
-//   PR 2-remittance:         RemittanceConfig.
-//   PR 2-demo-configs:       DemoConfig (unified per-demo-type carrier).
+//   PR 2-brands (Part A):     Brand.
+//   PR 2-transactions:        Transaction, WebhookEvent.
+//   PR 2-demo-configs:        DemoConfig (unified per-demo-type carrier).
+//   PR 2-remittance-fold:     RemittanceConfig folded into DemoConfig with
+//                             kind = "remittance"; legacy table dropped.
 //
 // Pending:
-//   - Folding RemittanceConfig into DemoConfig (follow-up PR; same row
-//     shape with `kind = "remittance"`).
 //   - Action-layer cutover so legacy `lib/actions/<demoType>.ts` paths
 //     write to DemoConfig instead of their per-type Redis stores.
 
@@ -81,34 +80,9 @@ model Brand {
   demoRemittanceId    String?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
-  remittanceConfigs   RemittanceConfig[]
   demoConfigs         DemoConfig[]
 
   @@index([ownerId])
-}
-
-/// First-class per-instance config for the Remittance demo (Phase 2-
-/// remittance). `brandId` links to the canonical Brand row so theming /
-/// logo render through the shared Brand surface; `config` carries any
-/// residual demo-specific fields (currently the embedded `theme` /
-/// `branding` shape from `StoredRemittanceConfig` in
-/// `apps/dashboard/src/lib/types/dashboard.ts`). Apps never read this
-/// table — only the dashboard via the service layer (D-015). Service:
-/// `apps/dashboard/src/lib/services/postgres/remittance.ts`, flag
-/// `USE_POSTGRES_REMITTANCE`.
-model RemittanceConfig {
-  id          String   @id @default(cuid())
-  ownerId     String
-  name        String
-  description String?
-  brandId     String
-  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  config      Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([ownerId])
-  @@index([brandId])
 }
 
 /// Canonical "money in flight" transaction record (D-010). Every state

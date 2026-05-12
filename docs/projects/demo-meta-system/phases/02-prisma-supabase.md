@@ -308,9 +308,11 @@ are painful; the meta-system explicitly avoids them.
 
 ### Out of scope for this PR (deferred follow-ups)
 
-- **`RemittanceConfig` fold-in.** `RemittanceConfig` (PR #59) stays as
-  its own table for now; a follow-up PR migrates its rows to
-  `DemoConfig` with `kind="remittance"` and drops the table.
+- **`RemittanceConfig` fold-in.** ✅ done — follow-up PR #82 migrated
+  every legacy `RemittanceConfig` row into `DemoConfig` with
+  `kind="remittance"` via `fold_remittance_into_demo_config` and
+  dropped the legacy table. The unified `backfill:demo-configs` now
+  walks the remittance Redis store too.
 - **Action-layer cutover.** `apps/dashboard/src/lib/actions/{earns,
   wallets,trade,visa-direct,checkouts,remittance}.ts` still write to
   their per-type Redis stores. A follow-up PR routes them through
@@ -328,7 +330,9 @@ are painful; the meta-system explicitly avoids them.
       round-trip, config Json round-trip.
 - [ ] `USE_POSTGRES_DEMO_CONFIGS` flag (default false).
 - [ ] Idempotent backfill (`backfill:demo-configs`) — deterministic
-      Brand id; preserved legacy ids (Q-014); RemittanceConfig skipped.
+      Brand id; preserved legacy ids (Q-014). Initial PR (#81) skipped
+      remittance; follow-up PR #82 extended it to walk the remittance
+      Redis store after the legacy table was dropped.
 - [ ] Spark26 untouched.
 - [ ] `packages/db/AGENTS.md` updated and ≤150 lines.
 

@@ -11,8 +11,8 @@ status: stable
 Prisma + Supabase Postgres access layer. Provides a serverless-safe
 `PrismaClient` singleton and the schema definition. Models landed
 incrementally: `Brand` (2-brands), `Transaction` + `WebhookEvent`
-(2-transactions), `RemittanceConfig` (2-remittance), `DemoConfig`
-(2-demo-configs — unified per-demo-type carrier).
+(2-transactions), `DemoConfig` (2-demo-configs — unified per-demo-type
+carrier; remittance folded in via `fold_remittance_into_demo_config`).
 
 ## Hard rule: single consumer
 
@@ -37,7 +37,7 @@ fetch from that endpoint instead.
 
 - `prisma` — singleton `PrismaClient` with delegates for every declared
   model: `prisma.brand`, `prisma.transaction`, `prisma.webhookEvent`,
-  `prisma.remittanceConfig`, `prisma.demoConfig`. (stable)
+  `prisma.demoConfig`. (stable)
 - `Prisma` — namespace re-exported from `@prisma/client` for input/output
   typing (e.g., `Prisma.BrandCreateInput`). (stable)
 - `PrismaClient` — class re-export for callers that need their own instance
@@ -58,12 +58,8 @@ fetch from that endpoint instead.
   boundary. Indexed on `ownerId`, `brandId`, `kind`, `(ownerId, kind)`.
   Service: `apps/dashboard/src/lib/services/postgres/demo-configs.ts`,
   flag `USE_POSTGRES_DEMO_CONFIGS`. Replaces what would otherwise be one
-  table per demo type.
-- `RemittanceConfig` — first-class per-instance config for the Remittance
-  demo (2-remittance). FK `brandId` → `Brand`. Service:
-  `apps/dashboard/src/lib/services/postgres/remittance.ts`, flag
-  `USE_POSTGRES_REMITTANCE`. Will be folded into `DemoConfig` (kind =
-  "remittance") in a follow-up PR.
+  table per demo type; legacy `RemittanceConfig` rows were migrated here
+  with `kind="remittance"` and the legacy table dropped (D-029).
 - `Transaction` — canonical "money in flight" record (D-010). State
   validated by `assertValidTransition` at the service boundary; DB stores
   verbatim. Indexed on `demoInstanceId`, `brandId`, `state`,
@@ -138,11 +134,12 @@ export async function listDemoConfigs(ownerId: string, kind: string) {
 - Action-layer cutover: legacy `lib/actions/{earns,wallets,trade,visa-direct,
   checkouts,remittance}.ts` still write to per-type Redis stores. A
   follow-up PR routes them through `DemoConfigService`.
-- `RemittanceConfig` ↔ `DemoConfig` fold: `RemittanceConfig` will be
-  retired in a follow-up; rows migrate to `DemoConfig` with `kind="remittance"`.
-- Backfills: brand (`backfill:brands`), remittance (`backfill:remittance`),
-  unified demo-configs (`backfill:demo-configs`). All idempotent —
-  deterministic Brand id from `(ownerId, primaryColor, logoUrl)` and
-  preserved legacy ids (Q-014).
+- `RemittanceConfig` ↔ `DemoConfig` fold: **done** — legacy table dropped
+  by `fold_remittance_into_demo_config`; rows live in `DemoConfig` with
+  `kind="remittance"` and the unified backfill handles them.
+- Backfills: brand (`backfill:brands`) and unified demo-configs
+  (`backfill:demo-configs` — covers every kind including remittance).
+  Both idempotent — deterministic Brand id from
+  `(ownerId, primaryColor, logoUrl)` and preserved legacy ids (Q-014).
 - RLS is enabled on every Phase-2 table. Prisma connects as superuser and
   bypasses it; service-layer ownership checks remain the trust boundary.

@@ -4,14 +4,16 @@
  * The script walks each legacy per-type Redis keyspace
  * (`dashboard:earn:<id>`, `dashboard:wallet:<id>`,
  * `dashboard:trade:<id>`, `dashboard:visa-direct:<id>`,
- * `payment-widget:config:<id>` for checkouts), upserts a Brand row for
- * the embedded theme (idempotent via `hashBrandKey` from the brand
- * backfill), then upserts a `DemoConfig` row that links to that Brand
- * with `kind=<demoType>`. Legacy ids are preserved (Q-014) so existing
- * demo URLs keep resolving unchanged.
+ * `dashboard:remittance:<id>`, `payment-widget:config:<id>` for
+ * checkouts), upserts a Brand row for the embedded theme (idempotent
+ * via `hashBrandKey` from the brand backfill), then upserts a
+ * `DemoConfig` row that links to that Brand with `kind=<demoType>`.
+ * Legacy ids are preserved (Q-014) so existing demo URLs keep
+ * resolving unchanged.
  *
- * RemittanceConfig is **out of scope** — folding it in lives in a
- * separate follow-up PR.
+ * Remittance is included here as `kind="remittance"` — the legacy
+ * per-type `RemittanceConfig` table has been folded into `DemoConfig`
+ * (see `packages/db/prisma/migrations/<ts>_fold_remittance_into_demo_config`).
  */
 
 import type { RedisClient } from "@/lib/redis";
@@ -22,11 +24,12 @@ import type {
 } from "@/lib/services/types";
 
 /**
- * Subset of `DemoConfigKind` covered by this backfill. Excludes
- * `remittance` — that store moves via a separate PR so the two
- * migrations stay independently revertable.
+ * Demo kinds covered by this backfill. Currently the full
+ * `DemoConfigKind` set: earn, wallet, trade, visa-direct, checkout,
+ * remittance. The alias stays so callers and tests can scope a run to
+ * a subset of kinds without rewiring.
  */
-export type BackfillDemoKind = Exclude<DemoConfigKind, "remittance">;
+export type BackfillDemoKind = DemoConfigKind;
 
 export const BACKFILL_KINDS: readonly BackfillDemoKind[] = [
   "earn",
@@ -34,6 +37,7 @@ export const BACKFILL_KINDS: readonly BackfillDemoKind[] = [
   "trade",
   "visa-direct",
   "checkout",
+  "remittance",
 ] as const;
 
 export interface DemoConfigsBackfillSource {

@@ -12,14 +12,18 @@
  * a record-scoped error doesn't stop the run — a re-run after the
  * underlying issue is fixed picks them up.
  *
- * RemittanceConfig is **not** processed here. That migration lives in
- * a separate follow-up PR so the two stay independently revertable.
+ * Remittance is included here as `kind="remittance"` — the legacy
+ * per-type `RemittanceConfig` table has been folded into `DemoConfig`
+ * by the `fold_remittance_into_demo_config` migration. The legacy
+ * `dashboard:remittance:<id>` Redis keyspace continues to back
+ * `lib/actions/remittance.ts` until the action-layer cutover lands.
  */
 
 import { REDIS_KEYS } from "@/lib/redis";
 import type {
   StoredCheckoutConfig,
   StoredEarnConfig,
+  StoredRemittanceConfig,
   StoredTradeConfig,
   StoredVisaDirectConfig,
   StoredWalletConfig,
@@ -32,6 +36,7 @@ import type {
 import {
   extractFromCheckout,
   extractFromEarn,
+  extractFromRemittance,
   extractFromWallet,
 } from "../backfill-brands/extractors";
 import { hashBrandKey } from "../backfill-brands/hash";
@@ -265,6 +270,35 @@ const STORES: readonly LegacyStore[] = [
           name: seed.name,
           description: seed.description ?? null,
           primaryColor: seed.primaryColor,
+          accentColor: seed.accentColor ?? null,
+          logoUrl: seed.logoUrl ?? null,
+        },
+        brandId: hashBrandKey(seed),
+        configPayload: stored.config,
+      };
+    },
+  },
+  {
+    kind: "remittance",
+    listKey: REDIS_KEYS.remittanceConfigList,
+    itemKey: (id) => REDIS_KEYS.remittanceConfig(id),
+    resolve: (raw, id) => {
+      if (!isObject(raw)) return { skipReason: "record missing" };
+      const stored = raw as unknown as StoredRemittanceConfig;
+      if (!stored.ownerId)
+        return { skipReason: "missing ownerId — orphan legacy config" };
+      const { seed, skipReason } = extractFromRemittance(stored);
+      if (!seed) return { skipReason: skipReason ?? "could not derive brand" };
+      return {
+        ownerId: stored.ownerId,
+        name: stored.name,
+        description: stored.description ?? null,
+        brandInput: {
+          ownerId: seed.ownerId,
+          name: seed.name,
+          description: seed.description ?? null,
+          primaryColor: seed.primaryColor,
+          secondaryColor: seed.secondaryColor ?? null,
           accentColor: seed.accentColor ?? null,
           logoUrl: seed.logoUrl ?? null,
         },
