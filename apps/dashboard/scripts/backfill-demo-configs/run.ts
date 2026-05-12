@@ -31,6 +31,7 @@ import type {
 import type {
   CreateBrandInput,
   CreateDemoConfigInput,
+  UpdateBrandInput,
 } from "@/lib/services/types";
 
 import {
@@ -47,6 +48,22 @@ import type {
   DemoConfigsBackfillReport,
 } from "./types";
 import { BACKFILL_KINDS } from "./types";
+
+/**
+ * Maps the unified DemoConfig `kind` to the corresponding denormalized
+ * back-reference column on `Brand`. The brand-edit page surfaces four
+ * demo kinds today (earn/checkout/wallet/remittance); trade and
+ * visa-direct have no column and intentionally fall outside this map
+ * (the link step is a no-op for them).
+ */
+const DEMO_KIND_TO_BRAND_FIELD: Partial<
+  Record<BackfillDemoKind, keyof Pick<UpdateBrandInput, "demoEarnId" | "demoCheckoutsId" | "demoWalletId" | "demoRemittanceId">>
+> = {
+  earn: "demoEarnId",
+  checkout: "demoCheckoutsId",
+  wallet: "demoWalletId",
+  remittance: "demoRemittanceId",
+};
 
 /**
  * Per-kind Redis adapter. Every legacy store has a (list, value)
@@ -363,7 +380,19 @@ async function processOne(
     return { source, outcome: "skipped", reason: resolved.skipReason };
   }
   try {
-    await deps.brands.upsertWithId(resolved.brandId, resolved.brandInput);
+    // Brand: create only if missing. The canonical brands are seeded by
+    // backfill:brands (which populates demoEarnId/demoCheckoutsId/etc.
+    // from the BrandProfile aggregate). Re-upserting here with a seed
+    // derived from a single demo's embedded theme overwrites those
+    // back-references with null and replaces the clean BrandProfile name
+    // with the demo's display name.
+    let existingBrand = await deps.brands.get(resolved.brandId);
+    if (!existingBrand) {
+      existingBrand = await deps.brands.upsertWithId(
+        resolved.brandId,
+        resolved.brandInput,
+      );
+    }
     const existing = await deps.demoConfigs.get(id);
     const input: CreateDemoConfigInput = {
       kind: store.kind,
@@ -375,6 +404,18 @@ async function processOne(
       config: resolved.configPayload,
     };
     const row = await deps.demoConfigs.upsertWithId(id, input);
+    // Backfill the brand's denormalized demoXxxId for this kind so the
+    // dashboard UI's "Demos" count and demo-link slots populate. Only
+    // touch the field if it's currently null — preserves any
+    // BrandProfile-derived value that backfill:brands already set.
+    // Trade and visa-direct have no Brand back-reference column
+    // (the brand-edit page only surfaces 4 demo kinds today), so they
+    // skip silently.
+    const linkField = DEMO_KIND_TO_BRAND_FIELD[store.kind];
+    if (linkField && existingBrand && existingBrand[linkField] === null) {
+      const patch: UpdateBrandInput = { [linkField]: row.id };
+      await deps.brands.update(resolved.brandId, patch);
+    }
     return {
       source,
       outcome: existing ? "deduped" : "created",

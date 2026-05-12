@@ -85,6 +85,7 @@ Dashboard uses its own internal styling — it is the operator UI, not a custome
 - **Custom domain:** TBD (preview URL stable for operators today).
 - **Owner:** demos team.
 - **Dev port:** 4000 (`pnpm dev:dashboard`).
+- **Migrations on deploy:** `prisma migrate deploy` runs in `build` when `VERCEL_ENV=production`; preview + local builds skip. Requires `DIRECT_URL` in the Vercel Production env.
 
 ## Integration map
 
