@@ -257,36 +257,80 @@ Service-layer parity: same input → same output for all CRUD operations across 
 
 ---
 
-## PR 2-others — remaining demo config types
+## PR 2-demo-configs — unified `DemoConfig` table (replaces PR 2-others)
 
-Repeat the PR 2-remittance pattern for each:
-- `earn` (`EarnConfig`)
-- `visa-direct` (`VisaDirectConfig`)
-- `wallet` (`WalletConfig`)
-- `trade` (`TradeConfig`)
-- `deposit` (`DepositConfig`) — if present in dashboard
-- `shop` (`ShopConfig`) — if present
-- `cross-border-ap-ar` (`SandwichConfig`) — if present in dashboard
-- `checkouts` (`CheckoutConfig`)
+The original plan had one PR per demo type (earn, visa-direct, wallet, trade,
+deposit, shop, cross-border-ap-ar, checkouts) — 7+ migrations. **This is
+abandoned.** A single unified `DemoConfig` table handles every demo type
+via a `kind` discriminator. The full rationale lives in **D-029**.
 
-One PR per type. Or batch 2-3 if extremely small. Spark26 has no dashboard config and is excluded.
+### Schema (one table, all kinds)
 
-### D-028 — brand reference + theme overrides (mandatory shape for every per-demo cutover)
+```prisma
+model DemoConfig {
+  id              String   @id @default(cuid())
+  kind            String   // 'earn' | 'wallet' | 'trade' | 'visa-direct' | 'checkout' | 'remittance' — validated app-side
+  ownerId         String
+  name            String
+  description     String?
+  brandId         String
+  brand           Brand    @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  themeOverrides  Json?
+  config          Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-Every demo config table created in this batch follows the D-028 contract:
+  @@index([ownerId])
+  @@index([brandId])
+  @@index([kind])
+  @@index([ownerId, kind])
+}
+```
 
-- **Schema:** `brandId String` FK to `Brand` (NOT NULL — every demo belongs to a brand) plus `themeOverrides Json?` (nullable). Demo-specific config (rails, supported tokens, settlement) lives alongside as first-class columns or in a `config: Json` carrier.
-- **No embedded theme columns.** The visual theme tokens stay on `Brand`. Don't copy `primaryColor`/`pageBackground`/etc. onto the demo config table.
-- **Backfill:** hash each legacy demo's embedded theme via the same `(ownerId, primaryColor, logoUrl)` derivation used in `apps/dashboard/scripts/backfill-brands/`. Match to existing `bf_<24-hex>` Brand row; upsert if absent. Set `brandId`. If the demo's theme exactly matches the brand's, leave `themeOverrides` null. If it diverges, capture deltas as `themeOverrides`.
-- **Service abstraction:** each demo config service joins to `Brand` (or hydrates with `services.brands.get(brandId)`) when assembling the payload returned to the demo app. The merge `brand.theme ⊕ themeOverrides` happens at the service boundary so consumers receive a single resolved theme.
-- **Frontend:** `<ThemeStyleTag>` already takes a fetched theme — no signature change. The per-config theme fetch swaps from "read demo's embedded theme" to "fetch brand + apply overrides."
-- **Embedded-theme cleanup migration:** dropping legacy embedded theme columns from the Postgres table is a separate **follow-up** migration after the new `brandId` reference is verified in production. Don't drop in the same PR that adds the FK.
+`kind` is **plain TEXT, not a Prisma enum.** The closed set is enforced
+app-side via a Zod discriminated union in
+`apps/dashboard/src/lib/services/demo-config-schemas.ts`. Adding a new
+demo type is a TypeScript + Zod edit, not a migration. Enum migrations
+are painful; the meta-system explicitly avoids them.
 
-`RemittanceConfig` (PR #59) is already structurally aligned — it has `brandId` FK and `config: Json` (no embedded theme columns). Its cutover is the smallest delta; remaining demo types follow this same shape.
+### Why unified (D-029 — short form)
 
-### Acceptance criteria (per PR)
+- **Scales for the meta-system.** Adding a new demo type = add a Zod
+  schema + a kind literal. No `prisma migrate dev`.
+- **One service, one parity suite.** `DemoConfigService` covers every
+  kind. Per-type tables would need 6+ near-identical Postgres + Redis
+  services and 6+ parity test files.
+- **One backfill.** `backfill:demo-configs` walks every legacy Redis
+  store and lands rows into one table. Per-type tables would need 6+
+  backfills.
+- **D-028 is satisfied trivially.** Every row has `brandId` FK and
+  optional `themeOverrides Json?`. Visual theme stays on `Brand`.
 
-Same shape as 2-remittance, plus the D-028 contract above. Each migration is independently shippable.
+### Out of scope for this PR (deferred follow-ups)
+
+- **`RemittanceConfig` fold-in.** `RemittanceConfig` (PR #59) stays as
+  its own table for now; a follow-up PR migrates its rows to
+  `DemoConfig` with `kind="remittance"` and drops the table.
+- **Action-layer cutover.** `apps/dashboard/src/lib/actions/{earns,
+  wallets,trade,visa-direct,checkouts,remittance}.ts` still write to
+  their per-type Redis stores. A follow-up PR routes them through
+  `DemoConfigService`.
+- **Strict per-kind Zod schemas.** The initial discriminated union
+  accepts `z.record(z.unknown())` per kind. Strict schemas land
+  alongside the action-layer cutover.
+
+### Acceptance criteria (PR 2-demo-configs)
+
+- [ ] `DemoConfig` model + migration (with RLS + FK to Brand).
+- [ ] Postgres + Redis `DemoConfigService` implementations.
+- [ ] Parity tests cover create/get/list (by owner / by kind / both) /
+      update / delete / upsertWithId, each kind, themeOverrides
+      round-trip, config Json round-trip.
+- [ ] `USE_POSTGRES_DEMO_CONFIGS` flag (default false).
+- [ ] Idempotent backfill (`backfill:demo-configs`) — deterministic
+      Brand id; preserved legacy ids (Q-014); RemittanceConfig skipped.
+- [ ] Spark26 untouched.
+- [ ] `packages/db/AGENTS.md` updated and ≤150 lines.
 
 ---
 

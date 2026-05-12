@@ -27,11 +27,14 @@ datasource db {
 // Landed:
 //   PR 2-brands (Part A):    Brand.
 //   PR 2-transactions:       Transaction, WebhookEvent.
-//   PR 2-remittance (this):  RemittanceConfig.
+//   PR 2-remittance:         RemittanceConfig.
+//   PR 2-demo-configs:       DemoConfig (unified per-demo-type carrier).
 //
 // Pending:
-//   PR 2-others: EarnConfig, VisaDirectConfig, WalletConfig, TradeConfig,
-//                DepositConfig, ShopConfig, SandwichConfig, CheckoutConfig.
+//   - Folding RemittanceConfig into DemoConfig (follow-up PR; same row
+//     shape with `kind = "remittance"`).
+//   - Action-layer cutover so legacy `lib/actions/<demoType>.ts` paths
+//     write to DemoConfig instead of their per-type Redis stores.
 
 /// First-class Brand record. Owns shared theme + logo metadata that demo
 /// configs (remittance, earn, etc.) reference via FK. `id` is application-
@@ -79,6 +82,7 @@ model Brand {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   remittanceConfigs   RemittanceConfig[]
+  demoConfigs         DemoConfig[]
 
   @@index([ownerId])
 }
@@ -193,4 +197,48 @@ model WebhookEvent {
   @@index([transactionId])
   @@index([receivedAt])
   @@index([processingStatus])
+}
+
+/// Unified per-instance config carrier for every demo type (earn,
+/// wallet, trade, visa-direct, checkout, remittance). Replaces what
+/// would otherwise be one Postgres table per demo type — `kind` is the
+/// discriminator. The closed set of kinds is enforced in the
+/// application layer (Zod discriminated union at
+/// `apps/dashboard/src/lib/services/demo-config-schemas.ts`), not via a
+/// Prisma enum: the meta-system goal is to add new demo types without
+/// a migration, so the column stays plain TEXT.
+///
+/// `brandId` is the FK to the canonical `Brand` row (D-028). The
+/// optional `themeOverrides` carries per-config theme deltas merged on
+/// top of the brand's theme at the service boundary; null means
+/// "render the brand theme as-is."
+///
+/// `config` is kind-specific payload validated by the Zod schema on
+/// write. Initially permissive (`z.record(z.unknown())`); strict
+/// per-kind schemas land alongside the action-layer wiring follow-up.
+///
+/// Apps never read this table directly — only the dashboard via the
+/// service layer (D-015). Service:
+/// `apps/dashboard/src/lib/services/postgres/demo-configs.ts`, flag
+/// `USE_POSTGRES_DEMO_CONFIGS`.
+model DemoConfig {
+  id             String   @id @default(cuid())
+  /// One of: 'earn' | 'wallet' | 'trade' | 'visa-direct' | 'checkout'
+  /// | 'remittance'. Validated app-side; no Prisma enum so new kinds
+  /// don't require a migration.
+  kind           String
+  ownerId        String
+  name           String?
+  description    String?
+  brandId        String
+  brand          Brand    @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  themeOverrides Json?
+  config         Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([brandId])
+  @@index([kind])
+  @@index([ownerId, kind])
 }

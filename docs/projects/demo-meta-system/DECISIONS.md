@@ -228,3 +228,50 @@ Each demo config table additionally carries an optional `themeOverrides Json?` c
 4. Service abstraction: each demo config service fetches the joined `Brand` (or its bundle of theme tokens) when assembling the payload returned to the demo app.
 5. Frontend: `<ThemeStyleTag>` already takes a fetched theme — no signature change. The fetch call swaps from "read demo config's embedded theme" to "fetch brand by id, apply overrides."
 6. Spark26 zero-touch (D-006): no migration touches `apps/spark26/`.
+
+---
+
+## D-029 — Unified `DemoConfig` table over per-demo-type tables
+
+Phase 2's per-demo-config storage uses a **single** Postgres table —
+`DemoConfig` — discriminated by a `kind` column (`'earn' | 'wallet' |
+'trade' | 'visa-direct' | 'checkout' | 'remittance'`). Replaces the
+original plan of one table per demo type (`EarnConfig`,
+`VisaDirectConfig`, etc., as outlined in the superseded PR 2-others
+section of `phases/02-prisma-supabase.md`).
+
+`kind` is a plain Postgres TEXT column. The closed set is enforced
+app-side via a Zod discriminated union in
+`apps/dashboard/src/lib/services/demo-config-schemas.ts` — **not** via
+a Prisma enum. Adding a new demo type is a TypeScript + Zod edit
+(no migration).
+
+**Why:**
+
+- The meta-system's core goal is to add new demo types cheaply.
+  Per-type tables make this O(migration + service + parity suite +
+  backfill) per type; one unified table makes it O(Zod schema +
+  literal type).
+- One `DemoConfigService` interface; one parity suite covering every
+  kind. Per-type tables would have required 6+ near-identical
+  services and 6+ near-identical parity test files.
+- One backfill (`backfill:demo-configs`) walks every legacy per-type
+  Redis store and lands rows into `DemoConfig` with the matching
+  `kind`. Per-type tables would have required 6+ backfills.
+- D-028 (Brand owns theme) holds verbatim: every row has `brandId`
+  FK and optional `themeOverrides Json?`. No embedded theme columns.
+
+**Scope:**
+
+- `RemittanceConfig` (PR #59) stays as its own table for now. A
+  follow-up PR folds it into `DemoConfig` with `kind="remittance"`
+  and drops the legacy table.
+- The action-layer cutover (routing `lib/actions/<demoType>.ts`
+  through `DemoConfigService` instead of per-type Redis stores) is a
+  deferred follow-up — same scope discipline as PR #59.
+- Strict per-kind Zod schemas land alongside the action-layer
+  cutover; the initial discriminated union accepts
+  `z.record(z.unknown())` per kind.
+
+**Spark26 zero-touch** (D-006) holds; spark26 has no dashboard config
+and is explicitly excluded.

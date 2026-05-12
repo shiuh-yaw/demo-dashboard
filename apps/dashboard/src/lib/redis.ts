@@ -318,4 +318,29 @@ export const REDIS_KEYS = {
 
   /** Set of all TransactionRecord IDs. */
   transactionRecordList: `${DASHBOARD_PREFIX}:tx-v2:list`,
+
+  // ==========================================================================
+  // Phase 2-demo-configs — unified per-demo-type config carrier (earn,
+  // wallet, trade, visa-direct, checkout, remittance). Discriminated by
+  // `kind` in the value; per-kind keyspace + per-owner-per-kind index
+  // keep `list({ ownerId, kind })` cheap. Mirrors the Postgres
+  // `DemoConfig` table so the Redis backend can serve as a parity
+  // baseline behind USE_POSTGRES_DEMO_CONFIGS.
+  // ==========================================================================
+
+  /** Single DemoConfig row by (kind, id). */
+  demoConfig: (kind: string, id: string) =>
+    `${DASHBOARD_PREFIX}:demo-config:${kind}:${id}`,
+
+  /** Set of all DemoConfig ids for a given kind. */
+  demoConfigKindList: (kind: string) =>
+    `${DASHBOARD_PREFIX}:demo-config:${kind}:list`,
+
+  /**
+   * Set of DemoConfig ids for a given (ownerId, kind). Makes
+   * `list({ ownerId, kind })` an O(N owned-by-owner) operation
+   * instead of scanning the entire kind keyspace.
+   */
+  demoConfigOwnerKindIndex: (ownerId: string, kind: string) =>
+    `${DASHBOARD_PREFIX}:demo-config:owner:${ownerId}:${kind}`,
 } as const;

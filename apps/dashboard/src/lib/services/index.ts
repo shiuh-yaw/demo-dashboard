@@ -8,6 +8,7 @@
  *   - USE_POSTGRES_BRANDS         → BrandService
  *   - USE_POSTGRES_TRANSACTIONS   → TransactionRecordService
  *   - USE_POSTGRES_REMITTANCE     → RemittanceConfigService
+ *   - USE_POSTGRES_DEMO_CONFIGS   → DemoConfigService (unified table)
  * Default is Redis so production stays unchanged until each explicit
  * cutover.
  *
@@ -24,12 +25,15 @@ import { RedisCheckoutService } from "./redis/checkouts";
 import { RedisBrandService } from "./redis/brands";
 import { RedisTransactionRecordService } from "./redis/transactions-record";
 import { RedisRemittanceConfigService } from "./redis/remittance";
+import { RedisDemoConfigService } from "./redis/demo-configs";
 import { PostgresBrandService } from "./postgres/brands";
 import { PostgresTransactionRecordService } from "./postgres/transactions";
 import { PostgresWebhookEventService } from "./postgres/webhook-events";
 import { PostgresRemittanceConfigService } from "./postgres/remittance";
+import { PostgresDemoConfigService } from "./postgres/demo-configs";
 import type {
   BrandService,
+  DemoConfigService,
   RemittanceConfigService,
   Services,
   TransactionRecordService,
@@ -53,6 +57,9 @@ export const remittanceConfigService: RemittanceConfigService =
   env.USE_POSTGRES_REMITTANCE
     ? new PostgresRemittanceConfigService()
     : new RedisRemittanceConfigService();
+export const demoConfigService: DemoConfigService = env.USE_POSTGRES_DEMO_CONFIGS
+  ? new PostgresDemoConfigService()
+  : new RedisDemoConfigService();
 
 // Export as combined services object
 export const services: Services = {
@@ -63,6 +70,7 @@ export const services: Services = {
   checkouts: checkoutService,
   brands: brandService,
   remittanceConfigs: remittanceConfigService,
+  demoConfigs: demoConfigService,
 };
 
 // Re-export types
@@ -96,6 +104,12 @@ export type {
   RemittanceConfigListOptions,
   CreateRemittanceConfigInput,
   UpdateRemittanceConfigInput,
+  DemoConfigService,
+  DemoConfigRecord,
+  DemoConfigListOptions,
+  DemoConfigKind,
+  CreateDemoConfigInput,
+  UpdateDemoConfigInput,
   Services,
 } from "./types";
 export { DuplicateWebhookEventError } from "./types";

@@ -649,6 +649,112 @@ export interface RemittanceConfigService {
 }
 
 // =============================================================================
+// Demo Config Service (Phase 2 — unified DemoConfig table)
+// =============================================================================
+//
+// Single per-demo-type config row carrier (mirrors the Prisma `DemoConfig`
+// model). One table for every demo type — earn, wallet, trade, visa-direct,
+// checkout, remittance — discriminated by `kind`. Replaces what would
+// otherwise be one Postgres table per demo type. Adding a new demo type
+// is a Zod-schema change, not a migration.
+//
+// `kind` is a string (not a Prisma enum). The strict per-kind payload
+// schemas land alongside the action-layer wiring follow-up; for now the
+// per-kind config payload is permissive (`z.record(z.unknown())`).
+
+/**
+ * Closed set of demo kinds supported by the unified `DemoConfig` table.
+ * Lives at the service layer (not in the Prisma schema) so adding a new
+ * demo type doesn't require a migration. Validation enforced via
+ * `demoConfigKindSchema` (see ./demo-config-schemas.ts).
+ */
+export type DemoConfigKind =
+  | "earn"
+  | "wallet"
+  | "trade"
+  | "visa-direct"
+  | "checkout"
+  | "remittance";
+
+/**
+ * Demo config row as it lives in Postgres (mirrors the Prisma `DemoConfig`
+ * model). The dashboard service layer surfaces this shape regardless of
+ * backend. `themeOverrides` is optional per D-028 — `Brand` is the source
+ * of truth for visual theme; demos may carry per-config overrides.
+ */
+export interface DemoConfigRecord {
+  id: string;
+  kind: DemoConfigKind;
+  ownerId: string;
+  name: string | null;
+  description: string | null;
+  brandId: string;
+  /**
+   * Optional per-config theme overrides merged on top of the linked
+   * Brand's theme at the service boundary. Null means "render brand
+   * theme as-is" (D-028).
+   */
+  themeOverrides: unknown | null;
+  /**
+   * Kind-specific payload. The Zod discriminated union narrows on
+   * `kind` at the service write boundary; consumers can re-narrow.
+   * Kept permissive for this PR — strict per-kind schemas land
+   * alongside the action-layer wiring follow-up.
+   */
+  config: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateDemoConfigInput {
+  kind: DemoConfigKind;
+  ownerId: string;
+  name?: string | null;
+  description?: string | null;
+  brandId: string;
+  themeOverrides?: unknown | null;
+  config: unknown;
+}
+
+export interface UpdateDemoConfigInput {
+  name?: string | null;
+  description?: string | null;
+  brandId?: string;
+  themeOverrides?: unknown | null;
+  config?: unknown;
+}
+
+export interface DemoConfigListOptions {
+  /** When set, restrict results to configs owned by this user. */
+  ownerId?: string;
+  /** When set, restrict results to configs of this kind. */
+  kind?: DemoConfigKind;
+  /** When set, restrict results to configs that reference this Brand. */
+  brandId?: string;
+}
+
+export interface DemoConfigService {
+  create(input: CreateDemoConfigInput): Promise<DemoConfigRecord>;
+  get(id: string): Promise<DemoConfigRecord | null>;
+  list(options?: DemoConfigListOptions): Promise<DemoConfigRecord[]>;
+  update(
+    id: string,
+    input: UpdateDemoConfigInput,
+  ): Promise<DemoConfigRecord>;
+  delete(id: string): Promise<void>;
+  /**
+   * Idempotent create-or-update by caller-supplied id. Used by the
+   * backfill so re-runs don't duplicate rows and the existing demo
+   * URLs (which embed the legacy id) keep working unchanged (Q-014).
+   * Preserves `createdAt` on update; bumps `updatedAt`.
+   */
+  upsertWithId(
+    id: string,
+    input: CreateDemoConfigInput,
+  ): Promise<DemoConfigRecord>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
@@ -660,4 +766,5 @@ export interface Services {
   checkouts: CheckoutService;
   brands: BrandService;
   remittanceConfigs: RemittanceConfigService;
+  demoConfigs: DemoConfigService;
 }

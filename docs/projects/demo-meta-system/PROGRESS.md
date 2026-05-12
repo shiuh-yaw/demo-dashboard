@@ -40,7 +40,7 @@ Single source of truth for what's done, in flight, and blocked. Update after eve
 | 2-migrate. Brand backfill (Part B) | 🟢 done | [#56](https://github.com/dynamic-labs/demo-dashboard/pull/56) | Idempotent backfill via `pnpm --filter @dynamic-demos/dashboard backfill:brands`; deterministic id from `(ownerId, primaryColor, logoUrl)`. |
 | 2-migrate. Brand cutover | 🟡 in-flight | — | Legacy `BrandProfile` actions route through `BrandService` (Postgres when `USE_POSTGRES_BRANDS=true`); Brand row carries the full visual theme + linked demo-config ids. Demo-config records (earn/wallet/checkout/remittance) still Redis-resident pending PR 2-others. |
 | 2-migrate. First config-type migration (remittance) | 🟢 done | https://github.com/dynamic-labs/demo-dashboard/pull/59 | `RemittanceConfig` Prisma model + migration with RLS, Postgres + Redis services with 36 parity tests, `USE_POSTGRES_REMITTANCE` flag, and idempotent backfill (`pnpm --filter @dynamic-demos/dashboard backfill:remittance`) that auto-upserts a Brand per legacy config and preserves legacy ids (Q-014). |
-| 2-migrate. Per demo type migrations | ⚪️ pending | — | — |
+| 2-migrate. Unified `DemoConfig` table | 🟡 in-flight | [#81](https://github.com/dynamic-labs/demo-dashboard/pull/81) | Single `DemoConfig` Postgres table with `kind` discriminator replaces what would have been one table per demo type — see D-029. Covers earn, wallet, trade, visa-direct, checkout. Remittance fold-in is follow-up PR #82. The previously-planned per-type PRs (#83/#84/#85 in the original layout) are obsolete and will be closed. Action-layer cutover deferred. |
 | 2-migrate. Transactions + WebhookEvents tables | ⚪️ pending | — | — |
 | 3. AGENTS.md + demo-registry | ⚪️ pending | — | Parallel per package/app |
 
