@@ -183,7 +183,9 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
   beforeEach(() => {
     redis = createFakeRedis();
     brands = new RedisBrandService(redis);
-    demoConfigs = new RedisDemoConfigService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
   });
 
   it("creates Brand + DemoConfig for an earn record and preserves the id", async () => {
@@ -318,7 +320,9 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
   beforeEach(() => {
     redis = createFakeRedis();
     brands = new RedisBrandService(redis);
-    demoConfigs = new RedisDemoConfigService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
   });
 
   it("skips an earn record with no ownerId", async () => {
@@ -410,7 +414,9 @@ describe("runDemoConfigsBackfill — idempotency", () => {
   beforeEach(() => {
     redis = createFakeRedis();
     brands = new RedisBrandService(redis);
-    demoConfigs = new RedisDemoConfigService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
   });
 
   it("re-running with the same data yields zero new rows (deduped)", async () => {
@@ -501,7 +507,9 @@ describe("runDemoConfigsBackfill — partial failure", () => {
   beforeEach(() => {
     redis = createFakeRedis();
     brands = new RedisBrandService(redis);
-    demoConfigs = new RedisDemoConfigService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
   });
 
   it("keeps going when one record's upsertWithId throws", async () => {

@@ -64,11 +64,24 @@ function toRecord(stored: StoredDemoConfigRow): DemoConfigRecord {
   };
 }
 
+/**
+ * Optional constructor options. `enableLegacyFallback` defaults to `true`
+ * so the action layer (TD-002) sees pre-cutover rows. The backfill sets it
+ * to `false` so its existence-probe (`get(id) -> existing ? deduped : created`)
+ * only sees rows already migrated into the v2 keyspace.
+ */
+export interface RedisDemoConfigServiceOptions {
+  /** Default `true`. */
+  enableLegacyFallback?: boolean;
+}
+
 export class RedisDemoConfigService implements DemoConfigService {
   private readonly redis: RedisClient;
+  private readonly enableLegacyFallback: boolean;
 
-  constructor(redis?: RedisClient) {
+  constructor(redis?: RedisClient, options: RedisDemoConfigServiceOptions = {}) {
     this.redis = redis ?? getRedis();
+    this.enableLegacyFallback = options.enableLegacyFallback ?? true;
   }
 
   async create(input: CreateDemoConfigInput): Promise<DemoConfigRecord> {
@@ -101,6 +114,37 @@ export class RedisDemoConfigService implements DemoConfigService {
         REDIS_KEYS.demoConfig(kind, id),
       );
       if (stored) return toRecord(stored);
+    }
+    // TD-002 read-fallback: until the action-layer cutover writes every
+    // row through this service, production has rows under the legacy
+    // per-kind keyspaces (`dashboard:earn:<id>`, etc.). Probe each one
+    // before declaring a miss. No lazy upsert into v2 — the
+    // `backfill:demo-configs` script is the authoritative migration path
+    // (a read-time write would race the backfill and complicate brand
+    // resolution).
+    //
+    // The backfill itself disables this fallback via the constructor
+    // option — it needs `get(id) === null` for unmigrated ids so it
+    // creates fresh rows instead of marking them deduped.
+    if (this.enableLegacyFallback) {
+      return this.tryReadLegacy(id);
+    }
+    return null;
+  }
+
+  /**
+   * Read a row from the legacy per-kind Redis keyspaces. Returns a
+   * synthesised `DemoConfigRecord` so callers see one shape; the
+   * `brandId` is empty for legacy rows (they predate Brand records) and
+   * the mapper layer is responsible for hydrating Brand at the action
+   * boundary.
+   */
+  private async tryReadLegacy(
+    id: string,
+  ): Promise<DemoConfigRecord | null> {
+    for (const probe of LEGACY_PROBES) {
+      const raw = await this.redis.get<LegacyConfigShape>(probe.key(id));
+      if (raw) return legacyToRecord(probe.kind, id, raw);
     }
     return null;
   }
@@ -282,4 +326,69 @@ function splitComposite(composite: string): [DemoConfigKind, string] {
     composite.slice(0, idx) as DemoConfigKind,
     composite.slice(idx + 1),
   ];
+}
+
+// ============================================================================
+// Legacy-keyspace read fallback (TD-002)
+// ============================================================================
+//
+// Every legacy `Stored<Kind>Config` row shares the same outer shape — `id`,
+// `name`, `ownerId`, `createdAt`, `updatedAt`, and a kind-specific `config`
+// payload. That's enough to synthesise a `DemoConfigRecord` without writing
+// new code per kind. The mapper layer (action boundary) is responsible for
+// re-projecting the synthesised record back onto the kind-specific
+// `StoredXConfig` shape and for hydrating the linked Brand.
+//
+// Synthesised rows carry `brandId = ""` (legacy rows predate Brand records).
+// The action mapper either resolves a Brand on the fly (read path) or
+// triggers a brand-resolve + write-through on the next update — neither
+// happens here so the fallback stays read-only.
+
+interface LegacyConfigShape {
+  id: string;
+  name?: string | null;
+  description?: string | null;
+  ownerId?: string | null;
+  config: unknown;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface LegacyProbe {
+  kind: DemoConfigKind;
+  key: (id: string) => string;
+}
+
+const LEGACY_PROBES: readonly LegacyProbe[] = [
+  { kind: "earn", key: REDIS_KEYS.earnConfig },
+  { kind: "wallet", key: REDIS_KEYS.walletConfig },
+  { kind: "trade", key: REDIS_KEYS.tradeConfig },
+  { kind: "visa-direct", key: REDIS_KEYS.visaDirectConfig },
+  { kind: "checkout", key: REDIS_KEYS.checkoutConfig },
+  { kind: "remittance", key: REDIS_KEYS.remittanceConfig },
+];
+
+function legacyToRecord(
+  kind: DemoConfigKind,
+  id: string,
+  raw: LegacyConfigShape,
+): DemoConfigRecord {
+  const createdAt = raw.createdAt
+    ? new Date(raw.createdAt)
+    : new Date(0);
+  const updatedAt = raw.updatedAt
+    ? new Date(raw.updatedAt)
+    : createdAt;
+  return {
+    id,
+    kind,
+    ownerId: raw.ownerId ?? "",
+    name: raw.name ?? null,
+    description: raw.description ?? null,
+    brandId: "",
+    themeOverrides: null,
+    config: raw.config,
+    createdAt,
+    updatedAt,
+  };
 }

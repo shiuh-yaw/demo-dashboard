@@ -7,6 +7,24 @@ affected apps, and rough scope. Use this as the queue when picking up
 
 ---
 
+## TD-002 — Wire dashboard action layer through `DemoConfigService`
+
+**Status:** done — PR [#83](https://github.com/dynamic-labs/demo-dashboard/pull/83).
+**Surface area:** `apps/dashboard/src/lib/actions/{earns,wallets,trade,visa-direct,checkouts,remittance}.ts`.
+
+### What landed
+- All 6 demo-type action files now route through `services.demoConfigs.{create,get,list,update,delete}` via per-kind mappers in `apps/dashboard/src/lib/services/demo-config-mappers/`. `getRedis()` removed from every demo-type action.
+- Shared `brand-resolver.ts` derives `brandId` via `scripts/backfill-brands/hash.ts` (deterministic on `(ownerId, primaryColor, logoUrl)`) — action-created and backfill-created rows converge on the same Brand row.
+- `RedisDemoConfigService.get` falls back to the legacy per-kind keyspace on miss (read-only, no lazy upsert). The backfill constructs its service with `enableLegacyFallback: false` so its existence-probe stays honest.
+- `CreateDemoConfigInput.name` is nullable end-to-end: blank form input → `null` in DB. Mappers surface `"Untitled <Kind> Config"` at the UI boundary so list rows stay readable.
+- `USE_POSTGRES_DEMO_CONFIGS=false` default preserved. Redis remains canonical until ops flips it.
+- New tests: brand-resolver determinism, per-mapper round-trips (every kind), legacy-fallback read path, nullable name (270 dashboard tests total, +31 vs baseline).
+
+### Why it mattered
+This was the gate between dormant infrastructure and an actual cutover. Path now: apply migration to staging Supabase → run `backfill:demo-configs` → flip `USE_POSTGRES_DEMO_CONFIGS=true` → soak → production.
+
+---
+
 ## TD-001 — Consolidate auth flow into a shared `ConnectedAuthFlow`
 
 **Status:** open.

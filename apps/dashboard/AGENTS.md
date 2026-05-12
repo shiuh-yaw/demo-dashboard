@@ -76,6 +76,7 @@ Dashboard uses its own internal styling — it is the operator UI, not a custome
 - **Redis (QStash)** — webhook fan-out + cron tasks (Phase 5A).
 - **Provider event log** — `WebhookEvent` table (Phase 2-transactions + Phase 5A).
 - **Canonical transactions** — `transactions` table referenced by `demoInstanceId`, `brandId`, `parentTransactionId` (Phase 2-transactions).
+- **Per-demo-type config rows** — unified `DemoConfig` table (one row per demo, discriminated by `kind`). The action layer (`lib/actions/{earns,wallets,trade,visa-direct,checkouts,remittance}.ts`) routes every CRUD through `services.demoConfigs.*` via per-kind mappers under `lib/services/demo-config-mappers/`. Brand resolution is deterministic — `(ownerId, primaryColor, logoUrl)` hashes via `scripts/backfill-brands/hash.ts` so action- and backfill-created demos share the same Brand row. `USE_POSTGRES_DEMO_CONFIGS=false` default; Redis backend (with a legacy per-kind keyspace read-fallback) stays canonical until ops flips the flag.
 
 ## Deployment
 

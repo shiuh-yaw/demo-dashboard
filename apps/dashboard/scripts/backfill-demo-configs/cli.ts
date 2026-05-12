@@ -21,18 +21,31 @@
  * secret. Logging is restricted to record ids, kinds, and counts.
  */
 
-import { brandService, demoConfigService } from "@/lib/services";
+import { env } from "@/env";
+import { brandService } from "@/lib/services";
+import { PostgresDemoConfigService } from "@/lib/services/postgres/demo-configs";
+import { RedisDemoConfigService } from "@/lib/services/redis/demo-configs";
 import { getRedis } from "@/lib/redis";
+import type { DemoConfigService } from "@/lib/services/types";
 
 import { runDemoConfigsBackfill } from "./run";
 import { BACKFILL_KINDS } from "./types";
 
 async function main() {
   const redis = getRedis();
+  // The backfill uses `demoConfigs.get(id)` as an existence probe to
+  // distinguish `created` from `deduped`. The Redis service's TD-002
+  // legacy-keyspace fallback would otherwise resolve every unmigrated id
+  // to a synthesised record, producing a false `deduped` outcome. Disable
+  // it here — the backfill is the canonical migration path, not a
+  // read-through consumer.
+  const demoConfigs: DemoConfigService = env.USE_POSTGRES_DEMO_CONFIGS
+    ? new PostgresDemoConfigService()
+    : new RedisDemoConfigService(redis, { enableLegacyFallback: false });
   const report = await runDemoConfigsBackfill({
     redis,
     brands: brandService,
-    demoConfigs: demoConfigService,
+    demoConfigs,
     log: (m) => process.stdout.write(`${m}\n`),
   });
   process.stdout.write("\n=== DemoConfig backfill complete ===\n");

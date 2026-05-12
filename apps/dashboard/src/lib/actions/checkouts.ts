@@ -7,97 +7,77 @@
  * Authenticates via Dynamic JWT cookie.
  *
  * Note: "Checkout" is the unified term for deposit/payment widgets.
- * Uses "payment-widget" Redis keys for backwards compatibility.
+ *
+ * TD-002: routes through `services.demoConfigs.*` via `checkoutMapper`.
+ * The legacy `mode` field is preserved on the embedded `config` payload.
+ * See `lib/actions/earns.ts` for the pattern.
  */
 
 import { revalidatePath } from "next/cache";
-import { createId } from "@paralleldrive/cuid2";
-import { getRedis, REDIS_KEYS } from "@/lib/redis";
 import { getCurrentUser } from "@/lib/auth/session";
-import type { StoredCheckoutConfig, CheckoutMode } from "@/lib/types/dashboard";
+import { getRedis, REDIS_KEYS } from "@/lib/redis";
+import { services } from "@/lib/services";
+import { checkoutMapper } from "@/lib/services/demo-config-mappers/checkout";
+import type {
+  CheckoutMode,
+  StoredCheckoutConfig,
+} from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG, type WidgetConfig } from "@/lib/widget-config";
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
-/**
- * Create a new checkout configuration
- */
 export async function createCheckout(
   name: string,
   mode?: CheckoutMode,
   config?: Partial<WidgetConfig>
 ): Promise<ActionResult<StoredCheckoutConfig>> {
   const user = await getCurrentUser();
-  if (!user) {
-    return { success: false, error: "Authentication required" };
-  }
-
+  if (!user) return { success: false, error: "Authentication required" };
   try {
-    const redis = getRedis();
-    const id = createId();
-    const now = new Date().toISOString();
-
-    const newConfig: StoredCheckoutConfig = {
-      id,
-      name: name || "Untitled Checkout",
-      mode: mode || "payment",
-      config: { ...DEFAULT_WIDGET_CONFIG, ...config },
+    const create = await checkoutMapper.toCreateInput(services.brands, {
       ownerId: user.sub,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.checkoutConfig(id), newConfig);
-    await redis.sadd(REDIS_KEYS.checkoutConfigList, id);
-
+      name: name && name.length > 0 ? name : null,
+      description: null,
+      mode: mode ?? "payment",
+      config: { ...DEFAULT_WIDGET_CONFIG, ...config },
+    });
+    const record = await services.demoConfigs.create(create);
+    const brand = await services.brands.get(record.brandId);
+    const stored = checkoutMapper.toStored(record, brand);
     revalidatePath("/");
     revalidatePath("/checkouts");
-
-    return { success: true, data: newConfig };
+    return { success: true, data: stored };
   } catch (err) {
     console.error("Failed to create checkout:", err);
     return { success: false, error: "Failed to create checkout" };
   }
 }
 
-/**
- * Get a checkout configuration by ID
- */
 export async function getCheckout(
   id: string
 ): Promise<ActionResult<StoredCheckoutConfig>> {
   const user = await getCurrentUser();
-  if (!user) {
-    return { success: false, error: "Authentication required" };
-  }
-
+  if (!user) return { success: false, error: "Authentication required" };
   try {
-    const redis = getRedis();
-    const config = await redis.get<StoredCheckoutConfig>(
-      REDIS_KEYS.checkoutConfig(id)
-    );
-
-    if (!config) {
+    const record = await services.demoConfigs.get(id);
+    if (!record || record.kind !== "checkout") {
       return { success: false, error: "Checkout not found" };
     }
-
-    // Check ownership (allow orphaned checkouts)
-    if (config.ownerId && config.ownerId !== user.sub) {
+    if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-
-    return { success: true, data: config };
+    const brand = record.brandId
+      ? await services.brands.get(record.brandId)
+      : null;
+    return { success: true, data: checkoutMapper.toStored(record, brand) };
   } catch (err) {
     console.error("Failed to get checkout:", err);
     return { success: false, error: "Failed to get checkout" };
   }
 }
 
-/**
- * Update an existing checkout configuration
- */
 export async function updateCheckout(
   id: string,
   updates: {
@@ -108,80 +88,55 @@ export async function updateCheckout(
   }
 ): Promise<ActionResult<StoredCheckoutConfig>> {
   const user = await getCurrentUser();
-  if (!user) {
-    return { success: false, error: "Authentication required" };
-  }
-
+  if (!user) return { success: false, error: "Authentication required" };
   try {
-    const redis = getRedis();
-    const existing = await redis.get<StoredCheckoutConfig>(
-      REDIS_KEYS.checkoutConfig(id)
-    );
-
-    if (!existing) {
+    const existing = await services.demoConfigs.get(id);
+    if (!existing || existing.kind !== "checkout") {
       return { success: false, error: "Checkout not found" };
     }
-
-    // Check ownership (allow orphaned checkouts to be claimed)
     if (existing.ownerId && existing.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-
-    const updated: StoredCheckoutConfig = {
-      ...existing,
-      name: updates.name ?? existing.name,
-      description: updates.description ?? existing.description,
-      mode: updates.mode ?? existing.mode,
-      config: updates.config ?? existing.config,
-      ownerId: existing.ownerId || user.sub, // Claim orphaned checkouts
-      updatedAt: new Date().toISOString(),
-    };
-
-    await redis.set(REDIS_KEYS.checkoutConfig(id), updated);
-
+    const update = await checkoutMapper.toUpdateInput(
+      services.brands,
+      existing,
+      {
+        ownerId: existing.ownerId || user.sub,
+        name: updates.name,
+        description: updates.description,
+        mode: updates.mode,
+        config: updates.config,
+      },
+    );
+    const updated = await services.demoConfigs.update(id, update);
+    const brand = await services.brands.get(updated.brandId);
+    const stored = checkoutMapper.toStored(updated, brand);
     revalidatePath("/");
     revalidatePath("/checkouts");
     revalidatePath(`/checkouts/${id}`);
-
-    return { success: true, data: updated };
+    return { success: true, data: stored };
   } catch (err) {
     console.error("Failed to update checkout:", err);
     return { success: false, error: "Failed to update checkout" };
   }
 }
 
-/**
- * Delete a checkout configuration
- */
 export async function deleteCheckout(
   id: string
 ): Promise<ActionResult<{ deleted: true }>> {
   const user = await getCurrentUser();
-  if (!user) {
-    return { success: false, error: "Authentication required" };
-  }
-
+  if (!user) return { success: false, error: "Authentication required" };
   try {
-    const redis = getRedis();
-    const config = await redis.get<StoredCheckoutConfig>(
-      REDIS_KEYS.checkoutConfig(id)
-    );
-
-    if (!config) {
+    const record = await services.demoConfigs.get(id);
+    if (!record || record.kind !== "checkout") {
       return { success: false, error: "Checkout not found" };
     }
-
-    // Check ownership
-    if (config.ownerId && config.ownerId !== user.sub) {
+    if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-
-    await redis.del(REDIS_KEYS.checkoutConfig(id));
-    await redis.srem(REDIS_KEYS.checkoutConfigList, id);
-
+    await services.demoConfigs.delete(id);
     revalidatePath("/");
     revalidatePath("/checkouts");
-
     return { success: true, data: { deleted: true } };
   } catch (err) {
     console.error("Failed to delete checkout:", err);
@@ -189,53 +144,25 @@ export async function deleteCheckout(
   }
 }
 
-/**
- * Fetches checkout configurations for the current user and orphaned checkouts
- *
- * @returns Object with user's checkouts and orphaned checkouts, sorted by updatedAt descending
- * @throws Error if Redis operation fails or times out
- */
 export async function getAllCheckoutConfigs(): Promise<{
   checkouts: StoredCheckoutConfig[];
   orphaned: StoredCheckoutConfig[];
 }> {
   const user = await getCurrentUser();
   if (!user) return { checkouts: [], orphaned: [] };
-
-  const redis = getRedis();
-
-  // Get all config IDs from the list
-  const configIds = await redis.smembers(REDIS_KEYS.checkoutConfigList);
-
-  if (!configIds || configIds.length === 0) {
-    return { checkouts: [], orphaned: [] };
-  }
-
-  // Fetch all configs
-  const fetchedConfigs = await Promise.all(
-    configIds.map(async (id) => {
-      const config = await redis.get<StoredCheckoutConfig>(
-        REDIS_KEYS.checkoutConfig(id)
-      );
-      return config;
-    })
+  const all = await services.demoConfigs.list({ kind: "checkout" });
+  const stored = await Promise.all(
+    all.map(async (record) => {
+      const brand = record.brandId
+        ? await services.brands.get(record.brandId)
+        : null;
+      return checkoutMapper.toStored(record, brand);
+    }),
   );
-
-  // Filter out nulls
-  const validConfigs = fetchedConfigs.filter(
-    (c): c is StoredCheckoutConfig => c !== null
-  );
-
-  // Separate user's checkouts and orphaned checkouts
-  const userCheckouts = user
-    ? validConfigs.filter((c) => c.ownerId === user.sub)
-    : [];
-  const orphanedCheckouts = validConfigs.filter((c) => !c.ownerId);
-
-  // Sort both lists by updatedAt descending
+  const userCheckouts = stored.filter((c) => c.ownerId === user.sub);
+  const orphanedCheckouts = stored.filter((c) => !c.ownerId);
   const sortByUpdated = (a: StoredCheckoutConfig, b: StoredCheckoutConfig) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-
   return {
     checkouts: userCheckouts.sort(sortByUpdated),
     orphaned: orphanedCheckouts.sort(sortByUpdated),
@@ -243,45 +170,37 @@ export async function getAllCheckoutConfigs(): Promise<{
 }
 
 /**
- * Fetches a single checkout configuration by ID
- *
- * @param id - Checkout configuration ID
- * @returns Checkout configuration or null if not found/unauthorized
+ * Fetches a single checkout configuration by ID (auth-required, used by
+ * layout/settings pages). Returns `null` on miss or access denied.
  */
 export async function getCheckoutConfig(
   id: string
 ): Promise<StoredCheckoutConfig | null> {
   const user = await getCurrentUser();
   if (!user) return null;
-
-  const redis = getRedis();
-  const config = await redis.get<StoredCheckoutConfig>(
-    REDIS_KEYS.checkoutConfig(id)
-  );
-
-  if (!config) return null;
-
-  // Check ownership (allow orphaned checkouts)
-  if (config.ownerId && config.ownerId !== user.sub) {
-    return null;
-  }
-
-  return config;
+  const record = await services.demoConfigs.get(id);
+  if (!record || record.kind !== "checkout") return null;
+  if (record.ownerId && record.ownerId !== user.sub) return null;
+  const brand = record.brandId
+    ? await services.brands.get(record.brandId)
+    : null;
+  return checkoutMapper.toStored(record, brand);
 }
 
 /**
  * Get transaction count for a checkout
+ *
+ * Note: transaction data still lives in Redis under the `checkout:*:txs`
+ * keyspace (independent of demo-config storage). That's unchanged by
+ * TD-002 — only per-demo-type config rows route through the service.
  */
 export async function getCheckoutTransactionCount(
   checkoutId: string
 ): Promise<number> {
   const user = await getCurrentUser();
   if (!user) return 0;
-
-  // Verify user has access to this checkout
   const config = await getCheckoutConfig(checkoutId);
   if (!config) return 0;
-
   const redis = getRedis();
   const txIds = await redis.smembers(
     REDIS_KEYS.checkoutTransactions(checkoutId)
