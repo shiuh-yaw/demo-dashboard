@@ -56,7 +56,7 @@ export async function GET(
     const client = getFireblocksClient();
 
     const listIncoming = () =>
-      client.listTransactions({
+      client.transactions.list({
         destId: vaultId,
         destType: "VAULT_ACCOUNT",
         assets: asset,
@@ -66,7 +66,7 @@ export async function GET(
       });
 
     const listOutgoing = () =>
-      client.listTransactions({
+      client.transactions.list({
         sourceId: vaultId,
         sourceType: "VAULT_ACCOUNT",
         assets: asset,

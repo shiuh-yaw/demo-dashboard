@@ -86,6 +86,32 @@ export type {
   FireblocksTransactionWebhookData,
 } from "./webhook/notification-schemas";
 
+// Shared request signing helper (used by orders + raw REST escape hatch)
+export {
+  signFireblocksRequest,
+  type SignFireblocksRequestInput,
+  type SignedFireblocksRequest,
+} from "./sign-request";
+
+// Raw REST escape hatch
+export {
+  createApiClient,
+  FireblocksApiError,
+  type FireblocksApiClient,
+  type CreateApiClientConfig,
+} from "./api";
+
+// Pre-transaction compliance screening
+export {
+  createComplianceModule,
+  FireblocksComplianceError,
+  type ComplianceModule,
+  type ComplianceVerdict,
+  type ScreenTransactionParams,
+  type ScreenTransactionResult,
+  type CreateComplianceModuleDeps,
+} from "./compliance";
+
 // Trading orders (Fireblocks DVP / Network listings)
 export {
   listOrders,

@@ -23,8 +23,8 @@ export default async function AdminVaultsPage() {
   try {
     const client = getFireblocksClient();
     const [v, addrs] = await Promise.all([
-      client.getVaultAccount(omnibusVaultId),
-      client.getDepositAddresses(omnibusVaultId, assetId).catch(() => []),
+      client.vault.getAccount(omnibusVaultId),
+      client.vault.getDepositAddresses(omnibusVaultId, assetId).catch(() => []),
     ]);
     vault = v;
     addresses = addrs;

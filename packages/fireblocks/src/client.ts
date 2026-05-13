@@ -2,27 +2,51 @@
  * Fireblocks API Client
  *
  * Wraps the official @fireblocks/ts-sdk with our simplified types.
+ *
+ * The public surface is namespaced — `fb.vault.*`, `fb.transactions.*`,
+ * `fb.internalWallets.*`, `fb.orders.*`, `fb.compliance.*`,
+ * `fb.providers.*`, plus the `fb.sdk` (raw SDK) and `fb.api` (raw REST)
+ * escape hatches. The actual SDK call bodies are unchanged from the
+ * previous flat client; this file only reorganizes them.
  */
 
 import { Fireblocks, type BasePath } from "@fireblocks/ts-sdk";
+
+import { createApiClient, type FireblocksApiClient } from "./api";
+import type { IFireblocksClient } from "./client-interface";
+import { createComplianceModule, type ComplianceModule } from "./compliance";
+import {
+  createOrdersNamespace,
+  type OrdersNamespace,
+  type ProviderEnvironment,
+} from "./orders";
+import * as alfredpay from "./providers/alfredpay";
+import * as mtlco from "./providers/mtlco";
 import type {
   FireblocksConfig,
-  IFireblocksClient,
-  InternalWalletSummary,
+  InternalWalletsNamespace,
+  TransactionsNamespace,
+  TransferPeerPath,
   VaultAccount,
   VaultAsset,
   VaultWallet,
-  DepositAddress,
   TransactionResponse,
-  CreateTransactionRequest,
-  ListTransactionsParams,
-  TransferPeerPath,
+  DepositAddress,
+  InternalWalletSummary,
   VaultAccountsTagAttachmentOperationsRequest,
   VaultAccountsTagAttachmentOperationsResponse,
+  VaultNamespace,
 } from "./types";
 
 export class FireblocksClient implements IFireblocksClient {
-  private sdk: Fireblocks;
+  readonly sdk: Fireblocks;
+  readonly vault: VaultNamespace;
+  readonly transactions: TransactionsNamespace;
+  readonly internalWallets: InternalWalletsNamespace;
+  readonly orders: OrdersNamespace;
+  readonly compliance: ComplianceModule;
+  readonly providers: { mtlco: typeof mtlco; alfredpay: typeof alfredpay };
+  readonly api: FireblocksApiClient;
 
   constructor(config: FireblocksConfig) {
     this.sdk = new Fireblocks({
@@ -30,265 +54,293 @@ export class FireblocksClient implements IFireblocksClient {
       secretKey: config.apiSecret,
       basePath: config.baseUrl as BasePath,
     });
-  }
 
-  async createVaultAccount(
-    name: string,
-    opts?: { hiddenOnUI?: boolean; customerRefId?: string; autoFuel?: boolean },
-  ): Promise<VaultAccount> {
-    const res = await this.sdk.vaults.createVaultAccount({
-      createVaultAccountRequest: {
-        name,
-        hiddenOnUI: opts?.hiddenOnUI ?? false,
-        autoFuel: opts?.autoFuel ?? false,
-        ...(opts?.customerRefId ? { customerRefId: opts.customerRefId } : {}),
+    // ─── vault ────────────────────────────────────────────────────────────
+    this.vault = {
+      createAccount: async (
+        name: string,
+        opts?: { hiddenOnUI?: boolean; customerRefId?: string; autoFuel?: boolean },
+      ): Promise<VaultAccount> => {
+        const res = await this.sdk.vaults.createVaultAccount({
+          createVaultAccountRequest: {
+            name,
+            hiddenOnUI: opts?.hiddenOnUI ?? false,
+            autoFuel: opts?.autoFuel ?? false,
+            ...(opts?.customerRefId ? { customerRefId: opts.customerRefId } : {}),
+          },
+        });
+        return this.mapVaultAccount(res.data);
       },
-    });
-    return this.mapVaultAccount(res.data);
-  }
 
-  async getVaultAccount(vaultId: string): Promise<VaultAccount> {
-    const res = await this.sdk.vaults.getVaultAccount({
-      vaultAccountId: vaultId,
-    });
-    return this.mapVaultAccount(res.data);
-  }
-
-  async listVaultAccounts(limit = 50): Promise<VaultAccount[]> {
-    const res = await this.sdk.vaults.getPagedVaultAccounts({ limit });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (res.data.accounts ?? []).map((a: any) => this.mapVaultAccount(a));
-  }
-
-  async hideVaultAccount(vaultId: string): Promise<void> {
-    await this.sdk.vaults.hideVaultAccount({ vaultAccountId: vaultId });
-  }
-
-  async setVaultAccountCustomerRefId(
-    vaultId: string,
-    customerRefId: string,
-  ): Promise<void> {
-    await this.sdk.vaults.setVaultAccountCustomerRefId({
-      vaultAccountId: vaultId,
-      setCustomerRefIdRequest: { customerRefId },
-    });
-  }
-
-  async attachOrDetachTagsFromVaultAccounts(
-    request: VaultAccountsTagAttachmentOperationsRequest,
-    opts?: { idempotencyKey?: string },
-  ): Promise<VaultAccountsTagAttachmentOperationsResponse> {
-    const res = await this.sdk.vaults.attachOrDetachTagsFromVaultAccounts({
-      vaultAccountsTagAttachmentOperationsRequest: {
-        vaultAccountIds: request.vaultAccountIds,
-        tagIdsToAttach: request.tagIdsToAttach,
-        tagIdsToDetach: request.tagIdsToDetach,
+      getAccount: async (vaultId: string): Promise<VaultAccount> => {
+        const res = await this.sdk.vaults.getVaultAccount({
+          vaultAccountId: vaultId,
+        });
+        return this.mapVaultAccount(res.data);
       },
-      idempotencyKey: opts?.idempotencyKey,
-    });
-    return res.data as VaultAccountsTagAttachmentOperationsResponse;
-  }
 
-  async listInternalWallets(): Promise<InternalWalletSummary[]> {
-    const res = await this.sdk.internalWallets.getInternalWallets();
-    const list = Array.isArray(res.data) ? res.data : [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return list.map((w: any) => ({
-      id: String(w.id ?? ""),
-      name: String(w.name ?? ""),
-      customerRefId:
-        w.customerRefId != null ? String(w.customerRefId) : undefined,
-    }));
-  }
-
-  async createInternalWallet(
-    name: string,
-    opts?: { customerRefId?: string },
-  ): Promise<{ id: string }> {
-    const res = await this.sdk.internalWallets.createInternalWallet({
-      createWalletRequest: {
-        name,
-        customerRefId: opts?.customerRefId,
+      listAccounts: async (limit = 50): Promise<VaultAccount[]> => {
+        const res = await this.sdk.vaults.getPagedVaultAccounts({ limit });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (res.data.accounts ?? []).map((a: any) => this.mapVaultAccount(a));
       },
-    });
-    return { id: String(res.data.id ?? "") };
-  }
 
-  async getInternalWallet(walletId: string): Promise<{
-    id: string;
-    assets: { id: string; address?: string }[];
-  }> {
-    const res = await this.sdk.internalWallets.getInternalWallet({
-      walletId,
-    });
-    const d = res.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const assets = (d.assets ?? []).map((a: any) => {
-      const id = String(a.id ?? "");
-      const raw = a.address ?? a.baseAssetAddress;
-      const address =
-        raw != null && String(raw).trim() !== ""
-          ? String(raw).trim()
-          : undefined;
-      return { id, address };
-    });
-    return { id: String(d.id ?? ""), assets };
-  }
-
-  async createInternalWalletAsset(
-    walletId: string,
-    assetId: string,
-    address: string,
-  ): Promise<void> {
-    await this.sdk.internalWallets.createInternalWalletAsset({
-      walletId,
-      assetId,
-      createInternalWalletAssetRequest: { address },
-    });
-  }
-
-  async createVaultWallet(
-    vaultId: string,
-    assetId: string,
-  ): Promise<VaultWallet> {
-    const res = await this.sdk.vaults.createVaultAccountAsset({
-      vaultAccountId: vaultId,
-      assetId,
-    });
-    return this.mapVaultWallet(res.data);
-  }
-
-  async getDepositAddresses(
-    vaultId: string,
-    assetId: string,
-  ): Promise<DepositAddress[]> {
-    const res = await this.sdk.vaults.getVaultAccountAssetAddressesPaginated({
-      vaultAccountId: vaultId,
-      assetId,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (res.data.addresses ?? []).map((a: any) => ({
-      address: String(a.address ?? ""),
-      description: String(a.description ?? ""),
-      tag: String(a.tag ?? ""),
-      type: String(a.type ?? ""),
-      customerRefId: a.customerRefId as string | undefined,
-      addressFormat: a.addressFormat as string | undefined,
-      legacyAddress: a.legacyAddress as string | undefined,
-      enterpriseAddress: a.enterpriseAddress as string | undefined,
-    }));
-  }
-
-  async createTransaction(
-    request: CreateTransactionRequest,
-  ): Promise<TransactionResponse> {
-    const res = await this.sdk.transactions.createTransaction({
-      transactionRequest: {
-        assetId: request.assetId,
-        amount: request.amount,
-        source: this.mapPeerPathToSdk(request.source),
-        destination: this.mapPeerPathToSdk(request.destination),
-        externalTxId: request.externalTxId,
-        note: request.note,
-        customerRefId: request.customerRefId,
-        ...(request.useGasless !== undefined
-          ? { useGasless: request.useGasless }
-          : {}),
+      hideAccount: async (vaultId: string): Promise<void> => {
+        await this.sdk.vaults.hideVaultAccount({ vaultAccountId: vaultId });
       },
-    });
-    // createTransaction returns a minimal response (id + status).
-    // Fetch the full transaction to return our complete type.
-    const txId = String(res.data.id);
-    return this.getTransaction(txId);
-  }
 
-  async getTransaction(txId: string): Promise<TransactionResponse> {
-    const res = await this.sdk.transactions.getTransaction({ txId });
-    return this.mapTransaction(res.data);
-  }
-
-  async getTransactionByExternalTxId(
-    externalTxId: string,
-  ): Promise<TransactionResponse | null> {
-    try {
-      const res = await this.sdk.transactions.getTransactionByExternalId({
-        externalTxId,
-      });
-      return this.mapTransaction(res.data);
-    } catch (err: unknown) {
-      if (FireblocksClient.isNotFoundError(err)) return null;
-      throw err;
-    }
-  }
-
-  async createDepositAddress(
-    vaultId: string,
-    assetId: string,
-    opts?: { description?: string; customerRefId?: string },
-  ): Promise<DepositAddress> {
-    const res = await this.sdk.vaults.createVaultAccountAssetAddress({
-      vaultAccountId: vaultId,
-      assetId,
-      createAddressRequest: {
-        description: opts?.description,
-        customerRefId: opts?.customerRefId,
+      setCustomerRefId: async (
+        vaultId: string,
+        customerRefId: string,
+      ): Promise<void> => {
+        await this.sdk.vaults.setVaultAccountCustomerRefId({
+          vaultAccountId: vaultId,
+          setCustomerRefIdRequest: { customerRefId },
+        });
       },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = res.data as any;
-    return {
-      address: String(raw.address ?? ""),
-      description: String(raw.description ?? opts?.description ?? ""),
-      tag: String(raw.tag ?? ""),
-      type: String(raw.type ?? "DEPOSIT"),
-      customerRefId: raw.customerRefId as string | undefined,
-      addressFormat: raw.addressFormat as string | undefined,
-      legacyAddress: raw.legacyAddress as string | undefined,
-      enterpriseAddress: raw.enterpriseAddress as string | undefined,
+
+      attachOrDetachTags: async (
+        request: VaultAccountsTagAttachmentOperationsRequest,
+        opts?: { idempotencyKey?: string },
+      ): Promise<VaultAccountsTagAttachmentOperationsResponse> => {
+        const res = await this.sdk.vaults.attachOrDetachTagsFromVaultAccounts({
+          vaultAccountsTagAttachmentOperationsRequest: {
+            vaultAccountIds: request.vaultAccountIds,
+            tagIdsToAttach: request.tagIdsToAttach,
+            tagIdsToDetach: request.tagIdsToDetach,
+          },
+          idempotencyKey: opts?.idempotencyKey,
+        });
+        return res.data as VaultAccountsTagAttachmentOperationsResponse;
+      },
+
+      createWallet: async (
+        vaultId: string,
+        assetId: string,
+      ): Promise<VaultWallet> => {
+        const res = await this.sdk.vaults.createVaultAccountAsset({
+          vaultAccountId: vaultId,
+          assetId,
+        });
+        return this.mapVaultWallet(res.data);
+      },
+
+      getDepositAddresses: async (
+        vaultId: string,
+        assetId: string,
+      ): Promise<DepositAddress[]> => {
+        const res = await this.sdk.vaults.getVaultAccountAssetAddressesPaginated({
+          vaultAccountId: vaultId,
+          assetId,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (res.data.addresses ?? []).map((a: any) => ({
+          address: String(a.address ?? ""),
+          description: String(a.description ?? ""),
+          tag: String(a.tag ?? ""),
+          type: String(a.type ?? ""),
+          customerRefId: a.customerRefId as string | undefined,
+          addressFormat: a.addressFormat as string | undefined,
+          legacyAddress: a.legacyAddress as string | undefined,
+          enterpriseAddress: a.enterpriseAddress as string | undefined,
+        }));
+      },
+
+      createDepositAddress: async (
+        vaultId: string,
+        assetId: string,
+        opts?: { description?: string; customerRefId?: string },
+      ): Promise<DepositAddress> => {
+        const res = await this.sdk.vaults.createVaultAccountAssetAddress({
+          vaultAccountId: vaultId,
+          assetId,
+          createAddressRequest: {
+            description: opts?.description,
+            customerRefId: opts?.customerRefId,
+          },
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = res.data as any;
+        return {
+          address: String(raw.address ?? ""),
+          description: String(raw.description ?? opts?.description ?? ""),
+          tag: String(raw.tag ?? ""),
+          type: String(raw.type ?? "DEPOSIT"),
+          customerRefId: raw.customerRefId as string | undefined,
+          addressFormat: raw.addressFormat as string | undefined,
+          legacyAddress: raw.legacyAddress as string | undefined,
+          enterpriseAddress: raw.enterpriseAddress as string | undefined,
+        };
+      },
+
+      getAssetBalance: async (
+        vaultId: string,
+        assetId: string,
+      ): Promise<VaultAsset> => {
+        const res = await this.sdk.vaults.getVaultAccountAsset({
+          vaultAccountId: vaultId,
+          assetId,
+        });
+        const raw = res.data;
+        return {
+          id: String(raw.id ?? assetId),
+          total: String(raw.total ?? "0"),
+          available: String(raw.available ?? "0"),
+          pending: String(raw.pending ?? "0"),
+          frozen: String(raw.frozen ?? "0"),
+          lockedAmount: String(raw.lockedAmount ?? "0"),
+          blockHeight: String(raw.blockHeight ?? ""),
+          blockHash: String(raw.blockHash ?? ""),
+        };
+      },
     };
-  }
 
-  async getVaultAssetBalance(
-    vaultId: string,
-    assetId: string,
-  ): Promise<VaultAsset> {
-    const res = await this.sdk.vaults.getVaultAccountAsset({
-      vaultAccountId: vaultId,
-      assetId,
-    });
-    const raw = res.data;
-    return {
-      id: String(raw.id ?? assetId),
-      total: String(raw.total ?? "0"),
-      available: String(raw.available ?? "0"),
-      pending: String(raw.pending ?? "0"),
-      frozen: String(raw.frozen ?? "0"),
-      lockedAmount: String(raw.lockedAmount ?? "0"),
-      blockHeight: String(raw.blockHeight ?? ""),
-      blockHash: String(raw.blockHash ?? ""),
+    // ─── transactions ─────────────────────────────────────────────────────
+    this.transactions = {
+      create: async (request): Promise<TransactionResponse> => {
+        const res = await this.sdk.transactions.createTransaction({
+          transactionRequest: {
+            assetId: request.assetId,
+            amount: request.amount,
+            source: this.mapPeerPathToSdk(request.source),
+            destination: this.mapPeerPathToSdk(request.destination),
+            externalTxId: request.externalTxId,
+            note: request.note,
+            customerRefId: request.customerRefId,
+            ...(request.useGasless !== undefined
+              ? { useGasless: request.useGasless }
+              : {}),
+          },
+        });
+        // createTransaction returns a minimal response (id + status).
+        // Fetch the full transaction to return our complete type.
+        const txId = String(res.data.id);
+        return this.transactions.get(txId);
+      },
+
+      get: async (txId: string): Promise<TransactionResponse> => {
+        const res = await this.sdk.transactions.getTransaction({ txId });
+        return this.mapTransaction(res.data);
+      },
+
+      getByExternalId: async (
+        externalTxId: string,
+      ): Promise<TransactionResponse | null> => {
+        try {
+          const res = await this.sdk.transactions.getTransactionByExternalId({
+            externalTxId,
+          });
+          return this.mapTransaction(res.data);
+        } catch (err: unknown) {
+          if (FireblocksClient.isNotFoundError(err)) return null;
+          throw err;
+        }
+      },
+
+      list: async (params): Promise<TransactionResponse[]> => {
+        const res = await this.sdk.transactions.getTransactions({
+          before: params?.before,
+          after: params?.after,
+          status: params?.status,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          sourceType: params?.sourceType as any,
+          sourceId: params?.sourceId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          destType: params?.destType as any,
+          destId: params?.destId,
+          assets: params?.assets,
+          limit: params?.limit ?? 50,
+          orderBy: params?.orderBy,
+          sort: params?.sort,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (res.data ?? []).map((tx: any) => this.mapTransaction(tx));
+      },
     };
-  }
 
-  async listTransactions(
-    params?: ListTransactionsParams,
-  ): Promise<TransactionResponse[]> {
-    const res = await this.sdk.transactions.getTransactions({
-      before: params?.before,
-      after: params?.after,
-      status: params?.status,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sourceType: params?.sourceType as any,
-      sourceId: params?.sourceId,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      destType: params?.destType as any,
-      destId: params?.destId,
-      assets: params?.assets,
-      limit: params?.limit ?? 50,
-      orderBy: params?.orderBy,
-      sort: params?.sort,
+    // ─── internalWallets ──────────────────────────────────────────────────
+    this.internalWallets = {
+      list: async (): Promise<InternalWalletSummary[]> => {
+        const res = await this.sdk.internalWallets.getInternalWallets();
+        const list = Array.isArray(res.data) ? res.data : [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return list.map((w: any) => ({
+          id: String(w.id ?? ""),
+          name: String(w.name ?? ""),
+          customerRefId:
+            w.customerRefId != null ? String(w.customerRefId) : undefined,
+        }));
+      },
+
+      get: async (walletId: string) => {
+        const res = await this.sdk.internalWallets.getInternalWallet({
+          walletId,
+        });
+        const d = res.data;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const assets = (d.assets ?? []).map((a: any) => {
+          const id = String(a.id ?? "");
+          const raw = a.address ?? a.baseAssetAddress;
+          const address =
+            raw != null && String(raw).trim() !== ""
+              ? String(raw).trim()
+              : undefined;
+          return { id, address };
+        });
+        return { id: String(d.id ?? ""), assets };
+      },
+
+      create: async (
+        name: string,
+        opts?: { customerRefId?: string },
+      ): Promise<{ id: string }> => {
+        const res = await this.sdk.internalWallets.createInternalWallet({
+          createWalletRequest: {
+            name,
+            customerRefId: opts?.customerRefId,
+          },
+        });
+        return { id: String(res.data.id ?? "") };
+      },
+
+      createAsset: async (
+        walletId: string,
+        assetId: string,
+        address: string,
+      ): Promise<void> => {
+        await this.sdk.internalWallets.createInternalWalletAsset({
+          walletId,
+          assetId,
+          createInternalWalletAssetRequest: { address },
+        });
+      },
+    };
+
+    // ─── orders ───────────────────────────────────────────────────────────
+    // Heuristic: production base path → production env; else sandbox.
+    const env: ProviderEnvironment = /api\.fireblocks\.io/.test(config.baseUrl)
+      ? "production"
+      : "sandbox";
+    this.orders = createOrdersNamespace({
+      apiKey: config.apiKey,
+      apiSecretPem: config.apiSecret,
+      env,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (res.data ?? []).map((tx: any) => this.mapTransaction(tx));
+
+    // ─── compliance ───────────────────────────────────────────────────────
+    // The SDK's compliance module shape is internal; cast through `never`
+    // and let `compliance.ts` defensively read the response.
+    this.compliance = createComplianceModule({ sdk: this.sdk as never });
+
+    // ─── providers ────────────────────────────────────────────────────────
+    this.providers = { mtlco, alfredpay };
+
+    // ─── api (raw REST escape hatch) ──────────────────────────────────────
+    this.api = createApiClient({
+      apiKey: config.apiKey,
+      secretKey: config.apiSecret,
+      basePath: config.baseUrl,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -438,8 +490,8 @@ export class FireblocksClient implements IFireblocksClient {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   /** Fireblocks peers may put the chain address in `address` or only in `oneTimeAddress.address`. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapPeerPath(raw: any): TransferPeerPath {
     const a =
       (typeof raw?.address === "string" ? raw.address.trim() : "") ||

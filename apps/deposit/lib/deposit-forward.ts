@@ -89,7 +89,7 @@ export async function submitDepositForward(
   const internalWalletIdTrim = internalWalletId.trim();
   const extId = forwardExternalTxId(incomingTxIdTrim);
 
-  const existing = await client.getTransactionByExternalTxId(extId);
+  const existing = await client.transactions.getByExternalId(extId);
   if (existing) {
     console.log(
       "[deposit-forward] skip createTransaction — forward already exists for incoming tx",
@@ -117,7 +117,7 @@ export async function submitDepositForward(
   });
 
   try {
-    await client.createTransaction(txRequest);
+    await client.transactions.create(txRequest);
     console.log("[deposit-forward] forward transaction submitted", {
       incomingTxId: incomingTxIdTrim,
       externalTxId: extId,

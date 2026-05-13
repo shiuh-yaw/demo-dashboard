@@ -16,8 +16,7 @@
  * @see https://developers.fireblocks.com/reference/createorder
  */
 
-import { createHash, randomUUID } from "node:crypto";
-import { SignJWT, importPKCS8 } from "jose";
+import { signFireblocksRequest } from "./sign-request";
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -209,22 +208,17 @@ async function buildAuthJwt(
   path: string,
   body: unknown,
 ): Promise<string> {
-  const bodyStr = body != null ? JSON.stringify(body) : "";
-  const bodyHash = createHash("sha256").update(bodyStr).digest("hex");
-  const now = Math.floor(Date.now() / 1000);
-
-  const key = await importPKCS8(privateKeyPem, "RS256");
-
-  return new SignJWT({
-    uri: path,
-    nonce: randomUUID(),
-    iat: now,
-    exp: now + 30,
-    sub: apiKey,
-    bodyHash,
-  })
-    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .sign(key);
+  const bodyBuffer =
+    body != null ? Buffer.from(JSON.stringify(body)) : undefined;
+  const signed = await signFireblocksRequest({
+    secretKey: privateKeyPem,
+    apiKey,
+    // orders.ts uses POST and GET; method doesn't affect the JWT itself.
+    method: "POST",
+    path,
+    bodyBuffer,
+  });
+  return signed.token;
 }
 
 async function readJsonOrText(res: Response): Promise<unknown> {
@@ -390,5 +384,28 @@ export async function createOrder(
     orderId: raw.id,
     status: raw.status,
     raw,
+  };
+}
+
+// ─── Namespace wrapper (used by FireblocksClient.orders) ─────────────────────
+
+/**
+ * Namespaced surface exposed via `fb.orders` on the high-level client.
+ * Binds an already-configured `FireblocksOrdersClient` so callers don't
+ * have to repeat credentials on every call.
+ */
+export interface OrdersNamespace {
+  list(opts?: ListOrdersOptions): Promise<FireblocksOrder[]>;
+  get(orderId: string): Promise<FireblocksOrder>;
+  create(params: CreateOrderParams): Promise<CreateOrderResult>;
+}
+
+export function createOrdersNamespace(
+  client: FireblocksOrdersClient,
+): OrdersNamespace {
+  return {
+    list: (opts) => listOrders(client, opts),
+    get: (orderId) => getOrder(client, orderId),
+    create: (params) => createOrder(client, params),
   };
 }

@@ -195,7 +195,7 @@ async function resolveAndForwardDeposit(
 
   let whitelistedAddress: string;
   try {
-    const { assets } = await client.getInternalWallet(internalWalletId);
+    const { assets } = await client.internalWallets.get(internalWalletId);
     const assetRow = assets.find((a) => a.id === tx.assetId);
     whitelistedAddress = assetRow?.address?.trim() ?? "";
   } catch (err) {

@@ -67,7 +67,7 @@ export async function listUsersWithBalances(
           const client = getFireblocksClient();
           const assetId = env.FIREBLOCKS_DEFAULT_ASSET_ID;
           if (assetId) {
-            const asset = await client.getVaultAssetBalance(vaultId, assetId);
+            const asset = await client.vault.getAssetBalance(vaultId, assetId);
             vaultBalance = parseFloat(asset.available || "0");
           }
         } catch {

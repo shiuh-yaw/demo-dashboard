@@ -13,13 +13,13 @@ import { env } from "@/lib/env";
 export async function handleGetOmnibusVault() {
   const omnibusVaultId = requireOmnibusVaultId();
   const client = getFireblocksClient();
-  const vault = await client.getVaultAccount(omnibusVaultId);
+  const vault = await client.vault.getAccount(omnibusVaultId);
   return { vault };
 }
 
 export async function handleGetVault(vaultId: string) {
   const client = getFireblocksClient();
-  const vault = await client.getVaultAccount(vaultId);
+  const vault = await client.vault.getAccount(vaultId);
   return vault;
 }
 
@@ -35,7 +35,7 @@ export async function handleGetVaultAddresses(
   }
 
   const client = getFireblocksClient();
-  const addresses = await client.getDepositAddresses(vaultId, resolvedAssetId);
+  const addresses = await client.vault.getDepositAddresses(vaultId, resolvedAssetId);
   return { addresses };
 }
 
@@ -47,7 +47,7 @@ export async function handleCreateVaultAddress(
   const assetId = optionalString(body, "assetId") ?? requireAssetId();
 
   const client = getFireblocksClient();
-  const address = await client.createDepositAddress(vaultId, assetId, {
+  const address = await client.vault.createDepositAddress(vaultId, assetId, {
     description,
   });
   return address;

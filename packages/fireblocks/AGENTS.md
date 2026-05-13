@@ -25,24 +25,48 @@ If you are an AI agent integrating against Fireblocks, **consult the provider do
 - **Webhooks:** [Webhooks & notifications](https://developers.fireblocks.com/docs/webhooks-notifications) (JWKS-based since 2024; legacy RSA verifier retained for older tenants)
 - **Status:** [status.fireblocks.io](https://status.fireblocks.io)
 
+## Hard rule — NCW out of scope
+
+Fireblocks NCW (Non-Custodial Wallets, marketed as "Embedded Wallets") is deprecated in this project. This package will never include an NCW module. End-user wallets are Dynamic's territory — see the `dynamic-node-sdk` and `dynamic-javascript-sdk` skills. See the `project_no_fireblocks_ncw` memory for the rule.
+
 ## Capabilities
 
 - Vault management — accounts, assets, deposit addresses, tag attachment, supported assets (`vault.ts`, `supported-assets.ts`).
 - Transactions — typed shapes, validation schemas (`validation.ts`), and the SDK-backed `FireblocksClient` / `MockFireblocksClient`.
-- Trading Orders — `listOrders`, `createOrder`, `getOrder` (RS256 JWT, body SHA-256) — used for DVP and Network listings.
+- Trading Orders — `list`, `create`, `get` against `/v1/trading/orders` (RS256 JWT, body SHA-256) — used for DVP and Network listings.
+- Pre-tx compliance — `fb.compliance.screenTransaction(...)` collapses Fireblocks's multi-provider screening into a single `{ verdict, riskScore, providers, raw }` shape.
+- Raw escape hatches — `fb.sdk` (raw `@fireblocks/ts-sdk`) and `fb.api` (raw JWT-signed REST) for endpoints not yet wrapped.
 - Provider sub-modules — `Mtlco` (PREFUNDED USD→USDC onramp) and `Alfredpay` (DVP USDC→fiat). Each exports its own `mapStatus` and is namespaced.
 - Incoming webhooks — `verifyIncomingFireblocksWebhook` (JWKS, with optional legacy RSA fallback) plus typed notification schemas.
 
 ## Public surface
 
-All exports are stable and live at the package root.
+`createFireblocksClient(config)` returns an `IFireblocksClient` with these namespaces:
 
-- Vault — `createFireblocksClient`, `FireblocksClient`, `MockFireblocksClient`, vault helpers (`tryGetVaultAccount`, `getOrCreateVaultByName`, deposit-address helpers, `attachTagsToVaultAccounts`, `resolveVaultIdByName`). (stable)
-- Types — `FireblocksConfig`, `IFireblocksClient`, `VaultAccount`, `VaultAsset`, `VaultWallet`, `DepositAddress`, `TransactionResponse`, `TransactionStatus`, `CreateTransactionRequest`, `ListTransactionsParams`, plus the AML/Travel-Rule and tag-attachment shapes. (stable)
-- Validation — `transferPeerPathSchema`, `createTransactionRequestSchema` + `Validated*` types. (stable)
-- Trading Orders — `listOrders`, `getOrder`, `createOrder`, `FireblocksOrdersError`, `FireblocksOrder`, `OrderSide`, `OrderSettlementType`, `OrderBeneficiary`, `CreateOrderParams`, `CreateOrderResult`, `ProviderAccountRef`, `ProviderEnvironment`. (stable)
-- Webhooks — `verifyIncomingFireblocksWebhook`, `resolveFireblocksWebhookJwksUrl`, `defaultFireblocksWebhookJwksUrl`, JWKS + legacy verifiers, `fireblocksWebhookNotificationSchema`, `fireblocksTransactionWebhookDataSchema`, `normalizeFireblocksEventType`. (stable)
-- Provider namespaces — `Mtlco.*`, `Alfredpay.*` (each with its own `mapStatus`). (stable)
+- `fb.vault` — vault accounts, deposit addresses, tags (`createAccount`, `getAccount`, `listAccounts`, `hideAccount`, `setCustomerRefId`, `attachOrDetachTags`, `createWallet`, `getDepositAddresses`, `createDepositAddress`, `getAssetBalance`).
+- `fb.transactions` — transaction CRUD (`create`, `get`, `getByExternalId`, `list`).
+- `fb.internalWallets` — internal wallet CRUD (`list`, `get`, `create`, `createAsset`).
+- `fb.orders` — Trading Orders API (`list`, `get`, `create`).
+- `fb.compliance` — pre-transaction screening (`screenTransaction`).
+- `fb.providers.mtlco` / `.alfredpay` — Fireblocks-mediated partner wrappers.
+- `fb.sdk` — raw `@fireblocks/ts-sdk` `Fireblocks` instance (escape hatch #1).
+- `fb.api` — raw JWT-signed REST client (escape hatch #2).
+
+`MockFireblocksClient` mirrors the same surface for tests.
+
+Additional flat exports (stable):
+
+- Vault helpers — `tryGetVaultAccount`, `getOrCreateVaultByName`, `getOrCreateDepositAddressForVault`, `getOrCreateDepositAddress`, `resolveVaultIdByName`, `attachTagsToVaultAccounts`.
+- Types — `FireblocksConfig`, `IFireblocksClient`, `VaultNamespace`, `TransactionsNamespace`, `InternalWalletsNamespace`, `VaultAccount`, `VaultAsset`, `VaultWallet`, `DepositAddress`, `TransactionResponse`, `TransactionStatus`, `CreateTransactionRequest`, `ListTransactionsParams`, plus the AML/Travel-Rule and tag-attachment shapes.
+- Validation — `transferPeerPathSchema`, `createTransactionRequestSchema` + `Validated*` types.
+- Request signing — `signFireblocksRequest` (shared by `fb.orders` and `fb.api`).
+- Raw REST escape hatch — `createApiClient`, `FireblocksApiClient`, `FireblocksApiError`, `CreateApiClientConfig`.
+- Compliance — `createComplianceModule`, `FireblocksComplianceError`, `ComplianceModule`, `ComplianceVerdict`, `ScreenTransactionParams`, `ScreenTransactionResult`.
+- Trading Orders (functional, for callers who want explicit credentials) — `listOrders`, `getOrder`, `createOrder`, `FireblocksOrdersError`, `FireblocksOrder`, `OrderSide`, `OrderSettlementType`, `OrderBeneficiary`, `CreateOrderParams`, `CreateOrderResult`, `ProviderAccountRef`, `ProviderEnvironment`.
+- Webhooks — `verifyIncomingFireblocksWebhook`, `resolveFireblocksWebhookJwksUrl`, `defaultFireblocksWebhookJwksUrl`, JWKS + legacy verifiers, `fireblocksWebhookNotificationSchema`, `fireblocksTransactionWebhookDataSchema`, `normalizeFireblocksEventType`.
+- Provider namespaces — `Mtlco.*`, `Alfredpay.*` (each with its own `mapStatus`).
+
+See `.claude/skills/fireblocks/SKILL.md` for the canonical extension guide — when to promote a typed module vs. use an escape hatch.
 
 ## Required environment
 

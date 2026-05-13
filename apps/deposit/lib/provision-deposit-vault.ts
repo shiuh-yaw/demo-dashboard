@@ -56,7 +56,7 @@ export async function provisionDepositVault(
   opts?: ProvisionDepositVaultOptions,
 ): Promise<string> {
   const tagIds = opts?.tagIds ?? [];
-  const vault = await client.createVaultAccount(vaultName, {
+  const vault = await client.vault.createAccount(vaultName, {
     hiddenOnUI: opts?.hiddenOnUI ?? false,
     customerRefId: opts?.customerRefId,
     autoFuel: opts?.autoFuel ?? true,

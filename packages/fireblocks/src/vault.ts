@@ -33,7 +33,7 @@ export async function tryGetVaultAccount(
   vaultAccountId: string,
 ): Promise<VaultAccount | null> {
   try {
-    return await client.getVaultAccount(vaultAccountId);
+    return await client.vault.getAccount(vaultAccountId);
   } catch (err) {
     const status =
       err !== null &&
@@ -59,13 +59,13 @@ export async function getOrCreateVaultByName(
   name: string,
   opts?: { visibleInConsole?: boolean; customerRefId?: string },
 ): Promise<{ vaultId: string; tags: VaultAccountTag[] }> {
-  const vaults = await client.listVaultAccounts(VAULT_LIST_LIMIT);
+  const vaults = await client.vault.listAccounts(VAULT_LIST_LIMIT);
   const existing = vaults.find((v) => v.name === name);
   if (existing) {
     return { vaultId: existing.id, tags: existing.tags };
   }
   const hiddenOnUI = opts?.visibleInConsole === false;
-  const vault = await client.createVaultAccount(name, {
+  const vault = await client.vault.createAccount(name, {
     hiddenOnUI,
     ...(opts?.customerRefId ? { customerRefId: opts.customerRefId } : {}),
   });
@@ -80,10 +80,10 @@ export async function getOrCreateDepositAddressForVault(
   vaultId: string,
   assetId: string,
 ): Promise<DepositAddressWithVaultId> {
-  let addresses = await client.getDepositAddresses(vaultId, assetId);
+  let addresses = await client.vault.getDepositAddresses(vaultId, assetId);
   if (!addresses[0]) {
-    const wallet = await client.createVaultWallet(vaultId, assetId);
-    addresses = await client.getDepositAddresses(vaultId, assetId);
+    const wallet = await client.vault.createWallet(vaultId, assetId);
+    addresses = await client.vault.getDepositAddresses(vaultId, assetId);
 
     const addr = addresses[0];
     if (addr) return { ...addr, vaultId };
@@ -124,7 +124,7 @@ export async function resolveVaultIdByName(
   client: IFireblocksClient,
   name: string,
 ): Promise<string | null> {
-  const vaults = await client.listVaultAccounts(VAULT_LIST_LIMIT);
+  const vaults = await client.vault.listAccounts(VAULT_LIST_LIMIT);
   const existing = vaults.find((v) => v.name === name);
   return existing?.id ?? null;
 }
@@ -140,7 +140,7 @@ export async function attachTagsToVaultAccounts(
   tagIdsToAttach: string[],
   opts?: { idempotencyKey?: string },
 ): Promise<VaultAccountsTagAttachmentOperationsResponse> {
-  return client.attachOrDetachTagsFromVaultAccounts(
+  return client.vault.attachOrDetachTags(
     { vaultAccountIds, tagIdsToAttach },
     opts,
   );

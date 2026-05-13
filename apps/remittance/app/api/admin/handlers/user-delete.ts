@@ -21,7 +21,7 @@ export async function handleDeleteUser(userId: string) {
   if (vaultId) {
     try {
       const client = getFireblocksClient();
-      await client.hideVaultAccount(vaultId);
+      await client.vault.hideAccount(vaultId);
     } catch (err) {
       console.warn("[admin/users/delete] Failed to hide vault:", err);
     }

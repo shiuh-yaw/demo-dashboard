@@ -16,7 +16,7 @@ async function findInternalWalletIdByName(
   client: IFireblocksClient,
   name: string,
 ): Promise<string | undefined> {
-  const wallets = await client.listInternalWallets();
+  const wallets = await client.internalWallets.list();
   return wallets.find((w) => w.name === name)?.id;
 }
 
@@ -30,10 +30,10 @@ async function ensureEmbeddedAddressWhitelistedOnInternalWallet(
     ...new Set(assetIds.map((id) => id.trim()).filter(Boolean)),
   ];
   const { assets: existingAssets } =
-    await client.getInternalWallet(internalWalletId);
+    await client.internalWallets.get(internalWalletId);
   for (const assetId of uniqueAssetIds) {
     if (existingAssets.some((a) => a.id === assetId)) continue;
-    await client.createInternalWalletAsset(
+    await client.internalWallets.createAsset(
       internalWalletId,
       assetId,
       embeddedAddress,
@@ -67,7 +67,7 @@ export async function provisionEmbeddedWallet(
   let internalWalletId: string;
   try {
     internalWalletId = (
-      await client.createInternalWallet(name, { customerRefId })
+      await client.internalWallets.create(name, { customerRefId })
     ).id;
   } catch (err) {
     const existingId = await findInternalWalletIdByName(client, name);
@@ -88,7 +88,7 @@ export async function provisionEmbeddedWallet(
 
   // Store the internal wallet id as the vault's `customerRefId` so the
   // webhook handler can later resolve the vault → internal wallet mapping.
-  await client.setVaultAccountCustomerRefId(vaultId, internalWalletId);
+  await client.vault.setCustomerRefId(vaultId, internalWalletId);
 
   console.log("[deposit/provision-embedded-wallet] done", {
     vaultId,

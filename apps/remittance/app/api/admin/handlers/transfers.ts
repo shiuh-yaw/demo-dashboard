@@ -21,7 +21,7 @@ export async function handleFundTransfer(body: unknown) {
   }
 
   const client = getFireblocksClient();
-  const tx = await client.createTransaction(parsed.data);
+  const tx = await client.transactions.create(parsed.data);
   return tx;
 }
 
@@ -37,7 +37,7 @@ export async function handleReleaseTransfer(body: unknown) {
   }
 
   const client = getFireblocksClient();
-  const tx = await client.createTransaction(data);
+  const tx = await client.transactions.create(data);
   return tx;
 }
 
@@ -51,7 +51,7 @@ export async function handleSweepTransfer(body: Record<string, unknown>) {
   const assetId = requireAssetId();
 
   const client = getFireblocksClient();
-  const tx = await client.createTransaction({
+  const tx = await client.transactions.create({
     assetId,
     source: { type: "VAULT_ACCOUNT", id: vaultId },
     destination: { type: "VAULT_ACCOUNT", id: omnibusVaultId },
@@ -72,7 +72,7 @@ export async function handleTransferToWallet(body: Record<string, unknown>) {
   const assetId = requireAssetId();
 
   const client = getFireblocksClient();
-  const tx = await client.createTransaction({
+  const tx = await client.transactions.create({
     assetId,
     source: { type: "VAULT_ACCOUNT", id: omnibusVaultId },
     destination: { type: "ONE_TIME_ADDRESS", address: walletAddress },

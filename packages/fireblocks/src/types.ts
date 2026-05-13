@@ -225,49 +225,26 @@ export interface VaultAccountsTagAttachmentOperationsResponse {
   rejectedOperations?: VaultAccountTagAttachmentRejectedOperation[];
 }
 
-// ─── Client Interface ────────────────────────────────────────────────────────
+// ─── Namespaced Client Interface ─────────────────────────────────────────────
 
-export interface IFireblocksClient {
-  // Vault operations
-  createVaultAccount(
+export interface VaultNamespace {
+  createAccount(
     name: string,
     opts?: { hiddenOnUI?: boolean; customerRefId?: string; autoFuel?: boolean },
   ): Promise<VaultAccount>;
-  getVaultAccount(vaultId: string): Promise<VaultAccount>;
-  listVaultAccounts(limit?: number): Promise<VaultAccount[]>;
-  hideVaultAccount(vaultId: string): Promise<void>;
-  setVaultAccountCustomerRefId(
-    vaultId: string,
-    customerRefId: string,
-  ): Promise<void>;
+  getAccount(vaultId: string): Promise<VaultAccount>;
+  listAccounts(limit?: number): Promise<VaultAccount[]>;
+  hideAccount(vaultId: string): Promise<void>;
+  setCustomerRefId(vaultId: string, customerRefId: string): Promise<void>;
   /**
    * Attach and/or detach workspace tags on vault accounts.
    * @see https://developers.fireblocks.com/reference/attachordetachtagsfromvaultaccounts
    */
-  attachOrDetachTagsFromVaultAccounts(
+  attachOrDetachTags(
     request: VaultAccountsTagAttachmentOperationsRequest,
     opts?: { idempotencyKey?: string },
   ): Promise<VaultAccountsTagAttachmentOperationsResponse>;
-
-  /** @see https://developers.fireblocks.com/reference/createinternalwallet */
-  listInternalWallets(): Promise<InternalWalletSummary[]>;
-  createInternalWallet(
-    name: string,
-    opts?: { customerRefId?: string },
-  ): Promise<{ id: string }>;
-  getInternalWallet(walletId: string): Promise<{
-    id: string;
-    assets: { id: string; address?: string }[];
-  }>;
-  /** Whitelist an asset address on an internal wallet (embedded wallet in your ecosystem). */
-  createInternalWalletAsset(
-    walletId: string,
-    assetId: string,
-    address: string,
-  ): Promise<void>;
-
-  // Wallet operations
-  createVaultWallet(vaultId: string, assetId: string): Promise<VaultWallet>;
+  createWallet(vaultId: string, assetId: string): Promise<VaultWallet>;
   getDepositAddresses(
     vaultId: string,
     assetId: string,
@@ -277,18 +254,38 @@ export interface IFireblocksClient {
     assetId: string,
     opts?: { description?: string; customerRefId?: string },
   ): Promise<DepositAddress>;
-  getVaultAssetBalance(vaultId: string, assetId: string): Promise<VaultAsset>;
-
-  // Transaction operations
-  createTransaction(
-    request: CreateTransactionRequest,
-  ): Promise<TransactionResponse>;
-  getTransaction(txId: string): Promise<TransactionResponse>;
-  /** @see https://developers.fireblocks.com/reference/gettransactionbyexternaltxid */
-  getTransactionByExternalTxId(
-    externalTxId: string,
-  ): Promise<TransactionResponse | null>;
-  listTransactions(
-    params?: ListTransactionsParams,
-  ): Promise<TransactionResponse[]>;
+  getAssetBalance(vaultId: string, assetId: string): Promise<VaultAsset>;
 }
+
+export interface TransactionsNamespace {
+  create(request: CreateTransactionRequest): Promise<TransactionResponse>;
+  get(txId: string): Promise<TransactionResponse>;
+  /** @see https://developers.fireblocks.com/reference/gettransactionbyexternaltxid */
+  getByExternalId(externalTxId: string): Promise<TransactionResponse | null>;
+  list(params?: ListTransactionsParams): Promise<TransactionResponse[]>;
+}
+
+export interface InternalWalletsNamespace {
+  /** @see https://developers.fireblocks.com/reference/createinternalwallet */
+  list(): Promise<InternalWalletSummary[]>;
+  get(walletId: string): Promise<{
+    id: string;
+    assets: { id: string; address?: string }[];
+  }>;
+  create(
+    name: string,
+    opts?: { customerRefId?: string },
+  ): Promise<{ id: string }>;
+  /** Whitelist an asset address on an internal wallet (embedded wallet in your ecosystem). */
+  createAsset(
+    walletId: string,
+    assetId: string,
+    address: string,
+  ): Promise<void>;
+}
+
+// `IFireblocksClient` itself is declared in `./client-interface.ts` to
+// avoid a circular dependency: orders / compliance / api types import
+// `types.ts`, and `IFireblocksClient` references them. Re-exported below
+// so callers that historically import it from `./types` keep working.
+export type { IFireblocksClient } from "./client-interface";
