@@ -56,9 +56,9 @@ If region coverage changes, update both this table and the `regions` field in fr
 ## Capabilities
 
 - REST client factory — `createBlindpayClient({ env, instanceId, apiKey })`.
-- Quote + execute payouts — `client.payouts.quote(...)`, `client.payouts.execute(...)`.
-- Quote + execute payins — `client.payins.quote(...)`, `client.payins.execute(...)`.
-- Live FX rates — `client.rates.fetch(...)`.
+- Quote + execute + status payouts — `client.createPayoutQuote(...)`, `client.executePayout(...)`, `client.getPayoutStatus(payoutId)`.
+- Quote + execute + status payins — `client.createPayinQuote(...)`, `client.executePayin(...)`, `client.getPayinStatus(payinId)`.
+- Live FX rates with 402 → full-quote fallback — `client.getRates(...)`.
 - Webhook signature verification — `webhooks.verifySignature` (Svix HMAC-SHA256).
 - Webhook normalisation — `webhooks.normalize` → `CanonicalEvent`.
 - Status mapping — `mapBlindpayStatus(upstream)` → canonical placeholder (Phase 1E swaps in `TransactionState`).
@@ -124,13 +124,19 @@ const client = createBlindpayClient({
   apiKey: process.env.BLINDPAY_API_KEY!,
 });
 
-const quote = await client.payouts.quote({
-  request_amount: 100_00,
+const quote = await client.createPayoutQuote({
+  bank_account_id: "...",
   currency_type: "sender",
   cover_fees: false,
-  payment_method: "pix",
+  request_amount: 100_00,
+  network: "polygon",
+  token: "USDC",
 });
-const result = await client.payouts.execute({ quote_id: quote.quote_id, /* beneficiary */ });
+const result = await client.executePayout({
+  quote_id: quote.quote_id,
+  sender_wallet_address: "0xabc...",
+});
+const status = await client.getPayoutStatus(result.id);
 ```
 
 ## Do / Don't
