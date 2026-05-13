@@ -6,6 +6,14 @@ export default defineConfig({
     globals: false,
     environment: "node",
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+    // The create-demo-app skill tests live outside the dashboard tree and
+    // are run via a dedicated config file
+    // (.claude/skills/create-demo-app/__tests__/vitest.skill.config.ts) so
+    // they do NOT get picked up by the dashboard's default `pnpm test` /
+    // `pnpm turbo test` run (those tests spawn real Claude Code subprocesses
+    // and cost API tokens). Invoke explicitly via root scripts:
+    //   pnpm test:skill            # 5 failure-mode tests
+    //   pnpm test:skill:success    # main-only success path
     // Populate env vars before any test module loads so that importing
     // `@/env` (transitively pulled in via `@/lib/redis`) doesn't fail
     // validation. Dummies only — tests never open real connections.

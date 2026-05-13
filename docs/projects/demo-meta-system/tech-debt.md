@@ -7,6 +7,105 @@ affected apps, and rough scope. Use this as the queue when picking up
 
 ---
 
+## TD-004 — `createDemoMiddleware` should fail closed when `/login` is missing
+
+**Status:** open.
+**Surface area:** `packages/dynamic/src/demo-middleware.ts` (or wherever `createDemoMiddleware` lives), every app's `middleware.ts`.
+
+### What's fragile today
+
+`createDemoMiddleware` assumes a `/login` page exists in the app and silently redirects unauth'd traffic there. If the app doesn't ship `/login`, you get a redirect → 404 (or worse, a redirect loop) — no signal at build time or import time that anything's wrong.
+
+The Phase 6A skill's first generated demo (`stripe-onramp`) hit exactly this: middleware was wired with `publicRoutes: ["/login"]`, but no `/login` page was generated. Unauth'd visitors landed on a broken state.
+
+### Proposed fix
+
+Make the `/login` requirement explicit in the middleware's contract:
+
+```ts
+createDemoMiddleware({
+  demoType: "stripe-onramp",
+  loginPath: "/login",   // default: redirect unauth'd traffic to this path
+  // OR
+  loginPath: false,      // explicit opt-out: no auth gate; auth-on-action pattern
+});
+```
+
+- `loginPath: string` (default `"/login"`) → middleware redirects unauth'd traffic here.
+- `loginPath: false` → middleware does not redirect; downstream code (API routes, components) enforces auth where needed. Use this for auth-on-action flows (onramp, checkout, public browsing).
+
+**Also: when `loginPath` is a string, the middleware should auto-add it to `publicRoutes`** so callers can't accidentally create a redirect loop by listing `loginPath: "/login"` without also adding `"/login"` to `publicRoutes`. The current contract requires both — easy to forget, and the failure mode is `ERR_TOO_MANY_REDIRECTS` in the browser with no clear error in code. Hit by the Phase 6A skill's first end-to-end run.
+
+Bonus: at build time (via a Next.js plugin, or a `next.config.ts` postbuild check), if `loginPath` is a string, verify the file `app/login/page.tsx` exists; throw with a clear error if not.
+
+### Scope
+
+- ~50 LOC in `packages/dynamic/`.
+- Update existing app middlewares (remittance, earn, etc.) to use the new explicit `loginPath`. Most stay on default; auth-on-action apps switch to `false`.
+- `packages/dynamic/AGENTS.md` documents the new option.
+- Phase 6A skill's SKILL.md updates the "Auth wiring" table to reference `loginPath: false` where appropriate (already does — the option name will match after this PR lands).
+
+### Why this is its own thing
+
+The skill fix (PR #90) already instructs the generator to make the auth decision explicit. TD-004 closes the contract at the package layer so the issue can't recur in apps not authored by the skill.
+
+---
+
+## TD-003 — Manifest-driven codegen for dashboard demo-kind wiring
+
+**Status:** open.
+**Surface area:** `apps/dashboard/src/lib/services/{types.ts, demo-config-schemas.ts}`, `apps/dashboard/src/lib/types/dashboard.ts`, `apps/dashboard/src/components/sidebar.tsx`, and the per-kind union/nav entries every new demo type currently adds by hand.
+
+### What's duplicated / fragile today
+
+Every new demo type requires coordinated edits to three union files plus the sidebar:
+
+1. `lib/services/types.ts` — append to `DemoConfigKind` string union.
+2. `lib/services/demo-config-schemas.ts` — append to `DEMO_CONFIG_KINDS` array AND add a Zod member to the discriminated union.
+3. `lib/types/dashboard.ts` — append `<Type>Config` and `Stored<Type>Config` interfaces.
+4. `components/sidebar.tsx` — one-line nav entry.
+
+The Phase 6A `create-demo-app` skill writes all four atomically, so drift can't happen at creation time. The risk shows up later — a human editing one union but forgetting another, a kind renamed in `types.ts` but stale in the Zod schema, an orphan section page after a sidebar entry is deleted. The unions are "secondary state" that should be derived, not edited.
+
+### Proposed consolidation
+
+Make each app's `AGENTS.md` frontmatter the single source of truth for "what demo kinds exist." Generate the union/nav glue from it at build time.
+
+Pipeline:
+
+```
+apps/<kebab>/AGENTS.md       (frontmatter: kind, configSchema reference, sidebar metadata)
+       ↓ codegen step
+apps/dashboard/.generated/
+  demo-config-kinds.ts        DEMO_CONFIG_KINDS + Zod discriminated union
+  demo-config-types.ts        DemoConfigKind string union
+  sidebar-entries.ts          Sidebar nav entries
+```
+
+The hand-edited files in `lib/services/types.ts`, `lib/services/demo-config-schemas.ts`, and `components/sidebar.tsx` stop being hand-edited — they import from `apps/dashboard/.generated/...`. The existing `scripts/generate-demo-registry.mjs` extends with an `--emit` mode that writes these `.generated/` files alongside the registry. CI `--check` gate fails any PR where regenerated output differs from the committed `.generated/` files (same pattern the registry already uses).
+
+What stays per-type (intentionally — these encode demo-specific shape/behavior):
+
+- `<Type>Config` / `Stored<Type>Config` interface bodies in `lib/types/dashboard.ts` — each kind's config shape is unique.
+- Mapper at `lib/services/demo-config-mappers/<kind>.ts` — kind-specific round-tripping.
+- Dashboard section pages under `app/<kind>/` — kind-specific editor UI.
+
+Devs writing those still write code (which is the point — that's where intent lives). The boilerplate union/nav glue goes away.
+
+### Scope
+
+- Extend `scripts/generate-demo-registry.mjs` with `--emit` mode that writes the three `.generated/` files.
+- Add `--check` to the relevant CI job so stale generated files fail PRs.
+- Convert `lib/services/types.ts`, `lib/services/demo-config-schemas.ts`, `components/sidebar.tsx` to import from `.generated/` instead of hand-rolling.
+- Backfill: regenerate against current `apps/*/AGENTS.md` frontmatter; commit the resulting `.generated/` files; confirm no behavioral diff.
+- Update Phase 6A `create-demo-app` SKILL.md Step 8: remove the three union edits + sidebar edit from the file list; replace with "edit `apps/<kebab>/AGENTS.md` frontmatter to declare the kind, then `pnpm registry --emit`."
+
+### Why this is its own thing
+
+The Phase 6A skill works fine today because it writes all four edits in one atomic PR — drift at creation time is impossible. TD-003 closes the gap that opens *after* creation, when humans maintain demos and the four files can drift. Worth doing, but doesn't block 6A.
+
+---
+
 ## TD-002 — Wire dashboard action layer through `DemoConfigService`
 
 **Status:** done — PR [#83](https://github.com/dynamic-labs/demo-dashboard/pull/83).

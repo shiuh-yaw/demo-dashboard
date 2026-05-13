@@ -4,11 +4,14 @@ import {
   abandon,
   cancel,
   confirm,
+  confirmTransfer,
   draft,
   expire,
   fail,
   pending,
   submit,
+  submitTransfer,
+  submitUserop,
   transition,
 } from "../machine";
 import { LegalTransitions, TransactionState } from "../state";
@@ -30,6 +33,9 @@ const HELPERS: Record<
   abandoned: (t) => abandon(t),
   failed: (t) => fail(t),
   cancelled: (t) => cancel(t),
+  "submitted-transfer": (t) => submitTransfer(t),
+  "transfer-confirmed": (t) => confirmTransfer(t),
+  "submitted-userop": (t) => submitUserop(t),
 };
 
 const ALL_STATES = Object.values(TransactionState);

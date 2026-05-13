@@ -362,6 +362,9 @@ importers:
       tw-animate-css:
         specifier: 'catalog:'
         version: 1.4.0
+      viem:
+        specifier: 2.37.2
+        version: 2.37.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       zod:
         specifier: 3.25.76
         version: 3.25.76

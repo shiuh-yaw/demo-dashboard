@@ -212,3 +212,9 @@ jobs:
 
       - name: Prod-creds script self-test
         run: ./.github/scripts/test-check-prod-creds.sh
+
+  # NOTE: The Phase 6A `create-demo-app` skill tests run locally only — see
+  # `pnpm test:skill` / `pnpm test:skill:success`. They require an Anthropic
+  # API key for `claude -p` invocations, which isn't configured for this repo.
+  # Anyone editing `.claude/skills/create-demo-app/` runs `pnpm test:skill`
+  # before pushing. Re-add a CI job here once the API key plumbing exists.

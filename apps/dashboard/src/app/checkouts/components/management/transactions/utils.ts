@@ -5,6 +5,10 @@ import type { Transaction } from "@/lib/types/dashboard";
  * Get badge styling for transaction status
  */
 export function getStatusBadge(status: TransactionStatus): string {
+  // Phase 7 magic-send sub-states (`submitted-transfer`,
+  // `transfer-confirmed`, `submitted-userop`) reuse the in-flight
+  // badge styles — they're conceptually equivalent to "submitted /
+  // pending" for the checkout dashboard UI.
   const styles: Record<TransactionStatus, string> = {
     confirmed: "bg-emerald-50 text-emerald-700",
     failed: "bg-red-50 text-red-700",
@@ -15,6 +19,9 @@ export function getStatusBadge(status: TransactionStatus): string {
     initialized: "bg-slate-100 text-slate-600",
     expired: "bg-slate-100 text-slate-500",
     abandoned: "bg-slate-100 text-slate-500",
+    "submitted-transfer": "bg-blue-50 text-blue-700",
+    "transfer-confirmed": "bg-blue-50 text-blue-700",
+    "submitted-userop": "bg-amber-50 text-amber-700",
   };
   return styles[status];
 }

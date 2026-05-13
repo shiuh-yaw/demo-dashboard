@@ -101,3 +101,36 @@ export function abandon<T extends WithState>(
 ): Omit<T, "state"> & { state: "abandoned" } {
   return transition(t, "abandoned", ctx);
 }
+
+// ---------------------------------------------------------------------------
+// Magic-send sub-state helpers (Phase 7)
+//
+// These name the two-leg magic-send lifecycle explicitly so callers don't
+// have to reach for the generic `transition()` escape hatch. Each helper
+// validates the source state via the shared adjacency table, so the helper
+// names are pure ergonomics — the state machine is the authority.
+// ---------------------------------------------------------------------------
+
+/** initialized → submitted-transfer. */
+export function submitTransfer<T extends WithState>(
+  t: T,
+  ctx?: TransitionContext
+): Omit<T, "state"> & { state: "submitted-transfer" } {
+  return transition(t, "submitted-transfer", ctx);
+}
+
+/** submitted-transfer → transfer-confirmed. */
+export function confirmTransfer<T extends WithState>(
+  t: T,
+  ctx?: TransitionContext
+): Omit<T, "state"> & { state: "transfer-confirmed" } {
+  return transition(t, "transfer-confirmed", ctx);
+}
+
+/** transfer-confirmed → submitted-userop. */
+export function submitUserop<T extends WithState>(
+  t: T,
+  ctx?: TransitionContext
+): Omit<T, "state"> & { state: "submitted-userop" } {
+  return transition(t, "submitted-userop", ctx);
+}

@@ -56,6 +56,9 @@ export function TransactionDetail({
   }
 
   function getStatusBadge(status: Transaction["status"]) {
+    // Magic-send sub-states reuse the in-flight badge palette so the
+    // checkout dashboard renders them consistently with `submitted`
+    // and `pending`.
     const styles: Record<Transaction["status"], string> = {
       confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200",
       failed: "bg-red-50 text-red-700 border-red-200",
@@ -66,6 +69,9 @@ export function TransactionDetail({
       expired: "bg-slate-100 text-slate-500 border-slate-200",
       abandoned: "bg-slate-100 text-slate-500 border-slate-200",
       cancelled: "bg-slate-100 text-slate-500 border-slate-200",
+      "submitted-transfer": "bg-blue-50 text-blue-700 border-blue-200",
+      "transfer-confirmed": "bg-blue-50 text-blue-700 border-blue-200",
+      "submitted-userop": "bg-amber-50 text-amber-700 border-amber-200",
     };
     return styles[status];
   }

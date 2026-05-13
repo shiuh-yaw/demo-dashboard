@@ -13,6 +13,9 @@ describe("TransactionState enum", () => {
       draft: "draft",
       submitted: "submitted",
       pending: "pending",
+      "submitted-transfer": "submitted-transfer",
+      "transfer-confirmed": "transfer-confirmed",
+      "submitted-userop": "submitted-userop",
       confirmed: "confirmed",
       expired: "expired",
       abandoned: "abandoned",
@@ -23,9 +26,10 @@ describe("TransactionState enum", () => {
 });
 
 describe("LegalTransitions table", () => {
-  it("permits initialized → draft, expired, cancelled (only)", () => {
+  it("permits initialized → draft, submitted-transfer, expired, cancelled (only)", () => {
     expect(LegalTransitions.initialized).toEqual([
       "draft",
+      "submitted-transfer",
       "expired",
       "cancelled",
     ]);
@@ -49,6 +53,22 @@ describe("LegalTransitions table", () => {
 
   it("permits pending → confirmed, failed (only)", () => {
     expect(LegalTransitions.pending).toEqual(["confirmed", "failed"]);
+  });
+
+  it("permits magic-send chain: submitted-transfer → transfer-confirmed → submitted-userop → confirmed", () => {
+    expect(LegalTransitions["submitted-transfer"]).toEqual([
+      "transfer-confirmed",
+      "failed",
+      "cancelled",
+    ]);
+    expect(LegalTransitions["transfer-confirmed"]).toEqual([
+      "submitted-userop",
+      "failed",
+    ]);
+    expect(LegalTransitions["submitted-userop"]).toEqual([
+      "confirmed",
+      "failed",
+    ]);
   });
 
   it("treats every terminal state as transitionless", () => {
@@ -90,6 +110,9 @@ describe("TerminalStates set", () => {
       "draft",
       "submitted",
       "pending",
+      "submitted-transfer",
+      "transfer-confirmed",
+      "submitted-userop",
     ] as const) {
       expect(TerminalStates.has(nonTerminal)).toBe(false);
     }

@@ -53,7 +53,12 @@ export class RedisCheckoutService implements CheckoutService {
       pageSize: 10000,
     });
 
-    // Count transactions by status
+    // Count transactions by status. Phase 7 magic-send sub-states never
+    // appear in the legacy LI.FI checkout flow, but the
+    // `Record<TransactionStatus, …>` shape requires every canonical
+    // state to be keyed. Initialise the magic-send slots to zero so the
+    // checkout stats page keeps rendering — those rows live under a
+    // different `kind` and never reach this aggregator.
     const transactionsByStatus: Record<TransactionStatus, number> = {
       initialized: 0,
       draft: 0,
@@ -64,6 +69,9 @@ export class RedisCheckoutService implements CheckoutService {
       expired: 0,
       abandoned: 0,
       cancelled: 0,
+      "submitted-transfer": 0,
+      "transfer-confirmed": 0,
+      "submitted-userop": 0,
     };
 
     let completedCount = 0;

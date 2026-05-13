@@ -12,24 +12,25 @@ Canonical state machine for the "money in flight" transaction lifecycle (D-010).
 
 ## Capabilities
 
-- Canonical states — `TransactionState` const + type with all nine values.
+- Canonical states — `TransactionState` const + type. Twelve values: the nine baseline states plus the three Phase 7 magic-send sub-states (`submitted-transfer`, `transfer-confirmed`, `submitted-userop`).
 - Adjacency table — `LegalTransitions` mapping each state to its legal successors.
 - Terminal set — `TerminalStates` (`confirmed`, `expired`, `abandoned`, `failed`, `cancelled`).
 - Validators — `assertValidTransition(from, to)`, `isTerminal(state)`, `IllegalTransitionError`.
-- Transition helpers — `draft`, `submit`, `pending`, `confirm`, `fail`, `cancel`, `expire`, `abandon`, plus a generic `transition(tx, to, ctx)` for cases where the helper signature doesn't fit.
+- Transition helpers — `draft`, `submit`, `pending`, `confirm`, `fail`, `cancel`, `expire`, `abandon`, plus `submitTransfer`, `confirmTransfer`, `submitUserop` for the magic-send sub-lifecycle, plus a generic `transition(tx, to, ctx)` for cases where the helper signature doesn't fit.
 - Types — `Transaction`, `TransactionRefs`, `TransitionContext`.
 
 ## Public surface
 
 All exports are stable and live at the package root (`@dynamic-demos/transactions`).
 
-- `TransactionState` — const + type with values: `initialized | draft | submitted | pending | confirmed | expired | abandoned | failed | cancelled`. (stable)
+- `TransactionState` — const + type with values: `initialized | draft | submitted | pending | confirmed | expired | abandoned | failed | cancelled | submitted-transfer | transfer-confirmed | submitted-userop`. (stable)
 - `LegalTransitions` — adjacency table of legal transitions. (stable)
 - `TerminalStates` — read-only set of terminal states. (stable)
 - `assertValidTransition(from, to)` — throws `IllegalTransitionError` on illegal transitions. (stable)
 - `isTerminal(state)` — predicate for terminal states. (stable)
 - `IllegalTransitionError` — typed error carrying `from` + `to`. (stable)
 - `draft`, `submit`, `pending`, `confirm`, `fail`, `cancel`, `expire`, `abandon` — typed transition helpers. (stable)
+- `submitTransfer`, `confirmTransfer`, `submitUserop` — magic-send sub-state helpers (Phase 7). (stable)
 - `transition(tx, to, ctx)` — generic helper when a fixed verb doesn't apply. (stable)
 - Types — `Transaction`, `TransactionRefs`, `TransitionContext`. (stable)
 
@@ -47,8 +48,9 @@ None. The package is pure logic — no I/O, no env reads.
 **Invariants:**
 
 - The legal lifecycle (D-010) is:
-  - Happy path: `initialized → draft → submitted → pending → confirmed`.
-  - Terminal exits: `initialized → expired | cancelled`, `draft → abandoned | cancelled`, `submitted → failed | cancelled`, `pending → failed`.
+  - Baseline happy path: `initialized → draft → submitted → pending → confirmed`.
+  - Magic-send happy path (Phase 7): `initialized → submitted-transfer → transfer-confirmed → submitted-userop → confirmed`.
+  - Terminal exits: `initialized → expired | cancelled`, `draft → abandoned | cancelled`, `submitted → failed | cancelled`, `pending → failed`, `submitted-transfer → failed | cancelled`, `transfer-confirmed → failed`, `submitted-userop → failed`.
 - Terminal states accept no further transitions. `assertValidTransition` enforces this at runtime.
 - No code outside this package may assign `Transaction.state` directly. Always go through a helper or `transition(...)`.
 - Per-provider state mapping lives in the provider package (`packages/<provider>/src/state-mapping.ts`). Mappers return `TransactionState`; transitions go through this package's helpers.

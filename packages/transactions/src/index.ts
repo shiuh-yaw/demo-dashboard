@@ -11,6 +11,7 @@
  *   - Transaction, TransactionRefs
  *   - assertValidTransition, isTerminal, IllegalTransitionError
  *   - draft, submit, pending, confirm, fail, cancel, expire, abandon, transition
+ *   - submitTransfer, confirmTransfer, submitUserop (Phase 7 magic-send)
  *   - TransitionContext
  */
 export {
@@ -32,10 +33,13 @@ export {
   abandon,
   cancel,
   confirm,
+  confirmTransfer,
   draft,
   expire,
   fail,
   pending,
   submit,
+  submitTransfer,
+  submitUserop,
   transition,
 } from "./machine";

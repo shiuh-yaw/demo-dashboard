@@ -22,7 +22,10 @@ import {
 // =============================================================================
 
 /**
- * Transaction status enum
+ * Transaction status enum. Mirrors the canonical state machine in
+ * `@dynamic-demos/transactions`, including Phase 7 magic-send
+ * intermediate states (`submitted-transfer`, `transfer-confirmed`,
+ * `submitted-userop`).
  */
 export const transactionStatusSchema = z.enum([
   "initialized",
@@ -34,6 +37,9 @@ export const transactionStatusSchema = z.enum([
   "cancelled",
   "expired",
   "abandoned",
+  "submitted-transfer",
+  "transfer-confirmed",
+  "submitted-userop",
 ]);
 
 export type TransactionStatusEnum = z.infer<typeof transactionStatusSchema>;

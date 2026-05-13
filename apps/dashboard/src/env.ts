@@ -167,6 +167,46 @@ export const env = createEnv({
       .optional()
       .default("false")
       .transform((v) => v === "true"),
+    /**
+     * Magic-send vault private key (sandbox).
+     * 0x-prefixed hex string. Drives the custodial EOA that funds the
+     * embedded wallet leg of magic-send (Phase 7). Sandbox per D-005;
+     * a production-grade implementation will swap in a Fireblocks-
+     * backed adapter in a follow-up PR.
+     */
+    MAGIC_SEND_VAULT_PRIVATE_KEY: z.string().optional(),
+    /**
+     * Magic-send vault chain id (sandbox).
+     * Default 84532 (Base Sepolia). Coerced from string env var.
+     */
+    MAGIC_SEND_VAULT_CHAIN_ID: z
+      .string()
+      .optional()
+      .transform((v) => (v ? Number(v) : 84532))
+      .pipe(z.number().int().positive()),
+    /**
+     * Magic-send vault RPC URL (sandbox).
+     * Defaults to the public Base Sepolia RPC.
+     */
+    MAGIC_SEND_VAULT_RPC_URL: z
+      .string()
+      .url()
+      .optional()
+      .default("https://sepolia.base.org"),
+    /**
+     * Dynamic webhook signing secret. Used to verify `wallet.activity`
+     * deliveries to /api/webhooks/dynamic (Phase 7). When unset the
+     * receiver fails closed with 401 — never silently accept unsigned
+     * webhooks.
+     */
+    DYNAMIC_WEBHOOK_SECRET: z.string().optional(),
+    /**
+     * Internal API gating secret for /api/magic-send/intents/[id]/execute.
+     * External callers cannot trigger userop dispatch — only the
+     * dashboard's own webhook receiver may. Sent as the
+     * `x-internal-api-secret` header.
+     */
+    INTERNAL_API_SECRET: z.string().optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -266,6 +306,11 @@ export const env = createEnv({
     USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
     USE_POSTGRES_TRANSACTIONS: process.env.USE_POSTGRES_TRANSACTIONS,
     USE_POSTGRES_DEMO_CONFIGS: process.env.USE_POSTGRES_DEMO_CONFIGS,
+    MAGIC_SEND_VAULT_PRIVATE_KEY: process.env.MAGIC_SEND_VAULT_PRIVATE_KEY,
+    MAGIC_SEND_VAULT_CHAIN_ID: process.env.MAGIC_SEND_VAULT_CHAIN_ID,
+    MAGIC_SEND_VAULT_RPC_URL: process.env.MAGIC_SEND_VAULT_RPC_URL,
+    DYNAMIC_WEBHOOK_SECRET: process.env.DYNAMIC_WEBHOOK_SECRET,
+    INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
