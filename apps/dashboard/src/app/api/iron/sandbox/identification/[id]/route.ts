@@ -10,7 +10,7 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 type IdentificationParams = Promise<{ id: string }>;
@@ -28,8 +28,10 @@ export async function POST(
   { params }: { params: IdentificationParams }
 ) {
   try {
+    const client = getIronClient();
+
     // Check if we're in sandbox mode
-    if (!ironClient.isSandbox()) {
+    if (!client.isSandbox()) {
       return createResponse(
         { error: "This endpoint is only available in sandbox mode" },
         403
@@ -42,7 +44,7 @@ export async function POST(
     // Validate request body
     const validated = updateStatusSchema.parse(body);
 
-    const identification = await ironClient.updateIdentificationStatus(
+    const identification = await client.identifications.updateStatus(
       identificationId,
       validated.approved
     );

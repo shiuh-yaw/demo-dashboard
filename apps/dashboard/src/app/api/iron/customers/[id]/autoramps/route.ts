@@ -8,7 +8,8 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient, IronAutorampResponse } from "@dynamic-demos/iron";
+import { type IronAutorampResponse } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 /**
  * GET /api/iron/customers/[id]/autoramps
@@ -22,8 +23,8 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Fetch autoramps using ironClient
-    const result = await ironClient.listAutoramps(id);
+    // Fetch autoramps using the namespaced client
+    const result = await getIronClient().autoramps.list(id);
 
     // Iron API returns { items: [...], cursor: "...", prev_cursor: "..." }
     const transactions = (result.items || [])

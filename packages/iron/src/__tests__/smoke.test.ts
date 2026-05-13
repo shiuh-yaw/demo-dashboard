@@ -5,10 +5,10 @@ import { describe, it, expect } from "vitest";
 import * as Iron from "../index";
 
 describe("@dynamic-demos/iron — public surface", () => {
-  it("exports client factory + class + singleton", () => {
+  it("exports client factory + class + mock", () => {
     expect(typeof Iron.createIronClient).toBe("function");
     expect(typeof Iron.IronFinanceClient).toBe("function");
-    expect(Iron.ironClient).toBeInstanceOf(Iron.IronFinanceClient);
+    expect(typeof Iron.MockIronClient).toBe("function");
   });
 
   it("exports env resolvers and defaults to sandbox", () => {

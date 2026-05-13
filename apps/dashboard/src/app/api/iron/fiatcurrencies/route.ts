@@ -7,7 +7,7 @@
  */
 
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 /**
  * GET /api/iron/fiatcurrencies
@@ -15,7 +15,7 @@ import { ironClient } from "@dynamic-demos/iron";
  */
 export async function GET() {
   try {
-    const currencies = await ironClient.listFiatCurrencies();
+    const currencies = await getIronClient().metadata.listFiatCurrencies();
     return createResponse(currencies, 200);
   } catch (error) {
     return handleApiError(error, "iron/fiatcurrencies");

@@ -58,7 +58,8 @@ If region coverage changes, update this table and the `regions` field in frontma
 
 ## Capabilities
 
-- Client factories — `createIronClient({ env, apiKey })` and the lazy singleton `ironClient` (reads `IRON_API_KEY` / `IRON_ENVIRONMENT`).
+- Client factory — `createIronClient({ apiKey, env })`. `apiKey` is required; the constructor no longer reads `process.env`.
+- Mock client — `MockIronClient` mirrors the namespace surface for tests and non-network demos.
 - Customer + KYC + wallet + bank account management.
 - Onramp + offramp quote/execute (autoramp + simple).
 - Third-party payments + named virtual accounts.
@@ -70,11 +71,14 @@ If region coverage changes, update this table and the `regions` field in frontma
 
 Stable, all live at the package root.
 
-- `IronFinanceClient`, `createIronClient`, `ironClient` (singleton). (stable)
+- `IronFinanceClient`, `createIronClient`, `MockIronClient`. (stable)
+- `IronClientConfig`, `IIronFinanceClient`, plus each namespace interface (`CustomersNamespace`, `KycNamespace`, etc.). (stable)
 - `resolveIronBaseUrl`, `resolveIronEnvironment`, `IronEnvironment`. (stable)
 - `rampStatusToCanonical`, `ironAutorampStatusToCanonical`, `CanonicalTransactionState`. (stable)
 - Simple offramp helpers — `getOfframpQuote`, `createOfframp`, `chainIdToBlockchain`, `SimpleOfframp*` types. (stable)
 - Webhooks — `verifyIronSignature`, `normalizeIronEvent`, `IRON_SIGNATURE_HEADER`, `CanonicalEvent`. (stable)
+
+The 13 namespaces exposed by `IronFinanceClient` (and `MockIronClient`): `customers`, `kyc`, `identifications`, `signings`, `wallets`, `bank`, `onramp`, `offramp`, `quotes`, `thirdPartyPayments`, `autoramps`, `virtualAccounts`, `metadata`. See `IIronFinanceClient` in `src/types.ts` for method signatures.
 
 ## Dashboard API surface
 
@@ -121,9 +125,9 @@ Demos do not import this package directly. They call the dashboard endpoints bel
 
 ## Required environment
 
-The package singleton reads `process.env.IRON_API_KEY` + `IRON_ENVIRONMENT` lazily; **prefer `createIronClient` for testability**.
+The package no longer reads `process.env`. Callers pass `apiKey` (and optionally `env`) explicitly to `createIronClient`. The dashboard reads `IRON_API_KEY` + `IRON_ENVIRONMENT` from validated env in `apps/dashboard/src/lib/iron/client.ts` (the only sanctioned env-reader for Iron credentials).
 
-- `IRON_API_KEY` — Iron API key — required at runtime.
+- `IRON_API_KEY` — Iron API key — required at runtime (dashboard).
 - `IRON_ENVIRONMENT` — `sandbox` | `production` — optional, defaults to sandbox (D-005).
 - `IRON_WEBHOOK_SECRET` — for signature verification — required when wiring the receiver.
 
@@ -135,13 +139,13 @@ The package singleton reads `process.env.IRON_API_KEY` + `IRON_ENVIRONMENT` lazi
 
 - Sandbox-by-default (D-005).
 - Non-custodial: Iron's offramp settles via Dynamic wallet → bank account; the user controls their crypto until offramp execution.
-- The singleton (`ironClient`) is convenience-only. Tests must use `createIronClient` to avoid env coupling.
-- Apps never import this package — go through the per-provider dashboard endpoints listed in "Dashboard API surface" below (D-003).
+- `apiKey` must be passed explicitly to `createIronClient`. The package does not fall back to `process.env`.
+- Apps never import this package — go through the per-provider dashboard endpoints listed in "Dashboard API surface" above (D-003).
 
 ## Integration map
 
 **Imports:** none (uses global `fetch`).
-**Imported by:** `apps/dashboard` (orchestration, webhooks, customer/KYC API). Apps interact via dashboard HTTP API.
+**Imported by:** `apps/dashboard` (orchestration, webhooks, customer/KYC API) via the dashboard helper `apps/dashboard/src/lib/iron/client.ts`. Apps interact via dashboard HTTP API.
 
 ## Examples
 
@@ -149,20 +153,35 @@ The package singleton reads `process.env.IRON_API_KEY` + `IRON_ENVIRONMENT` lazi
 import { createIronClient } from "@dynamic-demos/iron";
 
 const iron = createIronClient({
-  env: "sandbox",
   apiKey: process.env.IRON_API_KEY!,
+  env: "sandbox",
 });
 
-const quote = await iron.simple.getOfframpQuote({
-  source: { chain: "ethereum", token: "USDC", amount: "100" },
-  destination: { country: "US", currency: "USD", rail: "ach" },
+const customer = await iron.customers.create({
+  type: "individual",
+  email: "ada@example.com",
+});
+
+const quote = await iron.onramp.quote({
+  customer_id: customer.id,
+  source_currency: "EUR",
+  destination_currency: "USDC",
+  payment_rail: "sepa",
+  wallet_address: "0x...",
+});
+
+const onramp = await iron.onramp.create({
+  quote_id: quote.id,
+  customer_id: customer.id,
+  wallet_address: "0x...",
 });
 ```
 
 ## Do / Don't
 
-- Do: prefer `createIronClient` over the singleton in any new code (testability).
-- Do: keep secrets in dashboard env (D-003).
+- Do: pass `apiKey` explicitly to `createIronClient` (no env fallback).
+- Do: keep secrets in dashboard env (D-003) — read via `apps/dashboard/src/lib/iron/client.ts`.
+- Do: use `MockIronClient` in tests that don't need a real network.
 - Don't: import this package from a demo app.
 - Don't: skip `verifyIronSignature` before persisting webhook events.
 
@@ -171,4 +190,3 @@ const quote = await iron.simple.getOfframpQuote({
 - Phase 1E re-binds the canonical state to `TransactionState` from `@dynamic-demos/transactions`.
 - Phase 5A wires the dashboard webhook framework to `verifyIronSignature` + `normalizeIronEvent`.
 - Onramp surface is exposed but not yet wired to a demo. If a future demo adds onramp, set `flow_role` accordingly (or split this package).
-- See `packages/iron/docs/iron-api*.md` for the broader API surface beyond offramp.

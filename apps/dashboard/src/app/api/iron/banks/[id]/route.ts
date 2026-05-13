@@ -11,7 +11,7 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 export const OPTIONS = corsOptions;
 
@@ -25,7 +25,7 @@ export const GET = withAuth(
   async (req: NextRequest, { params }: { params: BankParams }) => {
     try {
       const { id } = await params;
-      const bankAccount = await ironClient.getBankAccount(id);
+      const bankAccount = await getIronClient().bank.get(id);
       return createResponse(bankAccount, 200);
     } catch (error) {
       return handleApiError(error, "iron/banks/get");
@@ -41,7 +41,7 @@ export const DELETE = withAuth(
   async (req: NextRequest, { params }: { params: BankParams }) => {
     try {
       const { id } = await params;
-      const result = await ironClient.deleteBankAccount(id);
+      const result = await getIronClient().bank.delete(id);
       return createResponse(result, 200);
     } catch (error) {
       return handleApiError(error, "iron/banks/delete");

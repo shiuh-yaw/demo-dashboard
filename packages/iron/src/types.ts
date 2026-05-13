@@ -580,3 +580,176 @@ export interface Identification {
   created_at: string;
   updated_at: string;
 }
+
+// =============================================================================
+// VIRTUAL ACCOUNT REQUEST
+// =============================================================================
+
+export interface CreateVirtualAccountRequest {
+  name: string;
+  currency: FiatCurrency;
+  destination_wallet_address?: string;
+  destination_blockchain?: BlockchainType;
+  destination_currency?: CryptoCurrency;
+}
+
+// =============================================================================
+// CLIENT CONFIG + NAMESPACE INTERFACES
+// =============================================================================
+
+/**
+ * Client configuration for {@link IronFinanceClient}. `apiKey` is required —
+ * the constructor no longer falls back to `process.env`. Pass `env` to pick
+ * sandbox (default per D-005) or production; `baseUrl` overrides for tests.
+ */
+export interface IronClientConfig {
+  apiKey: string;
+  baseUrl?: string;
+  env?: "sandbox" | "production";
+  /** Override the global `fetch` (test fixtures). */
+  fetchImpl?: typeof fetch;
+}
+
+export interface CustomersNamespace {
+  create(
+    request: CreateCustomerRequest,
+    idempotencyKey?: string,
+  ): Promise<Customer>;
+  get(customerId: string): Promise<Customer>;
+  list(
+    request?: ListCustomersRequest,
+  ): Promise<{ data: Customer[]; total: number }>;
+  update(
+    customerId: string,
+    request: UpdateCustomerRequest,
+  ): Promise<Customer>;
+}
+
+export interface KycNamespace {
+  start(request: StartKYCRequest, idempotencyKey?: string): Promise<KYCSession>;
+  getSession(sessionId: string): Promise<KYCSession>;
+  getStatus(
+    customerId: string,
+  ): Promise<{ status: KYCStatus; session?: KYCSession }>;
+}
+
+export interface IdentificationsNamespace {
+  list(customerId: string): Promise<Identification[]>;
+  updateStatus(
+    identificationId: string,
+    approved: boolean,
+    idempotencyKey?: string,
+  ): Promise<Identification>;
+}
+
+export interface SigningsNamespace {
+  listRequired(customerId: string): Promise<RequiredSigning[]>;
+  create(
+    customerId: string,
+    request: CreateSigningRequest,
+    idempotencyKey?: string,
+  ): Promise<Signing>;
+}
+
+export interface WalletsNamespace {
+  registerHosted(
+    request: RegisterSelfHostedAddressRequest,
+    idempotencyKey?: string,
+  ): Promise<Wallet>;
+  registerSelfHosted(
+    request: RegisterSelfHostedAddressRequest,
+    idempotencyKey?: string,
+  ): Promise<Wallet>;
+  get(walletId: string): Promise<Wallet>;
+  list(customerId: string): Promise<{ data: Wallet[] }>;
+}
+
+export interface BankNamespace {
+  register(
+    request: SimplifiedBankAccountRequest | SimpleBankAccountRequest,
+    idempotencyKey?: string,
+  ): Promise<FiatAddress>;
+  get(addressId: string): Promise<BankAccount>;
+  list(customerId: string): Promise<{ data: BankAccount[] }>;
+  delete(addressId: string): Promise<{ success: boolean }>;
+}
+
+export interface OnrampNamespace {
+  quote(request: OnrampQuoteRequest): Promise<Quote>;
+  create(
+    request: CreateOnrampRequest,
+    idempotencyKey?: string,
+  ): Promise<Onramp>;
+  get(onrampId: string): Promise<Onramp>;
+  list(
+    customerId: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<{ data: Onramp[]; total: number }>;
+  cancel(onrampId: string): Promise<Onramp>;
+}
+
+export interface OfframpNamespace {
+  quote(request: OfframpQuoteRequest): Promise<Quote>;
+  create(
+    request: CreateOfframpRequest,
+    idempotencyKey?: string,
+  ): Promise<Offramp>;
+  get(offrampId: string): Promise<Offramp>;
+  list(
+    customerId: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<{ data: Offramp[]; total: number }>;
+  cancel(offrampId: string): Promise<Offramp>;
+}
+
+export interface QuotesNamespace {
+  get(quoteId: string): Promise<Quote>;
+}
+
+export interface ThirdPartyPaymentsNamespace {
+  create(
+    request: CreateThirdPartyPaymentRequest,
+    idempotencyKey?: string,
+  ): Promise<ThirdPartyPayment>;
+  get(paymentId: string): Promise<ThirdPartyPayment>;
+  list(
+    customerId: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<{ data: ThirdPartyPayment[]; total: number }>;
+}
+
+export interface AutorampsNamespace {
+  list(customerId: string): Promise<PagedAutorampsResponse>;
+}
+
+export interface VirtualAccountsNamespace {
+  list(customerId: string): Promise<PagedVirtualAccountsResponse>;
+  create(
+    customerId: string,
+    request: CreateVirtualAccountRequest,
+    idempotencyKey?: string,
+  ): Promise<VirtualAccount>;
+}
+
+export interface MetadataNamespace {
+  listFiatCurrencies(): Promise<IronFiatCurrency[]>;
+}
+
+export interface IIronFinanceClient {
+  readonly customers: CustomersNamespace;
+  readonly kyc: KycNamespace;
+  readonly identifications: IdentificationsNamespace;
+  readonly signings: SigningsNamespace;
+  readonly wallets: WalletsNamespace;
+  readonly bank: BankNamespace;
+  readonly onramp: OnrampNamespace;
+  readonly offramp: OfframpNamespace;
+  readonly quotes: QuotesNamespace;
+  readonly thirdPartyPayments: ThirdPartyPaymentsNamespace;
+  readonly autoramps: AutorampsNamespace;
+  readonly virtualAccounts: VirtualAccountsNamespace;
+  readonly metadata: MetadataNamespace;
+}

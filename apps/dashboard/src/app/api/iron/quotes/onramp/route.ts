@@ -10,7 +10,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient, type OnrampQuoteRequest } from "@dynamic-demos/iron";
+import { type OnrampQuoteRequest } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -48,7 +49,7 @@ export const POST = withAuth(async (req: NextRequest) => {
       wallet_address: validated.wallet_address,
     };
 
-    const quote = await ironClient.getOnrampQuote(quoteRequest);
+    const quote = await getIronClient().onramp.quote(quoteRequest);
 
     return createResponse(quote);
   } catch (error) {

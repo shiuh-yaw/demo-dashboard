@@ -12,7 +12,7 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 type CustomerParams = Promise<{ id: string }>;
@@ -48,7 +48,7 @@ export async function GET(
 ) {
   try {
     const { id: customer_id } = await params;
-    const signings = await ironClient.getRequiredSignings(customer_id);
+    const signings = await getIronClient().signings.listRequired(customer_id);
     return createResponse(signings, 200);
   } catch (error) {
     return handleApiError(error, "iron/customers/signings/list");
@@ -70,7 +70,7 @@ export async function POST(
     // Validate request body
     const validated = createSigningSchema.parse(body);
 
-    const signing = await ironClient.createSigning(customer_id, {
+    const signing = await getIronClient().signings.create(customer_id, {
       content_id: validated.content_id,
       content_type: validated.content_type,
       signed: validated.signed,

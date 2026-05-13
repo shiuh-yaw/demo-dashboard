@@ -9,7 +9,7 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 /**
  * GET /api/iron/customers/[id]/virtual-accounts
@@ -21,7 +21,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const virtualAccounts = await ironClient.listVirtualAccounts(id);
+    const virtualAccounts = await getIronClient().virtualAccounts.list(id);
     return createResponse(virtualAccounts, 200);
   } catch (error) {
     return handleApiError(error, "iron/customers/virtual-accounts/list");
@@ -40,7 +40,7 @@ export async function POST(
     const { id } = await params;
     const body = await req.json();
 
-    const result = await ironClient.createVirtualAccount(id, body);
+    const result = await getIronClient().virtualAccounts.create(id, body);
     return createResponse(result, 201);
   } catch (error) {
     return handleApiError(error, "iron/customers/virtual-accounts/create");

@@ -10,7 +10,7 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 export const OPTIONS = corsOptions;
 
@@ -24,7 +24,7 @@ export const GET = withAuth(
   async (req: NextRequest, { params }: { params: QuoteParams }) => {
     try {
       const { id } = await params;
-      const quote = await ironClient.getQuote(id);
+      const quote = await getIronClient().quotes.get(id);
       return createResponse(quote, 200);
     } catch (error) {
       return handleApiError(error, "iron/quotes/get");

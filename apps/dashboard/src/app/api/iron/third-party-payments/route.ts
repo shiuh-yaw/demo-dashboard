@@ -15,7 +15,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient, type CreateThirdPartyPaymentRequest } from "@dynamic-demos/iron";
+import { type CreateThirdPartyPaymentRequest } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -51,7 +52,7 @@ export const POST = withAuth(async (req: NextRequest) => {
       metadata: validated.metadata,
     };
 
-    const payment = await ironClient.createThirdPartyPayment(paymentRequest);
+    const payment = await getIronClient().thirdPartyPayments.create(paymentRequest);
 
     return createResponse(payment, 201);
   } catch (error) {
@@ -78,7 +79,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       throw new Error("customer_id query parameter is required");
     }
 
-    const result = await ironClient.listThirdPartyPayments(customer_id, limit, offset);
+    const result = await getIronClient().thirdPartyPayments.list(customer_id, limit, offset);
 
     return createResponse(result);
   } catch (error) {

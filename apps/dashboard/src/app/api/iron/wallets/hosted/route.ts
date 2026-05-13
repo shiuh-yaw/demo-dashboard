@@ -13,7 +13,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient, type RegisterHostedWalletRequest } from "@dynamic-demos/iron";
+import { type RegisterHostedWalletRequest } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -47,7 +48,7 @@ export const POST = withAuth(async (req: NextRequest) => {
       label: validated.label,
     };
 
-    const wallet = await ironClient.registerHostedWallet(walletRequest);
+    const wallet = await getIronClient().wallets.registerHosted(walletRequest);
 
     return createResponse(wallet, 201);
   } catch (error) {

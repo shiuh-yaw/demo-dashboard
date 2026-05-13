@@ -8,7 +8,7 @@
 
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 type CustomerParams = Promise<{ id: string }>;
 
@@ -22,9 +22,8 @@ export async function GET(
 ) {
   try {
     const { id: customerId } = await params;
-    const identifications = await ironClient.getCustomerIdentifications(
-      customerId
-    );
+    const identifications =
+      await getIronClient().identifications.list(customerId);
     return createResponse(identifications, 200);
   } catch (error) {
     return handleApiError(error, "iron/customers/identifications/list");

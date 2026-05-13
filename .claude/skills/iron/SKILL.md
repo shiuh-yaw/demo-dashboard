@@ -14,45 +14,54 @@ description: Use when the user needs to integrate Iron Finance (a MoonPay produc
 
 ## The client and its public surface
 
-Iron has the **largest surface** of any provider in the monorepo (~30 methods on the `IronFinanceClient` class). Group by domain when reaching for a method:
+`IronFinanceClient` exposes a **namespaced surface** — 13 namespaces grouped by domain. `MockIronClient` mirrors the same shape for tests.
 
 ```typescript
 import { createIronClient } from "@dynamic-demos/iron";
 
 const iron = createIronClient({
-  env: "sandbox", // or "production"
   apiKey: process.env.IRON_API_KEY!,
+  env: "sandbox", // or "production" — defaults to sandbox (D-005)
 });
 
 // Customers (KYC subject)
-iron.createCustomer(...)
-iron.getCustomer(id) / iron.listCustomers(...) / iron.updateCustomer(...)
+iron.customers.create(...) / iron.customers.get(id)
+iron.customers.list(...)   / iron.customers.update(id, ...)
 
-// KYC
-iron.startKYC(...) / iron.getKYCSession(id) / iron.getCustomerKYCStatus(id)
-iron.getRequiredSignings(customerId) / iron.createSigning(...)
-iron.getCustomerIdentifications(customerId) / iron.updateIdentificationStatus(...)
+// KYC + identifications + signings
+iron.kyc.start({ customer_id, return_url? })
+iron.kyc.getSession(sessionId) / iron.kyc.getStatus(customerId)
+iron.identifications.list(customerId)
+iron.identifications.updateStatus(identificationId, approved)
+iron.signings.listRequired(customerId)
+iron.signings.create(customerId, request)
 
-// Wallets (hosted + self-hosted)
-iron.registerHostedWallet(...) / iron.registerSelfHostedWallet(...)
-iron.getWallet(id) / iron.listWallets(customerId)
+// Wallets (hosted + self-hosted — same Iron endpoint, alias methods)
+iron.wallets.registerHosted(req) / iron.wallets.registerSelfHosted(req)
+iron.wallets.get(id) / iron.wallets.list(customerId)
 
 // Bank accounts (FiatAddresses)
-iron.registerBankAccount(...)
-iron.getBankAccount(id) / iron.listBankAccounts(...) / iron.deleteBankAccount(id)
-iron.listFiatCurrencies()
+iron.bank.register(req) / iron.bank.get(id)
+iron.bank.list(customerId) / iron.bank.delete(id)
 
-// Quotes + ramps
-iron.getOnrampQuote(req)  / iron.createOnramp(...)
-iron.getOfframpQuote(req) / iron.createOfframp(...)
-iron.getQuote(id) / iron.getOnramp(id) / iron.getOfframp(id)
-iron.listOnramps(...) / iron.listOfframps(...)
-iron.cancelOnramp(id) / iron.cancelOfframp(id)
+// Onramp + offramp (quote + create + get + list + cancel each)
+iron.onramp.quote(req)  / iron.onramp.create(req)
+iron.onramp.get(id)     / iron.onramp.list(customerId, limit?, offset?)
+iron.onramp.cancel(id)
+iron.offramp.quote(req) / iron.offramp.create(req)
+iron.offramp.get(id)    / iron.offramp.list(customerId, limit?, offset?)
+iron.offramp.cancel(id)
 
-// Third-party payments + virtual accounts + autoramps
-iron.createThirdPartyPayment(...) / iron.getThirdPartyPayment(id) / iron.listThirdPartyPayments(...)
-iron.listAutoramps(customerId)
-iron.listVirtualAccounts(...) / iron.createVirtualAccount(...)
+// Quotes (Iron has no quote-by-ID endpoint; .get throws)
+iron.quotes.get(id) // throws — use onramp.quote / offramp.quote instead
+
+// Third-party payments + autoramps + virtual accounts + metadata
+iron.thirdPartyPayments.create(req)
+iron.thirdPartyPayments.get(id) / iron.thirdPartyPayments.list(customerId, limit?, offset?)
+iron.autoramps.list(customerId)
+iron.virtualAccounts.list(customerId)
+iron.virtualAccounts.create(customerId, request)
+iron.metadata.listFiatCurrencies()
 
 // Webhooks
 import { verifyIronSignature, normalizeIronEvent, IRON_SIGNATURE_HEADER } from "@dynamic-demos/iron";
@@ -65,23 +74,18 @@ Supported corridors (frontmatter / `regions` is the source of truth): US/ACH+WIR
 
 ## Env vars
 
-- `IRON_API_KEY` — Iron API key — required at runtime.
+- `IRON_API_KEY` — Iron API key — required at runtime (read by dashboard).
 - `IRON_ENVIRONMENT` — `sandbox` | `production` — optional, defaults to sandbox (D-005).
 - `IRON_WEBHOOK_SECRET` — for `verifyIronSignature` — required when wiring the receiver.
 
-The package also exports a lazy singleton `ironClient` that reads `IRON_API_KEY` + `IRON_ENVIRONMENT` from `process.env` directly (see anti-patterns below).
+The package does **not** read `process.env`. The dashboard reads Iron env via `apps/dashboard/src/lib/iron/client.ts` (`getIronClient()`), which is the only sanctioned env-reader. Routes call `getIronClient().customers.get(id)` etc.
 
 ## Escape hatch — when the typed wrapper doesn't cover what you need
 
-There is **no escape hatch on disk today**. The internal `request<T>` helper inside `IronFinanceClient` is private. If you need an endpoint not exposed by the ~30 typed methods:
+There is **no escape hatch on disk today**. The internal `request<T>` helper inside `IronFinanceClient` is private. If you need an endpoint not exposed by the typed methods:
 
 - **Short-term:** call the upstream API directly with `fetch` using the `X-API-Key` header against `resolveIronBaseUrl(env)`. Don't reimplement the header / base-URL resolution in more than one site.
-- **Medium-term:** add a typed method on `IronFinanceClient` and submit a PR. The surface is already large; one more method has marginal cost.
-
-## Known anti-patterns in this package (avoid in new code)
-
-- **`process.env.IRON_API_KEY` is read inside the constructor.** This breaks the "package never reads env" guarantee that every other Phase 1B provider follows. Prefer passing `apiKey` explicitly via `createIronClient({ apiKey })`. Tests must do this to avoid env coupling.
-- **`ironClient` singleton is exported** for convenience. Don't use it in new code — it's untestable and couples runtime to module-load time. Use `createIronClient(...)` and inject.
+- **Medium-term:** add a typed method on the appropriate namespace and submit a PR. The surface is already large; one more method has marginal cost.
 
 ## Promote to typed only when…
 
@@ -94,8 +98,10 @@ Same three-tier rule as Fireblocks: prefer the typed method > extend `IronFinanc
 
 ## Common gotchas
 
-- Prefer `createIronClient` over the `ironClient` singleton in any new code (testability).
+- `apiKey` is **required** on `createIronClient` — the package no longer falls back to `process.env`. Dashboard route handlers should call `getIronClient()` from `apps/dashboard/src/lib/iron/client.ts`.
 - `rampStatusToCanonical` / `ironAutorampStatusToCanonical` are placeholders until Phase 1E rebinds them to `TransactionState` from `@dynamic-demos/transactions`.
 - `verifyIronSignature(rawBody, signature, secret)` requires the **raw** body (pre-JSON-parse). Don't call `JSON.parse` before verifying.
 - Iron's API uses `X-API-Key` (not `Authorization: Bearer`) and `IDEMPOTENCY-KEY` for idempotency — don't copy auth from another provider's wrapper.
-- For broader API surface (beyond what `IronFinanceClient` exposes), check `packages/iron/docs/iron-api.md`.
+- `iron.quotes.get(id)` throws — Iron has no quote-by-ID endpoint. Use `iron.onramp.quote(req)` / `iron.offramp.quote(req)` instead.
+- `iron.wallets.registerHosted` and `iron.wallets.registerSelfHosted` both hit the same `/api/addresses/crypto/selfhosted` endpoint — the alias exists because Iron exposes a single endpoint for both types.
+- For broader API surface (beyond what the namespaces expose), check `packages/iron/docs/iron-api.md`.

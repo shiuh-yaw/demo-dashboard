@@ -11,7 +11,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient, type UpdateCustomerRequest } from "@dynamic-demos/iron";
+import { type UpdateCustomerRequest } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -35,7 +36,7 @@ export const GET = withAuth(
   async (req: NextRequest, { params }: { params: CustomerParams }) => {
     try {
       const { id } = await params;
-      const customer = await ironClient.getCustomer(id);
+      const customer = await getIronClient().customers.get(id);
       return createResponse(customer, 200);
     } catch (error) {
       return handleApiError(error, "iron/customers/get");
@@ -65,7 +66,7 @@ export const PATCH = withAuth(
         metadata: validated.metadata,
       };
 
-      const customer = await ironClient.updateCustomer(id, updateRequest);
+      const customer = await getIronClient().customers.update(id, updateRequest);
 
       return createResponse(customer, 200);
     } catch (error) {

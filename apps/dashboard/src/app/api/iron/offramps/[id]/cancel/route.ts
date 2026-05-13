@@ -10,7 +10,7 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 
 export const OPTIONS = corsOptions;
 
@@ -24,7 +24,7 @@ export const POST = withAuth(
   async (_req: NextRequest, { params }: { params: OfframpParams }) => {
     try {
       const { id } = await params;
-      const offramp = await ironClient.cancelOfframp(id);
+      const offramp = await getIronClient().offramp.cancel(id);
       return createResponse(offramp);
     } catch (error) {
       return handleApiError(error, "iron/offramps/cancel");

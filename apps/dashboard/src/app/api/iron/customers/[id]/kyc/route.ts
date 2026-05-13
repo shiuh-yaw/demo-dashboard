@@ -11,7 +11,7 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -35,7 +35,7 @@ export const POST = withAuth(
       // Validate request body
       const validated = startKYCSchema.parse(body);
 
-      const session = await ironClient.startKYC({
+      const session = await getIronClient().kyc.start({
         customer_id,
         return_url: validated.return_url,
       });
@@ -55,7 +55,7 @@ export const GET = withAuth(
   async (req: NextRequest, { params }: { params: CustomerParams }) => {
     try {
       const { id: customer_id } = await params;
-      const status = await ironClient.getCustomerKYCStatus(customer_id);
+      const status = await getIronClient().kyc.getStatus(customer_id);
       return createResponse(status, 200);
     } catch (error) {
       return handleApiError(error, "iron/customers/kyc/status");

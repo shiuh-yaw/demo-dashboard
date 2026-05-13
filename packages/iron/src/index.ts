@@ -4,18 +4,16 @@
  * Iron Finance (MoonPay) integration package — onramp, offramp, KYC,
  * customer/wallet/bank management, third-party payments, virtual accounts.
  *
- * Sandbox-by-default per D-005. Use `createIronClient` for new code; the
- * exported `ironClient` singleton is a convenience that reads
- * `IRON_API_KEY` / `IRON_ENVIRONMENT` from `process.env`.
+ * Sandbox-by-default per D-005. Use `createIronClient({ apiKey, env })` —
+ * the constructor no longer reads `process.env`. The dashboard-side helper
+ * `apps/dashboard/src/lib/iron/client.ts` is the only sanctioned env-reader.
  */
 
 // Client + factory
-export {
-  IronFinanceClient,
-  createIronClient,
-  ironClient,
-  type IronClientOptions,
-} from "./client";
+export { IronFinanceClient, createIronClient } from "./client";
+
+// Mock client (test fixtures + non-network demos)
+export { MockIronClient } from "./mock-client";
 
 // Environment helpers
 export {
@@ -53,6 +51,23 @@ export {
 
 // Types
 export type {
+  // client config + namespace interfaces
+  IronClientConfig,
+  IIronFinanceClient,
+  CustomersNamespace,
+  KycNamespace,
+  IdentificationsNamespace,
+  SigningsNamespace,
+  WalletsNamespace,
+  BankNamespace,
+  OnrampNamespace,
+  OfframpNamespace,
+  QuotesNamespace,
+  ThirdPartyPaymentsNamespace,
+  AutorampsNamespace,
+  VirtualAccountsNamespace,
+  MetadataNamespace,
+  CreateVirtualAccountRequest,
   // base
   CustomerType,
   KYCStatus,

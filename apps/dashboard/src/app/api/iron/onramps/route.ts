@@ -11,7 +11,8 @@ import { NextRequest } from "next/server";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
-import { ironClient, type CreateOnrampRequest } from "@dynamic-demos/iron";
+import { type CreateOnrampRequest } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 export const OPTIONS = corsOptions;
@@ -41,7 +42,7 @@ export const POST = withAuth(async (req: NextRequest) => {
       bank_account_id: validated.bank_account_id,
     };
 
-    const onramp = await ironClient.createOnramp(onrampRequest);
+    const onramp = await getIronClient().onramp.create(onrampRequest);
 
     return createResponse(onramp, 201);
   } catch (error) {
@@ -68,7 +69,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       throw new Error("customer_id query parameter is required");
     }
 
-    const result = await ironClient.listOnramps(customer_id, limit, offset);
+    const result = await getIronClient().onramp.list(customer_id, limit, offset);
 
     return createResponse(result);
   } catch (error) {

@@ -13,10 +13,10 @@
 import { NextRequest } from "next/server";
 import { createResponse, handleApiError } from "@/lib/api-response";
 import {
-  ironClient,
   type OfframpQuoteRequest,
   type CreateOfframpRequest,
 } from "@dynamic-demos/iron";
+import { getIronClient } from "@/lib/iron/client";
 import { z } from "zod";
 
 const quoteSchema = z.object({
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         blockchain: validated.blockchain, // Pass blockchain selection
       };
 
-      const quote = await ironClient.getOfframpQuote(quoteRequest);
+      const quote = await getIronClient().offramp.quote(quoteRequest);
       return createResponse(quote, 200);
     } else {
       // Execute offramp
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         destination_currency: validated.destination_currency, // Pass destination currency
       };
 
-      const offramp = await ironClient.createOfframp(offrampRequest);
+      const offramp = await getIronClient().offramp.create(offrampRequest);
       return createResponse(offramp, 201);
     }
   } catch (error) {

@@ -11,8 +11,10 @@ Iron Finance (by MoonPay) provides stablecoin payment infrastructure:
 - **Virtual Accounts**: receive payments via named bank accounts
 - **Third Party Payments**: external payout/payin services
 
-Sandbox-by-default. Pass `env: 'sandbox' | 'production'` to the client factory or
-allow it to inherit from `IRON_ENVIRONMENT` (defaults to `sandbox`).
+Sandbox-by-default. Pass `apiKey` explicitly to the client factory along with
+`env: 'sandbox' | 'production'` (`sandbox` is the default per D-005). The
+package no longer reads `process.env` — the dashboard reads Iron env via
+`apps/dashboard/src/lib/iron/client.ts`.
 
 ## Quick start
 
@@ -20,21 +22,31 @@ allow it to inherit from `IRON_ENVIRONMENT` (defaults to `sandbox`).
 import { createIronClient } from "@dynamic-demos/iron";
 
 const client = createIronClient({
-  env: "sandbox",
   apiKey: process.env.IRON_API_KEY!,
+  env: "sandbox",
 });
 
-const customer = await client.createCustomer({
+const customer = await client.customers.create({
   type: "individual",
   email: "user@example.com",
   first_name: "Ada",
   last_name: "Lovelace",
 });
+
+const quote = await client.onramp.quote({
+  customer_id: customer.id,
+  source_currency: "EUR",
+  destination_currency: "USDC",
+  payment_rail: "sepa",
+  wallet_address: "0x...",
+});
 ```
 
-A pre-configured singleton (`ironClient`) is exported for convenience and reads
-`IRON_API_KEY` / `IRON_ENVIRONMENT` from `process.env`. Prefer `createIronClient`
-for testability.
+The 13 namespaces on `IronFinanceClient`: `customers`, `kyc`, `identifications`,
+`signings`, `wallets`, `bank`, `onramp`, `offramp`, `quotes`, `thirdPartyPayments`,
+`autoramps`, `virtualAccounts`, `metadata`. See `IIronFinanceClient` in
+`src/types.ts` for method signatures. A `MockIronClient` mirroring the same
+shape is exported for tests.
 
 ## Documentation
 
