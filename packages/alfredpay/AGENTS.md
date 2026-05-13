@@ -75,6 +75,12 @@ All exports are stable and live at the package root.
 - Types: `AlfredpayEnvironment`, `AlfredpayClient`, `AlfredpayBeneficiary`, `AlfredpayCountry`, `AlfredpayCreateOfframpParams`, `AlfredpayOfframp`, `AlfredpayRail`, `AlfredpaySourceCurrency`, `AlfredpayStatus`. (stable)
 - `webhooks.verifySignature`, `webhooks.normalize` — webhook helpers. (stable)
 
+## Dashboard API surface
+
+No dashboard API endpoints expose this package today. Demos that want alfredPay's direct-REST offramp call into the dashboard via a per-demo route handler that imports `@dynamic-demos/alfredpay` (the dashboard owns the API key per D-003); a generic `/api/alfredpay/*` surface has not been authored because no live demo currently composes against it. When the next alfredPay demo lands, add the endpoints + this section's table at the same time as the route handlers.
+
+For Fireblocks-mediated DVP against the same partner, see `packages/fireblocks/AGENTS.md` (D-009) — different code path, different boundary.
+
 ## Required environment
 
 The package reads no `process.env` directly — credentials live at the **dashboard** (D-003).
@@ -92,7 +98,7 @@ The package reads no `process.env` directly — credentials live at the **dashbo
 - Sandbox-by-default (D-005).
 - Non-custodial: alfredPay never holds the user's crypto — funds settle direct from the user's Dynamic wallet via signed transfer.
 - Webhook signatures must verify before the dashboard transitions any transaction state.
-- Apps never call alfredPay directly — they go through the dashboard's `/api/orchestrate/offramp` (D-001/D-003).
+- Apps never call alfredPay directly — they go through a dashboard route handler that imports this package (D-001/D-003). See "Dashboard API surface" above.
 
 ## Integration map
 
@@ -119,7 +125,7 @@ const offramp = await createOfframp(client, {
 
 ## Do / Don't
 
-- Do: route demo-app calls through `/api/orchestrate/offramp` so secrets stay in dashboard (D-003).
+- Do: keep all alfredPay credentials in dashboard env and call alfredPay only from dashboard route handlers (D-003). Demos never hold the API key.
 - Do: use the canonical state machine (`@dynamic-demos/transactions`) when persisting alfredPay transactions.
 - Don't: import this package from a demo app. The Direct REST path is dashboard-side.
 - Don't: store `ALFREDPAY_API_KEY` in any `apps/*` env file — production-creds CI gate enforces this.
@@ -128,5 +134,5 @@ const offramp = await createOfframp(client, {
 
 - Phase 1E re-points `state-mapping.ts` from the placeholder canonical-state union to the real `TransactionState` from `@dynamic-demos/transactions`.
 - Phase 5A wires the dashboard's `/api/webhooks/alfredpay` route to `webhooks.verifySignature` + `webhooks.normalize`.
-- Phase 5B routes `/api/orchestrate/offramp` to `createOfframp` for `BR | MX | CO | AR | SV | US` corridors.
+- No dashboard endpoints expose this package yet. Add `/api/alfredpay/*` route handlers (and a matching table row in "Dashboard API surface") the first time a demo wires the direct-REST path.
 - Real-network tests stay out of CI (D-023). Test coverage is fetch-stubbed Vitest only.

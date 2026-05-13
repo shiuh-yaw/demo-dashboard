@@ -73,6 +73,21 @@ All exports are stable and live at the package root.
 - `webhooks` namespace — `verifySignature`, `normalize`, header types. (stable)
 - `mapBlindpayStatus`, `BlindpayStatus`, `CanonicalTransactionStatePlaceholder` — state mapping (placeholder). (stable, will rebind in Phase 1E)
 
+## Dashboard API surface
+
+Demos do not import this package directly. They call the dashboard endpoints below that expose it. The Phase 6A Skill reads this section when scaffolding to know which endpoints to wire.
+
+| Endpoint | Method | Purpose | Audience |
+|---|---|---|---|
+| `/api/blindpay/payouts/quote` | POST | Quote a stablecoin → fiat payout (step 1) | demo |
+| `/api/blindpay/payouts/execute` | POST | Execute a payout after user token approval (step 2) | demo |
+| `/api/blindpay/payouts/[id]` | GET | Get payout status | demo / operator |
+| `/api/blindpay/payins/quote` | POST | Quote a fiat → stablecoin payin (step 1) | demo |
+| `/api/blindpay/payins/execute` | POST | Execute a payin after fiat deposit (step 2) | demo |
+| `/api/blindpay/payins/[id]` | GET | Get payin status | demo / operator |
+| `/api/blindpay/rates` | GET | Get FX rates (with bank-account fallback to full quote) | demo |
+| `/api/webhooks/blindpay` | POST | Svix-verified webhook receiver (D-011) | provider → dashboard |
+
 ## Required environment
 
 The package reads no `process.env` directly — credentials live at the dashboard (D-003).
@@ -91,7 +106,7 @@ The package reads no `process.env` directly — credentials live at the dashboar
 - Sandbox-by-default (D-005).
 - **Custodial**: BlindPay holds funds between USDC receipt and fiat disbursement — surface this in demo copy.
 - Webhook signatures (Svix) must verify before any transaction state transitions. Replay attacks otherwise.
-- Apps never import this package — go through dashboard `/api/orchestrate/offramp` (D-001/D-003).
+- Apps never import this package — go through the dashboard endpoints listed in "Dashboard API surface" above (D-001/D-003).
 
 ## Integration map
 

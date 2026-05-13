@@ -44,6 +44,10 @@ All exports are stable and live at the package root (`@dynamic-demos/coingecko`)
 - `getTokenStats(coinId, options)` — `GET /coins/{id}/market_chart` shape. (stable)
 - Types: `CoinGeckoOptions`, `MarketCoin`, `GetMarketCoinsParams`, `TokenMetadata`, `TokenStats`. (stable)
 
+## Dashboard API surface
+
+No dashboard API endpoints expose this package — apps import `@dynamic-demos/coingecko` directly. Reason: CoinGecko's Demo tier is public read-only (the key is rate-limit identity, not auth), and consumers cache through Next.js `revalidate`. Dashboard proxying would add a hop without changing the security model. Server-only — never call from a browser bundle (the rate-limit key still leaks).
+
 ## Required environment
 
 The package reads no `process.env`. Consumers pass credentials per call:

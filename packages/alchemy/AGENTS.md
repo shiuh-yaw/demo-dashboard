@@ -43,6 +43,10 @@ All exports are stable and live at the package root (`@dynamic-demos/alchemy`).
 - `ALCHEMY_NETWORKS` — supported network slugs (`eth-mainnet`, `base-mainnet`, etc.). (stable)
 - Type exports: `AlchemyOptions`, `AssetTransferCategory`, `GetAssetTransfersParams`, `GetAssetTransfersResponse`, `AssetTransfer`, `RawContract`, `TransferMetadata`, `GetTokenPricesBySymbolParams`, `GetHistoricalTokenPricesParams`. (stable)
 
+## Dashboard API surface
+
+No dashboard API endpoints expose this package — apps import `@dynamic-demos/alchemy` directly. Reason: Alchemy is a read-only data utility (prices + transfer history) with a per-call `apiKey` parameter; apps already hold an Alchemy key in their own env (D-003 carves out Dynamic + Fireblocks; this package follows the same pattern because the key has no per-demo configuration and proxying through dashboard adds latency without security benefit). Server-only — never call from a browser bundle (key leaks).
+
 ## Required environment
 
 The package itself reads no `process.env`. Consumers pass credentials per call:

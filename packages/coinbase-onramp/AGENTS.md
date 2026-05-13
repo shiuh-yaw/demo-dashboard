@@ -73,6 +73,16 @@ Stable, all live at the package root.
 - `mapCoinbaseOnrampStatus`, `CoinbaseOnrampOrderStatus`, `CanonicalTransactionStatePlaceholder`. (stable, rebinds in Phase 1E)
 - Webhooks: `COINBASE_ONRAMP_SIGNATURE_HEADER`, signature verifier, normaliser.
 
+## Dashboard API surface
+
+Demos do not import this package directly. They call the dashboard endpoint below that exposes it. The Phase 6A Skill reads this section when scaffolding to know which endpoints to wire.
+
+| Endpoint | Method | Purpose | Audience |
+|---|---|---|---|
+| `/api/coinbase/onramp` | POST | Create a hosted onramp order; returns redirect / payment link | demo |
+
+Coinbase webhook receiver (`/api/webhooks/coinbase`) lands as part of Phase 5A; not yet wired.
+
 ## Required environment
 
 The package reads no `process.env` directly — credentials live at the dashboard (D-003).
@@ -91,7 +101,7 @@ The package reads no `process.env` directly — credentials live at the dashboar
 - Sandbox-by-default (D-005).
 - Non-custodial: Coinbase delivers crypto directly to the user's Dynamic wallet; no escrow.
 - Webhook signatures must verify before any state transitions.
-- Apps never import this package — dashboard `/api/orchestrate/onramp` is the boundary (D-003).
+- Apps never import this package — the dashboard endpoint listed in "Dashboard API surface" above is the boundary (D-003).
 
 ## Integration map
 

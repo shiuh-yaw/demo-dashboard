@@ -76,6 +76,49 @@ Stable, all live at the package root.
 - Simple offramp helpers — `getOfframpQuote`, `createOfframp`, `chainIdToBlockchain`, `SimpleOfframp*` types. (stable)
 - Webhooks — `verifyIronSignature`, `normalizeIronEvent`, `IRON_SIGNATURE_HEADER`, `CanonicalEvent`. (stable)
 
+## Dashboard API surface
+
+Demos do not import this package directly. They call the dashboard endpoints below that expose it. The Phase 6A Skill reads this section when scaffolding to know which endpoints to wire.
+
+| Endpoint | Method | Purpose | Audience |
+|---|---|---|---|
+| `/api/iron/customers` | GET | List customers | demo / operator |
+| `/api/iron/customers` | POST | Create a customer | demo / operator |
+| `/api/iron/customers/[id]` | GET | Get a customer | demo / operator |
+| `/api/iron/customers/[id]` | PATCH | Update a customer | demo / operator |
+| `/api/iron/customers/[id]/kyc` | GET | Get KYC status | demo |
+| `/api/iron/customers/[id]/kyc` | POST | Start KYC verification | demo |
+| `/api/iron/customers/[id]/identifications` | GET | List customer identifications | demo |
+| `/api/iron/customers/[id]/signings` | GET | List required signing documents | demo |
+| `/api/iron/customers/[id]/signings` | POST | Sign a required document | demo |
+| `/api/iron/customers/[id]/wallets` | GET | List wallets for a customer | demo / operator |
+| `/api/iron/customers/[id]/banks` | GET | List bank accounts for a customer | demo / operator |
+| `/api/iron/customers/[id]/virtual-accounts` | GET | List named virtual accounts | demo / operator |
+| `/api/iron/customers/[id]/virtual-accounts` | POST | Create a named virtual account | demo / operator |
+| `/api/iron/customers/[id]/autoramps` | GET | List autoramp transactions for a customer | demo / operator |
+| `/api/iron/banks` | POST | Register a bank account | demo / operator |
+| `/api/iron/banks/[id]` | GET | Get a bank account | demo / operator |
+| `/api/iron/banks/[id]` | DELETE | Delete a bank account | operator |
+| `/api/iron/wallets/hosted` | POST | Register a hosted (Iron-managed) wallet | demo |
+| `/api/iron/wallets/self-hosted` | POST | Register a self-hosted wallet (signed proof) | demo |
+| `/api/iron/wallets/[id]` | GET | Get a wallet | demo / operator |
+| `/api/iron/quotes/onramp` | POST | Get an onramp quote (fiat → crypto) | demo |
+| `/api/iron/quotes/offramp` | POST | Get an offramp quote (crypto → fiat) | demo |
+| `/api/iron/quotes/[id]` | GET | Get a quote by id | demo |
+| `/api/iron/onramps` | GET | List onramps | demo / operator |
+| `/api/iron/onramps` | POST | Create an onramp transaction | demo |
+| `/api/iron/onramps/[id]` | GET | Get an onramp by id | demo / operator |
+| `/api/iron/onramps/[id]/cancel` | POST | Cancel an onramp | operator |
+| `/api/iron/offramps` | GET | List offramps | demo / operator |
+| `/api/iron/offramps` | POST | Create an offramp transaction | demo |
+| `/api/iron/offramps/[id]` | GET | Get an offramp by id | demo / operator |
+| `/api/iron/offramps/[id]/cancel` | POST | Cancel an offramp | operator |
+| `/api/iron/third-party-payments` | GET | List third-party payments | operator |
+| `/api/iron/third-party-payments` | POST | Create a third-party payment | operator |
+| `/api/iron/third-party-payments/[id]` | GET | Get a third-party payment | operator |
+| `/api/iron/fiatcurrencies` | GET | List Iron-supported fiat currencies | demo / operator |
+| `/api/iron/sandbox/identification/[id]` | POST | Force identification approval/rejection (sandbox only) | operator |
+
 ## Required environment
 
 The package singleton reads `process.env.IRON_API_KEY` + `IRON_ENVIRONMENT` lazily; **prefer `createIronClient` for testability**.
@@ -93,7 +136,7 @@ The package singleton reads `process.env.IRON_API_KEY` + `IRON_ENVIRONMENT` lazi
 - Sandbox-by-default (D-005).
 - Non-custodial: Iron's offramp settles via Dynamic wallet → bank account; the user controls their crypto until offramp execution.
 - The singleton (`ironClient`) is convenience-only. Tests must use `createIronClient` to avoid env coupling.
-- Apps never import this package — go through dashboard `/api/orchestrate/*` (D-003).
+- Apps never import this package — go through the per-provider dashboard endpoints listed in "Dashboard API surface" below (D-003).
 
 ## Integration map
 

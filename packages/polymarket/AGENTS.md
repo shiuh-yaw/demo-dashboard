@@ -49,6 +49,10 @@ All exports are stable and live at the package root (`@dynamic-demos/polymarket`
 - Schemas: `polymarketMarketSchema`, `polymarketMarketTransformedSchema`, `marketsResponseSchema`, `eventsResponseSchema`, `polymarketEventSchema`, `imageOptimizationSchema`. (stable)
 - Types: `PolymarketMarket`, `PolymarketMarketTransformed`, `PolymarketEventTransformed`, `ImageOptimization`, `PricePoint`, `PricesHistoryResponse`, `PricesHistoryInterval`, `GetPricesHistoryParams`, `GetPolymarketEventsParams`. (stable)
 
+## Dashboard API surface
+
+No dashboard API endpoints expose this package — apps import `@dynamic-demos/polymarket` directly. Reason: Polymarket Gamma + CLOB price endpoints are fully public and unauthenticated; there is no credential to protect and no per-demo configuration. Apps fetch on the server (Zod validation is sync) and hand JSON to the client. If a future demo needs authenticated CLOB trading, that's a separate package with its own custody story — not a dashboard surface bolted onto this read-only one.
+
 ## Required environment
 
 None. Polymarket Gamma + CLOB price endpoints are public.

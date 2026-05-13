@@ -126,6 +126,6 @@ Be honest. If something is stubbed or planned, say so. Future agents reading thi
 
 **Authoring rules for this file:**
 
-- Keep total length under ~150 lines. If you need more, you're documenting too much surface area.
+- Keep total length under ~200 lines. If you need more, you're documenting too much surface area. (Pre-Phase-5B the cap was 150; the "Dashboard API surface" section for provider packages added enough rows to justify the bump.)
 - Update this file in the same PR that changes behavior. Stale AGENTS.md files lie to agents.
 - Optimize for "an agent who has never seen this code can use it correctly without reading the source." That's the bar.

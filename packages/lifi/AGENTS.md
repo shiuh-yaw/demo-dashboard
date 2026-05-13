@@ -51,6 +51,17 @@ All exports are stable and live at the package root.
 - `mapLifiStatus`, `mapLifiStatusResult`. (stable, rebinds in Phase 1E)
 - `webhooks.verifySignature`, `webhooks.normalize` — no-op placeholders. (stable)
 
+## Dashboard API surface
+
+No dedicated `/api/lifi/*` endpoints expose this package. LI.FI is composed inside higher-level dashboard surfaces:
+
+- `POST /api/checkouts/[id]/transactions/[txId]/quote` — internally calls `getQuote` against LI.FI to price a checkout bridge/swap leg.
+- Internal worker route — polls LI.FI `getStatus` to advance bridge transactions.
+
+For browser-side route execution, demos import `configureLifi` from this package directly (the SDK signs and submits via the user's wallet — no dashboard proxy adds value, see "Invariants").
+
+When a future demo needs a generic LI.FI quote/status surface (e.g. cross-demo bridge widget), add `/api/lifi/{quote,status}` route handlers and document them here.
+
 ## Required environment
 
 The package reads no `process.env` — callers pass credentials at call time per D-005.
@@ -67,7 +78,7 @@ The package reads no `process.env` — callers pass credentials at call time per
 - Server-side LI.FI access goes through `client.ts` (REST). Browser-side route execution goes through `sdk-config.ts` + `@lifi/sdk` directly. The SDK is **not** used for quote / status fetching.
 - Sandbox-by-default: every public function takes an explicit `env: 'sandbox' | 'production'`. No implicit default — callers default at the call site so the choice is visible.
 - Non-custodial: the bridge transaction is signed and submitted by the user's wallet; LI.FI never holds funds.
-- Apps don't import this package — go through dashboard `/api/orchestrate/swap` (D-001/D-003).
+- Server-side quote/status access is dashboard-only (D-001/D-003); demos call the higher-level dashboard endpoints listed in "Dashboard API surface" above. Browser-side `configureLifi` is the one exception (SDK self-signs; no secret involved).
 - The package never reads `process.env`. Adding env reads breaks the "anywhere" guarantee.
 
 ## Integration map
@@ -103,7 +114,7 @@ configureLifi([/* wallet providers */], { integrator: "demo-checkouts" });
 
 ## Do / Don't
 
-- Do: route quote + status through `/api/orchestrate/swap`. The dashboard owns the API key (D-003).
+- Do: route server-side quote + status through the dashboard endpoints in "Dashboard API surface" above. The dashboard owns `LIFI_API_KEY` (D-003).
 - Do: keep `configureLifi(...)` to one call at app boot. The SDK self-registers — re-calling fights itself.
 - Don't: import this package's `client.ts` from a browser bundle.
 - Don't: assume LI.FI sandbox vs production differ — they're the same host today. The seam is for future-proofing, not behavior.

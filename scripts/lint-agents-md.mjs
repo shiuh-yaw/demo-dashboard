@@ -9,7 +9,10 @@
 //   - For onramp/offramp: regions[] (each with country, currency, rails[]).
 //   - For provider wrappers (provider field present): provider.name, .docs,
 //     .api_reference, .agent_docs.
-//   - File length <= 150 lines (per the template's authoring rules).
+//   - File length <= 200 lines (per the template's authoring rules; raised
+//     from 150 in Phase 5B to accommodate the per-provider "Dashboard API
+//     surface" section that documents the dashboard HTTP endpoints
+//     exposing each provider package).
 //   - All provider.* URL fields are syntactically valid (or the
 //     "agent_docs: none" sentinel).
 //
@@ -41,7 +44,7 @@ const VALID_KIND = new Set(["package", "app", "integration"]);
 
 const REQUIRED_PROVIDER_FIELDS = ["name", "docs", "api_reference", "agent_docs"];
 
-const LIMIT_LINES = 150;
+const LIMIT_LINES = 200;
 
 const errors = [];
 
