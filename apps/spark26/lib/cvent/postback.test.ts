@@ -54,7 +54,37 @@ describe("runCventPostback", () => {
       "ABC",
       ["tx_confirmed"],
       "paid",
-      expect.objectContaining({ cventTransactionId: "ctx-1" })
+      expect.objectContaining({
+        cventTransactionId: "ctx-1",
+        cventPostAttempts: 1,
+      })
+    );
+  });
+
+  it("counts the successful Cvent post as an attempt after prior failures", async () => {
+    readByConfirmation.mockResolvedValue({
+      status: "tx_confirmed",
+      cventAttendeeId: "a1",
+      cventOrderId: "o1",
+      txHash:
+        "0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+      confirmationNumber: "ABC",
+      amountDue: "10",
+      currency: "USD",
+      cventPostAttempts: 2,
+    });
+    postOfflineCharge.mockResolvedValue({ id: "ctx-1", success: true });
+    transition.mockResolvedValue({ status: "paid" });
+
+    const { runCventPostback } = await import("./postback.js");
+    const result = await runCventPostback("ABC");
+
+    expect(result).toEqual({ ok: true });
+    expect(transition).toHaveBeenCalledWith(
+      "ABC",
+      ["tx_confirmed"],
+      "paid",
+      expect.objectContaining({ cventPostAttempts: 3 })
     );
   });
 

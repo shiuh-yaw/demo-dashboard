@@ -47,7 +47,10 @@ export async function runCventPostback(
       reference,
     });
     const cventTransactionId = (result as { id?: string }).id ?? "unknown";
-    await transition(confirmation, ["tx_confirmed"], "paid", { cventTransactionId });
+    await transition(confirmation, ["tx_confirmed"], "paid", {
+      cventTransactionId,
+      cventPostAttempts: (order.cventPostAttempts ?? 0) + 1,
+    });
     console.info(
       `[spark26] Cvent postback success ${confirmation} cventTransactionId=${cventTransactionId}`,
     );
