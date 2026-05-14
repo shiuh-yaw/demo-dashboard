@@ -18,6 +18,9 @@
     "registry": "node scripts/generate-demo-registry.mjs",
     "registry:check": "node scripts/generate-demo-registry.mjs --check",
     "lint:agents-md": "node scripts/lint-agents-md.mjs",
+    "setup:deploy": "node scripts/setup-vercel-project.mjs",
+    "teardown:deploy": "node scripts/teardown-vercel-project.mjs",
+    "test:scripts": "node --test scripts/__tests__/*.test.mjs",
     "test:skill": "pnpm --filter @dynamic-demos/dashboard exec vitest run --config ../../.claude/skills/create-demo-app/__tests__/vitest.skill.config.ts failure-modes.test.ts",
     "test:skill:success": "pnpm --filter @dynamic-demos/dashboard exec vitest run --config ../../.claude/skills/create-demo-app/__tests__/vitest.skill.config.ts success-path.test.ts"
   },

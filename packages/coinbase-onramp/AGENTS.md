@@ -66,7 +66,9 @@ Coverage shifts as Coinbase enables new corridors — confirm against [Coinbase'
 
 Stable, all live at the package root.
 
-- `createCoinbaseOnrampClient`, `createOnrampOrder`, `CoinbaseError`. (stable)
+- `createCoinbaseOnrampClient`, `createOnrampOrder`, `CoinbaseError`, `CoinbaseOnrampClient`. (stable)
+- `CoinbaseOnrampClient.request(descriptor: CoinbaseTokenRequest)` — raw CDP REST escape hatch with auth handled. Use when the typed wrappers don't cover an endpoint.
+- `CoinbaseOnrampClient.generateToken(method, path)` — CDP JWT helper, exposed for callers that need a signed token for a one-off call.
 - `resolveCoinbaseOnrampEndpoint`, `CoinbaseOnrampEndpoint`, `CoinbaseOnrampEnvironment`. (stable)
 - Schemas: `createOnrampOrderApiSchema`, `createOnrampOrderValidationSchema`. (stable)
 - Types: `CoinbaseOrder`, `CoinbaseOrderResponse`, `CoinbasePaymentLink`, `CoinbaseTokenRequest`, `CreateOnrampOrderApiParams`, `CreateOnrampOrderParams`, `OnrampOrderResponse`. (stable)
@@ -87,9 +89,9 @@ Coinbase webhook receiver (`/api/webhooks/coinbase`) lands as part of Phase 5A; 
 
 The package reads no `process.env` directly — credentials live at the dashboard (D-003).
 
-- `COINBASE_ONRAMP_API_KEY` — CDP API key id — required.
-- `COINBASE_ONRAMP_API_SECRET` — CDP API secret (PEM-formatted ECDSA) — required.
-- `COINBASE_ONRAMP_ENVIRONMENT` — `sandbox` | `production` — optional, defaults to sandbox (D-005).
+- `COINBASE_API_KEY` — CDP API key id — required.
+- `COINBASE_API_SECRET` — CDP API secret (PEM-formatted ECDSA) — required.
+- `COINBASE_API_ENVIRONMENT` — `sandbox` | `production` — optional, defaults to sandbox (D-005).
 - `COINBASE_ONRAMP_WEBHOOK_SECRET` — for signature verification — required when wiring receiver.
 
 ## Slots vs invariants
@@ -113,19 +115,30 @@ The package reads no `process.env` directly — credentials live at the dashboar
 ```ts
 import { createCoinbaseOnrampClient, createOnrampOrder } from "@dynamic-demos/coinbase-onramp";
 
+// Credentials come from the dashboard-side helper (the only sanctioned
+// env-reader). Apps/demos never import this package — they call
+// `/api/coinbase/onramp` instead (D-003).
 const client = createCoinbaseOnrampClient({
   env: "sandbox",
-  apiKey: process.env.COINBASE_ONRAMP_API_KEY!,
-  apiSecret: process.env.COINBASE_ONRAMP_API_SECRET!,
+  apiKey: process.env.COINBASE_API_KEY!,
+  apiSecret: process.env.COINBASE_API_SECRET!,
 });
 
 const order = await createOnrampOrder(client, {
-  destinationWallet: "0xabc...",
-  asset: "USDC",
-  amountUsd: "50.00",
-  corridor: { country: "US", currency: "USD", rail: "card" },
+  agreementAcceptedAt: new Date().toISOString(),
+  destinationAddress: "0xabc...",
+  destinationNetwork: "base",
+  purchaseCurrency: "USDC",
+  paymentCurrency: "USD",
+  paymentAmount: "50.00",
+  purchaseAmount: "50.00",
+  isQuote: false,
+  email: "user@example.com",
+  partnerUserRef: "user-123",
+  phoneNumber: "+12345678901",
+  phoneNumberVerifiedAt: new Date().toISOString(),
 });
-// redirect the end user to order.payment_link
+// redirect the end user to order.paymentUrl
 ```
 
 ## Do / Don't

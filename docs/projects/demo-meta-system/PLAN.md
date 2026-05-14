@@ -14,6 +14,8 @@ Make it possible for non-engineers to 1-shot a new demo app via Claude Code. The
 
 Track progress in `PROGRESS.md` and update it as each PR merges.
 
+> **Reframe history (Phase 7):** Phase 7 as originally scoped (dashboard `demo-spec.json` preview + runtime `parse-intent.ts` prefill + 2-question disambiguation hard cap) was **superseded**. Step 1 depended on Phase 5C (🚫 superseded — composition removed the need). Step 2 referenced runtime scripts that the LLM-driven skill shipped in #90 doesn't have. Step 3 (the 2-question hard cap) was rejected. The implicit-context goal — "non-engineers don't need to know what to ask" — now lives inside `.claude/skills/create-demo-app/SKILL.md`: it parses intent, matches against the registry, silently defaults brand, and asks gap-fill only for what isn't derivable. The remaining v1 completion gate is the **skill integration acceptance test** — fixtures + manual runbook at `docs/engineering/skill-acceptance-test.md`. See `phases/07-implicit-context.md` for the original prompt (kept for historical context with a banner at the top).
+
 ---
 
 ## Project shape (decisions already locked)

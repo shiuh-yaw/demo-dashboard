@@ -42,7 +42,7 @@ API namespaces (server):
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` — dashboard's **own** Dynamic env (D-004) — required.
 - `DATABASE_URL` — Supabase pooler URL — required (D-013).
 - `DIRECT_URL` — Supabase direct URL for migrations — required.
-- Provider keys (D-003): `IRON_API_KEY`, `BLINDPAY_API_KEY` + `BLINDPAY_INSTANCE_ID`, `COINBASE_ONRAMP_API_KEY` + `COINBASE_ONRAMP_API_SECRET`, `LIFI_API_KEY`, `ALFREDPAY_API_KEY`. Sandbox-by-default (D-005).
+- Provider keys (D-003): `IRON_API_KEY`, `BLINDPAY_API_KEY` + `BLINDPAY_INSTANCE_ID`, `COINBASE_API_KEY` + `COINBASE_API_SECRET`, `LIFI_API_KEY`, `ALFREDPAY_API_KEY`. Sandbox-by-default (D-005).
 - Webhook secrets per provider (`*_WEBHOOK_SECRET`) — required when wiring receivers. `BLINDPAY_WEBHOOK_SECRET` is wired (Phase 5A); receivers fail closed with 401 if unset.
 - `FIREBLOCKS_API_KEY` / `FIREBLOCKS_API_SECRET` — for Trading Orders + DVP flows.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox flags off across all wired providers.

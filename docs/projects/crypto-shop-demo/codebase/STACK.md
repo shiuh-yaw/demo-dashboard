@@ -86,7 +86,7 @@
 **Fiat Onramps:**
 - @coinbase/cdp-sdk 1.38.6 - Coinbase onramp integration
   - `src/lib/coinbase/` - Service implementation
-  - Requires: `COINBASE_API_KEY`, `COINBASE_API_SECRET`
+  - Requires: `COINBASE_API_KEY`, `COINBASE_API_SECRET` (sandbox by default via `COINBASE_API_ENVIRONMENT`)
   - Handles onramp configuration and payment processing
 
 **Bank & Payment Processing:**

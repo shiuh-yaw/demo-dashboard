@@ -11,6 +11,7 @@
 const procEnv = process.env as Record<string, string | undefined>;
 procEnv.COINBASE_API_KEY ??= "test_coinbase_api_key";
 procEnv.COINBASE_API_SECRET ??= "test_coinbase_api_secret";
+procEnv.COINBASE_API_ENVIRONMENT ??= "sandbox";
 procEnv.LIFI_API_KEY ??= "test_lifi_api_key";
 procEnv.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID ??= "test_dynamic_env_id";
 procEnv.NODE_ENV ??= "test";

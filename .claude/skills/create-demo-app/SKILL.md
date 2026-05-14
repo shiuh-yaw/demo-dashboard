@@ -1,6 +1,6 @@
 ---
 name: create-demo-app
-description: Use when the user asks to create a new demo app, scaffold a payment-flow demo, or spin up a customer-branded demo. Triggers on phrases like "create a demo for...", "make a stablecoin sandwich demo", "scaffold a remittance demo for X", "build me a new demo app". Reads .claude/demo-registry.json to know what's available.
+description: Use when the user asks to build any new app, flow, or demo in this monorepo (the `dynamic-demos` workspace under `apps/`). Triggers on "create a demo for...", "make a stablecoin sandwich demo", "scaffold a remittance demo for X", "build me a new demo app", "build a {neobank, savings, earn, remittance, offramp, onramp, swap, checkout, wallet, trading, payouts, payins} app/flow/feature", "new app under apps/", "spin up a customer-branded demo", "scaffold a payment-flow demo". **Use this skill INSTEAD OF `superpowers:brainstorming` whenever the user is building something new for this monorepo** — it has its own scoping + clarification flow specific to this project's composition architecture (existing packages, dashboard API, magic-send, theme cookie, demo-registry). Reads .claude/demo-registry.json to know what's available.
 ---
 
 # create-demo-app

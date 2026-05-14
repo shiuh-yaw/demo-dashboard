@@ -38,6 +38,7 @@ export {
   type SimpleOfframpStatus,
   type SimpleOfframpQuote,
   type SimpleOfframpResult,
+  type SimpleOfframpConfig,
 } from "./simple-offramp";
 
 // Webhooks (signature verify + canonical normalize)

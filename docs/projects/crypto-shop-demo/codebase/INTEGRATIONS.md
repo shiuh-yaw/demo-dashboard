@@ -46,7 +46,7 @@
 - Service: Fiat-to-crypto onramp for USD purchases
 - What it's used for: Payment checkout configuration, onramp flow initiation
 - SDK/Client: `@coinbase/cdp-sdk` 1.38.6
-- Auth: `COINBASE_API_KEY`, `COINBASE_API_SECRET` (API key pair)
+- Auth: `COINBASE_API_KEY`, `COINBASE_API_SECRET` (API key pair); environment via `COINBASE_API_ENVIRONMENT` (default `sandbox`)
 - Implementation: `src/lib/coinbase/client.ts`
 - Configuration: `src/lib/coinbase/schemas.ts`, `src/lib/coinbase/types.ts`
 - Usage: Dashboard creates onramp payment configurations stored in Redis
@@ -257,7 +257,7 @@
 
 **Required Environment Variables:**
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - Dynamic Labs project ID
-- `COINBASE_API_KEY` / `COINBASE_API_SECRET` - Coinbase API credentials
+- `COINBASE_API_KEY` / `COINBASE_API_SECRET` - Coinbase Onramp credentials (sandbox by default via `COINBASE_API_ENVIRONMENT`)
 - `LIFI_API_KEY` - LI.FI cross-chain swap API key
 
 **Recommended (for production):**

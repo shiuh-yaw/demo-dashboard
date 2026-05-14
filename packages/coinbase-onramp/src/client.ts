@@ -47,10 +47,17 @@ export class CoinbaseError extends Error {
 export interface CreateCoinbaseOnrampClientOptions {
   /** Environment selector. Defaults to `'sandbox'` (D-005). */
   env?: CoinbaseOnrampEnvironment;
-  /** Coinbase CDP API key id. Falls back to `COINBASE_API_KEY` env var. */
-  apiKey?: string;
-  /** Coinbase CDP API secret. Falls back to `COINBASE_API_SECRET` env var. */
-  apiSecret?: string;
+  /**
+   * Coinbase CDP API key id. Required — the package reads no `process.env`
+   * itself; the dashboard-side helper is the only sanctioned env-reader.
+   */
+  apiKey: string;
+  /**
+   * Coinbase CDP API secret (PEM-formatted ECDSA). Required — the package
+   * reads no `process.env` itself; the dashboard-side helper is the only
+   * sanctioned env-reader.
+   */
+  apiSecret: string;
   /**
    * Optional injected fetch implementation — primarily for tests.
    * Defaults to the global `fetch`.
@@ -98,11 +105,10 @@ function resolveConfig(
   const env = options.env ?? "sandbox";
   const endpoint = resolveCoinbaseOnrampEndpoint(env);
 
-  const apiKey = options.apiKey ?? process.env.COINBASE_API_KEY;
-  const apiSecret = options.apiSecret ?? process.env.COINBASE_API_SECRET;
+  const { apiKey, apiSecret } = options;
   if (!apiKey || !apiSecret) {
     throw new CoinbaseError(
-      "Coinbase Onramp credentials required (COINBASE_API_KEY, COINBASE_API_SECRET)",
+      "Coinbase Onramp credentials required (apiKey + apiSecret)",
       500,
     );
   }
@@ -124,7 +130,7 @@ function resolveConfig(
  * Throws `CoinbaseError` synchronously when credentials are missing.
  */
 export function createCoinbaseOnrampClient(
-  options: CreateCoinbaseOnrampClientOptions = {},
+  options: CreateCoinbaseOnrampClientOptions,
 ): CoinbaseOnrampClient {
   const config = resolveConfig(options);
 

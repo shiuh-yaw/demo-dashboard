@@ -21,6 +21,9 @@ export {
   type CreateCoinbaseOnrampClientOptions,
 } from "./client";
 
+// Mock client for tests
+export { MockCoinbaseOnrampClient } from "./mock-client";
+
 // Schemas
 export {
   createOnrampOrderApiSchema,

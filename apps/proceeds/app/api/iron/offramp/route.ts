@@ -6,6 +6,7 @@ import {
   chainIdToBlockchain,
 } from "@dynamic-demos/iron";
 import { getServerUserData } from "@/lib/auth/server-auth";
+import { getSimpleOfframpConfig } from "@/lib/iron-env";
 
 const quoteSchema = z.object({
   action: z.literal("quote"),
@@ -55,12 +56,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const config = getSimpleOfframpConfig();
+
     if (data.action === "quote") {
-      const quote = await getOfframpQuote(data.amount_usdc, blockchain);
+      const quote = await getOfframpQuote(
+        data.amount_usdc,
+        blockchain,
+        config,
+      );
       return NextResponse.json(quote);
     }
 
-    const result = await createOfframp(data.quote_id, blockchain);
+    const result = await createOfframp(data.quote_id, blockchain, config);
     return NextResponse.json(result);
   } catch (err) {
     console.error("[iron/offramp] Error:", err);

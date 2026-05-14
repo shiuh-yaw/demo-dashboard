@@ -1,11 +1,11 @@
 import { type NextRequest } from "next/server";
 import {
   CoinbaseError,
-  createCoinbaseOnrampClient,
   createOnrampOrder,
   createOnrampOrderApiSchema,
 } from "@dynamic-demos/coinbase-onramp";
 import { withAuth } from "@/lib/dynamic/dynamic-auth";
+import { getCoinbaseOnrampClient } from "@/lib/coinbase-onramp/client";
 import { OPTIONS as corsOptions } from "@/lib/cors";
 import {
   createResponse,
@@ -15,12 +15,6 @@ import {
 import { parseWithSchema } from "@/lib/validation";
 
 export const OPTIONS = corsOptions;
-
-// Sandbox-by-default per DECISIONS.md D-005. The dashboard route forwards
-// the per-request `isSandbox` flag to Coinbase via the package payload;
-// the client itself defaults to sandbox unless promoted to production by
-// an explicit env override later (Phase 5B orchestration).
-const coinbaseOnrampClient = createCoinbaseOnrampClient({ env: "sandbox" });
 
 export const POST = withAuth(async (request: NextRequest, { user }) => {
   try {
@@ -33,7 +27,7 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
     const phoneNumberVerifiedAt = new Date().toISOString();
 
     // Make the authenticated request to Coinbase API
-    const result = await createOnrampOrder(coinbaseOnrampClient, {
+    const result = await createOnrampOrder(getCoinbaseOnrampClient(), {
       ...validatedBody,
       partnerUserRef: validatedBody.isSandbox
         ? `sandbox-${user.sub}`

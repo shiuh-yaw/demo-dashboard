@@ -75,7 +75,7 @@ See `.example.env` for all available configuration options.
 **Required variables:**
 
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - Dynamic Labs environment
-- `COINBASE_API_KEY` / `COINBASE_API_SECRET` - Coinbase API
+- `COINBASE_API_KEY` / `COINBASE_API_SECRET` - Coinbase Onramp API (sandbox by default; set `COINBASE_API_ENVIRONMENT=production` to opt in)
 - `LIFI_API_KEY` - LI.FI API for swaps
 
 **Optional for full features:**

@@ -4,21 +4,20 @@
  * These are the minimal "USDC → USD via demo bank IBAN" helpers used by the
  * proceeds app. They differ from `IronFinanceClient` in that:
  *   1. They take `(amountUsdc, blockchain)` directly (no quote object).
- *   2. They source `customer_id` + `bank_iban` from the env vars
- *      `IRON_DEMO_CUSTOMER_ID` + `IRON_DEMO_BANK_IBAN` rather than per-call
- *      arguments.
+ *   2. They require `customerId` + `bankIban` to be passed in by the caller
+ *      (consumer-side env-reader; the package never reads `process.env`).
  *   3. They use ACH (vs the dashboard's SEPA default).
  *
- * The dashboard uses `IronFinanceClient` directly; proceeds uses these helpers.
- * Both share `env.ts` + `state-mapping.ts`.
+ * Sandbox-by-default per D-005. Callers pass an explicit `env` —
+ * `sandbox` (default) or `production`.
+ *
+ * The dashboard uses `IronFinanceClient` directly; proceeds uses these helpers
+ * via `apps/proceeds/lib/iron-env.ts` (the sanctioned env-reader on the
+ * consumer side). Both share `env.ts` + `state-mapping.ts`.
  */
 
 import { randomUUID } from "node:crypto";
-import {
-  resolveIronBaseUrl,
-  resolveIronEnvironment,
-  type IronEnvironment,
-} from "./env";
+import { resolveIronBaseUrl, type IronEnvironment } from "./env";
 
 /**
  * Subset of `BlockchainType` supported by the proceeds offramp helper.
@@ -77,11 +76,16 @@ export function chainIdToBlockchain(chainId: number): SimpleOfframpBlockchain {
   return mapped;
 }
 
-interface SimpleOfframpConfig {
-  apiKey?: string;
+/**
+ * Required config for the simple offramp helpers. The caller must source these
+ * values (the package never reads `process.env`). `env` is optional and
+ * defaults to `sandbox` per D-005.
+ */
+export interface SimpleOfframpConfig {
+  apiKey: string;
+  customerId: string;
+  bankIban: string;
   env?: IronEnvironment;
-  customerId?: string;
-  bankIban?: string;
   fetchImpl?: typeof fetch;
 }
 
@@ -92,22 +96,18 @@ function resolveConfig(config: SimpleOfframpConfig): {
   bankIban: string;
   fetchImpl: typeof fetch;
 } {
-  const apiKey = config.apiKey ?? process.env.IRON_API_KEY ?? "";
-  const env = resolveIronEnvironment(config.env);
-  const customerId = config.customerId ?? process.env.IRON_DEMO_CUSTOMER_ID;
-  const bankIban = config.bankIban ?? process.env.IRON_DEMO_BANK_IBAN;
-
-  if (!customerId || !bankIban) {
-    throw new Error(
-      "IRON_DEMO_CUSTOMER_ID and IRON_DEMO_BANK_IBAN are required",
-    );
+  if (!config.apiKey) {
+    throw new Error("apiKey is required");
+  }
+  if (!config.customerId || !config.bankIban) {
+    throw new Error("customerId and bankIban are required");
   }
 
   return {
-    apiKey,
-    baseUrl: resolveIronBaseUrl(env),
-    customerId,
-    bankIban,
+    apiKey: config.apiKey,
+    baseUrl: resolveIronBaseUrl(config.env ?? "sandbox"),
+    customerId: config.customerId,
+    bankIban: config.bankIban,
     fetchImpl: config.fetchImpl ?? globalThis.fetch.bind(globalThis),
   };
 }
@@ -180,12 +180,13 @@ function parseAutorampStatus(status: string): SimpleOfframpStatus {
 }
 
 /**
- * Get a USDC → USD offramp quote using the demo customer + IBAN env vars.
+ * Get a USDC → USD offramp quote. `config` carries the demo customer + IBAN —
+ * consumers source these from their own env-reader and pass them in.
  */
 export async function getOfframpQuote(
   amountUsdc: number,
   blockchain: SimpleOfframpBlockchain,
-  config: SimpleOfframpConfig = {},
+  config: SimpleOfframpConfig,
 ): Promise<SimpleOfframpQuote> {
   const { apiKey, baseUrl, customerId, bankIban, fetchImpl } =
     resolveConfig(config);
@@ -222,12 +223,13 @@ interface RawAutorampResponse {
 }
 
 /**
- * Create a USDC → USD offramp using the demo customer + IBAN env vars.
+ * Create a USDC → USD offramp. `config` carries the demo customer + IBAN —
+ * consumers source these from their own env-reader and pass them in.
  */
 export async function createOfframp(
   quoteId: string,
   blockchain: SimpleOfframpBlockchain,
-  config: SimpleOfframpConfig = {},
+  config: SimpleOfframpConfig,
 ): Promise<SimpleOfframpResult> {
   const { apiKey, baseUrl, customerId, bankIban, fetchImpl } =
     resolveConfig(config);

@@ -1,5 +1,7 @@
 # Phase 7 — Implicit context capture
 
+> **🚫 SUPERSEDED.** Phase 7 as originally scoped is obsolete. Its three sub-goals are either folded into the skill (#90 + #99) or depended on Phase 5C (🚫 superseded). The implicit-context-capture goal — "non-engineers don't need to know what to ask" — was achieved inside `.claude/skills/create-demo-app/SKILL.md` itself: it parses intent (Step 2), matches against the registry (Step 3), silently defaults brand (Brand handling), and asks gap-fill questions only for what's not derivable (Step 4). The remaining v1 completion gate is the skill integration acceptance test — see `docs/engineering/skill-acceptance-test.md` (Workstream B / PR #99).
+
 > **Self-contained agent prompt.** Read this entire file. Then `PLAN.md`, `DECISIONS.md`, `GLOSSARY.md`.
 
 ---

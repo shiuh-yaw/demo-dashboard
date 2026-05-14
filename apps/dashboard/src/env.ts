@@ -10,6 +10,13 @@ export const env = createEnv({
     COINBASE_API_KEY: z.string(),
     COINBASE_API_SECRET: z.string(),
     /**
+     * Coinbase Onramp environment selector. Sandbox-by-default per D-005;
+     * production opt-in requires the standard `[prod-creds]` PR flow.
+     */
+    COINBASE_API_ENVIRONMENT: z
+      .enum(["sandbox", "production"])
+      .default("sandbox"),
+    /**
      * LI.FI API Key for cross-chain swaps
      */
     LIFI_API_KEY: z.string(),
@@ -284,6 +291,7 @@ export const env = createEnv({
   runtimeEnv: {
     COINBASE_API_KEY: process.env.COINBASE_API_KEY,
     COINBASE_API_SECRET: process.env.COINBASE_API_SECRET,
+    COINBASE_API_ENVIRONMENT: process.env.COINBASE_API_ENVIRONMENT,
     LIFI_API_KEY: process.env.LIFI_API_KEY,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     REDIS_URL: process.env.REDIS_URL,

@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { generateJwt } from "@coinbase/cdp-sdk/auth";
 
 import {
   CoinbaseError,
@@ -12,6 +13,13 @@ import {
 vi.mock("@coinbase/cdp-sdk/auth", () => ({
   generateJwt: vi.fn(async () => "test-jwt-token"),
 }));
+
+const generateJwtMock = vi.mocked(generateJwt);
+
+beforeEach(() => {
+  generateJwtMock.mockReset();
+  generateJwtMock.mockResolvedValue("test-jwt-token");
+});
 
 const validParams = {
   agreementAcceptedAt: "2025-01-01T00:00:00.000Z",
@@ -51,39 +59,32 @@ const successPayload = {
   },
 };
 
-const originalApiKey = process.env.COINBASE_API_KEY;
-const originalApiSecret = process.env.COINBASE_API_SECRET;
-
-beforeEach(() => {
-  process.env.COINBASE_API_KEY = "test-key";
-  process.env.COINBASE_API_SECRET = "test-secret";
-});
-
-afterEach(() => {
-  if (originalApiKey === undefined) delete process.env.COINBASE_API_KEY;
-  else process.env.COINBASE_API_KEY = originalApiKey;
-  if (originalApiSecret === undefined) delete process.env.COINBASE_API_SECRET;
-  else process.env.COINBASE_API_SECRET = originalApiSecret;
-});
+const testCreds = { apiKey: "test-key", apiSecret: "test-secret" };
 
 describe("createCoinbaseOnrampClient", () => {
   it("defaults to sandbox", () => {
-    const client = createCoinbaseOnrampClient({});
+    const client = createCoinbaseOnrampClient(testCreds);
     expect(client.env).toBe("sandbox");
     expect(client.endpoint.isSandbox).toBe(true);
     expect(client.endpoint.host).toBe("api.cdp.coinbase.com");
   });
 
   it("respects an explicit production environment", () => {
-    const client = createCoinbaseOnrampClient({ env: "production" });
+    const client = createCoinbaseOnrampClient({
+      ...testCreds,
+      env: "production",
+    });
     expect(client.env).toBe("production");
     expect(client.endpoint.isSandbox).toBe(false);
   });
 
   it("throws CoinbaseError when credentials are missing", () => {
-    delete process.env.COINBASE_API_KEY;
-    delete process.env.COINBASE_API_SECRET;
-    expect(() => createCoinbaseOnrampClient({})).toThrow(CoinbaseError);
+    expect(() =>
+      createCoinbaseOnrampClient({
+        apiKey: "",
+        apiSecret: "",
+      }),
+    ).toThrow(CoinbaseError);
   });
 });
 
@@ -96,6 +97,7 @@ describe("createOnrampOrder", () => {
       }),
     );
     const client = createCoinbaseOnrampClient({
+      ...testCreds,
       env: "sandbox",
       fetchImpl: fetchMock as unknown as typeof fetch,
     });
@@ -133,6 +135,7 @@ describe("createOnrampOrder", () => {
       }),
     );
     const client = createCoinbaseOnrampClient({
+      ...testCreds,
       env: "sandbox",
       fetchImpl: fetchMock as unknown as typeof fetch,
     });
@@ -151,6 +154,7 @@ describe("createOnrampOrder", () => {
       }),
     );
     const client = createCoinbaseOnrampClient({
+      ...testCreds,
       env: "sandbox",
       fetchImpl: fetchMock as unknown as typeof fetch,
     });
@@ -158,5 +162,84 @@ describe("createOnrampOrder", () => {
     await expect(createOnrampOrder(client, validParams)).rejects.toThrow(
       /Missing order or paymentLink/,
     );
+  });
+});
+
+describe("client.request", () => {
+  const descriptor = {
+    requestMethod: "GET" as const,
+    requestHost: "api.cdp.coinbase.com",
+    requestPath: "/platform/v2/onramp/anything",
+  };
+
+  it("propagates upstream non-2xx as a CoinbaseError with the status code", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ message: "not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const client = createCoinbaseOnrampClient({
+      ...testCreds,
+      env: "sandbox",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    await expect(client.request(descriptor)).rejects.toMatchObject({
+      name: "CoinbaseError",
+      statusCode: 404,
+    });
+  });
+
+  it("wraps network throws as a CoinbaseError", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error("network down");
+    });
+    const client = createCoinbaseOnrampClient({
+      ...testCreds,
+      env: "sandbox",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    const error = await client.request(descriptor).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(CoinbaseError);
+    expect((error as CoinbaseError).statusCode).toBe(500);
+    expect((error as CoinbaseError).originalError?.message).toBe("network down");
+  });
+
+  it("wraps JSON-parse failures when upstream returns non-JSON", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response("<html>not json</html>", {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      }),
+    );
+    const client = createCoinbaseOnrampClient({
+      ...testCreds,
+      env: "sandbox",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    const error = await client.request(descriptor).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(CoinbaseError);
+    expect((error as CoinbaseError).message).toMatch(/non-JSON/);
+  });
+});
+
+describe("client.generateToken", () => {
+  it("wraps a generateJwt failure as a CoinbaseError with the original error in the chain", async () => {
+    const upstream = new Error("invalid PEM");
+    generateJwtMock.mockRejectedValueOnce(upstream);
+
+    const client = createCoinbaseOnrampClient({
+      ...testCreds,
+      env: "sandbox",
+    });
+
+    const error = await client
+      .generateToken("GET", "/platform/v2/onramp/anything")
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(CoinbaseError);
+    expect((error as CoinbaseError).originalError).toBe(upstream);
   });
 });

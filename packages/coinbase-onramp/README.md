@@ -14,12 +14,30 @@ import {
   createOnrampOrder,
 } from "@dynamic-demos/coinbase-onramp";
 
+// The package reads no `process.env`. Credentials must be passed
+// explicitly — the dashboard-side `getCoinbaseOnrampClient()` helper
+// is the only sanctioned env-reader.
 const client = createCoinbaseOnrampClient({
   env: "sandbox",
-  // Falls back to COINBASE_API_KEY / COINBASE_API_SECRET when omitted.
+  apiKey: process.env.COINBASE_API_KEY!,
+  apiSecret: process.env.COINBASE_API_SECRET!,
 });
 
-const order = await createOnrampOrder(client, params);
+const order = await createOnrampOrder(client, {
+  agreementAcceptedAt: new Date().toISOString(),
+  destinationAddress: "0xabc...",
+  destinationNetwork: "base",
+  purchaseCurrency: "USDC",
+  paymentCurrency: "USD",
+  paymentAmount: "50.00",
+  purchaseAmount: "50.00",
+  isQuote: false,
+  email: "user@example.com",
+  partnerUserRef: "user-123",
+  phoneNumber: "+12345678901",
+  phoneNumberVerifiedAt: new Date().toISOString(),
+});
+// redirect the end user to order.paymentUrl
 ```
 
 ## Webhooks
