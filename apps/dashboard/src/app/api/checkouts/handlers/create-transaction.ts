@@ -4,7 +4,7 @@
  * Initializes a new transaction with optional externalId and metadata.
  */
 
-import { transactionService, checkoutService } from "@/lib/services";
+import { transactionService, services } from "@/lib/services";
 import { NotFoundError } from "@/lib/errors";
 import {
   createTransactionSchema,
@@ -27,9 +27,13 @@ export async function handleCreateTransaction(
     rawInput
   );
 
-  // Verify checkout exists
-  const checkout = await checkoutService.get(checkoutId);
-  if (!checkout) throw new NotFoundError("Checkout not found");
+  // Verify checkout exists. Reads through `services.demoConfigs` (Postgres)
+  // to align with the write path in `actions/checkouts.ts`; see
+  // `get-checkout.ts` for the split-brain fix context.
+  const record = await services.demoConfigs.get(checkoutId);
+  if (!record || record.kind !== "checkout") {
+    throw new NotFoundError("Checkout not found");
+  }
 
   // Check for duplicate externalId
   if (externalId) {

@@ -4,7 +4,7 @@
  * Returns aggregated statistics for a checkout.
  */
 
-import { checkoutService } from "@/lib/services";
+import { services, checkoutService } from "@/lib/services";
 import { NotFoundError } from "@/lib/errors";
 import {
   getStatsSchema,
@@ -18,9 +18,14 @@ export async function handleGetStats(
 ): Promise<{ stats: Stats }> {
   const { checkoutId } = parseWithSchema(getStatsSchema, rawInput);
 
-  // Verify checkout exists
-  const checkout = await checkoutService.get(checkoutId);
-  if (!checkout) throw new NotFoundError("Checkout not found");
+  // Verify checkout exists. Existence check goes through Postgres via
+  // `services.demoConfigs` (see `get-checkout.ts` for context); the
+  // `getStats` call stays on Redis — transaction stats live there
+  // independently of config storage.
+  const record = await services.demoConfigs.get(checkoutId);
+  if (!record || record.kind !== "checkout") {
+    throw new NotFoundError("Checkout not found");
+  }
 
   const stats = await checkoutService.getStats(checkoutId);
 

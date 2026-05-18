@@ -4,7 +4,7 @@
  * Lists users for a checkout with pagination.
  */
 
-import { checkoutService, userService } from "@/lib/services";
+import { services, userService } from "@/lib/services";
 import { NotFoundError } from "@/lib/errors";
 import {
   listUsersSchema,
@@ -21,9 +21,12 @@ export async function handleListUsers(
     rawInput
   );
 
-  // Verify checkout exists
-  const checkout = await checkoutService.get(checkoutId);
-  if (!checkout) throw new NotFoundError("Checkout not found");
+  // Verify checkout exists (Postgres via `services.demoConfigs`; see
+  // `get-checkout.ts` for the split-brain fix context).
+  const record = await services.demoConfigs.get(checkoutId);
+  if (!record || record.kind !== "checkout") {
+    throw new NotFoundError("Checkout not found");
+  }
 
   return userService.list(checkoutId, { page, pageSize });
 }
