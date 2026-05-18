@@ -14,7 +14,10 @@ permissions:
 jobs:
   enforce:
     name: Enforce spark26 opt-in
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - fargate
+      - default
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -22,9 +22,14 @@ catalog:
   "@dynamic-labs/iconic": "4.61.1"
 
   # Framework
-  next: "15.5.18"
-  react: "19.1.7"
-  react-dom: "19.1.7"
+  # Versions downshifted from 15.5.18 / 19.1.7 to JFrog-compatible pins.
+  # JFrog hosts next@15.5.18 itself, but is missing its companion `@next/*`
+  # transitives at 15.5.16/.17/.18 (env, swc-*, etc.) — so 15.5.15 is the
+  # highest 15.5.x where the whole bundle resolves. Likewise react/react-dom
+  # 19.1.7 are not in JFrog (latest 19.1.x is 19.1.6).
+  next: "15.5.15"
+  react: "19.1.6"
+  react-dom: "19.1.6"
 
   # Solana ecosystem (used by checkouts, wallet, etc.)
   "@solana/web3.js": "1.98.4"
@@ -43,5 +48,16 @@ catalog:
   typescript: "5.9.3"
   vitest: "2.1.9"
   eslint: "9.39.1"
-  "eslint-config-next": "15.5.18"
+  # eslint-config-next downshifted 15.5.18 → 15.5.15: JFrog mirror is missing
+  # 15.5.16/17/18 of eslint-config-next specifically (it has next@15.5.18 but
+  # not the matching eslint config). 15.5.15 is the latest 15.5.x JFrog has.
+  "eslint-config-next": "15.5.15"
   "@eslint/eslintrc": "3.3.1"
+
+# Note on spark26: spark26 hardcodes react@19.1.7 / react-dom@19.1.7 /
+# eslint-config-next@15.5.18 in its package.json — versions JFrog's mirror
+# does not have. D-006 forbids touching apps/spark26/. The redirect to
+# JFrog-available versions lives in the root `package.json` under
+# `pnpm.overrides` (alongside the existing ufo/axios overrides), since
+# workspace-yaml-level overrides don't rescue direct-dep registry misses.
+# Retire the spark26-specific entries once JFrog catches up.

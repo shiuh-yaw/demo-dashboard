@@ -28,6 +28,10 @@ env:
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   # Stay in sandbox / fail-soft for any provider that reads NODE_ENV.
   NODE_ENV: test
+  # JFrog Artifactory mirror auth — interpolated into `.npmrc` at install
+  # time. Required for every `pnpm install --frozen-lockfile` step below.
+  # Add `JFROG_TOKEN` to repo secrets before this workflow can succeed.
+  JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -36,7 +40,10 @@ concurrency:
 jobs:
   install:
     name: Install (cache pnpm + node_modules)
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - fargate
+      - default
     outputs:
       pnpm-store: ${{ steps.pnpm-store.outputs.path }}
     steps:
@@ -84,7 +91,10 @@ jobs:
   typecheck:
     name: Typecheck
     needs: install
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - fargate
+      - default
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -122,7 +132,10 @@ jobs:
   lint:
     name: Lint
     needs: install
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - fargate
+      - default
     # apps/deposit currently fails lint (missing eslint.config.* — ESLint v9).
     # Tracked for follow-up; do not block this PR or downstream phase work.
     continue-on-error: true
@@ -169,7 +182,10 @@ jobs:
   test:
     name: Test
     needs: install
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - fargate
+      - default
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -37,18 +37,33 @@ concurrency:
 jobs:
   dryrun:
     name: prisma migrate deploy (ephemeral Postgres)
-    runs-on: ubuntu-latest
+    # CodeBuild runner with Docker — the fargate pool doesn't expose
+    # /var/run/docker.sock and GitHub's service-container feature (used
+    # below for the ephemeral Postgres) needs the Docker daemon. Per the
+    # org runner guide, `codebuild + docker` is the right label set for
+    # any job that uses `services:` or runs `docker` commands directly.
+    runs-on:
+      - self-hosted
+      - codebuild
+      - default
+      - docker
 
     services:
-      # Ephemeral Postgres for the migration dry-run only. Credentials are
-      # local-to-the-runner and never leave this job; they're not real
-      # secrets and never connect to anything outside the runner network.
+      # Ephemeral Postgres for the migration dry-run only. The container is
+      # local to one runner job, never reachable from outside the runner
+      # network, and torn down on job exit. We configure it with
+      # `POSTGRES_HOST_AUTH_METHOD: trust` so connections require no
+      # password — that eliminates the credential pattern that secret
+      # scanners (FireHog / Semgrep) would otherwise flag on the connection
+      # URLs below. There is no real secret being protected here; the
+      # scanners can't distinguish CI-local dummies from production keys,
+      # so removing the embedded credential is the cleanest mitigation.
       postgres:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: prisma_ci
-          POSTGRES_PASSWORD: prisma_ci_local_only
           POSTGRES_DB: prisma_ci
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -61,8 +76,24 @@ jobs:
       # Both URLs point at the in-runner Postgres. There is no pooler in CI;
       # using the direct port for both is fine because we're not exercising
       # connection-pool semantics here, only migration correctness.
-      DATABASE_URL: postgresql://prisma_ci:prisma_ci_local_only@localhost:5432/prisma_ci
-      DIRECT_URL: postgresql://prisma_ci:prisma_ci_local_only@localhost:5432/prisma_ci
+      #
+      # Host is `localhost` because the job's shell runs DIRECTLY on the
+      # self-hosted CodeBuild runner (not inside a container) — GitHub
+      # publishes the service container's port 5432 to the runner host
+      # via the `ports:` mapping. Service-name DNS (`postgres`) only works
+      # when the job ITSELF runs in a container on the same Docker network,
+      # which is not the case here.
+      #
+      # No `:password@` segment — the container uses `trust` auth (see
+      # `services.postgres.env` above). This keeps secret scanners quiet
+      # without sacrificing security: the Postgres container only accepts
+      # traffic from inside the runner's Docker network, which is torn
+      # down with the job.
+      DATABASE_URL: postgresql://prisma_ci@localhost:5432/prisma_ci
+      DIRECT_URL: postgresql://prisma_ci@localhost:5432/prisma_ci
+      # JFrog Artifactory mirror auth — interpolated into `.npmrc` for the
+      # `pnpm install --frozen-lockfile` step below.
+      JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
 
     steps:
       - name: Checkout
@@ -101,16 +132,29 @@ jobs:
         run: pnpm --filter @dynamic-demos/db prisma:validate
 
       - name: Wait for Postgres
+        # Uses bash's built-in /dev/tcp so we don't depend on `pg_isready`
+        # or `nc` being present on the runner image — the CodeBuild image
+        # ships neither out of the box. GitHub Actions already gates step
+        # execution on the service container's health check; this is a
+        # belt-and-suspenders TCP probe that also prints diagnostics on
+        # failure (hostname resolution, network state) for future debugging.
         run: |
-          set -euo pipefail
-          for i in {1..30}; do
-            if pg_isready -h localhost -p 5432 -U prisma_ci >/dev/null 2>&1; then
-              echo "postgres ready"
+          set -uo pipefail
+          for i in $(seq 1 30); do
+            if (timeout 1 bash -c '</dev/tcp/localhost/5432') 2>/dev/null; then
+              echo "postgres reachable after ${i}s"
               exit 0
             fi
             sleep 1
           done
-          echo "postgres did not become ready in time" >&2
+          echo "postgres did not become reachable in time"
+          echo "--- diagnostics ---"
+          echo "getent hosts postgres:"
+          getent hosts postgres || echo "  (cannot resolve)"
+          echo "ip a (truncated):"
+          ip a 2>&1 | head -30 || true
+          echo "docker network inspect (best-effort):"
+          docker network ls 2>&1 | head -10 || true
           exit 1
 
       - name: Detect migrations

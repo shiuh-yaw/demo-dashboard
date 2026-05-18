@@ -9,7 +9,10 @@ on:
 jobs:
   lint:
     name: Lint AGENTS.md frontmatter
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - fargate
+      - default
     steps:
       - uses: actions/checkout@v4
 
