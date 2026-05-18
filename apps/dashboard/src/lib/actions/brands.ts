@@ -11,15 +11,19 @@
  *
  * Phase 2-brand-cutover (2026-05-06): brand-row persistence routes
  * through `services.brands.*` (Postgres when USE_POSTGRES_BRANDS=true,
- * Redis otherwise). The demo-config side-effects below still write to
- * Redis directly because Earn / Wallet / Checkout / Remittance configs
- * haven't migrated yet (they land in PR 2-others).
+ * Redis otherwise). The demo-config side-effects (auto-create /
+ * update-theme / delete-with-brand) also route through
+ * `services.demoConfigs.*` (Postgres when USE_POSTGRES_DEMO_CONFIGS=true,
+ * Redis otherwise) as of the brand-auto-demo-write-postgres fix — the
+ * deferred "PR 2-others" work from the original cutover comment. Without
+ * this, brand-created demos landed in the legacy per-type Redis keyspace
+ * while the public widget read path (post-PR #101) only checked the
+ * unified store, producing 404s for every brand-auto-created demo.
  */
 
 import { revalidatePath } from "next/cache";
-import { getRedis, REDIS_KEYS } from "@/lib/redis";
 import { getCurrentUser } from "@/lib/auth/session";
-import { brandService } from "@/lib/services";
+import { brandService, services } from "@/lib/services";
 import {
   brandToProfile,
   createRequestToInput,
@@ -32,10 +36,6 @@ import type {
   BrandTheme,
   CreateBrandProfileRequest,
   UpdateBrandProfileRequest,
-  StoredEarnConfig,
-  StoredCheckoutConfig,
-  StoredWalletConfig,
-  StoredRemittanceConfig,
 } from "@/lib/types/dashboard";
 import {
   DEFAULT_BRAND_SETTINGS,
@@ -44,7 +44,6 @@ import {
   DEFAULT_REMITTANCE_CONFIG,
 } from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG } from "@/lib/widget-config";
-import { createId } from "@paralleldrive/cuid2";
 
 type ActionResult<T> =
   | { success: true; data: T }
@@ -71,8 +70,6 @@ async function createBrandDemoConfigs(
   wallet?: string;
   remittance?: string;
 }> {
-  const redis = getRedis();
-  const now = new Date().toISOString();
   const demos: {
     earn?: string;
     checkouts?: string;
@@ -89,171 +86,364 @@ async function createBrandDemoConfigs(
 
   // Create Earn config with brand settings
   if (createEarn) {
-    const earnId = createId();
     const theme: Partial<BrandTheme> = brand.theme || {};
-    const earnConfig: StoredEarnConfig = {
-      id: earnId,
+    const earnConfigPayload = {
+      theme: {
+        ...DEFAULT_EARN_CONFIG.theme,
+        primaryColor: brand.primaryColor,
+        accentColor: brand.accentColor || brand.primaryColor,
+        primaryHoverColor: theme.primaryHoverColor || brand.primaryColor,
+        borderRadius: brand.borderRadius,
+        // Apply extended theme colors if available
+        backgroundColor:
+          theme.pageBackground || DEFAULT_EARN_CONFIG.theme?.backgroundColor,
+        backgroundLightColor:
+          theme.background || DEFAULT_EARN_CONFIG.theme?.backgroundLightColor,
+        foregroundColor:
+          theme.foreground || DEFAULT_EARN_CONFIG.theme?.foregroundColor,
+        mutedTextColor:
+          theme.mutedTextColor || DEFAULT_EARN_CONFIG.theme?.mutedTextColor,
+        borderColor:
+          theme.borderColor || DEFAULT_EARN_CONFIG.theme?.borderColor,
+      },
+      branding: {
+        ...DEFAULT_EARN_CONFIG.branding,
+        logo: brand.logo === "custom" ? "custom" : "dynamic",
+        logoUrl: brand.logoUrl,
+      },
+      layout: DEFAULT_EARN_CONFIG.layout,
+    };
+    const record = await services.demoConfigs.create({
+      kind: "earn",
+      ownerId,
       name: `${brandName} - Earn`,
       description: `Auto-generated from brand profile: ${brandId}`,
-      config: {
-        theme: {
-          ...DEFAULT_EARN_CONFIG.theme,
-          primaryColor: brand.primaryColor,
-          accentColor: brand.accentColor || brand.primaryColor,
-          primaryHoverColor: theme.primaryHoverColor || brand.primaryColor,
-          borderRadius: brand.borderRadius,
-          // Apply extended theme colors if available
-          backgroundColor:
-            theme.pageBackground || DEFAULT_EARN_CONFIG.theme?.backgroundColor,
-          backgroundLightColor:
-            theme.background || DEFAULT_EARN_CONFIG.theme?.backgroundLightColor,
-          foregroundColor:
-            theme.foreground || DEFAULT_EARN_CONFIG.theme?.foregroundColor,
-          mutedTextColor:
-            theme.mutedTextColor || DEFAULT_EARN_CONFIG.theme?.mutedTextColor,
-          borderColor:
-            theme.borderColor || DEFAULT_EARN_CONFIG.theme?.borderColor,
-        },
-        branding: {
-          ...DEFAULT_EARN_CONFIG.branding,
-          logo: brand.logo === "custom" ? "custom" : "dynamic",
-          logoUrl: brand.logoUrl,
-        },
-        layout: DEFAULT_EARN_CONFIG.layout,
-      },
-      ownerId,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.earnConfig(earnId), earnConfig);
-    await redis.sadd(REDIS_KEYS.earnConfigList, earnId);
-    demos.earn = earnId;
+      brandId,
+      themeOverrides: null,
+      config: earnConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.earn = record.id;
   }
 
   // Create Checkouts config with brand settings
   if (createCheckouts) {
-    const checkoutId = createId();
     const theme: Partial<BrandTheme> = brand.theme || {};
-    const checkoutConfig: StoredCheckoutConfig = {
-      id: checkoutId,
+    const checkoutConfigPayload = {
+      ...DEFAULT_WIDGET_CONFIG,
+      theme: {
+        ...DEFAULT_WIDGET_CONFIG.theme,
+        primaryColor: brand.primaryColor,
+        accentColor: brand.accentColor || brand.primaryColor,
+        borderRadius: brand.borderRadius || "md",
+        // Apply extended theme colors if available
+        pageBackground:
+          theme.pageBackground || DEFAULT_WIDGET_CONFIG.theme?.pageBackground,
+        background:
+          theme.background || DEFAULT_WIDGET_CONFIG.theme?.background,
+        foreground:
+          theme.foreground || DEFAULT_WIDGET_CONFIG.theme?.foreground,
+        mutedTextColor:
+          theme.mutedTextColor || DEFAULT_WIDGET_CONFIG.theme?.mutedTextColor,
+        borderColor:
+          theme.borderColor || DEFAULT_WIDGET_CONFIG.theme?.borderColor,
+        rowBackground:
+          theme.rowBackground || DEFAULT_WIDGET_CONFIG.theme?.rowBackground,
+        rowHoverBackground:
+          theme.rowHoverBackground ||
+          DEFAULT_WIDGET_CONFIG.theme?.rowHoverBackground,
+        gradientFrom:
+          theme.gradientFrom || DEFAULT_WIDGET_CONFIG.theme?.gradientFrom,
+        gradientTo:
+          theme.gradientTo || DEFAULT_WIDGET_CONFIG.theme?.gradientTo,
+      },
+      branding: {
+        ...DEFAULT_WIDGET_CONFIG.branding,
+        // WidgetBranding uses 'logo' as URL directly, not a type enum
+        logo: brand.logo === "custom" ? brand.logoUrl : undefined,
+      },
+      // Round-trip the checkout mode through the unified store —
+      // `checkoutMapper.toStored` reads this field back as the
+      // `mode` on the response shape (default "payment").
+      _checkoutMode: "payment" as const,
+    };
+    const record = await services.demoConfigs.create({
+      kind: "checkout",
+      ownerId,
       name: `${brandName} - Checkouts`,
       description: `Auto-generated from brand profile: ${brandId}`,
-      mode: "payment",
-      config: {
-        ...DEFAULT_WIDGET_CONFIG,
-        theme: {
-          ...DEFAULT_WIDGET_CONFIG.theme,
-          primaryColor: brand.primaryColor,
-          accentColor: brand.accentColor || brand.primaryColor,
-          borderRadius: brand.borderRadius || "md",
-          // Apply extended theme colors if available
-          pageBackground:
-            theme.pageBackground || DEFAULT_WIDGET_CONFIG.theme?.pageBackground,
-          background:
-            theme.background || DEFAULT_WIDGET_CONFIG.theme?.background,
-          foreground:
-            theme.foreground || DEFAULT_WIDGET_CONFIG.theme?.foreground,
-          mutedTextColor:
-            theme.mutedTextColor || DEFAULT_WIDGET_CONFIG.theme?.mutedTextColor,
-          borderColor:
-            theme.borderColor || DEFAULT_WIDGET_CONFIG.theme?.borderColor,
-          rowBackground:
-            theme.rowBackground || DEFAULT_WIDGET_CONFIG.theme?.rowBackground,
-          rowHoverBackground:
-            theme.rowHoverBackground ||
-            DEFAULT_WIDGET_CONFIG.theme?.rowHoverBackground,
-          gradientFrom:
-            theme.gradientFrom || DEFAULT_WIDGET_CONFIG.theme?.gradientFrom,
-          gradientTo:
-            theme.gradientTo || DEFAULT_WIDGET_CONFIG.theme?.gradientTo,
-        },
-        branding: {
-          ...DEFAULT_WIDGET_CONFIG.branding,
-          // WidgetBranding uses 'logo' as URL directly, not a type enum
-          logo: brand.logo === "custom" ? brand.logoUrl : undefined,
-        },
-      },
-      ownerId,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.checkoutConfig(checkoutId), checkoutConfig);
-    await redis.sadd(REDIS_KEYS.checkoutConfigList, checkoutId);
-    demos.checkouts = checkoutId;
+      brandId,
+      themeOverrides: null,
+      config: checkoutConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.checkouts = record.id;
   }
 
   // Create Wallet config with brand settings
   if (createWallet) {
-    const walletId = createId();
     const theme: Partial<BrandTheme> = brand.theme || {};
-    const walletConfig: StoredWalletConfig = {
-      id: walletId,
+    const walletConfigPayload = {
+      theme: {
+        ...DEFAULT_WALLET_CONFIG.theme,
+        primaryColor: brand.primaryColor,
+        primaryHoverColor:
+          theme.primaryHoverColor ||
+          DEFAULT_WALLET_CONFIG.theme?.primaryHoverColor,
+        accentColor: brand.accentColor || brand.primaryColor,
+        borderRadius: brand.borderRadius,
+        // Apply extended theme colors if available
+        pageBackground:
+          theme.pageBackground || DEFAULT_WALLET_CONFIG.theme?.pageBackground,
+        background:
+          theme.background || DEFAULT_WALLET_CONFIG.theme?.background,
+        foreground:
+          theme.foreground || DEFAULT_WALLET_CONFIG.theme?.foreground,
+        mutedTextColor:
+          theme.mutedTextColor || DEFAULT_WALLET_CONFIG.theme?.mutedTextColor,
+        borderColor:
+          theme.borderColor || DEFAULT_WALLET_CONFIG.theme?.borderColor,
+        rowBackground:
+          theme.rowBackground || DEFAULT_WALLET_CONFIG.theme?.rowBackground,
+        rowHoverBackground:
+          theme.rowHoverBackground ||
+          DEFAULT_WALLET_CONFIG.theme?.rowHoverBackground,
+        gradientFrom:
+          theme.gradientFrom || DEFAULT_WALLET_CONFIG.theme?.gradientFrom,
+        gradientTo:
+          theme.gradientTo || DEFAULT_WALLET_CONFIG.theme?.gradientTo,
+      },
+      branding: {
+        // WalletBranding uses 'logo' as URL directly (like Checkouts)
+        logo: brand.logo === "custom" ? brand.logoUrl : undefined,
+        showPoweredBy: true,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "wallet",
+      ownerId,
       name: `${brandName} - Wallet`,
       description: `Auto-generated from brand profile: ${brandId}`,
-      config: {
-        theme: {
-          ...DEFAULT_WALLET_CONFIG.theme,
-          primaryColor: brand.primaryColor,
-          primaryHoverColor:
-            theme.primaryHoverColor ||
-            DEFAULT_WALLET_CONFIG.theme?.primaryHoverColor,
-          accentColor: brand.accentColor || brand.primaryColor,
-          borderRadius: brand.borderRadius,
-          // Apply extended theme colors if available
-          pageBackground:
-            theme.pageBackground || DEFAULT_WALLET_CONFIG.theme?.pageBackground,
-          background:
-            theme.background || DEFAULT_WALLET_CONFIG.theme?.background,
-          foreground:
-            theme.foreground || DEFAULT_WALLET_CONFIG.theme?.foreground,
-          mutedTextColor:
-            theme.mutedTextColor || DEFAULT_WALLET_CONFIG.theme?.mutedTextColor,
-          borderColor:
-            theme.borderColor || DEFAULT_WALLET_CONFIG.theme?.borderColor,
-          rowBackground:
-            theme.rowBackground || DEFAULT_WALLET_CONFIG.theme?.rowBackground,
-          rowHoverBackground:
-            theme.rowHoverBackground ||
-            DEFAULT_WALLET_CONFIG.theme?.rowHoverBackground,
-          gradientFrom:
-            theme.gradientFrom || DEFAULT_WALLET_CONFIG.theme?.gradientFrom,
-          gradientTo:
-            theme.gradientTo || DEFAULT_WALLET_CONFIG.theme?.gradientTo,
-        },
-        branding: {
-          // WalletBranding uses 'logo' as URL directly (like Checkouts)
-          logo: brand.logo === "custom" ? brand.logoUrl : undefined,
-          showPoweredBy: true,
-        },
-      },
-      ownerId,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.walletConfig(walletId), walletConfig);
-    await redis.sadd(REDIS_KEYS.walletConfigList, walletId);
-    demos.wallet = walletId;
+      brandId,
+      themeOverrides: null,
+      config: walletConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.wallet = record.id;
   }
 
   // Create Remittance config with brand settings
   if (createRemittance) {
-    const remittanceId = createId();
     // Carry the full brand theme through to the remittance config so
     // pageBackground / surface / foreground / muted / border / etc.
     // flow into the remittance app's `<ThemeStyleTag>` overrides. Until
     // this widening, remittance only got primary + secondary and every
     // other token snapped back to the static defaults in globals.css.
     const remittanceTheme: Partial<BrandTheme> = brand.theme || {};
-    const remittanceConfig: StoredRemittanceConfig = {
-      id: remittanceId,
+    const remittanceConfigPayload = {
+      theme: {
+        ...DEFAULT_REMITTANCE_CONFIG.theme,
+        primaryColor: brand.primaryColor,
+        primaryHoverColor: remittanceTheme.primaryHoverColor,
+        accentColor: brand.accentColor || brand.primaryColor,
+        secondaryColor: brand.accentColor || brand.primaryColor,
+        pageBackground: remittanceTheme.pageBackground,
+        background: remittanceTheme.background,
+        foregroundColor: remittanceTheme.foreground,
+        mutedTextColor: remittanceTheme.mutedTextColor,
+        borderColor: remittanceTheme.borderColor,
+        rowBackground: remittanceTheme.rowBackground,
+        rowHoverBackground: remittanceTheme.rowHoverBackground,
+        gradientFrom: remittanceTheme.gradientFrom,
+        gradientTo: remittanceTheme.gradientTo,
+      },
+      branding: {
+        logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "remittance",
+      ownerId,
       name: `${brandName} - Remittance`,
       description: `Auto-generated from brand profile: ${brandId}`,
-      config: {
+      brandId,
+      themeOverrides: null,
+      config: remittanceConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.remittance = record.id;
+  }
+
+  return demos;
+}
+
+/**
+ * Update demo configs when brand settings change
+ */
+async function updateBrandDemoConfigs(
+  profile: BrandProfile,
+  brand: BrandSettings,
+): Promise<void> {
+  // Update Earn config if it exists
+  if (profile.demos.earn) {
+    const record = await services.demoConfigs.get(profile.demos.earn);
+    if (record && record.kind === "earn") {
+      const existingConfig = (record.config ?? {}) as Record<string, unknown>;
+      const existingTheme = (existingConfig.theme ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const existingBranding = (existingConfig.branding ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const theme: Partial<BrandTheme> = brand.theme || {};
+      const updatedConfig = {
+        ...existingConfig,
         theme: {
-          ...DEFAULT_REMITTANCE_CONFIG.theme,
+          ...existingTheme,
+          primaryColor: brand.primaryColor,
+          accentColor: brand.accentColor || brand.primaryColor,
+          primaryHoverColor: theme.primaryHoverColor || brand.primaryColor,
+          borderRadius: brand.borderRadius,
+          // Apply extended theme colors if available
+          ...(theme.pageBackground && {
+            backgroundColor: theme.pageBackground,
+          }),
+          ...(theme.background && { backgroundLightColor: theme.background }),
+          ...(theme.foreground && { foregroundColor: theme.foreground }),
+          ...(theme.mutedTextColor && {
+            mutedTextColor: theme.mutedTextColor,
+          }),
+          ...(theme.borderColor && { borderColor: theme.borderColor }),
+        },
+        branding: {
+          ...existingBranding,
+          logo: brand.logo === "custom" ? "custom" : "dynamic",
+          logoUrl: brand.logoUrl,
+        },
+      };
+      await services.demoConfigs.update(profile.demos.earn, {
+        config: updatedConfig as unknown as Record<string, unknown>,
+      });
+    }
+  }
+
+  // Update Checkouts config if it exists
+  if (profile.demos.checkouts) {
+    const record = await services.demoConfigs.get(profile.demos.checkouts);
+    if (record && record.kind === "checkout") {
+      const existingConfig = (record.config ?? {}) as Record<string, unknown>;
+      const existingTheme = (existingConfig.theme ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const existingBranding = (existingConfig.branding ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const theme: Partial<BrandTheme> = brand.theme || {};
+      const updatedConfig = {
+        ...existingConfig,
+        theme: {
+          ...existingTheme,
+          primaryColor: brand.primaryColor,
+          accentColor: brand.accentColor || brand.primaryColor,
+          borderRadius: brand.borderRadius || "md",
+          // Apply extended theme colors if available
+          ...(theme.pageBackground && {
+            pageBackground: theme.pageBackground,
+          }),
+          ...(theme.background && { background: theme.background }),
+          ...(theme.foreground && { foreground: theme.foreground }),
+          ...(theme.mutedTextColor && {
+            mutedTextColor: theme.mutedTextColor,
+          }),
+          ...(theme.borderColor && { borderColor: theme.borderColor }),
+          ...(theme.rowBackground && { rowBackground: theme.rowBackground }),
+          ...(theme.rowHoverBackground && {
+            rowHoverBackground: theme.rowHoverBackground,
+          }),
+          ...(theme.gradientFrom && { gradientFrom: theme.gradientFrom }),
+          ...(theme.gradientTo && { gradientTo: theme.gradientTo }),
+        },
+        branding: {
+          ...existingBranding,
+          // WidgetBranding uses 'logo' as URL directly, not a type enum
+          logo: brand.logo === "custom" ? brand.logoUrl : undefined,
+        },
+      };
+      await services.demoConfigs.update(profile.demos.checkouts, {
+        config: updatedConfig as unknown as Record<string, unknown>,
+      });
+    }
+  }
+
+  // Update Wallet config if it exists
+  if (profile.demos.wallet) {
+    const record = await services.demoConfigs.get(profile.demos.wallet);
+    if (record && record.kind === "wallet") {
+      const existingConfig = (record.config ?? {}) as Record<string, unknown>;
+      const existingTheme = (existingConfig.theme ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const existingBranding = (existingConfig.branding ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const theme: Partial<BrandTheme> = brand.theme || {};
+      const updatedConfig = {
+        ...existingConfig,
+        theme: {
+          ...existingTheme,
+          primaryColor: brand.primaryColor,
+          primaryHoverColor:
+            theme.primaryHoverColor ||
+            (existingTheme.primaryHoverColor as string | undefined),
+          accentColor: brand.accentColor || brand.primaryColor,
+          borderRadius: brand.borderRadius,
+          // Apply extended theme colors if available
+          ...(theme.pageBackground && {
+            pageBackground: theme.pageBackground,
+          }),
+          ...(theme.background && { background: theme.background }),
+          ...(theme.foreground && { foreground: theme.foreground }),
+          ...(theme.mutedTextColor && {
+            mutedTextColor: theme.mutedTextColor,
+          }),
+          ...(theme.borderColor && { borderColor: theme.borderColor }),
+          ...(theme.rowBackground && { rowBackground: theme.rowBackground }),
+          ...(theme.rowHoverBackground && {
+            rowHoverBackground: theme.rowHoverBackground,
+          }),
+          ...(theme.gradientFrom && { gradientFrom: theme.gradientFrom }),
+          ...(theme.gradientTo && { gradientTo: theme.gradientTo }),
+        },
+        branding: {
+          ...existingBranding,
+          // WalletBranding uses 'logo' as URL directly (like Checkouts)
+          logo: brand.logo === "custom" ? brand.logoUrl : undefined,
+        },
+      };
+      await services.demoConfigs.update(profile.demos.wallet, {
+        config: updatedConfig as unknown as Record<string, unknown>,
+      });
+    }
+  }
+
+  // Update Remittance config if it exists. Carry the full brand theme
+  // through so the remittance app receives pageBackground / surface /
+  // foreground / muted / border / row* / gradient* — not just primary
+  // + secondary like it used to.
+  if (profile.demos.remittance) {
+    const record = await services.demoConfigs.get(profile.demos.remittance);
+    if (record && record.kind === "remittance") {
+      const existingConfig = (record.config ?? {}) as Record<string, unknown>;
+      const existingTheme = (existingConfig.theme ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const remittanceTheme: Partial<BrandTheme> = brand.theme || {};
+      const updatedConfig = {
+        theme: {
+          ...existingTheme,
           primaryColor: brand.primaryColor,
           primaryHoverColor: remittanceTheme.primaryHoverColor,
           accentColor: brand.accentColor || brand.primaryColor,
@@ -271,205 +461,10 @@ async function createBrandDemoConfigs(
         branding: {
           logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,
         },
-      },
-      ownerId,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await redis.set(REDIS_KEYS.remittanceConfig(remittanceId), remittanceConfig);
-    await redis.sadd(REDIS_KEYS.remittanceConfigList, remittanceId);
-    demos.remittance = remittanceId;
-  }
-
-  return demos;
-}
-
-/**
- * Update demo configs when brand settings change
- */
-async function updateBrandDemoConfigs(
-  profile: BrandProfile,
-  brand: BrandSettings,
-): Promise<void> {
-  const redis = getRedis();
-  const now = new Date().toISOString();
-
-  // Update Earn config if it exists
-  if (profile.demos.earn) {
-    const earnConfig = await redis.get<StoredEarnConfig>(
-      REDIS_KEYS.earnConfig(profile.demos.earn),
-    );
-    if (earnConfig) {
-      const theme: Partial<BrandTheme> = brand.theme || {};
-      const updated: StoredEarnConfig = {
-        ...earnConfig,
-        config: {
-          ...earnConfig.config,
-          theme: {
-            ...earnConfig.config.theme,
-            primaryColor: brand.primaryColor,
-            accentColor: brand.accentColor || brand.primaryColor,
-            primaryHoverColor: theme.primaryHoverColor || brand.primaryColor,
-              borderRadius: brand.borderRadius,
-            // Apply extended theme colors if available
-            ...(theme.pageBackground && {
-              backgroundColor: theme.pageBackground,
-            }),
-            ...(theme.background && { backgroundLightColor: theme.background }),
-            ...(theme.foreground && { foregroundColor: theme.foreground }),
-            ...(theme.mutedTextColor && {
-              mutedTextColor: theme.mutedTextColor,
-            }),
-            ...(theme.borderColor && { borderColor: theme.borderColor }),
-          },
-          branding: {
-            ...earnConfig.config.branding,
-            logo: brand.logo === "custom" ? "custom" : "dynamic",
-            logoUrl: brand.logoUrl,
-          },
-        },
-        updatedAt: now,
       };
-      await redis.set(REDIS_KEYS.earnConfig(profile.demos.earn), updated);
-    }
-  }
-
-  // Update Checkouts config if it exists
-  if (profile.demos.checkouts) {
-    const checkoutConfig = await redis.get<StoredCheckoutConfig>(
-      REDIS_KEYS.checkoutConfig(profile.demos.checkouts),
-    );
-    if (checkoutConfig) {
-      const theme: Partial<BrandTheme> = brand.theme || {};
-      const updated: StoredCheckoutConfig = {
-        ...checkoutConfig,
-        config: {
-          ...checkoutConfig.config,
-          theme: {
-            ...checkoutConfig.config.theme,
-            primaryColor: brand.primaryColor,
-            accentColor: brand.accentColor || brand.primaryColor,
-            borderRadius: brand.borderRadius || "md",
-            // Apply extended theme colors if available
-            ...(theme.pageBackground && {
-              pageBackground: theme.pageBackground,
-            }),
-            ...(theme.background && { background: theme.background }),
-            ...(theme.foreground && { foreground: theme.foreground }),
-            ...(theme.mutedTextColor && {
-              mutedTextColor: theme.mutedTextColor,
-            }),
-            ...(theme.borderColor && { borderColor: theme.borderColor }),
-            ...(theme.rowBackground && { rowBackground: theme.rowBackground }),
-            ...(theme.rowHoverBackground && {
-              rowHoverBackground: theme.rowHoverBackground,
-            }),
-            ...(theme.gradientFrom && { gradientFrom: theme.gradientFrom }),
-            ...(theme.gradientTo && { gradientTo: theme.gradientTo }),
-          },
-          branding: {
-            ...checkoutConfig.config.branding,
-            // WidgetBranding uses 'logo' as URL directly, not a type enum
-            logo: brand.logo === "custom" ? brand.logoUrl : undefined,
-          },
-        },
-        updatedAt: now,
-      };
-      await redis.set(
-        REDIS_KEYS.checkoutConfig(profile.demos.checkouts),
-        updated,
-      );
-    }
-  }
-
-  // Update Wallet config if it exists
-  if (profile.demos.wallet) {
-    const walletConfig = await redis.get<StoredWalletConfig>(
-      REDIS_KEYS.walletConfig(profile.demos.wallet),
-    );
-    if (walletConfig) {
-      const theme: Partial<BrandTheme> = brand.theme || {};
-      const updated: StoredWalletConfig = {
-        ...walletConfig,
-        config: {
-          ...walletConfig.config,
-          theme: {
-            ...walletConfig.config.theme,
-            primaryColor: brand.primaryColor,
-            primaryHoverColor:
-              theme.primaryHoverColor ||
-              walletConfig.config.theme?.primaryHoverColor,
-            accentColor: brand.accentColor || brand.primaryColor,
-            borderRadius: brand.borderRadius,
-            // Apply extended theme colors if available
-            ...(theme.pageBackground && {
-              pageBackground: theme.pageBackground,
-            }),
-            ...(theme.background && { background: theme.background }),
-            ...(theme.foreground && { foreground: theme.foreground }),
-            ...(theme.mutedTextColor && {
-              mutedTextColor: theme.mutedTextColor,
-            }),
-            ...(theme.borderColor && { borderColor: theme.borderColor }),
-            ...(theme.rowBackground && { rowBackground: theme.rowBackground }),
-            ...(theme.rowHoverBackground && {
-              rowHoverBackground: theme.rowHoverBackground,
-            }),
-            ...(theme.gradientFrom && { gradientFrom: theme.gradientFrom }),
-            ...(theme.gradientTo && { gradientTo: theme.gradientTo }),
-          },
-          branding: {
-            ...walletConfig.config.branding,
-            // WalletBranding uses 'logo' as URL directly (like Checkouts)
-            logo: brand.logo === "custom" ? brand.logoUrl : undefined,
-          },
-        },
-        updatedAt: now,
-      };
-      await redis.set(REDIS_KEYS.walletConfig(profile.demos.wallet), updated);
-    }
-  }
-
-  // Update Remittance config if it exists. Carry the full brand theme
-  // through so the remittance app receives pageBackground / surface /
-  // foreground / muted / border / row* / gradient* — not just primary
-  // + secondary like it used to.
-  if (profile.demos.remittance) {
-    const remittanceConfig = await redis.get<StoredRemittanceConfig>(
-      REDIS_KEYS.remittanceConfig(profile.demos.remittance),
-    );
-    if (remittanceConfig) {
-      const remittanceTheme: Partial<BrandTheme> = brand.theme || {};
-      const updated: StoredRemittanceConfig = {
-        ...remittanceConfig,
-        config: {
-          theme: {
-            ...remittanceConfig.config.theme,
-            primaryColor: brand.primaryColor,
-            primaryHoverColor: remittanceTheme.primaryHoverColor,
-            accentColor: brand.accentColor || brand.primaryColor,
-            secondaryColor: brand.accentColor || brand.primaryColor,
-            pageBackground: remittanceTheme.pageBackground,
-            background: remittanceTheme.background,
-            foregroundColor: remittanceTheme.foreground,
-            mutedTextColor: remittanceTheme.mutedTextColor,
-            borderColor: remittanceTheme.borderColor,
-            rowBackground: remittanceTheme.rowBackground,
-            rowHoverBackground: remittanceTheme.rowHoverBackground,
-            gradientFrom: remittanceTheme.gradientFrom,
-            gradientTo: remittanceTheme.gradientTo,
-          },
-          branding: {
-            logoUrl: brand.logo === "custom" ? brand.logoUrl : undefined,
-          },
-        },
-        updatedAt: now,
-      };
-      await redis.set(
-        REDIS_KEYS.remittanceConfig(profile.demos.remittance),
-        updated,
-      );
+      await services.demoConfigs.update(profile.demos.remittance, {
+        config: updatedConfig as unknown as Record<string, unknown>,
+      });
     }
   }
 }
@@ -483,27 +478,14 @@ async function deleteBrandDemoConfigs(demos: {
   wallet?: string;
   remittance?: string;
 }): Promise<void> {
-  const redis = getRedis();
-
-  if (demos.earn) {
-    await redis.del(REDIS_KEYS.earnConfig(demos.earn));
-    await redis.srem(REDIS_KEYS.earnConfigList, demos.earn);
-  }
-
-  if (demos.checkouts) {
-    await redis.del(REDIS_KEYS.checkoutConfig(demos.checkouts));
-    await redis.srem(REDIS_KEYS.checkoutConfigList, demos.checkouts);
-  }
-
-  if (demos.wallet) {
-    await redis.del(REDIS_KEYS.walletConfig(demos.wallet));
-    await redis.srem(REDIS_KEYS.walletConfigList, demos.wallet);
-  }
-
-  if (demos.remittance) {
-    await redis.del(REDIS_KEYS.remittanceConfig(demos.remittance));
-    await redis.srem(REDIS_KEYS.remittanceConfigList, demos.remittance);
-  }
+  // `services.demoConfigs.delete` is a no-op if the record is missing.
+  // We deliberately don't kind-check before delete — if a stale id
+  // somehow points at a different kind, the brand row was already
+  // misconfigured and deleting it cleans up the orphan reference.
+  if (demos.earn) await services.demoConfigs.delete(demos.earn);
+  if (demos.checkouts) await services.demoConfigs.delete(demos.checkouts);
+  if (demos.wallet) await services.demoConfigs.delete(demos.wallet);
+  if (demos.remittance) await services.demoConfigs.delete(demos.remittance);
 }
 
 /**
