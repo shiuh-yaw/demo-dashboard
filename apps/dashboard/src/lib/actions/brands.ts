@@ -470,7 +470,18 @@ async function updateBrandDemoConfigs(
 }
 
 /**
- * Delete demo configs associated with a brand profile
+ * Delete demo configs associated with a brand profile.
+ *
+ * Brand rows can point at demo ids that no longer exist in
+ * `services.demoConfigs` — e.g. records written via the pre-PR-#104
+ * legacy Redis path that never made it into Postgres, or demos already
+ * deleted out-of-band. The service's `delete` contract throws on
+ * missing ids (see `demo-configs.parity.test.ts`), so we existence-check
+ * here to keep brand deletion idempotent.
+ *
+ * We deliberately don't kind-check — if a stale id somehow points at a
+ * different kind, the brand row was already misconfigured and cleaning
+ * up the orphan reference is the desired end state.
  */
 async function deleteBrandDemoConfigs(demos: {
   earn?: string;
@@ -478,14 +489,12 @@ async function deleteBrandDemoConfigs(demos: {
   wallet?: string;
   remittance?: string;
 }): Promise<void> {
-  // `services.demoConfigs.delete` is a no-op if the record is missing.
-  // We deliberately don't kind-check before delete — if a stale id
-  // somehow points at a different kind, the brand row was already
-  // misconfigured and deleting it cleans up the orphan reference.
-  if (demos.earn) await services.demoConfigs.delete(demos.earn);
-  if (demos.checkouts) await services.demoConfigs.delete(demos.checkouts);
-  if (demos.wallet) await services.demoConfigs.delete(demos.wallet);
-  if (demos.remittance) await services.demoConfigs.delete(demos.remittance);
+  const ids = [demos.earn, demos.checkouts, demos.wallet, demos.remittance]
+    .filter((id): id is string => Boolean(id));
+  for (const id of ids) {
+    const existing = await services.demoConfigs.get(id);
+    if (existing) await services.demoConfigs.delete(id);
+  }
 }
 
 /**

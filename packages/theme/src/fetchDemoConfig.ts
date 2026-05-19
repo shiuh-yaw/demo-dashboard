@@ -23,9 +23,13 @@ export interface FetchDemoConfigOpts<T> {
   /** Fallback config returned when no id is set or the fetch fails. */
   fallback: T;
   /**
-   * Override the dashboard base URL. Defaults to `process.env.DASHBOARD_URL`
-   * (preferred) and `process.env.NEXT_PUBLIC_DASHBOARD_URL` (legacy). When
-   * neither is set, the helper logs a warning and returns `fallback`.
+   * Override the dashboard base URL. When omitted, the helper resolves
+   * one of (in priority order): `DASHBOARD_URL`,
+   * `NEXT_PUBLIC_DASHBOARD_URL`, `NEXT_PUBLIC_DASHBOARD_API_URL`,
+   * `NEXT_PUBLIC_API_BASE_URL`. The last two are compat aliases for the
+   * env names the per-app fetchers shipped with — apps don't need to
+   * rename their existing variables. When none are set, the helper logs
+   * a warning and returns `fallback`.
    */
   dashboardUrl?: string;
   /** Override `fetch` for tests. */
@@ -90,7 +94,8 @@ export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<
       );
       return fallback;
     }
-    const data = (await res.json()) as Partial<T> | T;
+    const raw = (await res.json()) as unknown;
+    const data = unwrapEnvelope<T>(raw);
     return mergeOverFallback(fallback, data);
   } catch (err) {
     logger.warn(`[fetchDemoConfig] fetch threw; falling back`, {
@@ -107,7 +112,36 @@ function resolveDashboardUrl(explicit?: string): string | undefined {
   if (explicit) return explicit;
   // Process.env can be undefined in some edge runtimes; guard accordingly.
   if (typeof process === "undefined" || !process.env) return undefined;
-  return process.env.DASHBOARD_URL ?? process.env.NEXT_PUBLIC_DASHBOARD_URL;
+  // Checked in priority order. The first two are the documented contract;
+  // the last two are compat with the env-var names the per-app fetchers
+  // shipped with (NEXT_PUBLIC_DASHBOARD_API_URL for checkouts/wallet/shop,
+  // NEXT_PUBLIC_API_BASE_URL for earn/remittance/trade) — keeping those
+  // working means no app `.env.local` edits are required to migrate.
+  return (
+    process.env.DASHBOARD_URL ??
+    process.env.NEXT_PUBLIC_DASHBOARD_URL ??
+    process.env.NEXT_PUBLIC_DASHBOARD_API_URL ??
+    process.env.NEXT_PUBLIC_API_BASE_URL
+  );
+}
+
+/**
+ * The dashboard's `createResponse` helper wraps every successful payload
+ * in `{ success: true, data: <T> }`. Detect that shape and pull the
+ * inner `data` out; pass anything else through unchanged so consumers
+ * that point this client at a different shape still work.
+ */
+function unwrapEnvelope<T>(raw: unknown): Partial<T> | T {
+  if (
+    raw != null &&
+    typeof raw === "object" &&
+    "success" in raw &&
+    (raw as { success: unknown }).success === true &&
+    "data" in raw
+  ) {
+    return (raw as { data: Partial<T> | T }).data;
+  }
+  return raw as Partial<T> | T;
 }
 
 /**

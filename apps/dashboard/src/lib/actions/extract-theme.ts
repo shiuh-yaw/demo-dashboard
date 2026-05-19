@@ -53,6 +53,73 @@ export async function extractThemeFromUrl(
     );
 
     const truncatedHtml = truncateHtml(html, 15000);
+    // Pull the logo as a base64 image so Claude can read the actual brand
+    // colors off pixels rather than guessing from the HTML. Banks especially
+    // ship white CTAs on red/blue branded chrome — without this, Claude
+    // sees `background-color: white` in the CSS and confidently returns
+    // `primaryColor: #ffffff`.
+    const logoImage = logo ? await fetchLogoAsImage(logo) : null;
+
+    const promptText = `Analyze this brand and extract a cohesive color theme for a payment widget. Brand: ${hostname}
+
+${
+  logoImage
+    ? "I've attached the brand's logo as an image. Look at it FIRST — the dominant non-background colour in the logo is almost always the right primaryColor. The HTML below is for layout/surface cues only; the brand colour comes from the logo."
+    : "Look at the HTML below for design language, CSS, and branding cues."
+}
+
+\`\`\`html
+${truncatedHtml}
+\`\`\`
+
+Return a JSON theme object using hex colors (e.g., "#a855f7"). CRITICAL rules for colour selection:
+- \`primaryColor\` MUST be a saturated brand colour from the logo or branded chrome. NEVER return #ffffff or #000000 (or any near-white / near-black hex) for primaryColor unless the brand is genuinely monochromatic (Apple, Nike-style). If the site shows white CTAs sitting on a saturated background, pick the SATURATED background, not the white CTA.
+- \`accentColor\` same constraint — saturated, brand-aligned. Often equal to primaryColor.
+- Neutrals belong on \`pageBackground\`, \`background\`, \`borderColor\`, \`mutedTextColor\` only.
+
+Schema:
+{
+  "isDark": boolean (true if the site uses a dark theme),
+  "pageBackground": "hex",
+  "background": "hex",
+  "foreground": "hex",
+  "primaryColor": "hex (saturated brand colour, per the rules above)",
+  "primaryHoverColor": "hex (slightly darker variant of primaryColor)",
+  "accentColor": "hex (saturated brand-aligned colour)",
+  "rowBackground": "hex",
+  "rowHoverBackground": "hex",
+  "mutedTextColor": "hex",
+  "borderColor": "hex",
+  "gradientFrom": "rgba color (e.g., rgba(168, 85, 247, 0.15))",
+  "gradientTo": "transparent",
+  "borderRadius": "xs" | "sm" | "md" | "lg",
+  "brandName": "the brand/company name"
+}
+
+Return ONLY the JSON object, no explanation or markdown.`;
+
+    const userContent: Array<
+      | { type: "text"; text: string }
+      | {
+          type: "image";
+          source: {
+            type: "base64";
+            media_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+            data: string;
+          };
+        }
+    > = [];
+    if (logoImage) {
+      userContent.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: logoImage.mediaType,
+          data: logoImage.base64,
+        },
+      });
+    }
+    userContent.push({ type: "text", text: promptText });
 
     const client = new Anthropic({ apiKey });
     let message;
@@ -60,39 +127,7 @@ export async function extractThemeFromUrl(
       message = await client.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
-        messages: [
-          {
-            role: "user",
-            content: `Analyze this website's design and extract a cohesive color theme for a payment widget. The website is: ${hostname}
-
-Here's the HTML content:
-\`\`\`html
-${truncatedHtml}
-\`\`\`
-
-Based on the website's design language, CSS, and branding, generate a JSON theme object with these exact properties. Use hex colors (e.g., "#a855f7") for all color values:
-
-{
-  "isDark": boolean (true if the site uses a dark theme),
-  "pageBackground": "hex color for the overall page background",
-  "background": "hex color for the widget card background",
-  "foreground": "hex color for primary text",
-  "primaryColor": "hex color for primary buttons and CTAs",
-  "primaryHoverColor": "hex color for primary button hover state",
-  "accentColor": "hex color for accents and highlights",
-  "rowBackground": "hex color for list item backgrounds",
-  "rowHoverBackground": "hex color for list item hover state",
-  "mutedTextColor": "hex color for secondary/muted text",
-  "borderColor": "hex color for borders and dividers",
-  "gradientFrom": "rgba color for gradient start (e.g., rgba(168, 85, 247, 0.15))",
-  "gradientTo": "transparent",
-  "borderRadius": "xs" | "sm" | "md" | "lg" (based on the site's roundedness),
-  "brandName": "the brand/company name"
-}
-
-Return ONLY the JSON object, no explanation or markdown.`,
-          },
-        ],
+        messages: [{ role: "user", content: userContent }],
       });
     } catch (err) {
       console.warn("AI extraction failed, using fallback:", err);
@@ -333,6 +368,48 @@ function resolveUrl(url: string, baseOrigin: string): string {
   if (url.startsWith("//")) return `https:${url}`;
   if (url.startsWith("/")) return `${baseOrigin}${url}`;
   return `${baseOrigin}/${url}`;
+}
+
+/**
+ * Fetch a logo URL and return it as base64 + media type, suitable for
+ * embedding as an `image` content block in the Anthropic Messages API.
+ *
+ * Returns `null` when the URL is unreachable, non-image, an unsupported
+ * format (e.g. SVG — Anthropic's vision endpoint accepts PNG/JPEG/GIF/WebP
+ * only), or larger than Anthropic's per-image cap (~5 MB).
+ */
+async function fetchLogoAsImage(
+  url: string,
+): Promise<{
+  base64: string;
+  mediaType: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+} | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; ThemeExtractor/1.0; +https://dynamic.xyz)",
+      },
+    });
+    if (!res.ok) return null;
+    const contentType = (res.headers.get("content-type") ?? "").toLowerCase();
+    const supported = [
+      "image/png",
+      "image/jpeg",
+      "image/gif",
+      "image/webp",
+    ] as const;
+    const mediaType = supported.find((t) => contentType.startsWith(t));
+    if (!mediaType) return null;
+    const buf = await res.arrayBuffer();
+    // Anthropic caps inline images at 5 MB. Reject larger payloads rather
+    // than letting the API error and pull the whole import down with it.
+    if (buf.byteLength > 5_000_000) return null;
+    const base64 = Buffer.from(buf).toString("base64");
+    return { base64, mediaType };
+  } catch {
+    return null;
+  }
 }
 
 async function getValidLogoUrl(

@@ -12,8 +12,9 @@
  */
 
 import { headers } from "next/headers";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { AppLogo } from "@/components/icons";
-import { getEarnConfig } from "@/lib/earn-config";
+import { DEFAULT_EARN_CONFIG } from "@/lib/earn-config";
 
 export default async function AuthLayout({
   children,
@@ -22,8 +23,12 @@ export default async function AuthLayout({
 }) {
   const headersList = await headers();
   const configId = headersList.get("x-earn-config-id");
-  const storedConfig = configId ? await getEarnConfig(configId) : null;
-  const branding = storedConfig?.config?.branding;
+  const config = await fetchDemoConfig({
+    demoType: "earn",
+    id: configId,
+    fallback: DEFAULT_EARN_CONFIG,
+  });
+  const branding = config.branding;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-earn-light p-6">

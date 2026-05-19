@@ -1,11 +1,12 @@
 /**
- * Earn Config Client
+ * Earn Config Types + Defaults
  *
- * Fetches Earn configurations from the dashboard API.
- * This runs server-side for SSR/SSG earn pages.
+ * Schema and defaults for the Earn demo. Server-side fetching now lives
+ * in `@dynamic-demos/theme/fetch-demo-config` against the unified
+ * `/api/demo-configs/earn/[id]` endpoint; this file only owns the type
+ * definitions and the Dynamic-branded defaults each layout passes as
+ * the `fallback`.
  */
-
-import { env } from "@/env";
 
 // =============================================================================
 // Types (mirrored from demo-dashboard)
@@ -75,24 +76,6 @@ export interface EarnConfig {
   layout?: EarnLayout;
 }
 
-/**
- * Stored Earn configuration (from API)
- */
-export interface StoredEarnConfig {
-  /** Unique identifier */
-  id: string;
-  /** Display name for the config */
-  name: string;
-  /** Optional description */
-  description?: string;
-  /** The actual Earn configuration */
-  config: EarnConfig;
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
-}
-
 // =============================================================================
 // Default Configuration
 // =============================================================================
@@ -143,60 +126,3 @@ export const DEFAULT_EARN_CONFIG: EarnConfig = {
   layout: DEFAULT_EARN_LAYOUT,
 };
 
-// =============================================================================
-// API Client
-// =============================================================================
-
-const DASHBOARD_API_URL = env.NEXT_PUBLIC_API_BASE_URL;
-
-/**
- * Fetch an Earn configuration by ID from the dashboard API
- */
-export async function getEarnConfig(
-  id: string,
-): Promise<StoredEarnConfig | null> {
-  try {
-    const response = await fetch(`${DASHBOARD_API_URL}/api/earns/${id}`, {
-      cache: "no-store", // Disable cache for development
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) return null;
-
-      try {
-        const errorData = await response.json();
-        const errorMessage =
-          (errorData as { error?: string }).error || `HTTP ${response.status}`;
-        console.error(`API error fetching Earn config ${id}:`, errorMessage);
-      } catch {
-        console.error(`Failed to fetch Earn config ${id}: ${response.status}`);
-      }
-      return null;
-    }
-
-    const data = await response.json();
-
-    // All responses are standardized to { success: true, data: T }
-    if ("success" in data && data.success === true && "data" in data) {
-      return (data as { success: true; data: StoredEarnConfig }).data;
-    }
-
-    // If response.ok is true but format is unexpected, log and return null
-    console.error(`Unexpected response format for Earn config ${id}:`, data);
-    return null;
-  } catch (error) {
-    console.error(`Error fetching Earn config ${id}:`, error);
-    return null;
-  }
-}
-
-/**
- * Merge a partial config with defaults
- */
-export function mergeWithDefaults(config?: EarnConfig): Required<EarnConfig> {
-  return {
-    theme: { ...DEFAULT_EARN_THEME, ...config?.theme },
-    branding: { ...DEFAULT_EARN_BRANDING, ...config?.branding },
-    layout: { ...DEFAULT_EARN_LAYOUT, ...config?.layout },
-  };
-}

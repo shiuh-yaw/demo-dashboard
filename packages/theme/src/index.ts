@@ -37,7 +37,9 @@ export {
 export {
   DEFAULT_WIDGET_THEME,
   DEFAULT_WIDGET_BRANDING,
+  DEFAULT_WIDGET_CONFIG,
   widgetThemeToCssVars,
+  widgetThemeToBrandTheme,
   createWidgetConfig,
   type WidgetTheme,
   type WidgetBranding,

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import {
+  DEFAULT_WIDGET_CONFIG,
+  widgetThemeToBrandTheme,
+} from "@dynamic-demos/theme";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { Providers } from "./providers";
 import { NetworkBar } from "./network-bar";
 import { DepositConfigProvider } from "@/contexts/deposit-config-context";
-import { getWalletConfig } from "@/lib/api/wallets";
-import { themeToBrandTheme } from "@/lib/deposit-brand";
 
 import "./globals.css";
 
@@ -21,14 +24,22 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const configId = headersList.get("x-deposit-config-id");
-  const stored = configId ? await getWalletConfig(configId) : null;
+  // Deposit shares wallet's storage kind (its records live under
+  // `kind: "wallet"` in DemoConfig); the middleware-level `demoType` is
+  // distinct from the storage `kind`. Apps know the mapping; the
+  // endpoint validates the `kind` it receives.
+  const config = await fetchDemoConfig({
+    demoType: "wallet",
+    id: configId,
+    fallback: DEFAULT_WIDGET_CONFIG,
+  });
 
   // SSR theme injection (D-008): emit only the `--brand-*` overrides for the
   // tokens deposit personalizes per brand. Everything else falls through to
   // deposit's static `--brand-*` overrides in globals.css and the canonical
   // defaults in @dynamic-demos/theme/defaults.css. Zero FOUC, zero hydration
   // mismatch — the inline <style> beats client paint.
-  const brandTheme = themeToBrandTheme(stored?.config?.theme ?? {});
+  const brandTheme = widgetThemeToBrandTheme(config.theme);
 
   return (
     <html lang="en">
@@ -39,7 +50,7 @@ export default async function RootLayout({
         <div className="min-h-screen flex items-center justify-center p-6">
           <div className="w-full max-w-[400px]">
             <Providers>
-              <DepositConfigProvider config={stored?.config ?? null}>
+              <DepositConfigProvider config={config}>
                 <NetworkBar />
                 {children}
               </DepositConfigProvider>

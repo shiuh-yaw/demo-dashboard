@@ -1,70 +1,15 @@
 /**
  * Checkout API Client
  *
- * Fetches checkout configurations from the dashboard API.
- * This runs server-side for SSR/SSG checkout pages.
+ * Server-side helpers for checkout-scoped operations. The config fetch
+ * (`getCheckoutConfig`) was retired in favour of
+ * `@dynamic-demos/theme/fetch-demo-config` against the unified
+ * `/api/demo-configs/checkout/[id]` endpoint; this file now holds only
+ * the transaction-side helper.
  */
 
-import { cache } from "react";
-import {
-  Status,
-  type StoredCheckoutConfig,
-  type Transaction,
-} from "@/lib/types";
-import { env } from "@/lib/env";
+import { Status, type Transaction } from "@/lib/types";
 import { serverPost } from "./server-client";
-
-const DASHBOARD_API_URL = env.NEXT_PUBLIC_DASHBOARD_API_URL;
-
-/**
- * Fetch a checkout configuration by ID from the dashboard API.
- *
- * Wrapped in React `cache()` so the root layout, the `[id]` validation
- * layout, and per-page fetches dedupe within a single render — a key
- * piece of the unified theme injection pattern (the layout needs the
- * config for `<ThemeStyleTag>`, while pages still need the full stored
- * record for transaction logic).
- */
-export const getCheckoutConfig = cache(_getCheckoutConfig);
-
-async function _getCheckoutConfig(
-  id: string,
-): Promise<StoredCheckoutConfig | null> {
-  try {
-    const response = await fetch(`${DASHBOARD_API_URL}/api/checkouts/${id}`, {
-      next: { revalidate: 60 }, // Cache for 60 seconds
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) return null;
-
-      // Error responses are standardized to { error: string, code?: string }
-      try {
-        const errorData = await response.json();
-        const errorMessage =
-          (errorData as { error?: string }).error || `HTTP ${response.status}`;
-        console.error(`API error fetching checkout ${id}:`, errorMessage);
-      } catch {
-        console.error(`Failed to fetch checkout ${id}: ${response.status}`);
-      }
-      return null;
-    }
-
-    const data = await response.json();
-
-    // All responses are now standardized to { success: true, data: T }
-    if ("success" in data && data.success === true && "data" in data) {
-      return (data as { success: true; data: StoredCheckoutConfig }).data;
-    }
-
-    // If response.ok is true but format is unexpected, log and return null
-    console.error(`Unexpected response format for checkout ${id}:`, data);
-    return null;
-  } catch (error) {
-    console.error(`Error fetching checkout ${id}:`, error);
-    return null;
-  }
-}
 
 /**
  * Check for existing transaction by externalId

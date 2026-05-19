@@ -11,6 +11,8 @@ import {
   DEFAULT_BASE_BRANDING,
   BORDER_RADIUS_SCALE,
 } from "./base";
+import type { BrandTheme } from "./brandTheme";
+import { darkenHex } from "./colorMath";
 
 /**
  * Widget-specific theme extensions
@@ -134,4 +136,53 @@ export function createWidgetConfig(
     theme: { ...DEFAULT_WIDGET_THEME, ...config?.theme },
     branding: { ...DEFAULT_WIDGET_BRANDING, ...config?.branding },
   };
+}
+
+/**
+ * Canonical unbranded widget config — the Dynamic-brand identity baked
+ * into the widget shape. Apps pass this as the `fallback` to
+ * `fetchDemoConfig` so the no-id / 404 / network-error paths all render
+ * a working demo against the same defaults the dashboard would emit
+ * for an unbranded record.
+ */
+export const DEFAULT_WIDGET_CONFIG: Required<WidgetConfig> = createWidgetConfig();
+
+/**
+ * Project the dashboard's stored `WidgetTheme` onto a `Partial<BrandTheme>`
+ * overlay consumed by `<ThemeStyleTag overridesOnly>` in each app's
+ * `app/layout.tsx`. Only fields present on the input emit overrides;
+ * unspecified fields fall through to the static `--brand-*` declarations
+ * in the app's `globals.css` and then to `defaults.css`.
+ *
+ * Shared by every app whose stored config is the canonical `WidgetTheme`
+ * shape (wallet / deposit / shop / visa-direct / trade). Apps whose
+ * brand projection legitimately diverges (earn's richer `EarnTheme`,
+ * remittance's secondary-color gradient, checkouts' legacy `foreground`
+ * vs `foregroundColor` schema) keep their own kind-specific projector.
+ */
+export function widgetThemeToBrandTheme(
+  theme: Partial<WidgetTheme> = {},
+): Partial<BrandTheme> {
+  const overlay: Partial<BrandTheme> = {};
+
+  if (theme.primaryColor) {
+    overlay.primary = theme.primaryColor;
+    overlay.primaryHover =
+      theme.primaryHoverColor ?? darkenHex(theme.primaryColor, 12);
+    overlay.accent = theme.accentColor ?? theme.primaryColor;
+  } else if (theme.accentColor) {
+    overlay.accent = theme.accentColor;
+  }
+
+  if (theme.pageBackground) overlay.pageBackground = theme.pageBackground;
+  if (theme.background) overlay.surface = theme.background;
+  if (theme.foregroundColor) overlay.foreground = theme.foregroundColor;
+  if (theme.mutedTextColor) overlay.muted = theme.mutedTextColor;
+  if (theme.borderColor) overlay.border = theme.borderColor;
+  if (theme.rowBackground) overlay.rowBackground = theme.rowBackground;
+  if (theme.rowHoverBackground) overlay.rowHover = theme.rowHoverBackground;
+  if (theme.gradientFrom) overlay.cardGradientStart = theme.gradientFrom;
+  if (theme.gradientTo) overlay.cardGradientEnd = theme.gradientTo;
+
+  return overlay;
 }

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { Providers } from "./providers";
 import { RemittanceConfigProvider } from "@/contexts/remittance-config-context";
-import { getRemittanceConfig } from "@/lib/api/remittance-config";
-import { themeToBrandTheme } from "@/lib/remittance-config";
+import {
+  type RemittanceConfig,
+  themeToBrandTheme,
+} from "@/lib/remittance-config";
 
 import "./globals.css";
 
@@ -21,13 +24,17 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const configId = headersList.get("x-remittance-config-id");
-  const config = configId ? await getRemittanceConfig(configId) : null;
+  const config = await fetchDemoConfig<RemittanceConfig>({
+    demoType: "remittance",
+    id: configId,
+    fallback: {},
+  });
 
   // SSR theme injection (D-008): project the stored `WidgetTheme` onto a
   // `Partial<BrandTheme>` overlay and emit per-brand `--brand-*` overrides
   // in <head>. Unspecified fields fall through to
   // @dynamic-demos/theme/defaults.css. Zero FOUC, zero hydration mismatch.
-  const brandTheme = themeToBrandTheme(config?.config?.theme ?? {});
+  const brandTheme = themeToBrandTheme(config.theme ?? {});
 
   return (
     <html lang="en">
@@ -36,7 +43,7 @@ export default async function RootLayout({
       </head>
       <body>
         <Providers>
-          <RemittanceConfigProvider config={config?.config}>
+          <RemittanceConfigProvider config={config}>
             {children}
           </RemittanceConfigProvider>
         </Providers>

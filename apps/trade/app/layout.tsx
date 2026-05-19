@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { headers } from "next/headers";
+import { widgetThemeToBrandTheme } from "@dynamic-demos/theme";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { Providers } from "./providers";
-import { getTradeConfig } from "@/lib/api/trade-config";
 import { TradeConfigProvider } from "@/contexts/trade-config-context";
-import { themeToBrandTheme } from "@/lib/trade-brand";
+import type { TradeConfig } from "@/lib/trade-config";
 
 import "./globals.css";
 
@@ -34,14 +35,18 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const configId = headersList.get("x-trade-config-id");
-  const stored = configId ? await getTradeConfig(configId) : null;
+  const config = await fetchDemoConfig<TradeConfig>({
+    demoType: "trade",
+    id: configId,
+    fallback: {},
+  });
 
   // SSR theme injection (D-008): emit only the `--brand-*` overrides for the
   // tokens trade personalizes per brand. Everything else falls through to
   // trade's static `--brand-*` overrides in globals.css and the canonical
   // defaults in @dynamic-demos/theme/defaults.css. Zero FOUC, zero hydration
   // mismatch — the inline <style> beats client paint.
-  const brandTheme = themeToBrandTheme(stored?.config?.theme ?? {});
+  const brandTheme = widgetThemeToBrandTheme(config.theme ?? {});
 
   return (
     <html
@@ -54,7 +59,7 @@ export default async function RootLayout({
       </head>
       <body className="bg-trade-bg text-trade-text-primary font-sans antialiased">
         <Providers>
-          <TradeConfigProvider config={stored?.config}>
+          <TradeConfigProvider config={config}>
             {children}
           </TradeConfigProvider>
         </Providers>

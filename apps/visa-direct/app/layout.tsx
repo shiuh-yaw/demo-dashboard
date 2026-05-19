@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { widgetThemeToBrandTheme } from "@dynamic-demos/theme";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { Providers } from "./providers";
 import { VisaDirectConfigProvider } from "@/contexts/visa-direct-config-context";
-import { getVisaDirectConfig } from "@/lib/api/visa-direct-config";
-import {
-  DEFAULT_VISA_DIRECT_CONFIG,
-  type VisaDirectConfig,
-} from "@/lib/visa-direct-config";
-import { themeToBrandTheme } from "@/lib/visa-direct-brand";
+import { DEFAULT_VISA_DIRECT_CONFIG } from "@/lib/visa-direct-config";
 
 import "./globals.css";
 
@@ -25,18 +22,15 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const configId = headersList.get("x-visa-direct-config-id");
-  const stored = configId ? await getVisaDirectConfig(configId) : null;
-
-  const resolvedConfig: VisaDirectConfig = {
-    branding: {
-      ...DEFAULT_VISA_DIRECT_CONFIG.branding,
-      ...stored?.config.branding,
-    },
-    theme: {
-      ...DEFAULT_VISA_DIRECT_CONFIG.theme,
-      ...stored?.config.theme,
-    },
-  };
+  // visaDirectMapper.toStored already bakes brand colour + record
+  // themeOverrides into the returned config, so the shallow-merge inside
+  // fetchDemoConfig only needs the top-level (theme, branding) keys
+  // replaced atomically — no further deep merge required here.
+  const resolvedConfig = await fetchDemoConfig({
+    demoType: "visa-direct",
+    id: configId,
+    fallback: DEFAULT_VISA_DIRECT_CONFIG,
+  });
 
   // SSR theme injection (D-008): emit only the `--brand-*` overrides for
   // the tokens visa-direct personalizes per brand (primary, primary-hover,
@@ -44,7 +38,7 @@ export default async function RootLayout({
   // overrides in globals.css and to @dynamic-demos/theme/defaults.css
   // below that. Zero FOUC, zero hydration mismatch — the inline <style>
   // beats client paint.
-  const brandTheme = themeToBrandTheme(resolvedConfig.theme);
+  const brandTheme = widgetThemeToBrandTheme(resolvedConfig.theme);
 
   return (
     <html lang="en">

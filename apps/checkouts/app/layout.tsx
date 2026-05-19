@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Geist, Geist_Mono, DM_Sans } from "next/font/google";
 import { ThemeStyleTag } from "@dynamic-demos/theme";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 
 import Providers from "@/lib/providers";
 import { CheckoutsConfigProvider } from "@/contexts/checkouts-config-context";
-import { getCheckoutConfig } from "@/lib/api/checkouts";
+import { DEPOSIT_CONFIG } from "@/lib/widget-config";
 import { themeToBrandTheme } from "@/lib/checkouts-brand";
 
 import "@/globals.css";
@@ -58,8 +59,12 @@ interface RootLayoutProps {
 export default async function RootLayout({ children }: RootLayoutProps) {
   const headersList = await headers();
   const configId = headersList.get("x-checkouts-config-id");
-  const stored = configId ? await getCheckoutConfig(configId) : null;
-  const brandTheme = themeToBrandTheme(stored?.config?.theme ?? {});
+  const config = await fetchDemoConfig({
+    demoType: "checkout",
+    id: configId,
+    fallback: DEPOSIT_CONFIG,
+  });
+  const brandTheme = themeToBrandTheme(config.theme ?? {});
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -70,7 +75,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} font-sans antialiased bg-(--brand-page-bg)`}
       >
         <Providers>
-          <CheckoutsConfigProvider config={stored?.config ?? null}>
+          <CheckoutsConfigProvider config={config}>
             {children}
           </CheckoutsConfigProvider>
         </Providers>

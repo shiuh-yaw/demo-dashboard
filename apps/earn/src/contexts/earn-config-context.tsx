@@ -5,14 +5,13 @@
  *
  * Provides Earn configuration (theme, branding, layout) to all child
  * components. Hydrated once by the root `app/layout.tsx` from the result
- * of `getEarnConfig(headers().get("x-earn-config-id"))`.
+ * of `fetchDemoConfig({ demoType: "earn", id: headers().get("x-earn-config-id"), fallback: DEFAULT_EARN_CONFIG })`.
  *
- * The provider takes the raw `StoredEarnConfig` (or null for the default
- * route) and merges its `config.theme`/`config.branding`/`config.layout`
- * with package defaults. Title/description are sourced from
- * `branding.pageTitle`/`branding.pageDescription` (with stored
- * `name`/`description` as a soft fallback so dashboard-side names show up
- * in the page header without explicit branding overrides).
+ * The provider takes the resolved `EarnConfig` (always defined — the
+ * fetcher merges over `DEFAULT_EARN_CONFIG` on miss) plus an optional
+ * `configId` from the middleware header. Title/description come from
+ * `branding.pageTitle`/`pageDescription` (with branding defaults filling
+ * the gap when not explicitly set by the operator).
  */
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
@@ -20,7 +19,6 @@ import type {
   EarnBranding,
   EarnConfig,
   EarnLayout,
-  StoredEarnConfig,
 } from "@/lib/earn-config";
 import {
   DEFAULT_EARN_BRANDING,
@@ -38,11 +36,11 @@ interface EarnConfigContextValue {
   branding: BrandingWithDefaults;
   /** Layout settings with defaults applied */
   layout: Required<EarnLayout>;
-  /** The config ID (if loaded from API) */
+  /** The config ID (if forwarded by middleware). */
   configId?: string;
-  /** Title for the page (from stored config name + branding override) */
+  /** Title for the page (sourced from branding.pageTitle, with default). */
   title: string;
-  /** Description for the page (from stored config description + branding override) */
+  /** Description for the page (sourced from branding.pageDescription, with default). */
   description: string;
 }
 
@@ -51,11 +49,12 @@ const EarnConfigContext = createContext<EarnConfigContextValue | null>(null);
 interface EarnConfigProviderProps {
   children: ReactNode;
   /**
-   * The hydrated server-side config (or null for the default route).
-   * Replaces the previous `{ config, configId }` pair so the provider
-   * has a single source of truth for the per-config context.
+   * The resolved Earn config — always defined since the layout's
+   * `fetchDemoConfig` call merges over `DEFAULT_EARN_CONFIG` on miss.
    */
-  storedConfig: StoredEarnConfig | null;
+  config: EarnConfig;
+  /** Forwarded middleware header value, when present. */
+  configId?: string;
 }
 
 /**
@@ -63,11 +62,10 @@ interface EarnConfigProviderProps {
  */
 export function EarnConfigProvider({
   children,
-  storedConfig,
+  config,
+  configId,
 }: EarnConfigProviderProps) {
   const value = useMemo<EarnConfigContextValue>(() => {
-    const config = storedConfig?.config ?? {};
-
     const branding: BrandingWithDefaults = {
       ...DEFAULT_EARN_BRANDING,
       ...config.branding,
@@ -78,19 +76,9 @@ export function EarnConfigProvider({
       ...config.layout,
     };
 
-    // Stored name/description as a soft fallback for the page header.
-    // Branding's pageTitle/pageDescription still wins when set explicitly
-    // by the operator (DEFAULT_EARN_BRANDING fills these with "Earn" / the
-    // standard description, so the explicit-vs-default distinction is
-    // maintained by checking the stored config first).
-    const title =
-      storedConfig?.config?.branding?.pageTitle ??
-      storedConfig?.name ??
-      branding.pageTitle;
+    const title = config.branding?.pageTitle ?? branding.pageTitle;
     const description =
-      storedConfig?.config?.branding?.pageDescription ??
-      storedConfig?.description ??
-      branding.pageDescription;
+      config.branding?.pageDescription ?? branding.pageDescription;
 
     // Theme tokens are emitted as `--brand-*` CSS variables at SSR via
     // `<ThemeStyleTag>` in the root layout; components consume them as
@@ -100,11 +88,11 @@ export function EarnConfigProvider({
       config: { theme: config.theme, branding, layout },
       branding,
       layout,
-      configId: storedConfig?.id,
+      configId,
       title,
       description,
     };
-  }, [storedConfig]);
+  }, [config, configId]);
 
   return (
     <EarnConfigContext.Provider value={value}>
