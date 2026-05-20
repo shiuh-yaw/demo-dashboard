@@ -302,6 +302,13 @@
       }
     },
     {
+      "name": "@dynamic-demos/checkouts-widget",
+      "kind": "package",
+      "flow_role": "checkout",
+      "custody": "non-custodial",
+      "status": "stable"
+    },
+    {
       "name": "@dynamic-demos/coinbase-onramp",
       "kind": "package",
       "flow_role": "onramp",

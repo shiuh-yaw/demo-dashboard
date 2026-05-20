@@ -23,8 +23,11 @@ import {
   type WalletConnectCatalogWallet,
 } from "@/lib/dynamicClient";
 import { Skeleton, ListRow } from "@dynamic-demos/ui";
-import InfoBox from "./info-box";
-import ErrorBanner, { type ErrorInfo } from "./error-banner";
+import {
+  InfoBox,
+  ErrorBanner,
+  type ErrorInfo,
+} from "@dynamic-demos/checkouts-widget";
 import WcQrView, {
   isMobileDevice,
   getDeepLink,

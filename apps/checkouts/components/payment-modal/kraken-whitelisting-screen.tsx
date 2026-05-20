@@ -22,7 +22,7 @@ import { ExternalLink, Copy, Check, X } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { Button } from "@dynamic-demos/ui";
 import { KrakenLogo } from "@dynamic-demos/ui";
-import ErrorBanner from "./error-banner";
+import { ErrorBanner } from "@dynamic-demos/checkouts-widget";
 import type { WhitelistCheckResult } from "@/lib/exchanges";
 
 // =============================================================================

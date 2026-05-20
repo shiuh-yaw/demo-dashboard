@@ -12,6 +12,8 @@
 /* Include shared packages for Tailwind class scanning */
 @source "../../packages/ui/src/**/*.tsx";
 @source "../../packages/ui/src/**/*.ts";
+@source "../../packages/checkouts-widget/src/**/*.tsx";
+@source "../../packages/checkouts-widget/src/**/*.ts";
 
 @custom-variant dark (&:is(.dark *));
 

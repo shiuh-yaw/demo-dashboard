@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { ListRow } from "@dynamic-demos/ui";
-import ErrorBanner, { type ErrorInfo } from "./error-banner";
+import { ErrorBanner, type ErrorInfo } from "@dynamic-demos/checkouts-widget";
 import type { WalletConnectCatalogWallet } from "@/lib/dynamicClient";
 
 // =============================================================================

@@ -1,178 +1,21 @@
 /**
  * Type Definitions
  *
- * All type definitions for the payment widget project.
+ * App-level type definitions for the checkouts dashboard integration.
+ * Widget-only types (Token, ReviewQuote, ExecutionStatus, ExecutionUpdate)
+ * are re-exported from @dynamic-demos/checkouts-widget.
  */
 
 import type { WidgetConfig } from "./widget-config";
 
-// =============================================================================
-// TOKEN & ROUTE TYPES
-// =============================================================================
+export type {
+  Token,
+  ExecutionStatus,
+  ExecutionUpdate,
+  ReviewQuote,
+} from "@dynamic-demos/checkouts-widget";
 
-export interface Token {
-  address: string;
-  chainId: number;
-  symbol: string;
-  decimals: number;
-  name: string;
-  logoURI?: string;
-}
-
-export interface FeeCost {
-  name: string;
-  amountUSD: string;
-  included: boolean;
-}
-
-export interface Step {
-  id: string;
-  type: string;
-  tool: string;
-  action: {
-    fromChainId: number;
-    toChainId: number;
-    fromToken: Token;
-    toToken: Token;
-    fromAmount: string;
-  };
-  estimate: {
-    fromAmount: string;
-    toAmount: string;
-    toAmountMin: string;
-    gasCosts: { amountUSD: string }[];
-    feeCosts?: FeeCost[];
-  };
-}
-
-export interface Route {
-  id: string;
-  fromChainId: number;
-  toChainId: number;
-  fromToken: Token;
-  toToken: Token;
-  fromAmount: string;
-  toAmount: string;
-  fromAmountUSD: string;
-  toAmountUSD: string;
-  gasCostUSD: string;
-  steps: Step[];
-  /** Sender wallet address - required for LiFi SDK executeRoute validation */
-  fromAddress: string;
-  /** Recipient wallet address - required for LiFi SDK executeRoute validation */
-  toAddress: string;
-}
-
-export interface RouteResponse {
-  routes: Route[];
-  integrator: string;
-}
-
-// =============================================================================
-// QUOTE TYPES
-// =============================================================================
-
-export interface QuoteResult {
-  route: Route;
-  fromToken: Token;
-  toToken: Token;
-  /** Formatted from amount (human-readable, e.g., "0.5") */
-  fromAmount: string;
-  /** Formatted to amount (human-readable, e.g., "0.5") */
-  toAmount: string;
-  toAmountUsd: string;
-  /** Total fees in USD (gas + bridge/DEX fees + integrator fee) */
-  totalFeeUsd: string;
-  /** Integrator fee in USD (if configured) */
-  integratorFeeUsd?: string;
-  /** Integrator identifier from dashboard (for SDK configuration) */
-  integrator: string;
-}
-
-// =============================================================================
-// TRANSFER STATUS TYPES
-// =============================================================================
-
-export type TransferStatus =
-  | "NOT_FOUND"
-  | "INVALID"
-  | "PENDING"
-  | "DONE"
-  | "FAILED";
-
-export type TransferSubstatus =
-  | "WAIT_SOURCE_CONFIRMATIONS"
-  | "WAIT_DESTINATION_TRANSACTION"
-  | "BRIDGE_NOT_AVAILABLE"
-  | "CHAIN_NOT_AVAILABLE"
-  | "REFUND_IN_PROGRESS"
-  | "UNKNOWN_ERROR"
-  | "COMPLETED"
-  | "PARTIAL"
-  | "REFUNDED";
-
-export interface TransferStatusResult {
-  status: TransferStatus;
-  substatus?: TransferSubstatus;
-  substatusMessage?: string;
-  sending?: {
-    txHash: string;
-    txLink?: string;
-    amount: string;
-    chainId: number;
-  };
-  receiving?: {
-    txHash: string;
-    txLink?: string;
-    amount: string;
-    chainId: number;
-  };
-  lifiExplorerLink?: string;
-}
-
-// =============================================================================
-// REQUEST PARAMS
-// =============================================================================
-
-/**
- * Quote request params.
- * The widget always quotes by toAmount — "merchant wants to receive Y,
- * how much must the user send?"
- */
-export interface GetRoutesParams {
-  fromChainId: number;
-  toChainId: number;
-  fromTokenAddress: string;
-  toTokenAddress: string;
-  /** Desired amount in destination token (raw, e.g., wei) */
-  toAmount: string;
-  fromAddress: string;
-  toAddress: string;
-}
-
-// =============================================================================
-// EXECUTION TYPES
-// =============================================================================
-
-/** Status of a swap execution step */
-export type ExecutionStatus =
-  | "PENDING"
-  | "ACTION_REQUIRED"
-  | "RUNNING"
-  | "DONE"
-  | "FAILED";
-
-/** Update emitted during swap execution */
-export interface ExecutionUpdate {
-  stepIndex: number;
-  totalSteps: number;
-  processType?: string;
-  status: ExecutionStatus;
-  txHash?: string;
-  isBridging?: boolean;
-  isCrossChain?: boolean;
-  lifiExplorerLink?: string;
-}
+import type { Token } from "@dynamic-demos/checkouts-widget";
 
 // =============================================================================
 // CHECKOUT TYPES

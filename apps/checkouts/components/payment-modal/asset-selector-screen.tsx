@@ -29,7 +29,7 @@ import { formatUsd, truncateAddress } from "@/lib/format";
 import { type WidgetMode } from "@/lib/widget-config";
 import { ChevronDown } from "lucide-react";
 import { DollarCircleIcon } from "@/components/icons";
-import ScreenHeader from "./screen-header";
+import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { Skeleton, ListRow } from "@dynamic-demos/ui";
 import { getExchangeAdapter, EXCHANGES } from "@/lib/exchanges";
 import { getUserSocialAccounts } from "@/lib/dynamicClient";
@@ -424,7 +424,7 @@ export default function AssetSelectorScreen({
                 type="button"
                 onClick={() => setShowAllTokens(!showAllTokens)}
                 className={cn(
-                  "w-full py-2 mt-1",
+                  "w-full pt-[5px] pb-3",
                   "text-xs font-medium text-(--brand-muted)",
                   "hover:text-(--brand-accent) transition-colors",
                   "cursor-pointer",

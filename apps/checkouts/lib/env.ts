@@ -39,11 +39,21 @@ export const env = createEnv({
       .string()
       .url()
       .default("http://localhost:4000"),
+
+    /**
+     * Dynamic Checkout id (provisioned via the Dynamic REST API).
+     * Used as the `checkoutId` in createCheckoutTransaction. One Checkout
+     * per Dynamic env id for now; dashboard-managed per-widget provisioning
+     * is a future enhancement.
+     */
+    NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID: z.string().min(1).optional(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_DASHBOARD_API_URL: process.env.NEXT_PUBLIC_DASHBOARD_API_URL,
+    NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID:
+      process.env.NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID,
     NODE_ENV: process.env.NODE_ENV,
   },
 });

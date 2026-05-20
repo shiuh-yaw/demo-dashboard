@@ -3,13 +3,16 @@
 /**
  * Payment Actions Hook
  *
- * Orchestrates token selection, quote fetching, and payment execution.
- * Owns the LI.FI hook instance and unified error/loading state.
+ * Orchestrates token selection and dashboard-mirror error/loading state for
+ * the exchange (Kraken) path. The wallet-token path is delegated to
+ * `<PaymentWidget />` from `@dynamic-demos/checkouts-widget`, which owns its
+ * own Checkout Flow lifecycle (begin-checkout → quote → submit → settle).
  *
  * Architecture:
- * - Token selection + quote fetching: this file
+ * - Token selection (wallet pre-flight + exchange whitelisting): this file
  * - Recipient address resolution: this file
- * - Payment execution: ./use-payment-execution.ts
+ * - Exchange payment execution: ./use-payment-execution.ts
+ * - Wallet payment execution: <PaymentWidget /> (package-owned)
  *
  * @module components/payment-widget/use-payment-actions
  */
@@ -22,25 +25,12 @@ import {
   ensureEmbeddedWallet,
   type Chain,
 } from "@/lib/dynamicClient";
-import { useLiFi, type ExecutionUpdate } from "@/hooks/use-lifi";
-import {
-  getActiveExchangeAdapter,
-  resolveActiveExchangeKey,
-} from "@/lib/exchanges";
-import {
-  type WidgetConfig,
-  toRawSettlementAmount,
-  toLiFiChainId,
-} from "@/lib/widget-config";
+import type { ExecutionUpdate } from "@/lib/types";
+import { getActiveExchangeAdapter } from "@/lib/exchanges";
+import { type WidgetConfig } from "@/lib/widget-config";
 import { isExchangeToken, type TokenAsset } from "@/lib/balance-utils";
-import type { QuoteResult } from "@/lib/actions/lifi";
 import type { Transaction } from "@/lib/types";
-import type { TransactionStep } from "@/components/payment-modal/transaction-progress-screen";
-import {
-  needsTokenConversion,
-  getTokenAddress,
-  isImmutableQuoteStatus,
-} from "./utils";
+import type { TransactionStep } from "@dynamic-demos/checkouts-widget";
 import { usePaymentExecution } from "./use-payment-execution";
 
 // =============================================================================
@@ -77,13 +67,11 @@ interface UsePaymentActionsOptions {
 }
 
 interface UsePaymentActionsReturn {
-  /** LI.FI quote result */
-  quote: QuoteResult | null;
-  /** Whether a quote or exchange operation is loading */
+  /** Whether an exchange operation is loading */
   isLoading: boolean;
-  /** Whether swap is executing */
+  /** Whether an exchange transfer is executing */
   isExecuting: boolean;
-  /** Error message (quote, swap, or exchange) */
+  /** Error message (exchange) */
   error: string | null;
   /** Clear current error */
   clearError: () => void;
@@ -91,7 +79,7 @@ interface UsePaymentActionsReturn {
   reset: () => void;
   /** Handle token selection from asset screen */
   handleTokenSelect: (token: TokenAsset) => Promise<void>;
-  /** Handle payment confirmation from review screen */
+  /** Handle payment confirmation from review screen (exchange-only) */
   handleConfirmPayment: (currentScreen: {
     type: "review";
     amount: number;
@@ -124,35 +112,17 @@ export function usePaymentActions(
     resolveDestinationAddress,
   } = options;
 
-  // LI.FI swap/quote handling
-  const {
-    quote,
-    isLoading: isQuoteLoading,
-    isExecuting,
-    error: lifiError,
-    getTransactionQuote: getTransactionQuoteFromHook,
-    executeSwap,
-    executeDirectTransfer,
-    executeSolanaTransfer,
-    clearError: clearLifiError,
-    reset: resetLifi,
-  } = useLiFi();
-
   // Exchange-specific state
   const [exchangeError, setExchangeError] = useState<string | null>(null);
   const [isExchangeLoading, setIsExchangeLoading] = useState(false);
 
-  // Combined error and reset for consumers (LI.FI or exchange)
-  const error = exchangeError || lifiError;
   const clearError = useCallback(() => {
     setExchangeError(null);
-    clearLifiError();
-  }, [clearLifiError]);
+  }, []);
   const reset = useCallback(() => {
     setExchangeError(null);
     setIsExchangeLoading(false);
-    resetLifi();
-  }, [resetLifi]);
+  }, []);
 
   // Embedded wallet address - state for reactivity, ref for deduplication
   const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<
@@ -203,19 +173,12 @@ export function usePaymentActions(
   );
 
   // ===========================================================================
-  // PAYMENT EXECUTION (delegated)
+  // PAYMENT EXECUTION (delegated — Kraken only; wallet path runs in PaymentWidget)
   // ===========================================================================
 
   const { handleConfirmPayment } = usePaymentExecution({
     config,
     activeExchangeKey,
-    lifi: {
-      quote,
-      executeSwap,
-      executeDirectTransfer,
-      executeSolanaTransfer,
-      getTransactionQuote: getTransactionQuoteFromHook,
-    },
     getRecipientAddress,
     goToProcessing,
     updateProcessingSteps,
@@ -230,8 +193,15 @@ export function usePaymentActions(
   // ===========================================================================
 
   /**
-   * Handle token selection - switch chain if needed, fetch quote, navigate to review.
-   * Protected against race conditions from rapid successive calls.
+   * Handle token selection.
+   *
+   * Exchange tokens: check whitelisting (route to whitelist screen if needed),
+   * otherwise navigate straight to review.
+   *
+   * Wallet tokens: pre-switch the chain + pre-resolve the embedded wallet
+   * address (UX nicety so PaymentWidget renders with a usable
+   * `destinationAddress` and a ready-to-sign network), then navigate to
+   * review where `<PaymentWidget />` mounts and owns the rest of the flow.
    */
   const handleTokenSelect = useCallback(
     async (token: TokenAsset) => {
@@ -243,7 +213,6 @@ export function usePaymentActions(
       // Clear any leftover errors from previous operations
       setExchangeError(null);
 
-      const { settlement } = config;
       const paymentAmount = getCurrentAmount();
 
       if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
@@ -251,7 +220,7 @@ export function usePaymentActions(
       }
 
       // =================================================================
-      // EXCHANGE TOKEN PATH — skip wallet/chain/LI.FI, go straight to review
+      // EXCHANGE TOKEN PATH — go straight to review (no Checkout Flow)
       // =================================================================
       if (isExchangeToken(token)) {
         const exchange = getActiveExchangeAdapter(activeExchangeKey);
@@ -288,16 +257,13 @@ export function usePaymentActions(
       }
 
       // =================================================================
-      // WALLET TOKEN PATH
+      // WALLET TOKEN PATH — delegated to <PaymentWidget />
       // =================================================================
-      const needsConversion = needsTokenConversion(token, settlement);
-
       const primaryWallet = getPrimaryWalletAccount();
-      if (!primaryWallet?.address) {
-        return;
-      }
+      if (!primaryWallet?.address) return;
 
-      // Switch to the token's chain if needed
+      // Pre-switch the chain so the user doesn't see a "wrong network"
+      // toast when PaymentWidget calls submit. UX nicety only.
       const { networkId: activeNetworkId } = await getActiveNetworkId({
         walletAccount: primaryWallet,
       });
@@ -314,92 +280,33 @@ export function usePaymentActions(
         }
       }
 
-      // Check if operation was cancelled
       if (abortController.signal.aborted) return;
 
-      // Pre-fetch embedded wallet address for review screen display
+      // Pre-resolve embedded-wallet address so PaymentWidget receives a
+      // ready destinationAddress synchronously at render time.
       if (config.depositDestination === "embedded") {
         await getRecipientAddress(primaryWallet.address);
       }
 
-      // If no conversion needed, go directly to review
-      if (!needsConversion || !settlement) {
-        if (!abortController.signal.aborted) {
-          goToReview(paymentAmount, token);
-        }
-        return;
-      }
-
-      // Quote by toAmount: desired output in destination token (what the merchant receives).
-      const rawToAmount = toRawSettlementAmount(
-        paymentAmount,
-        settlement.decimals,
-      );
-
-      // Fetch quote
-      const recipientAddress = await getRecipientAddress(primaryWallet.address);
-
-      // Check if operation was cancelled before making API call
       if (abortController.signal.aborted) return;
 
-      const swapParams = {
-        fromChainId: toLiFiChainId(token.chainId),
-        toChainId: toLiFiChainId(settlement.chainId),
-        fromTokenAddress: getTokenAddress(token),
-        toTokenAddress: settlement.tokenAddress,
-        toAmount: rawToAmount,
-        fromAddress: primaryWallet.address,
-        toAddress: recipientAddress,
-      };
-
-      // Always use transaction-scoped quote endpoint
-      // Transactions are initialized on login, so we should always have one
-      if (!trackedTransaction) {
-        throw new Error(
-          "Transaction not initialized. Please ensure you are logged in.",
-        );
-      }
-
-      if (isImmutableQuoteStatus(trackedTransaction.status)) {
-        throw new Error(
-          `Cannot get quote for transaction with status "${trackedTransaction.status}". Transaction is already in progress or completed.`,
-        );
-      }
-
-      // Use transaction-scoped quote endpoint (fetches quote AND stores route data atomically)
-      // This also updates the quote state in useLiFi hook for UI consumption
-      const quoteResult = await getTransactionQuoteFromHook(
-        checkoutId,
-        trackedTransaction.id,
-        swapParams,
-      );
-
-      // Check if operation was cancelled after API call
-      if (abortController.signal.aborted) return;
-
-      if (quoteResult) {
-        goToReview(paymentAmount, token);
-      }
+      goToReview(paymentAmount, token);
     },
     [
       config,
       activeExchangeKey,
       getCurrentAmount,
       getRecipientAddress,
-      getTransactionQuoteFromHook,
       goToReview,
       goToExchangeWhitelisting,
       resolveDestinationAddress,
-      trackedTransaction,
-      checkoutId,
     ],
   );
 
   return {
-    quote,
-    isLoading: isQuoteLoading || isExchangeLoading,
-    isExecuting,
-    error,
+    isLoading: isExchangeLoading,
+    isExecuting: false,
+    error: exchangeError,
     clearError,
     reset,
     handleTokenSelect,

@@ -19,32 +19,87 @@
  */
 
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
-import { logout, ensureEmbeddedWallet } from "@/lib/dynamicClient";
+import { logout, ensureEmbeddedWallet, getPrimaryWalletAccount } from "@/lib/dynamicClient";
 import { useTransaction } from "@/hooks/use-transaction";
-import { cancelTransaction } from "@/lib/api/transactions";
+import {
+  cancelTransaction,
+  failTransaction,
+} from "@/lib/api/transactions";
+import { env } from "@/lib/env";
 import { useWidgetNavigation } from "./use-navigation";
 import { usePaymentActions } from "./use-payment-actions";
 import { useExchangeOAuth } from "./use-exchange-oauth";
 import type { Transaction } from "@/lib/types";
+import type { TokenAsset } from "@/lib/balance-utils";
+import { isExchangeToken } from "@/lib/balance-utils";
 import ConnectWalletScreen from "../connect-wallet-screen";
 import AssetSelectorScreen from "@/components/payment-modal/asset-selector-screen";
 import ConnectedWalletsScreen from "@/components/payment-modal/connected-wallets-screen";
-import DepositAmountScreen from "@/components/payment-modal/deposit-amount-screen";
+import {
+  DepositAmountScreen,
+  PaymentWidget as CheckoutsPaymentWidget,
+  type Token,
+} from "@dynamic-demos/checkouts-widget";
 import KrakenWhitelistingScreen from "@/components/payment-modal/kraken-whitelisting-screen";
 import { WidgetCard } from "@dynamic-demos/ui";
 import { ReviewScreen } from "./screens/review-screen";
 import { ProcessingScreen } from "./screens/processing-screen";
 import {
   type WidgetConfig,
+  type SettlementConfig,
   type TransactionConfig,
   createWidgetConfig,
 } from "@/lib/widget-config";
-import { getHeaderConfig, isCancellableStatus } from "./utils";
+import {
+  getHeaderConfig,
+  isCancellableStatus,
+  needsTokenConversion,
+} from "./utils";
 import {
   EXCHANGES,
   getExchangeAdapter,
   resolveActiveExchangeKey,
 } from "@/lib/exchanges";
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+/**
+ * Fixed height for the wallet-flow WidgetCards. PaymentWidget itself enforces
+ * h-[30rem] internally; the host applies the same fixed height to the assets
+ * card and the pre-mount loading card so the entire flow stays the same size
+ * across every transition (asset-pick → quote-loading → review → processing).
+ */
+const WALLET_FLOW_MIN_H = "h-[27rem]";
+
+/** Map host `TokenAsset` → package `Token` shape. */
+function toPackageToken(asset: TokenAsset): Token {
+  return {
+    address: asset.tokenAddress ?? "",
+    chainId: asset.chainId,
+    symbol: asset.symbol,
+    decimals: asset.decimals,
+    name: asset.name ?? asset.symbol,
+    logoURI: asset.iconUrl,
+  };
+}
+
+/** Map host `SettlementConfig` → package `Token` shape. */
+function settlementToPackageToken(
+  settlement: SettlementConfig | undefined,
+): Token {
+  if (!settlement) {
+    return { address: "", chainId: 0, symbol: "USD", decimals: 6, name: "USD" };
+  }
+  return {
+    address: settlement.tokenAddress,
+    chainId: settlement.chainId,
+    symbol: settlement.tokenSymbol ?? "USD",
+    decimals: settlement.decimals,
+    name: settlement.tokenSymbol ?? "USD",
+  };
+}
 
 // =============================================================================
 // PROPS
@@ -148,6 +203,10 @@ export default function PaymentWidget({
   // Track previous loggedIn state to detect login transition
   const prevLoggedInRef = useRef(loggedIn);
 
+  // Guard rails for the PaymentWidget callbacks: status-map emits txHash on
+  // every poll snapshot, but the dashboard mirror only needs the first one.
+  const txHashSubmittedRef = useRef(false);
+
   // Initialize transaction when:
   // 1. User logs in (transition from false → true)
   // 2. User is logged in and transaction is reset (e.g., after completing a deposit)
@@ -195,7 +254,6 @@ export default function PaymentWidget({
 
   // Payment actions (quotes, swaps, transfers)
   const {
-    quote,
     isLoading,
     isExecuting,
     error,
@@ -217,6 +275,29 @@ export default function PaymentWidget({
     goToExchangeWhitelisting,
     resolveDestinationAddress,
   });
+
+  // ===========================================================================
+  // DERIVED VALUES (wallet-path delegate to <PaymentWidget />)
+  // ===========================================================================
+
+  // Resolve the primary wallet from Dynamic's SDK singleton. Read each render;
+  // PaymentWidget's begin-checkout effect is keyed on stage transitions, not on
+  // walletAccount identity, so a fresh reference each render is safe.
+  const primaryWallet = getPrimaryWalletAccount();
+
+  // PaymentWidget needs a synchronous string destination address. The
+  // embedded-wallet branch is pre-resolved in usePaymentActions.handleTokenSelect,
+  // so `embeddedWalletAddress` is set by the time we reach this render.
+  const resolvedDestinationAddress: string | null = useMemo(() => {
+    if (config.depositDestination === "embedded") {
+      return embeddedWalletAddress ?? null;
+    }
+    return config.recipientAddress ?? null;
+  }, [
+    config.depositDestination,
+    config.recipientAddress,
+    embeddedWalletAddress,
+  ]);
 
   // ===========================================================================
   // EVENT HANDLERS
@@ -388,7 +469,10 @@ export default function PaymentWidget({
 
       {/* Assets */}
       {screen.type === "assets" && loggedIn && (
-        <WidgetCard isTransitioning={isTransitioning}>
+        <WidgetCard
+          isTransitioning={isTransitioning}
+          className={WALLET_FLOW_MIN_H}
+        >
           <AssetSelectorScreen
             mode={config.mode}
             paymentAmount={screen.amount}
@@ -405,25 +489,120 @@ export default function PaymentWidget({
         </WidgetCard>
       )}
 
-      {/* Review Payment */}
-      {screen.type === "review" && loggedIn && (
-        <ReviewScreen
-          amount={screen.amount}
-          token={screen.token}
-          config={config}
-          quote={quote}
-          embeddedWalletAddress={embeddedWalletAddress}
-          isExecuting={isExecuting || isLoading}
-          error={error}
-          isTransitioning={isTransitioning}
-          onConfirm={handleConfirm}
-          onBack={goBackToAssets}
-          onClose={config.mode === "deposit" ? goToDepositAmount : handleLogout}
-          onClearError={clearError}
-        />
-      )}
+      {/*
+        Wallet token path — the entire amount/review/processing/done
+        lifecycle is owned by <PaymentWidget /> from
+        @dynamic-demos/checkouts-widget. The host's screen.type stays at
+        "review" while PaymentWidget cycles through its own internal stages.
+      */}
+      {screen.type === "review" &&
+        loggedIn &&
+        !isExchangeToken(screen.token) &&
+        (!resolvedDestinationAddress || !primaryWallet) && (
+          <WidgetCard
+            isTransitioning={isTransitioning}
+            className={WALLET_FLOW_MIN_H}
+          >
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <div className="w-8 h-8 border-2 border-(--brand-accent) border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-(--brand-muted)">
+                Preparing payment…
+              </p>
+            </div>
+          </WidgetCard>
+        )}
 
-      {/* Transaction Processing */}
+      {screen.type === "review" &&
+        loggedIn &&
+        !isExchangeToken(screen.token) &&
+        resolvedDestinationAddress &&
+        primaryWallet && (
+          <WidgetCard
+            isTransitioning={isTransitioning}
+            className={WALLET_FLOW_MIN_H}
+          >
+            <CheckoutsPaymentWidget
+              checkoutId={env.NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID ?? ""}
+              walletAccount={primaryWallet}
+              currency={config.settlement?.tokenSymbol ?? "USD"}
+              destinationAddress={resolvedDestinationAddress}
+              destinationChain={config.settlement?.chain ?? "EVM"}
+              fromToken={toPackageToken(screen.token)}
+              destinationToken={settlementToPackageToken(config.settlement)}
+              needsConversion={needsTokenConversion(
+                screen.token,
+                config.settlement,
+              )}
+              isCrossChain={screen.token.chainId !== config.settlement?.chainId}
+              amount={String(screen.amount)}
+              storageNamespace={env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID}
+              memo={{
+                externalId: trackedTransaction?.externalId,
+                widgetMetadata: trackedTransaction?.metadata,
+              }}
+              onExecutionUpdate={(update) => {
+                // Mirror the FIRST txHash only — status-map re-emits the hash
+                // on every poll tick and the dashboard mirror just needs the
+                // initial broadcast signal. Hard-failure mirroring is owned by
+                // onError so we don't double-POST failTransaction.
+                if (
+                  update.txHash &&
+                  trackedTransaction &&
+                  !txHashSubmittedRef.current
+                ) {
+                  txHashSubmittedRef.current = true;
+                  submitTrackedTransaction(update.txHash);
+                }
+              }}
+              onCancelled={() => {
+                // Reset so a retry's first txHash still mirrors to the dashboard.
+                txHashSubmittedRef.current = false;
+                if (trackedTransaction) {
+                  cancelTransaction(checkoutId, trackedTransaction.id).catch(
+                    () => {},
+                  );
+                }
+                // Unmount the widget — host owns navigation, not PaymentWidget.
+                goToAssets(getCurrentAmount());
+              }}
+              onError={(err) => {
+                if (trackedTransaction) {
+                  failTransaction(
+                    checkoutId,
+                    trackedTransaction.id,
+                    err.message,
+                  ).catch(() => {});
+                }
+              }}
+            />
+          </WidgetCard>
+        )}
+
+      {/* Exchange (Kraken) token path — keeps the existing host review wrapper */}
+      {screen.type === "review" &&
+        loggedIn &&
+        isExchangeToken(screen.token) && (
+          <ReviewScreen
+            amount={screen.amount}
+            token={screen.token}
+            config={config}
+            quote={null}
+            embeddedWalletAddress={embeddedWalletAddress}
+            isExecuting={isExecuting || isLoading}
+            error={error}
+            isTransitioning={isTransitioning}
+            onConfirm={handleConfirm}
+            onBack={goBackToAssets}
+            onClose={config.mode === "deposit" ? goToDepositAmount : handleLogout}
+            onClearError={clearError}
+          />
+        )}
+
+      {/*
+        Transaction Processing — exchange path only. The wallet path never
+        transitions screen.type to "processing"; PaymentWidget renders its
+        own progress screen while the host stays at "review".
+      */}
       {screen.type === "processing" && loggedIn && (
         <ProcessingScreen
           amount={screen.amount}
@@ -431,7 +610,7 @@ export default function PaymentWidget({
           steps={screen.steps}
           explorerLink={screen.explorerLink}
           config={config}
-          quote={quote}
+          quote={null}
           error={error}
           isTransitioning={isTransitioning}
           onClose={handleProcessingClose}

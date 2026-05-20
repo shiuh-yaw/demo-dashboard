@@ -45,6 +45,12 @@
 |---|---|---|---|
 | `dynamic` | Dynamic SDK (first-party) | n/a | stable |
 
+## Checkout providers
+
+| Package | Provider | custody | status |
+|---|---|---|---|
+| `checkouts-widget` | — | non-custodial | stable |
+
 ## Theming primitives
 
 | Package | Provider | custody | status |

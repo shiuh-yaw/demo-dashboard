@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -19,6 +20,11 @@ export default defineConfig({
         "0x0000000000000000000000000000000000000000",
       SETTLEMENT_SOL_ADDRESS:
         process.env.SETTLEMENT_SOL_ADDRESS ?? "11111111111111111111111111111111",
+    },
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "."),
     },
   },
 });

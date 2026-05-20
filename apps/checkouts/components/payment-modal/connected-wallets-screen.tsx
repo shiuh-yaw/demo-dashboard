@@ -25,7 +25,7 @@ import { cn } from "@dynamic-demos/utils";
 import { truncateAddress } from "@/lib/format";
 import { Plus, Check, Trash2, LogOut } from "lucide-react";
 import { WalletIcon } from "@/components/icons";
-import ScreenHeader from "./screen-header";
+import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { getUserSocialAccounts } from "@/lib/dynamicClient";
 import { EXCHANGES } from "@/lib/exchanges";
 import type { ExchangeAdapter } from "@/lib/exchanges";

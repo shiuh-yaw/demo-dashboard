@@ -15,13 +15,14 @@ import { cn } from "@dynamic-demos/utils";
 import { Check, AlertCircle, ExternalLink } from "lucide-react";
 import ScreenHeader from "./screen-header";
 import TokenConversionCard, { type TokenInfo } from "./token-conversion-card";
-import { type WidgetMode } from "@/lib/widget-config";
 import { Button } from "@dynamic-demos/ui";
-import {
-  AnimatedClockIcon,
-  PendingStepIcon,
-  CashIcon,
-} from "@/components/icons";
+import { AnimatedClockIcon, PendingStepIcon, CashIcon } from "./icons";
+
+/** The action noun — any string. See PaymentWidget docs for examples. */
+type WidgetMode = string;
+
+const capitalize = (s: string) =>
+  s.length === 0 ? s : s[0]!.toUpperCase() + s.slice(1);
 
 export type StepStatus = "pending" | "active" | "completed" | "failed";
 
@@ -89,7 +90,7 @@ export default function TransactionProgressScreen({
   onClose,
   onRetry,
 }: TransactionProgressScreenProps) {
-  const actionLabel = mode === "deposit" ? "Deposit" : "Payment";
+  const actionLabel = capitalize(mode);
 
   // Check if all steps are completed
   const isCompleted = steps.every((step) => step.status === "completed");
@@ -99,7 +100,7 @@ export default function TransactionProgressScreen({
   const explorerUrl = explorerLink || null;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full flex-1">
       <ScreenHeader
         icon={<CashIcon size={18} className="text-(--brand-fg)" />}
         title={
@@ -113,20 +114,102 @@ export default function TransactionProgressScreen({
         showClosePlaceholder={!(isCompleted || hasFailed)}
       />
 
-      {/* Token Conversion Section */}
-      <div className="p-3">
-        <TokenConversionCard
-          sourceToken={sourceToken}
-          destinationToken={destinationToken}
-        />
-      </div>
+      {/* Token Conversion Section — hidden on the completion + failure
+          screens since the summary calls out the relevant info. */}
+      {!isCompleted && !hasFailed && (
+        <div className="p-3 border-b border-(--brand-border)">
+          <TokenConversionCard
+            sourceToken={sourceToken}
+            destinationToken={destinationToken}
+          />
+        </div>
+      )}
 
-      {/* Divider */}
-      <div className="border-t border-(--brand-border)" />
+      {/* Body — completed flow renders a centered success summary; failed
+          flow renders a centered failure summary (collapsing the step list
+          so the error banner + retry actions get more room); in-flight
+          renders the per-step progress list. */}
+      {isCompleted ? (
+        <div className="flex-1 relative overflow-hidden flex flex-col items-center justify-center px-6 text-center">
+          {/* Atmospheric gradient — uses the same brand vars as the token
+              card so the success state feels of-a-piece with review/processing. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none opacity-80"
+            style={{
+              background:
+                "radial-gradient(120% 80% at 50% 0%, var(--brand-card-gradient-start), transparent 60%), radial-gradient(80% 60% at 50% 100%, var(--brand-card-gradient-end), transparent 70%)",
+            }}
+          />
 
-      {/* Progress Steps */}
-      <div className="p-3">
-        <div className="border border-(--brand-border) rounded-(--brand-radius) p-3">
+          <div className="relative flex flex-col items-center gap-4">
+            {/* Flat token avatar + check badge — no shadows, no halo. */}
+            <div className="relative flex items-center justify-center animate-in fade-in zoom-in-95 duration-500 ease-out">
+              <div className="w-12 h-12 rounded-full bg-(--brand-row-bg) flex items-center justify-center overflow-hidden">
+                {destinationToken?.iconUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={destinationToken.iconUrl}
+                    alt={destinationToken.symbol}
+                    className="w-8 h-8 rounded-full object-contain"
+                  />
+                ) : (
+                  <Check
+                    className="w-6 h-6 text-(--brand-fg)"
+                    strokeWidth={2.5}
+                  />
+                )}
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#46B463] flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+              </div>
+            </div>
+
+            {/* Hero amount — tabular-nums so digits don't jitter */}
+            {destinationToken && (
+              <div className="flex flex-col items-center gap-0.5 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out delay-100">
+                <div className="flex items-baseline gap-1.5 [font-variant-numeric:tabular-nums]">
+                  <span className="text-[28px] font-semibold leading-none tracking-[-0.5px] text-(--brand-fg)">
+                    {destinationToken.amount}
+                  </span>
+                  <span className="text-sm font-medium text-(--brand-muted) tracking-[0.08em] uppercase">
+                    {destinationToken.symbol}
+                  </span>
+                </div>
+                {destinationToken.usdValue && (
+                  <span className="text-xs text-(--brand-muted) tracking-[-0.12px]">
+                    ≈ {destinationToken.usdValue}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Status caption — small, hairline divider above */}
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out delay-200">
+              <span className="h-px w-6 bg-(--brand-border)" />
+              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-(--brand-muted)">
+                {actionLabel} settled
+              </span>
+              <span className="h-px w-6 bg-(--brand-border)" />
+            </div>
+          </div>
+        </div>
+      ) : hasFailed ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertCircle className="w-5 h-5 text-red-500" strokeWidth={2} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <h3 className="text-base font-medium text-(--brand-fg) tracking-[-0.16px]">
+              {actionLabel} failed
+            </h3>
+            <p className="text-sm text-(--brand-muted) tracking-[-0.14px]">
+              Something went wrong. You can try again or close this window.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="p-3">
           <div className="flex flex-col">
             {steps.map((step, index) => {
               const isLast = index === steps.length - 1;
@@ -134,7 +217,7 @@ export default function TransactionProgressScreen({
               const lineIsGreen = step.status === "completed";
 
               return (
-                <div key={step.id} className="flex items-stretch gap-3">
+                <div key={step.id} className="flex items-stretch gap-2.5">
                   {/* Icon column with connecting line */}
                   <div className="flex flex-col items-center">
                     <div className="pt-0.5">
@@ -152,7 +235,7 @@ export default function TransactionProgressScreen({
                   </div>
                   {/* Content */}
                   <div
-                    className={cn("flex flex-col gap-0.5", !isLast && "pb-4")}
+                    className={cn("flex flex-col", !isLast && "pb-4")}
                   >
                     <span className="text-sm font-medium tracking-[-0.14px] leading-5 text-(--brand-fg)">
                       {step.title}
@@ -166,7 +249,7 @@ export default function TransactionProgressScreen({
             })}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -221,8 +304,8 @@ export function generateTransactionSteps(
   destinationSymbol: string,
   walletName?: string,
 ): TransactionStep[] {
-  const isDeposit = mode === "deposit";
   const walletLabel = walletName || "your wallet";
+  const modeLower = mode.toLowerCase();
 
   const steps: TransactionStep[] = [];
 
@@ -237,7 +320,7 @@ export function generateTransactionSteps(
 
   steps.push({
     id: "authorize",
-    title: isDeposit ? "Authorize deposit" : "Authorize payment",
+    title: `Authorize ${modeLower}`,
     description: `Confirm in ${walletLabel}`,
     status: "pending",
   });
@@ -253,10 +336,8 @@ export function generateTransactionSteps(
 
   steps.push({
     id: "complete",
-    title: isDeposit ? "Complete deposit" : "Complete purchase",
-    description: isDeposit
-      ? `${destinationSymbol} is added to your account`
-      : `Merchant receives ${destinationSymbol}`,
+    title: `Complete ${modeLower}`,
+    description: `${destinationSymbol} settled`,
     status: "pending",
   });
 
@@ -339,6 +420,16 @@ export function updateTransactionSteps(
     } else if (authorizeIdx >= 0 && status !== "DONE") {
       // No dedicated approve step - approval is part of authorize
       setStepStatus(steps, authorizeIdx, "active");
+    }
+    return steps;
+  }
+
+  // Handle TRANSFER (same-token same-chain) — only authorize + complete steps
+  if (processType === "TRANSFER") {
+    if (status === "ACTION_REQUIRED" || status === "RUNNING") {
+      if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "active");
+    } else if (status === "DONE") {
+      return steps.map((s) => ({ ...s, status: "completed" as const }));
     }
     return steps;
   }

@@ -7,10 +7,9 @@
  * @module components/payment-widget/utils
  */
 
-import type { QuoteResult } from "@/lib/actions/lifi";
-import type { TokenInfo } from "@/components/payment-modal/token-conversion-card";
+import type { ReviewQuote } from "@/lib/types";
+import type { TokenInfo, TransactionStep } from "@dynamic-demos/checkouts-widget";
 import type { TokenAsset } from "@/lib/balance-utils";
-import type { TransactionStep } from "@/components/payment-modal/transaction-progress-screen";
 import type { WalletGroup } from "@/components/connect-wallet-screen";
 import { NATIVE_TOKEN_ADDRESS } from "@/lib/config";
 import { formatUsd } from "@/lib/format";
@@ -40,24 +39,6 @@ export function isCancellableStatus(status: TransactionStatus): boolean {
   return CANCELLABLE_STATUSES.includes(status);
 }
 
-/**
- * Transaction statuses that do not allow getting a new quote.
- * Backend addRouteData() only allows: initialized, draft, cancelled, failed.
- */
-export const IMMUTABLE_QUOTE_STATUSES: readonly TransactionStatus[] = [
-  Status.SUBMITTED,
-  Status.PENDING,
-  Status.CONFIRMED,
-  Status.EXPIRED,
-  Status.ABANDONED,
-] as const;
-
-/** Check if a transaction cannot accept a new quote */
-export function isImmutableQuoteStatus(
-  status: TransactionStatus,
-): status is (typeof IMMUTABLE_QUOTE_STATUSES)[number] {
-  return (IMMUTABLE_QUOTE_STATUSES as readonly string[]).includes(status);
-}
 
 // =============================================================================
 // SCREEN TYPES
@@ -149,27 +130,32 @@ export function getTokenAddress(token: TokenAsset): string {
 
 /**
  * Build source token display info for review/processing screens.
+ * Prefers the balance-loader's iconUrl (CoinGecko-backed, generally
+ * allowlist-friendly). Falls back to the Checkout Flow quote's logoURI
+ * (Trust Wallet CDN, which some adblockers / corporate networks block)
+ * only when the balance loader didn't carry an icon.
  */
 export function buildSourceTokenInfo(
   token: TokenAsset,
   amount: string,
   usdValue: string,
+  quote?: ReviewQuote | null,
 ): TokenInfo {
   return {
     name: token.name,
     symbol: token.symbol,
     amount,
     usdValue,
-    iconUrl: token.iconUrl,
+    iconUrl: token.iconUrl ?? quote?.fromToken.logoURI,
   };
 }
 
 /**
  * Build destination token display info from quote.
  */
-export function buildDestinationTokenInfo(quote: QuoteResult): TokenInfo {
+export function buildDestinationTokenInfo(quote: ReviewQuote): TokenInfo {
   return {
-    name: quote.toToken.name,
+    name: quote.toToken.name ?? quote.toToken.symbol,
     symbol: quote.toToken.symbol,
     amount: parseFloat(quote.toAmount).toFixed(2),
     usdValue: formatUsd(parseFloat(quote.toAmountUsd)),
@@ -181,7 +167,7 @@ export function buildDestinationTokenInfo(quote: QuoteResult): TokenInfo {
  * Calculate source amount for display.
  */
 export function getSourceAmount(
-  quote: QuoteResult | null,
+  quote: ReviewQuote | null,
   isSameToken: boolean,
   paymentAmount: number,
 ): string {
@@ -195,7 +181,7 @@ export function getSourceAmount(
  */
 export function calculateFeeBreakdown(
   paymentAmount: number,
-  quote: QuoteResult | null,
+  quote: ReviewQuote | null,
   isSameToken: boolean,
 ): {
   feeUsd: number;

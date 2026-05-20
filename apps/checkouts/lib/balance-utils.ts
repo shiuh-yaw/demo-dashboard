@@ -16,9 +16,9 @@
  *
  * ## Chain ID Support
  *
- * Supports both EVM and Solana chains:
+ * Supports both EVM and Solana chains using Dynamic network IDs:
  * - EVM chains use standard chain IDs (1 for Ethereum, 8453 for Base, etc.)
- * - Solana uses chain ID 1151111081099710 (LI.FI convention)
+ * - Solana uses the Dynamic network ID (DYNAMIC_SOLANA_NETWORK_ID from widget-config)
  *
  * ## Usage
  *
@@ -43,7 +43,6 @@
  * ```
  */
 
-import { toDynamicNetworkId } from "./widget-config";
 
 // =============================================================================
 // TYPES
@@ -141,7 +140,7 @@ export function isExchangeToken(token: TokenAsset): boolean {
  * Find a specific token balance from multichain balance response.
  *
  * @param response - Response from getMultichainBalances (can be array or object)
- * @param chainId - Network chain ID to filter by (supports both LI.FI and Dynamic IDs)
+ * @param chainId - Dynamic network ID to filter by
  * @param tokenAddress - Token contract address (undefined for native token)
  * @returns Parsed token balance or null if not found
  */
@@ -155,12 +154,9 @@ export function findTokenBalance(
     ? response
     : (response as MultichainBalanceResponse)?.chainBalances || [];
 
-  // Convert to Dynamic network ID if LI.FI chain ID was passed (e.g., Solana)
-  const dynamicNetworkId = toDynamicNetworkId(chainId);
-
   for (const chain of chainBalances) {
     for (const network of chain.networks || []) {
-      if (network.networkId !== dynamicNetworkId) continue;
+      if (network.networkId !== chainId) continue;
 
       for (const token of network.balances || []) {
         const isMatch = tokenAddress
@@ -213,7 +209,7 @@ export function getTotalBalanceValue(
  * Get all token balances from a specific network.
  *
  * @param response - Response from getMultichainBalances
- * @param chainId - Network chain ID to filter by (supports both LI.FI and Dynamic IDs)
+ * @param chainId - Dynamic network ID to filter by
  * @returns Array of token balances
  */
 export function getNetworkBalances(
@@ -224,14 +220,11 @@ export function getNetworkBalances(
     ? response
     : (response as MultichainBalanceResponse)?.chainBalances || [];
 
-  // Convert to Dynamic network ID if LI.FI chain ID was passed (e.g., Solana)
-  const dynamicNetworkId = toDynamicNetworkId(chainId);
-
   const balances: TokenBalance[] = [];
 
   for (const chain of chainBalances) {
     for (const network of chain.networks || []) {
-      if (network.networkId !== dynamicNetworkId) continue;
+      if (network.networkId !== chainId) continue;
 
       for (const token of network.balances || []) {
         balances.push({

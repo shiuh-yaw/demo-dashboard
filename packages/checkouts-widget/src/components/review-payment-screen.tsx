@@ -2,13 +2,36 @@
 
 import { useState } from "react";
 import { cn } from "@dynamic-demos/utils";
-import { ThumbsUpIcon } from "@/components/icons";
-import { type WidgetMode } from "@/lib/widget-config";
+import { ThumbsUpIcon } from "./icons";
 import { Button } from "@dynamic-demos/ui";
-import { truncateAddress } from "@/lib/format";
-import { DYNAMIC_ICON_URL } from "@/lib/dynamicClient";
+import { truncateAddress } from "../lib/format";
 import ScreenHeader from "./screen-header";
 import TokenConversionCard, { type TokenInfo } from "./token-conversion-card";
+
+/**
+ * The action noun that drives copy across this screen — any string is
+ * accepted (deposit, payment, withdraw, send, …). Common forms have their
+ * gerunds spelled out; unknown verbs fall back to a naive `${mode}ing`.
+ */
+type WidgetMode = string;
+
+const GERUNDS: Record<string, string> = {
+  deposit: "depositing",
+  payment: "paying",
+  withdraw: "withdrawing",
+  send: "sending",
+  transfer: "transferring",
+};
+const gerundOf = (mode: string) =>
+  GERUNDS[mode.toLowerCase()] ?? `${mode}ing`;
+const capitalize = (s: string) =>
+  s.length === 0 ? s : s[0]!.toUpperCase() + s.slice(1);
+
+// Dynamic logo mark as inline SVG data URL — extracted here so the package
+// does not depend on apps/checkouts/lib/dynamicClient.ts. Host apps can pass
+// their own logo via the `brand.logoUrl` prop on <PaymentWidget /> (Task 6).
+const DYNAMIC_ICON_URL =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -2 24 24' fill='%230050FF'%3E%3Cpath d='M9.9 1.5c-.43.4-.85.79-1.27 1.18C6.67 4.5 4.71 6.32 2.75 8.14c-.45.41-.92.81-1.48 1.06-.67.29-1.06.1-1.27-.62-.3-1.01-.14-1.95.44-2.82.5-.74 1.12-1.36 1.76-1.96 1.02-.96 2.05-1.9 3.1-2.83.46-.41.96-.78 1.57-.9C8.69-.31 9.85 1.44 9.9 1.5z'/%3E%3Cpath d='M1.1 10.75c1.11-.32 1.95-1.02 2.76-1.77 2.59-2.36 5.18-4.73 7.78-7.08.57-.52 1.18-1.01 1.81-1.45.81-.55 1.7-.63 2.57-.1.31.19.62.41.88.67.88.92 1.76 1.85 2.61 2.8.91 1 1.8 2.03 2.67 3.07.3.36.54.77.74 1.2.38.78.28 1.56-.18 2.29-.4.65-.95 1.19-1.52 1.7-2.21 2-4.42 3.99-6.65 5.96-.6.53-1.26 1-1.94 1.42-1.28.79-2.57.69-3.74-.24-.68-.55-1.32-1.16-1.9-1.8C5.06 15.34 3.21 13.23 1.4 11.1c-.1-.1-.18-.22-.3-.36z'/%3E%3C/svg%3E";
 
 interface FeeBreakdown {
   /** USD display value (e.g., "$0.50") */
@@ -89,9 +112,8 @@ export default function ReviewPaymentScreen({
 }: ReviewPaymentScreenProps) {
   const [showTokenAmounts, setShowTokenAmounts] = useState(false);
 
-  const actionLabel = mode === "deposit" ? "deposit" : "payment";
-  const confirmLabel =
-    mode === "deposit" ? "Confirm Deposit" : "Confirm Payment";
+  const actionLabel = mode;
+  const confirmLabel = `Confirm ${capitalize(mode)}`;
   const showConversion =
     destinationToken && destinationToken.symbol !== sourceToken.symbol;
 
@@ -105,18 +127,14 @@ export default function ReviewPaymentScreen({
     : totalAmount.usd;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full flex-1">
       <ScreenHeader
         icon={<ThumbsUpIcon size={18} className="text-(--brand-fg)" />}
         title={`Review your ${actionLabel}`}
         subtitle={
           showConversion
-            ? `You're ${mode === "deposit" ? "depositing" : "paying"} with ${
-                sourceToken.symbol
-              }. We'll automatically convert it to ${destinationToken.symbol}.`
-            : `You're ${mode === "deposit" ? "depositing" : "paying"} with ${
-                sourceToken.symbol
-              }. Your ${actionLabel} will be processed instantly.`
+            ? `You're ${gerundOf(mode)} with ${sourceToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
+            : `You're ${gerundOf(mode)} with ${sourceToken.symbol}. Your ${actionLabel} will be processed instantly.`
         }
         onClose={onClose}
       />
@@ -165,7 +183,7 @@ export default function ReviewPaymentScreen({
           />
           <div className="border-t border-dashed border-(--brand-border)" />
           <FeeRow
-            label={mode === "deposit" ? "Total" : "Payment fee"}
+            label="Total"
             value={displayTotalAmount}
             onToggle={() => setShowTokenAmounts(!showTokenAmounts)}
             isTotal
@@ -191,8 +209,13 @@ export default function ReviewPaymentScreen({
         </div>
       )}
 
+      {/* Spacer — push the footer buttons to the bottom of the card when
+          the host container is taller than our natural content (e.g. when
+          the host applies a min-h or sizes via flex). */}
+      <div className="flex-1" />
+
       {/* Footer Buttons */}
-      <div className="flex gap-[7px] p-3">
+      <div className="flex gap-[7px] px-3 pb-4 pt-0">
         <Button
           variant="secondary"
           onClick={onBack}

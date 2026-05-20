@@ -8,13 +8,23 @@ status: stable
 
 # @dynamic-demos/checkouts
 
-Stablecoin checkout / pay-with-crypto demo. End users authenticate via Dynamic, view a multichain balance summary, and complete a checkout that may bridge/swap across chains via LI.FI. Showcases the Dynamic embedded wallet + LI.FI bridge SDK pattern when paired with a CeFi balance source (Kraken via Dynamic CeFi connector).
+Stablecoin checkout / pay-with-crypto demo. End users authenticate via Dynamic, view a multichain balance summary, and complete a checkout that may bridge/swap across chains via Dynamic Checkout Flow. Showcases the Dynamic embedded wallet + Dynamic Checkout Flow pattern when paired with a CeFi balance source (Kraken via Dynamic CeFi connector).
+
+## Architecture (post `packages/checkouts-widget` extraction)
+
+Wallet-source widget rendering (amount picker, review, processing) is delegated to `@dynamic-demos/checkouts-widget`. This app owns:
+
+- Page chrome, auth flow, wallet/asset selection (`ConnectWalletScreen`, `AssetSelectorScreen`, `ConnectedWalletsScreen`).
+- Kraken/exchange OAuth flow (`KrakenWhitelistingScreen`, `usePaymentExecution`'s exchange branch).
+- Dashboard transaction mirror calls (`useTransaction.initializeTransaction` runs on login; `<PaymentWidget>` lifecycle callbacks — `onExecutionUpdate`, `onCancelled`, `onError` — drive subsequent state transitions).
+
+Branching is by token type at the `review` render: wallet tokens mount `<PaymentWidget />` from the package; exchange tokens (Kraken) keep rendering the existing `ReviewScreen` / `ProcessingScreen` wrappers via the host's `usePaymentExecution`.
 
 ## Capabilities
 
 - Email-OTP + social login (Dynamic).
 - Multichain balance fetch via dashboard orchestration (the 30+ inline SSR-safe wrappers cover Kraken accounts, multichain balances, etc.).
-- LI.FI bridge / swap setup via `configureLifi` + `executeRoute` (browser-side `@lifi/sdk`).
+- Cross-chain bridge / swap setup via the Dynamic Checkout Flow SDK (`@dynamic-labs-sdk/client`).
 - Checkout flow: select asset/chain → quote → execute → confirm.
 - Fiat-display + per-chain price formatting via dashboard prices proxy.
 
@@ -34,9 +44,8 @@ This app is a **partial consumer** of `@dynamic-demos/dynamic` Phase 1D primitiv
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` — workspace default.
 - `NEXT_PUBLIC_DASHBOARD_URL` — dashboard origin for orchestration / quote calls.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox off.
-- `LIFI_INTEGRATOR` — integrator string forwarded to LI.FI SDK — optional but recommended.
 
-LI.FI API key + Coinbase + Iron credentials live at the **dashboard** (D-003) — never in this app.
+Coinbase + Iron credentials live at the **dashboard** (D-003) — never in this app.
 
 ## Theming
 
@@ -56,26 +65,24 @@ Storage prefix in dashboard remains `payment-widget:` (legacy quirk — kept for
 
 - **Dynamic:** per-app or workspace-default (D-003).
 - **Fireblocks:** none.
-- **Other providers:** none — LI.FI / Coinbase / Iron go through dashboard orchestration.
+- **Other providers:** none — Coinbase / Iron go through dashboard orchestration.
 
 ## Slots vs invariants
 
-**Slots:** brand, supported chains/tokens (constrained by dashboard config + LI.FI chain table), checkout flow copy.
+**Slots:** brand, supported chains/tokens (constrained by dashboard config), checkout flow copy.
 
 **Invariants:**
 
-- All bridge / swap quotes go through dashboard `/api/orchestrate/swap` — never call LI.FI's REST API from the browser.
-- Browser-side LI.FI SDK setup goes through `configureLifi` from `@dynamic-demos/lifi/sdk-config` — call once at app boot.
-- Sandbox-by-default for the LI.FI environment seam (D-005), even though LI.FI sandbox/prod resolve to the same host today.
+- All Checkout Flow API calls go through `@dynamic-demos/checkouts-widget/checkout-flow` — never directly from `@dynamic-labs-sdk/client` elsewhere in the app.
+- The Checkout Flow primitives sign and broadcast on the user's behalf; the app never holds keys.
 - Apps don't access Postgres (D-002).
-- The user signs and submits the bridge tx — the app never holds keys.
 
 ## Data boundaries
 
 - No Postgres.
-- Redis: not used.
+- Redis: not used directly by this app. Dashboard transient transaction state remains Redis-backed; this app reads/writes that state via the dashboard API.
 - User state → Dynamic user metadata.
-- Canonical transactions → dashboard via orchestration; this app polls `/api/orchestrate/transactions/:id`.
+- Canonical transactions: Dynamic Checkout Flow is the routing source of truth. The dashboard transaction mirror is dual-written from each lifecycle transition (initialize → update with `dynamicTransactionId` → submit with `txHash` → done/fail/cancel).
 
 ## Deployment
 
@@ -87,26 +94,26 @@ Storage prefix in dashboard remains `payment-widget:` (legacy quirk — kept for
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/lifi`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`.
 **Imported by:** none.
 
 ## Examples
 
 ```ts
-// hooks/use-lifi/setup.ts
-import { configureLifi } from "@dynamic-demos/lifi";
-configureLifi(/* providers */, { integrator: process.env.LIFI_INTEGRATOR ?? "demo-checkouts" });
+// hooks/use-checkout-flow.ts
+import { createTransaction, submit } from "@dynamic-demos/checkouts-widget/checkout-flow";
+// SDK lifecycle: create → attach → quote → submit → events → cancel
 ```
 
 ## Do / Don't
 
-- Do: route quote + status reads through `/api/orchestrate/swap`. The dashboard owns LI.FI's API key (D-003).
-- Do: call `configureLifi` once at app boot; the SDK self-registers.
-- Don't: import `@dynamic-demos/lifi/client` (REST quote/status) from a browser bundle.
-- Don't: wire LI.FI key directly into this app — the dashboard owns commodity-provider secrets (D-003).
+- Do: route all Checkout Flow calls through `@dynamic-demos/checkouts-widget/checkout-flow`. Components and hooks should never import directly from `@dynamic-labs-sdk/client` for Checkout Flow functions.
+- Don't: import `@dynamic-labs-sdk/client` Checkout Flow functions directly from components — use the `@dynamic-demos/checkouts-widget/checkout-flow` wrapper.
 
 ## Open questions / known gaps
 
 - 30+ inline SSR-safe wrappers (`getKrakenAccounts`, etc.) retain bespoke shapes; consolidate when a third app needs the same wrappers.
 - `--widget-*` compat aliases in `globals.css` retained until `packages/ui` shared components migrate to `--brand-*`.
 - No real-network E2E in CI (D-023).
+- `needsTokenConversion` in `components/payment-widget/utils.ts` derives the same signal that a `requiresConversion` SDK helper could provide; could be consolidated if Dynamic surfaces that helper in a future SDK release.
+- The Kraken path still hand-writes wallet transfer logic in `usePaymentExecution`; a future PR can extract a Kraken-specific package or fold it into a generic exchange-flow primitive.

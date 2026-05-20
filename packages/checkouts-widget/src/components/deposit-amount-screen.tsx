@@ -2,14 +2,13 @@
 
 import { useState, useCallback, useRef } from "react";
 import { cn } from "@dynamic-demos/utils";
-import { DollarCircleIcon } from "@/components/icons";
+import { DollarCircleIcon } from "./icons";
 import ScreenHeader from "./screen-header";
 import { Button } from "@dynamic-demos/ui";
-import {
-  DEPOSIT_PRESETS,
-  DEPOSIT_MIN_AMOUNT,
-  DEPOSIT_MAX_AMOUNT,
-} from "@/lib/config";
+
+const DEFAULT_PRESETS = [50, 100, 500, 1000];
+const DEFAULT_MIN_AMOUNT = 1;
+const DEFAULT_MAX_AMOUNT = 10000;
 
 interface DepositAmountScreenProps {
   /** Preset amounts for quick selection */
@@ -23,9 +22,9 @@ interface DepositAmountScreenProps {
 }
 
 export default function DepositAmountScreen({
-  presets = DEPOSIT_PRESETS,
-  minAmount = DEPOSIT_MIN_AMOUNT,
-  maxAmount = DEPOSIT_MAX_AMOUNT,
+  presets = DEFAULT_PRESETS,
+  minAmount = DEFAULT_MIN_AMOUNT,
+  maxAmount = DEFAULT_MAX_AMOUNT,
   onConfirm,
 }: DepositAmountScreenProps) {
   const [amount, setAmount] = useState<string>("");

@@ -10,6 +10,13 @@ import { ANIMATION, INITIAL_TOKENS_SHOWN } from "./config";
 
 import type { Chain } from "@/lib/dynamicClient";
 
+export {
+  isSolanaChainId,
+  DYNAMIC_SOLANA_NETWORK_ID,
+} from "@dynamic-demos/checkouts-widget";
+
+import { DYNAMIC_SOLANA_NETWORK_ID } from "@dynamic-demos/checkouts-widget";
+
 /** Common Solana token addresses */
 export const SOLANA_TOKENS = {
   /** USDC on Solana (Circle native) */
@@ -31,12 +38,6 @@ export const RECIPIENT_ADDRESSES = {
   /** Default payment recipient address */
   DEFAULT_PAYMENT: "0x9C040E69a7e1866717E0A7a09D3484C718A1e8E7",
 } as const;
-
-/** LI.FI chain ID for Solana mainnet */
-export const LIFI_SOLANA_CHAIN_ID = 1151111081099710;
-
-/** Dynamic SDK network ID for Solana mainnet */
-export const DYNAMIC_SOLANA_NETWORK_ID = 101;
 
 // =============================================================================
 // THEME TYPES
@@ -108,41 +109,6 @@ export interface SettlementConfig {
 }
 
 /**
- * Map Dynamic SDK network IDs to LI.FI chain IDs.
- * Dynamic uses standard cluster IDs for Solana (101 = mainnet),
- * while LI.FI uses a different internal ID system.
- *
- * @param networkId - Dynamic SDK network ID
- * @returns LI.FI-compatible chain ID
- */
-export function toLiFiChainId(networkId: number): number {
-  // Solana mainnet: Dynamic uses 101, LI.FI uses 1151111081099710
-  if (networkId === DYNAMIC_SOLANA_NETWORK_ID) return LIFI_SOLANA_CHAIN_ID;
-  // EVM chain IDs are the same in both systems
-  return networkId;
-}
-
-/**
- * Map LI.FI chain IDs back to Dynamic SDK network IDs.
- *
- * @param chainId - LI.FI chain ID
- * @returns Dynamic SDK-compatible network ID
- */
-export function toDynamicNetworkId(chainId: number): number {
-  if (chainId === LIFI_SOLANA_CHAIN_ID) return DYNAMIC_SOLANA_NETWORK_ID;
-  return chainId;
-}
-
-/**
- * Check if a chain ID represents Solana (in either system).
- */
-export function isSolanaChainId(chainId: number): boolean {
-  return (
-    chainId === LIFI_SOLANA_CHAIN_ID || chainId === DYNAMIC_SOLANA_NETWORK_ID
-  );
-}
-
-/**
  * Default settlement configuration - USDC on Base (EVM)
  */
 export const DEFAULT_SETTLEMENT: SettlementConfig = {
@@ -160,7 +126,7 @@ export const DEFAULT_SETTLEMENT: SettlementConfig = {
  */
 export const SOLANA_SETTLEMENT: SettlementConfig = {
   chain: "SOL",
-  chainId: LIFI_SOLANA_CHAIN_ID,
+  chainId: DYNAMIC_SOLANA_NETWORK_ID,
   chainName: "solana",
   tokenAddress: SOLANA_TOKENS.USDC,
   tokenSymbol: "USDC",

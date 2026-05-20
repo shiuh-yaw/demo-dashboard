@@ -12,7 +12,7 @@
 
 import { useEffect, useRef } from "react";
 import { WidgetCard } from "@dynamic-demos/ui";
-import ScreenHeader from "@/components/payment-modal/screen-header";
+import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { Button } from "@dynamic-demos/ui";
 import { Loader2, ExternalLink } from "lucide-react";
 import { CashIcon } from "@/components/icons";

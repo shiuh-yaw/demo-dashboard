@@ -10,10 +10,10 @@
  */
 
 import { WidgetCard } from "@dynamic-demos/ui";
-import ReviewPaymentScreen from "@/components/payment-modal/review-payment-screen";
+import { ReviewPaymentScreen } from "@dynamic-demos/checkouts-widget";
 import type { WidgetConfig } from "@/lib/widget-config";
 import { isExchangeToken, type TokenAsset } from "@/lib/balance-utils";
-import type { QuoteResult } from "@/lib/actions/lifi";
+import type { ReviewQuote } from "@/lib/types";
 import { formatTokenAmount, formatUsd, formatApproxUsd } from "@/lib/format";
 import {
   needsTokenConversion,
@@ -34,7 +34,7 @@ export interface ReviewScreenProps {
   /** Widget configuration */
   config: WidgetConfig;
   /** Quote result from LI.FI (null for direct transfers) */
-  quote: QuoteResult | null;
+  quote: ReviewQuote | null;
   /** Embedded wallet address for display (when depositDestination is "embedded") */
   embeddedWalletAddress: string | null;
   /** Whether a transaction is currently executing */
@@ -120,6 +120,7 @@ export function ReviewScreen({
           token,
           sourceTokenAmount,
           sourceTokenSubtitle,
+          quote,
         )}
         destinationToken={
           !isSameToken && quote ? buildDestinationTokenInfo(quote) : undefined

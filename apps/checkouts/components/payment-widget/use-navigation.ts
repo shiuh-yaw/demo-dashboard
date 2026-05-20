@@ -20,9 +20,11 @@ import {
 } from "./utils";
 import type { WalletGroup } from "@/components/connect-wallet-screen";
 import type { TokenAsset } from "@/lib/balance-utils";
-import type { TransactionStep } from "@/components/payment-modal/transaction-progress-screen";
-import { updateTransactionSteps } from "@/components/payment-modal/transaction-progress-screen";
-import type { ExecutionUpdate } from "@/hooks/use-lifi";
+import {
+  type TransactionStep,
+  updateTransactionSteps,
+} from "@dynamic-demos/checkouts-widget";
+import type { ExecutionUpdate } from "@/lib/types";
 import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 
 // =============================================================================

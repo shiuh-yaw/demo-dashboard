@@ -9,11 +9,13 @@
  */
 
 import { WidgetCard } from "@dynamic-demos/ui";
-import TransactionProgressScreen from "@/components/payment-modal/transaction-progress-screen";
-import type { TransactionStep } from "@/components/payment-modal/transaction-progress-screen";
+import {
+  TransactionProgressScreen,
+  type TransactionStep,
+} from "@dynamic-demos/checkouts-widget";
 import type { WidgetConfig } from "@/lib/widget-config";
 import type { TokenAsset } from "@/lib/balance-utils";
-import type { QuoteResult } from "@/lib/actions/lifi";
+import type { ReviewQuote } from "@/lib/types";
 import { formatUsd } from "@/lib/format";
 import {
   needsTokenConversion,
@@ -38,7 +40,7 @@ export interface ProcessingScreenProps {
   /** Widget configuration */
   config: WidgetConfig;
   /** Quote result from LI.FI (null for direct transfers) */
-  quote: QuoteResult | null;
+  quote: ReviewQuote | null;
   /** Error message (swap, quote, or exchange) */
   error: string | null;
   /** Whether screen is transitioning */
@@ -77,6 +79,7 @@ export function ProcessingScreen({
           token,
           sourceAmount,
           formatUsd(amount),
+          quote,
         )}
         destinationToken={
           !isSameToken && quote ? buildDestinationTokenInfo(quote) : undefined

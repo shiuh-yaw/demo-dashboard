@@ -11,7 +11,7 @@
 
 import { useState } from "react";
 import { WidgetCard } from "@dynamic-demos/ui";
-import ScreenHeader from "@/components/payment-modal/screen-header";
+import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { Button } from "@dynamic-demos/ui";
 import { CheckCircle, ExternalLink, Copy, Check } from "lucide-react";
 import type { WidgetConfig } from "@/lib/widget-config";
