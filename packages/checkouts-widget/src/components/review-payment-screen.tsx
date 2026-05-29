@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { cn } from "@dynamic-demos/utils";
-import { ThumbsUpIcon } from "./icons";
 import { Button } from "@dynamic-demos/ui";
 import { truncateAddress } from "../lib/format";
 import ScreenHeader from "./screen-header";
@@ -129,18 +128,18 @@ export default function ReviewPaymentScreen({
   return (
     <div className="flex flex-col h-full flex-1">
       <ScreenHeader
-        icon={<ThumbsUpIcon size={18} className="text-(--brand-fg)" />}
+        eyebrow={mode.toUpperCase()}
         title={`Review your ${actionLabel}`}
         subtitle={
           showConversion
-            ? `You're ${gerundOf(mode)} with ${sourceToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
-            : `You're ${gerundOf(mode)} with ${sourceToken.symbol}. Your ${actionLabel} will be processed instantly.`
+            ? `You're ${gerundOf(mode)} ${itemTotal.usd} with ${sourceToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
+            : `You're ${gerundOf(mode)} ${itemTotal.usd} with ${sourceToken.symbol}.`
         }
         onClose={onClose}
       />
 
       {/* Token Conversion Section */}
-      <div className="p-3 border-b border-(--brand-border)">
+      <div className="px-5 py-3 border-b border-(--brand-border)">
         <TokenConversionCard
           sourceToken={sourceToken}
           destinationToken={destinationToken}
@@ -149,7 +148,7 @@ export default function ReviewPaymentScreen({
 
       {/* Destination Address (for embedded wallet deposits) */}
       {destinationAddress && (
-        <div className="p-3 border-b border-(--brand-border)">
+        <div className="px-5 py-3 border-b border-(--brand-border)">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
               Destination
@@ -169,7 +168,7 @@ export default function ReviewPaymentScreen({
       )}
 
       {/* Fee Breakdown - click any amount to toggle USD/token view */}
-      <div className="p-3 border-b border-(--brand-border)">
+      <div className="px-5 py-3 border-b border-(--brand-border)">
         <div className="flex flex-col gap-[7px]">
           <FeeRow
             label="Item total"
@@ -193,7 +192,7 @@ export default function ReviewPaymentScreen({
 
       {/* Error Message */}
       {error && (
-        <div className="px-3 pt-3">
+        <div className="px-5 pt-3">
           <div className="flex items-center justify-between gap-3 p-3 bg-red-50 border border-red-200 rounded-(--brand-radius)">
             <span className="text-sm text-red-600">{error}</span>
             {onClearError && (
@@ -215,7 +214,7 @@ export default function ReviewPaymentScreen({
       <div className="flex-1" />
 
       {/* Footer Buttons */}
-      <div className="flex gap-[7px] px-3 pb-4 pt-0">
+      <div className="flex gap-[7px] px-5 py-3">
         <Button
           variant="secondary"
           onClick={onBack}

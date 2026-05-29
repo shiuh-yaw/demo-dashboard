@@ -903,3 +903,151 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   hasMore: boolean;
 }
+
+// =============================================================================
+// Flow Configuration (Dynamic Flow / Checkouts / Deposit-with-Crypto)
+// =============================================================================
+
+/**
+ * Flow scenario discriminator. Each scenario is a prebuilt demo flow
+ * in `apps/flow` with a curated default `source` + `destination`. The
+ * builder lets the user override either toggle live; this field marks
+ * the demo's intended top-level pitch.
+ */
+export type FlowScenario = "checkout" | "deposit" | "withdraw";
+
+/**
+ * Where funds originate. Maps to the Flow SDK's source-attachment
+ * surface (`attachCheckoutTransactionSource`). The `details` payload
+ * is preserved as a hint for the UI; the SDK still allows the user to
+ * pick from any connected provider at runtime.
+ */
+export type FlowSourceType =
+  | "external-wallet"
+  | "exchange"
+  | "embedded-wallet"
+  | "fireblocks-vault";
+
+export interface FlowSource {
+  type: FlowSourceType;
+  /** Optional UI hint for which wallet/exchange to surface first. */
+  preferred?: {
+    walletProvider?: string;
+    exchange?: "coinbase" | "kraken" | "crypto-com";
+  };
+}
+
+/**
+ * Where funds settle. Mirrors the Flow checkout config's destination
+ * field. `fireblocks-vault` requires a vault account id (server-side
+ * only — the public config carries it for display, but the secret
+ * Fireblocks creds live in `apps/flow`'s env per D-003).
+ */
+export type FlowDestinationType =
+  | "fireblocks-vault"
+  | "embedded-wallet"
+  | "external-address";
+
+export interface FlowDestination {
+  type: FlowDestinationType;
+  /** Vault account id when type === "fireblocks-vault". */
+  vaultAccountId?: string;
+  /** Static address when type === "external-address". */
+  address?: string;
+}
+
+/**
+ * Settlement asset (the stablecoin or token the merchant/platform
+ * wants to receive). Chain identifier follows the Flow SDK's `Chain`
+ * type (lower-case ecosystem slug).
+ */
+export interface FlowAsset {
+  symbol: string;
+  chain: string;
+}
+
+export interface FlowAmountConfig {
+  /**
+   * `"fixed"` — merchant sets the amount (Payment mode).
+   * `"user-input"` — end-user sets the amount (Deposit mode, with
+   * optional minimums + preset chips).
+   */
+  mode: "fixed" | "user-input";
+  fixedAmount?: string;
+  fixedCurrency?: string;
+  minimums?: { usd?: number };
+  presets?: number[];
+}
+
+export interface FlowCompliance {
+  sanctionsScreening: boolean;
+  spamTokenFilter: boolean;
+  geographicBlocks?: string[];
+}
+
+export interface FlowBranding {
+  logoUrl?: string;
+  appName?: string;
+}
+
+export interface FlowTheme {
+  primaryColor?: string;
+  primaryHoverColor?: string;
+  accentColor?: string;
+}
+
+/**
+ * Full Flow configuration. Stored as `DemoConfig.config` with
+ * `kind === "flow"`. The Zod schema lives at
+ * `apps/flow/lib/flow-config/schema.ts` and is referenced by the
+ * Anthropic system prompt so chat-to-create stays in shape.
+ */
+export interface FlowConfig {
+  scenario: FlowScenario;
+  source: FlowSource;
+  destination: FlowDestination;
+  asset: FlowAsset;
+  amount: FlowAmountConfig;
+  compliance: FlowCompliance;
+  theme?: FlowTheme;
+  branding?: FlowBranding;
+}
+
+/**
+ * Default theme for Flow. Dynamic blue is the canonical primary;
+ * everything else falls through to brand chrome defaults at runtime.
+ */
+export const DEFAULT_FLOW_THEME: FlowTheme = {
+  primaryColor: "#4779FF",
+};
+
+/**
+ * Default Flow configuration — used when a scenario route has no
+ * config id resolved (no `?id=`, no cookie). Maps to the Checkout
+ * scenario by default; the landing surfaces all three.
+ */
+export const DEFAULT_FLOW_CONFIG: FlowConfig = {
+  scenario: "checkout",
+  source: { type: "external-wallet" },
+  destination: { type: "fireblocks-vault" },
+  asset: { symbol: "USDC", chain: "base" },
+  amount: { mode: "fixed", fixedAmount: "5.00", fixedCurrency: "USD" },
+  compliance: { sanctionsScreening: true, spamTokenFilter: true },
+  theme: DEFAULT_FLOW_THEME,
+  branding: {},
+};
+
+/**
+ * Stored Flow configuration with metadata. Returned by the dashboard's
+ * `/api/orchestrate/demo-configs` (or per-kind) endpoints and consumed
+ * by `apps/flow`'s server layout to render the active scenario.
+ */
+export interface StoredFlowConfig {
+  id: string;
+  name: string;
+  description?: string;
+  config: FlowConfig;
+  createdAt: string;
+  updatedAt: string;
+  ownerId?: string;
+}

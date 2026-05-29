@@ -15,7 +15,6 @@ import { WidgetCard } from "@dynamic-demos/ui";
 import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { Button } from "@dynamic-demos/ui";
 import { Loader2, ExternalLink } from "lucide-react";
-import { CashIcon } from "@/components/icons";
 import type { WidgetConfig } from "@/lib/widget-config";
 import { Status } from "@/lib/types";
 import { getTransactionStatus } from "@/lib/api/transactions";
@@ -105,7 +104,7 @@ export function PendingScreen({
     <WidgetCard isTransitioning={isTransitioning}>
       <div className="flex flex-col">
         <ScreenHeader
-          icon={<CashIcon size={18} className="text-(--brand-fg)" />}
+          eyebrow="Processing"
           title={`${actionLabel} Pending`}
           onClose={onClose}
         />

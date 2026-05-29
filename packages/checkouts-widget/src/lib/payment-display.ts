@@ -107,6 +107,7 @@ export function buildTokenInfo(
     amount,
     usdValue,
     iconUrl: token.logoURI,
+    chainId: token.chainId,
   };
 }
 

@@ -37,6 +37,34 @@
       "status": "stable"
     },
     {
+      "name": "@dynamic-demos/flow",
+      "kind": "app",
+      "flow_role": "checkout",
+      "custody": "mixed",
+      "status": "experimental",
+      "regions": [
+        {
+          "country": "ANY",
+          "currencies": [
+            "USDC",
+            "USDT",
+            "ETH",
+            "SOL",
+            "BTC"
+          ],
+          "rails": [
+            "onchain"
+          ]
+        }
+      ],
+      "provider": {
+        "name": "Dynamic (Flow)",
+        "docs": "https://www.dynamic.xyz/docs/overview/deposit-with-crypto",
+        "api_reference": "https://www.dynamic.xyz/docs/api-reference/checkout/create-a-checkout",
+        "agent_docs": "none"
+      }
+    },
+    {
       "name": "@dynamic-demos/proceeds",
       "kind": "app",
       "flow_role": "offramp",

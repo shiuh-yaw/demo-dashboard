@@ -28,7 +28,7 @@ import { useCheckoutFlow } from "./hooks/use-checkout-flow";
 import DepositAmountScreen from "./components/deposit-amount-screen";
 import ReviewPaymentScreen from "./components/review-payment-screen";
 import ScreenHeader from "./components/screen-header";
-import { ArrowRightIcon, ThumbsUpIcon } from "./components/icons";
+import { ArrowRightIcon } from "./components/icons";
 import { Button } from "@dynamic-demos/ui";
 import TransactionProgressScreen, {
   generateTransactionSteps,
@@ -42,6 +42,11 @@ import {
   formatUsdSafe,
   getTotalFeeUsd,
 } from "./lib/payment-display";
+import { isSolanaChainId } from "./lib/chain";
+import {
+  extractFailureMessage,
+  isFailedTerminal,
+} from "./checkout-flow/status-map";
 import type {
   BrandConfig,
   ExecutionUpdate,
@@ -85,6 +90,14 @@ export interface PaymentWidgetProps {
   /** Namespace for in-flight transaction persistence in localStorage. */
   storageNamespace?: string;
   /**
+   * Slippage tolerance forwarded to every quote request as a decimal
+   * (e.g. `0.02` = 2%). Withdrawals typically pass a higher value
+   * (~2%) because the source token is a stablecoin and the buyer-side
+   * cap is the platform balance, so a tighter quote can fail to clear
+   * cross-chain liquidity. Omit to let the SDK apply its default.
+   */
+  slippage?: number;
+  /**
    * Action verb that drives copy across the flow:
    *   "deposit" → "Review your deposit", "Confirm Deposit", "Deposit complete"
    *   "payment" → "Review your payment", "Confirm Payment", "Payment complete"
@@ -94,6 +107,14 @@ export interface PaymentWidgetProps {
    * "you're {gerund}…" subtitle.
    */
   mode?: string;
+  /**
+   * Hide the "Destination" row on the review + loading screens. Default
+   * false. Merchant checkout flows should set this — buyers don't care
+   * (and shouldn't be confused by) the merchant's settlement vault
+   * address. Deposit / withdraw flows generally leave it visible since
+   * the destination there is the buyer's own embedded or external wallet.
+   */
+  hideDestination?: boolean;
 
   /** Fires once when the user submits the amount-picker screen. */
   onAmountSelected?: (amount: string) => void;
@@ -151,7 +172,9 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     brand,
     memo,
     storageNamespace,
+    slippage,
     mode = "deposit",
+    hideDestination = false,
     onAmountSelected,
     onTransactionCreated,
     onQuoteLocked,
@@ -161,11 +184,13 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     onError,
   } = props;
 
-  const [stage, setStage] = useState<Stage>(initialAmount ? "review" : "amount");
+  const [stage, setStage] = useState<Stage>(
+    initialAmount ? "review" : "amount",
+  );
   const [amount, setAmount] = useState<string>(initialAmount ?? "");
   const [steps, setSteps] = useState<TransactionStep[]>([]);
 
-  const flow = useCheckoutFlow({ storageNamespace });
+  const flow = useCheckoutFlow({ storageNamespace, slippage });
 
   // Fire-once gates
   const lockedFiredRef = useRef(false);
@@ -198,21 +223,46 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
           amount,
           currency,
           checkoutId,
-          destinationAddresses: [
-            // Dynamic's Chain enum on the SDK side is a string union; we keep
-            // the typing loose here since hosts pass the matching enum value.
-            { address: destinationAddress, chain: destinationChain as never },
-          ],
+          // Empty `destinationAddress` → omit the override entirely so the
+          // Checkout's server-side `destinationConfig.destinations` is
+          // used. Sending `[{ address: "" }]` here trips the API's
+          // 18–100-char address pattern with a 400.
+          ...(destinationAddress
+            ? {
+                destinationAddresses: [
+                  // Dynamic's Chain enum on the SDK side is a string union; we keep
+                  // the typing loose here since hosts pass the matching enum value.
+                  {
+                    address: destinationAddress,
+                    chain: destinationChain as never,
+                  },
+                ],
+              }
+            : {}),
           memo,
           source: {
             fromAddress: walletAccount.address,
+            // Source chain comes from the PICKED TOKEN, not from
+            // the wallet's "active network."
+            //
+            // The SDK demo's pattern uses
+            // `getActiveNetworkData({ walletAccount }).networkId`
+            // — which works for EXTERNAL wallets (the user has
+            // ONE active chain at any time in MetaMask/Phantom,
+            // and the asset selector filters to tokens on that
+            // chain). It DOESN'T work for WaaS EVM embedded
+            // wallets: the wallet is multichain by design and the
+            // SDK's "active network" defaults to Ethereum mainnet
+            // (chainId 1) regardless of which chain the user
+            // actually holds funds on. `switchActiveNetwork`
+            // partially mitigates but doesn't always propagate
+            // before this call site runs.
+            //
+            // `fromToken.chainId` is authoritative — the user (or
+            // the host app) just explicitly picked this token, so
+            // its chainId is unambiguously the source chain.
             fromChainId: String(fromToken.chainId),
-            // Source chain matches destination when not crossing chains; for
-            // cross-chain swaps the host's `destinationChain` enum value is the
-            // best signal we have until the Dynamic SDK exposes a chain-id →
-            // enum lookup. Hosts that need precise source-chain control should
-            // wait for a future `fromChain` prop.
-            fromChainName: destinationChain as never,
+            fromChainName: walletAccount.chain as never,
           },
           fromTokenAddress: fromToken.address,
         });
@@ -258,8 +308,45 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     // key so the internal state machine restarts cleanly.
   }, [flow, onCancelled]);
 
+  /**
+   * Dismissal handler for TERMINAL-state screens (settlement complete
+   * + failure). Unlike `handleCancel`, this does NOT call
+   * `flow.cancel()` — the transaction is already in a terminal state
+   * (settled or failed), and the cancel API would either be a no-op
+   * or, worse, surface confusingly in the network tab as a "cancel
+   * after settlement." Use `flow.reset()` so local state is cleared
+   * for the next mount without the round-trip.
+   */
+  const handleDismiss = useCallback(() => {
+    flow.reset();
+    onCancelled?.();
+  }, [flow, onCancelled]);
+
   const handleReviewConfirm = useCallback(async () => {
     if (!flow.quote) return;
+
+    // Solana-only: re-fetch the quote right before submit. The
+    // server bakes a Solana `recentBlockhash` into the
+    // `signingPayload.serializedTransaction` returned from
+    // `getCheckoutTransactionQuote`. Blockhashes expire in ~60–90s.
+    // If the user lingered on the review screen, the initial
+    // quote's transaction will fail simulation with "Blockhash not
+    // found" during broadcast. Re-quoting yields a fresh
+    // serializedTransaction with a current blockhash, dramatically
+    // reducing the rate of stale-blockhash failures.
+    //
+    // We skip this on EVM because EVM transactions don't carry an
+    // expiring blockhash — the extra round-trip just adds latency
+    // on confirm with no benefit.
+    if (isSolanaChainId(fromToken.chainId)) {
+      const fresh = await flow.refreshQuote(fromToken.address);
+      if (!fresh) {
+        // `flow.error` is now set; the review screen will surface
+        // it. Don't advance to processing.
+        return;
+      }
+    }
+
     const needsApproval = needsConversion && !isCrossChain;
     const initialSteps = generateTransactionSteps(
       mode,
@@ -295,7 +382,17 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     });
 
     if (finalTx) {
+      // Defense-in-depth: the hook already returns null on terminal
+      // failures (BRIDGE_FAILED, expired, cancelled), but if a future
+      // SDK change shifts the failure surface, double-check here so we
+      // never call onSettlementCompleted for a tx that didn't actually
+      // settle. Lands the user on the "done" stage so
+      // TransactionProgressScreen renders FAILED + error + Retry.
       setStage("done");
+      if (isFailedTerminal(finalTx)) {
+        onError?.(new Error(extractFailureMessage(finalTx)));
+        return;
+      }
       onSettlementCompleted?.(finalTx);
     }
   }, [
@@ -333,7 +430,10 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     // chosen amount in source units (stablecoin == 1:1 USD).
     if (!needsConversion) return amount || "0";
     if (!flow.quote?.quote) return amount || "0";
-    return formatTokenDisplayAmount(flow.quote.quote.fromAmount, fromToken.decimals);
+    return formatTokenDisplayAmount(
+      flow.quote.quote.fromAmount,
+      fromToken.decimals,
+    );
   }, [needsConversion, flow.quote, fromToken.decimals, amount]);
 
   const destinationDisplayAmount = useMemo(() => {
@@ -394,12 +494,13 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
   // ---------------------------------------------------------------------------
   return (
     <div
-      className="checkouts-widget-root flex flex-col h-[27rem]"
+      className="checkouts-widget-root flex flex-col"
       style={brandStyle}
     >
       {stage === "amount" && (
         <DepositAmountScreen
           presets={presetAmounts}
+          mode={mode}
           onConfirm={(value: number) => handleAmountSubmit(String(value))}
         />
       )}
@@ -411,136 +512,136 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
               token symbols), so showing the real text keeps the skeleton →
               review transition smooth. Only the inner sections below pulse. */}
           <ScreenHeader
-            icon={<ThumbsUpIcon size={18} className="text-(--brand-fg)" />}
+            eyebrow={mode.toUpperCase()}
             title={`Review your ${mode}`}
             subtitle={
               needsConversion
-                ? `You're ${gerund(mode)} with ${fromToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
-                : `You're ${gerund(mode)} with ${fromToken.symbol}. Your ${mode} will be processed instantly.`
+                ? `You're ${gerund(mode)} ${formatUsdSafe(parseFloat(amount || "0"))} with ${fromToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
+                : `You're ${gerund(mode)} ${formatUsdSafe(parseFloat(amount || "0"))} with ${fromToken.symbol}.`
             }
             onClose={handleCancel}
           />
 
           <div className="flex flex-col flex-1 animate-pulse">
-
-          {/* Token card — same gradient + outer flex as TokenConversionCard.
+            {/* Token card — same gradient + outer flex as TokenConversionCard.
               Each inner text bar sits in a leading wrapper (h-4 for text-xs,
               h-5 for text-sm) so vertical rhythm matches the rendered card. */}
-          <div className="p-3 border-b border-(--brand-border)">
-            {needsConversion ? (
-              <div className="flex items-center gap-3">
-                <div className="flex-1 p-3 rounded-(--brand-radius) bg-gradient-to-r from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div className="w-7 h-7 rounded-full bg-gray-200" />
-                    <div className="flex flex-col items-center text-center">
-                      <div className="h-4 flex items-center">
-                        <div className="h-3 w-12 bg-gray-200 rounded" />
+            <div className="px-5 py-3 border-b border-(--brand-border)">
+              {needsConversion ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 p-3 rounded-(--brand-radius) bg-gradient-to-r from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className="w-7 h-7 rounded-full bg-gray-200" />
+                      <div className="flex flex-col items-center text-center">
+                        <div className="h-4 flex items-center">
+                          <div className="h-3 w-12 bg-gray-200 rounded" />
+                        </div>
+                        <div className="h-5 flex items-center">
+                          <div className="h-3.5 w-24 bg-gray-200 rounded" />
+                        </div>
+                        <div className="h-4 flex items-center">
+                          <div className="h-3 w-10 bg-gray-200 rounded" />
+                        </div>
                       </div>
-                      <div className="h-5 flex items-center">
-                        <div className="h-3.5 w-24 bg-gray-200 rounded" />
-                      </div>
-                      <div className="h-4 flex items-center">
-                        <div className="h-3 w-10 bg-gray-200 rounded" />
+                    </div>
+                  </div>
+                  <div className="w-4 h-4 flex items-center justify-center shrink-0 text-(--brand-muted)">
+                    <ArrowRightIcon />
+                  </div>
+                  <div className="flex-1 p-3 rounded-(--brand-radius) bg-gradient-to-l from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className="w-7 h-7 rounded-full bg-gray-200" />
+                      <div className="flex flex-col items-center text-center">
+                        <div className="h-4 flex items-center">
+                          <div className="h-3 w-12 bg-gray-200 rounded" />
+                        </div>
+                        <div className="h-5 flex items-center">
+                          <div className="h-3.5 w-24 bg-gray-200 rounded" />
+                        </div>
+                        <div className="h-4 flex items-center">
+                          <div className="h-3 w-10 bg-gray-200 rounded" />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="w-4 h-4 flex items-center justify-center shrink-0 text-(--brand-muted)">
-                  <ArrowRightIcon />
-                </div>
-                <div className="flex-1 p-3 rounded-(--brand-radius) bg-gradient-to-l from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)">
+              ) : (
+                <div className="p-3 rounded-(--brand-radius) bg-gradient-to-b from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)">
                   <div className="flex flex-col items-center gap-1.5">
                     <div className="w-7 h-7 rounded-full bg-gray-200" />
                     <div className="flex flex-col items-center text-center">
                       <div className="h-4 flex items-center">
-                        <div className="h-3 w-12 bg-gray-200 rounded" />
+                        <div className="h-3 w-16 bg-gray-200 rounded" />
                       </div>
                       <div className="h-5 flex items-center">
-                        <div className="h-3.5 w-24 bg-gray-200 rounded" />
+                        <div className="h-3.5 w-28 bg-gray-200 rounded" />
                       </div>
                       <div className="h-4 flex items-center">
-                        <div className="h-3 w-10 bg-gray-200 rounded" />
+                        <div className="h-3 w-12 bg-gray-200 rounded" />
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="p-3 rounded-(--brand-radius) bg-gradient-to-b from-(--brand-card-gradient-start) to-(--brand-card-gradient-end)">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-7 h-7 rounded-full bg-gray-200" />
-                  <div className="flex flex-col items-center text-center">
-                    <div className="h-4 flex items-center">
-                      <div className="h-3 w-16 bg-gray-200 rounded" />
-                    </div>
-                    <div className="h-5 flex items-center">
-                      <div className="h-3.5 w-28 bg-gray-200 rounded" />
-                    </div>
-                    <div className="h-4 flex items-center">
-                      <div className="h-3 w-12 bg-gray-200 rounded" />
+              )}
+            </div>
+
+            {/* Destination row — real label, placeholder bar for the value */}
+            {!hideDestination && (
+              <div className="px-5 py-3 border-b border-(--brand-border)">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
+                    Destination
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-4 rounded bg-gray-200" />
+                    <div className="h-[18px] flex items-center">
+                      <div className="h-3 w-24 bg-gray-200 rounded" />
                     </div>
                   </div>
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Destination row — real label, placeholder bar for the value */}
-          <div className="p-3 border-b border-(--brand-border)">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
-                Destination
-              </span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-gray-200" />
-                <div className="h-[18px] flex items-center">
-                  <div className="h-3 w-24 bg-gray-200 rounded" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Fee breakdown — real labels (Item total / Fee / Total), placeholder
+            {/* Fee breakdown — real labels (Item total / Fee / Total), placeholder
               bars only for the values since those need the quote to compute. */}
-          <div className="p-3 border-b border-(--brand-border)">
-            <div className="flex flex-col gap-[7px]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
-                  Item total
-                </span>
-                <div className="h-[18px] flex items-center">
-                  <div className="h-3 w-12 bg-gray-200 rounded" />
+            <div className="px-5 py-3 border-b border-(--brand-border)">
+              <div className="flex flex-col gap-[7px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
+                    Item total
+                  </span>
+                  <div className="h-[18px] flex items-center">
+                    <div className="h-3 w-12 bg-gray-200 rounded" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
-                  Fee
-                </span>
-                <div className="h-[18px] flex items-center">
-                  <div className="h-3 w-12 bg-gray-200 rounded" />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
+                    Fee
+                  </span>
+                  <div className="h-[18px] flex items-center">
+                    <div className="h-3 w-12 bg-gray-200 rounded" />
+                  </div>
                 </div>
-              </div>
-              <div className="border-t border-dashed border-(--brand-border)" />
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
-                  Total
-                </span>
-                <div className="h-[18px] flex items-center">
-                  <div className="h-3.5 w-16 bg-gray-200 rounded" />
+                <div className="border-t border-dashed border-(--brand-border)" />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-(--brand-muted) tracking-[-0.12px] leading-[18px]">
+                    Total
+                  </span>
+                  <div className="h-[18px] flex items-center">
+                    <div className="h-3.5 w-16 bg-gray-200 rounded" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Spacer — same pattern as the real review screen */}
-          <div className="flex-1" />
-
+            {/* Spacer — same pattern as the real review screen */}
+            <div className="flex-1" />
           </div>
 
           {/* Footer — real, enabled Back button so the user can cancel during
               the quote fetch; right placeholder mirrors the disabled Confirm
               button shape with the spinner + Getting quote… inline. */}
-          <div className="flex gap-[7px] px-3 pb-4 pt-0">
+          <div className="flex gap-[7px] px-5 py-3">
             <Button
               variant="secondary"
               onClick={handleCancel}
@@ -561,7 +662,7 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
           mode={mode}
           sourceToken={sourceTokenInfo}
           destinationToken={destinationTokenInfo}
-          destinationAddress={destinationAddress}
+          destinationAddress={hideDestination ? undefined : destinationAddress}
           itemTotal={itemTotalFee}
           networkFee={networkFee}
           totalAmount={totalAmountFee}
@@ -581,7 +682,14 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
           destinationToken={destinationTokenInfo}
           steps={steps}
           error={flow.error}
-          onClose={handleCancel}
+          // `onClose` only renders for terminal states (done +
+          // failed) — the X is hidden during the processing stage.
+          // We use `handleDismiss` here instead of `handleCancel`
+          // because the transaction is already settled/failed by
+          // the time this button is reachable; calling the cancel
+          // API on a resolved transaction is the bug that surfaces
+          // as "I pressed Done and it called cancel."
+          onClose={handleDismiss}
           onRetry={handleRetry}
         />
       )}

@@ -33,6 +33,17 @@ catalog:
 
   # Solana ecosystem (used by checkouts, wallet, etc.)
   "@solana/web3.js": "1.98.4"
+  # Peer required by `@solana/codecs-strings` and ~50 other @solana/* 2.x/3.x
+  # packages. Pure-JS TextEncoder/TextDecoder polyfill for legacy runtimes;
+  # modern Node + browsers already have those natives, but pnpm flags the
+  # missing peer ~50 times across the tree. Pinning here silences the noise
+  # and stays compatible with the upstream `>=1.0.22 <2.0.0-0` range.
+  fastestsmallesttextencoderdecoder: "1.0.22"
+  # Peer required by `@solana/rpc-subscriptions-channel-websocket` (pulled in
+  # via @coinbase/cdp-sdk → @solana/kit). Browser code uses native WebSocket,
+  # but Node-side codepaths that touch Solana RPC subscriptions throw
+  # `Cannot find module 'ws'` without this. Pinning at the floor of `^8.18.0`.
+  ws: "8.18.0"
 
   # Cross-chain SDK
   "@lifi/sdk": "3.14.1"

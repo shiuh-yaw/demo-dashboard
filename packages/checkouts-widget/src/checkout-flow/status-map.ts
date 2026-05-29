@@ -22,6 +22,65 @@ const settlState = (t: CheckoutTransaction): CheckoutSettlementState =>
   t.settlementState as unknown as CheckoutSettlementState;
 
 /**
+ * Terminal *failure* states — `failed`/`expired`/`cancelled` on the
+ * execution axis OR `failed` on the settlement axis. Single source of
+ * truth so `mapTransactionToUpdate`, `useCheckoutFlow.submit`, and
+ * `PaymentWidget`'s defensive post-submit check all agree.
+ */
+export function isFailedTerminal(t: CheckoutTransaction): boolean {
+  const exec = execState(t);
+  const sett = settlState(t);
+  return (
+    exec === "failed" ||
+    exec === "expired" ||
+    exec === "cancelled" ||
+    sett === "failed"
+  );
+}
+
+/**
+ * Shape of the `failure` discriminator that Dynamic's API attaches to
+ * a CheckoutTransaction when the bridge / settlement engine rejects
+ * the source on-chain tx (e.g. `BRIDGE_FAILED / source_confirm`). The
+ * SDK's `CheckoutTransaction` type doesn't model this field yet (as of
+ * 1.3.0), so callers have to lift it via a typed accessor instead of
+ * an open `as unknown as` cast each time.
+ */
+export interface CheckoutFailureInfo {
+  code?: string;
+  message?: string;
+  category?: string;
+  stage?: string;
+}
+
+/**
+ * Lift the `failure` blob off a CheckoutTransaction without an ad-hoc
+ * cast at each site. Returns `null` when the field isn't populated
+ * (success case or non-terminal). Use {@link extractFailureMessage}
+ * for the human-readable string variant.
+ */
+export function extractFailureInfo(
+  t: CheckoutTransaction,
+): CheckoutFailureInfo | null {
+  const f = (t as unknown as { failure?: CheckoutFailureInfo }).failure;
+  return f ?? null;
+}
+
+/**
+ * Best-effort human-readable failure message. Falls back to the
+ * failure code, then to a generic message stamped with the execution
+ * state, so the UI never renders a blank "Transaction failed" without
+ * context.
+ */
+export function extractFailureMessage(t: CheckoutTransaction): string {
+  const failure = extractFailureInfo(t);
+  if (failure?.message) return failure.message;
+  if (failure?.code) return `Transaction failed: ${failure.code}`;
+  const exec = execState(t);
+  return `Transaction failed (executionState=${exec || "unknown"})`;
+}
+
+/**
  * Translate a Dynamic CheckoutTransaction state snapshot into the
  * ExecutionUpdate shape the existing payment-widget UI already consumes.
  *
@@ -43,12 +102,7 @@ export function mapTransactionToUpdate(
   const sett = settlState(transaction);
 
   // Terminal failures take priority — short-circuit before reading other state.
-  if (
-    exec === "failed" ||
-    exec === "expired" ||
-    exec === "cancelled" ||
-    sett === "failed"
-  ) {
+  if (isFailedTerminal(transaction)) {
     return {
       stepIndex: currentStepIndex,
       totalSteps,

@@ -18,7 +18,7 @@ import type { ExecutionUpdate } from "@/lib/types";
 import { cancelTransaction } from "@/lib/api/transactions";
 import { getActiveExchangeAdapter } from "@/lib/exchanges";
 import { type WidgetConfig } from "@/lib/widget-config";
-import { isExchangeToken, type TokenAsset } from "@/lib/balance-utils";
+import { isExchangeToken, type TokenAsset } from "@dynamic-demos/checkouts-widget";
 import type { Transaction } from "@/lib/types";
 import {
   type TransactionStep,

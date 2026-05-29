@@ -1,0 +1,53 @@
+"use client";
+
+/**
+ * Withdraw demo slot — entry point.
+ *
+ * Renders a landing card; tapping its CTA hands off to PlatformShell,
+ * which owns the wallet provisioning lifecycle and routes between
+ * dashboard / deposit / withdraw sub-flows.
+ *
+ * Narrative:
+ *   1. User connects once (Dynamic provisions an embedded SOL WaaS
+ *      wallet via SIWE).
+ *   2. They land on a platform-style dashboard showing aggregate USDC
+ *      balance, with Deposit + Withdraw actions.
+ *   3. Deposit bridges any source asset on any chain INTO the embedded
+ *      wallet as USDC@Solana. Withdraw routes the platform USDC out to
+ *      any external wallet on any (chain, token) pair.
+ *
+ * Per-transaction Checkouts are minted server-side (`POST /api/checkouts`)
+ * for both deposit + withdraw because the destination address varies
+ * per user / per transaction. See `./use-checkout-minting.ts`.
+ */
+
+import { useState } from "react";
+import { ScenarioCard } from "@/components/scenario-card";
+import { WithdrawIllustration } from "./withdraw-illustration";
+import { PlatformShell } from "./platform-shell";
+
+export function WithdrawWidgetDemo() {
+  const [started, setStarted] = useState(false);
+  return (
+    <div className="w-full max-w-[440px] mx-auto lg:mx-0">
+      {started ? (
+        <PlatformShell onBack={() => setStarted(false)} />
+      ) : (
+        <LandingCard onStart={() => setStarted(true)} />
+      )}
+    </div>
+  );
+}
+
+function LandingCard({ onStart }: { onStart: () => void }) {
+  return (
+    <ScenarioCard
+      eyebrow="Cash out"
+      title="Open your platform wallet"
+      body="Sign in and Dynamic provisions an embedded wallet you control. Deposit funds, then withdraw to any external wallet — pick the settlement token + chain when you do."
+      ctaLabel="Continue to platform"
+      onCta={onStart}
+      illustration={<WithdrawIllustration />}
+    />
+  );
+}

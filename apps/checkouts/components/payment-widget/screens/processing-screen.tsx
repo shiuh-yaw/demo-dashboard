@@ -14,7 +14,7 @@ import {
   type TransactionStep,
 } from "@dynamic-demos/checkouts-widget";
 import type { WidgetConfig } from "@/lib/widget-config";
-import type { TokenAsset } from "@/lib/balance-utils";
+import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import type { ReviewQuote } from "@/lib/types";
 import { formatUsd } from "@/lib/format";
 import {

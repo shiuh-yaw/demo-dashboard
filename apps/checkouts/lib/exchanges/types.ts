@@ -15,7 +15,7 @@
  * @module lib/exchanges/types
  */
 
-import type { TokenAsset } from "@/lib/balance-utils";
+import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 
 // =============================================================================
 // PROVIDER (display config)

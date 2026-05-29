@@ -11,6 +11,7 @@
 | `dashboard` | utility | mixed | stable |
 | `deposit` | wallet | mixed | experimental |
 | `earn` | wallet | non-custodial | stable |
+| `flow` | checkout | mixed | experimental |
 | `proceeds` | offramp | non-custodial | stable |
 | `remittance` | offramp | non-custodial | stable |
 | `shop` | checkout | non-custodial | experimental |

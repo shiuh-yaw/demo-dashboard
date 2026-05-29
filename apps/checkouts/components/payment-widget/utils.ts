@@ -9,7 +9,7 @@
 
 import type { ReviewQuote } from "@/lib/types";
 import type { TokenInfo, TransactionStep } from "@dynamic-demos/checkouts-widget";
-import type { TokenAsset } from "@/lib/balance-utils";
+import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import type { WalletGroup } from "@/components/connect-wallet-screen";
 import { NATIVE_TOKEN_ADDRESS } from "@/lib/config";
 import { formatUsd } from "@/lib/format";

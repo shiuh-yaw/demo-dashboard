@@ -31,12 +31,36 @@ export interface ReviewQuote {
     toAmount: string;
     fromChainId: number;
     toChainId: number;
-    fromToken: { address: string; chainId: number; symbol: string; decimals: number };
-    toToken: { address: string; chainId: number; symbol: string; decimals: number };
+    fromToken: {
+      address: string;
+      chainId: number;
+      symbol: string;
+      decimals: number;
+    };
+    toToken: {
+      address: string;
+      chainId: number;
+      symbol: string;
+      decimals: number;
+    };
     steps: Array<{ type?: string }>;
   };
-  fromToken: { address: string; chainId: number; symbol: string; decimals: number; name?: string; logoURI?: string };
-  toToken: { address: string; chainId: number; symbol: string; decimals: number; name?: string; logoURI?: string };
+  fromToken: {
+    address: string;
+    chainId: number;
+    symbol: string;
+    decimals: number;
+    name?: string;
+    logoURI?: string;
+  };
+  toToken: {
+    address: string;
+    chainId: number;
+    symbol: string;
+    decimals: number;
+    name?: string;
+    logoURI?: string;
+  };
   fromAmount: string;
   toAmount: string;
   toAmountUsd: string;

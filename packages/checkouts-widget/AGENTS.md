@@ -16,20 +16,32 @@ Wallet-source payment widget extracted from `apps/checkouts/`. Consumed directly
 - SSR-safe wrappers over the Dynamic Checkout Flow SDK (`@dynamic-labs-sdk/client`) under `./checkout-flow`.
 - Lifecycle callbacks (`onAmountSelected`, `onTransactionCreated`, `onQuoteLocked`, `onExecutionUpdate`, `onSettlementCompleted`, `onCancelled`, `onError`) so hosts can mirror to a dashboard or emit analytics.
 - `localStorage` persistence of in-flight `transactionId` keyed by `storageNamespace` — survives reloads inside a single checkout session.
+- `hideDestination` prop suppresses the "Destination" row on the review + loading screens for merchant flows where the settlement vault address is not buyer-relevant.
+- Pre-flow screens — `WalletPickerScreen` (installed wallets + WalletConnect catalog with QR + search) and `AssetSelectorScreen` (multichain balances → token picker) — let hosts plug the widget into their own connect/picker UX without re-implementing balance fetching or wallet enumeration.
 - Re-exports leaf screens (`DepositAmountScreen`, `ReviewPaymentScreen`, `TransactionProgressScreen`, `TokenConversionCard`, `ScreenHeader`, `InfoBox`, `ErrorBanner`) for hosts that want partial composition.
+- `balance-utils` helpers (`transformToTokenAssets`, `formatBalance`, exchange-token discriminators, Kraken adapter) — the canonical source of multichain balance shaping inside the workspace.
 - Brand contract via CSS variables on a `.checkouts-widget-root` container; no dependency on `@dynamic-demos/theme`.
 
 ## Public surface
 
-Top-level component:
+Top-level components:
 
-- `PaymentWidget` / `PaymentWidgetProps` — drop-in `amount → review → processing` widget. (stable)
+- `CheckoutWidget` / `CheckoutWidgetProps` — batteries-included widget that owns the full `connect → pick → pay → done` flow. Wraps `WalletPickerScreen` + `AssetSelectorScreen` + `PaymentWidget` with `<WidgetCard>` chrome, the wallet de-dup listener, the `<PoweredByFooter />` mark, and Terms + Privacy legal links (overridable via `legalLinks`, hideable via `hideLegalLinks`). The standard path for any host that doesn't need custom screens. (stable)
+- `PaymentWidget` / `PaymentWidgetProps` — drop-in `amount → review → processing` widget. Use directly when the host owns its own wallet + token selection (e.g. apps/checkouts' exchange-OAuth + social-login screens). Supports `hideDestination` to suppress the merchant-vault row on review + loading. (stable)
 
 Hooks + types:
 
 - `useCheckoutFlow` — lifecycle hook used internally; exported for hosts composing leaf screens. (stable)
-- `UseCheckoutFlowReturn`, `UseCheckoutFlowOptions`, `BeginCheckoutParams`, `BeginCheckoutResult`, `SubmitParams` — companion types. (stable)
+- `UseCheckoutFlowReturn`, `UseCheckoutFlowOptions`, `BeginCheckoutParams` (`destinationAddresses` is optional — omit it to fall back to the Checkout's server-side `destinationConfig.destinations`), `BeginCheckoutResult`, `SubmitParams` — companion types. (stable)
+- `useWalletConnectCatalog` / `CatalogEntry` / `UseWalletConnectCatalogOptions` / `UseWalletConnectCatalogReturn` — lazy fetcher for the WalletConnect catalog, gated on `enabled` and Strict-Mode-safe. (stable)
 - `Token`, `ExecutionStatus`, `ExecutionUpdate`, `ReviewQuote`, `BrandConfig` — public type aliases. (stable)
+
+Pre-flow screens (host-mounted before `<PaymentWidget />`):
+
+- `WalletPickerScreen` / `WalletPickerScreenProps` — installed + discovered (WalletConnect) wallet picker with QR surface, search, mobile deeplink fallback. Snapshots the prior wallet address so the parent only sees the new connection. `verifyOnConnect` (default `true`) toggles between `connectAndVerifyWithWalletProvider` (with SIWE challenge) and `connectWithWalletProvider` (no signature) for both installed and WalletConnect paths. (stable)
+- `AssetSelectorScreen` / `AssetSelectorScreenProps` — fetches multichain balances for a `WalletAccount`, shows a scrollable token picker with iconify fallback, empty + error states. (stable)
+- `groupProviders` / `WalletGroup` — collapses Phantom EVM + Phantom SOL etc. into one row by brand. (stable)
+- `TokenAsset`, `TokenBalance`, `MultichainBalanceResponse`, `TokenFilterOptions` — balance + asset types. (stable)
 
 Leaf screens (for partial composition):
 
@@ -40,6 +52,7 @@ Helpers:
 
 - `formatRawTokenAmount`, `formatUsd`, `formatApproxUsd`, `parseUsd`, `formatTokenAmount`, `formatBalance`, `truncateAddress`, `formatErrorMessage`, `isUserRejection` — formatting + error helpers. (stable)
 - `isSolanaChainId`, `DYNAMIC_SOLANA_NETWORK_ID` — chain helpers. (stable)
+- `findTokenBalance`, `getTotalBalanceValue`, `getNetworkBalances`, `normalizeBalanceResponse`, `transformToTokenAssets`, `transformKrakenToTokenAssets`, `isExchangeToken`, `logBalanceDebug` — balance shaping + Kraken adapter, canonical inside the workspace. (stable)
 - `generateTransactionSteps`, `updateTransactionSteps` — step builders re-exported from `TransactionProgressScreen`. (internal — used by `apps/checkouts/` Kraken path; will be removed once `apps/checkouts/` fully delegates or the Kraken path becomes its own package.)
 
 Subpath exports:
@@ -65,8 +78,8 @@ The package consumes CSS variables prefixed `--brand-*` (e.g. `--brand-fg`, `--b
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/utils`, `@dynamic-demos/ui`, `@dynamic-labs/iconic`, `@dynamic-labs-sdk/client` (peer), `@dynamic-labs-sdk/evm` (peer), `react` / `react-dom` (peer), `lucide-react`, `zod`.
-**Imported by:** `apps/checkouts/` (today). The next consumer is the new in-monorepo host app being built in a sibling worktree.
+**Imports:** `@dynamic-demos/utils`, `@dynamic-demos/ui`, `@dynamic-labs/iconic`, `@dynamic-labs-sdk/client` (peer), `@dynamic-labs-sdk/evm` (peer), `react` / `react-dom` (peer), `lucide-react`, `qrcode.react`, `zod`.
+**Imported by:** `apps/checkouts/`, `apps/flow/`. Both apps use `PaymentWidget` plus the pre-flow `WalletPickerScreen` + `AssetSelectorScreen` screens; `apps/checkouts` additionally consumes the leaf screens for its exchange-specific flows.
 
 ## Examples
 

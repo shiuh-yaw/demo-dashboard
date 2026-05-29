@@ -24,7 +24,6 @@ import {
 import { cn } from "@dynamic-demos/utils";
 import { truncateAddress } from "@/lib/format";
 import { Plus, Check, Trash2, LogOut } from "lucide-react";
-import { WalletIcon } from "@/components/icons";
 import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { getUserSocialAccounts } from "@/lib/dynamicClient";
 import { EXCHANGES } from "@/lib/exchanges";
@@ -176,7 +175,7 @@ export default function ConnectedWalletsScreen({
   return (
     <div className="flex flex-col">
       <ScreenHeader
-        icon={<WalletIcon size={18} className="text-(--brand-fg)" />}
+        eyebrow="Wallets"
         title="Your Wallets"
         subtitle="Select a wallet or connect a new one"
         onClose={onClose}

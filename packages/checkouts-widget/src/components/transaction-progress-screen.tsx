@@ -16,7 +16,7 @@ import { Check, AlertCircle, ExternalLink } from "lucide-react";
 import ScreenHeader from "./screen-header";
 import TokenConversionCard, { type TokenInfo } from "./token-conversion-card";
 import { Button } from "@dynamic-demos/ui";
-import { AnimatedClockIcon, PendingStepIcon, CashIcon } from "./icons";
+import { AnimatedClockIcon, PendingStepIcon } from "./icons";
 
 /** The action noun — any string. See PaymentWidget docs for examples. */
 type WidgetMode = string;
@@ -102,7 +102,7 @@ export default function TransactionProgressScreen({
   return (
     <div className="flex flex-col h-full flex-1">
       <ScreenHeader
-        icon={<CashIcon size={18} className="text-(--brand-fg)" />}
+        eyebrow={mode.toUpperCase()}
         title={
           isCompleted
             ? `${actionLabel} Complete`
@@ -117,7 +117,7 @@ export default function TransactionProgressScreen({
       {/* Token Conversion Section — hidden on the completion + failure
           screens since the summary calls out the relevant info. */}
       {!isCompleted && !hasFailed && (
-        <div className="p-3 border-b border-(--brand-border)">
+        <div className="px-5 py-3 border-b border-(--brand-border)">
           <TokenConversionCard
             sourceToken={sourceToken}
             destinationToken={destinationToken}
@@ -130,7 +130,7 @@ export default function TransactionProgressScreen({
           so the error banner + retry actions get more room); in-flight
           renders the per-step progress list. */}
       {isCompleted ? (
-        <div className="flex-1 relative overflow-hidden flex flex-col items-center justify-center px-6 text-center">
+        <div className="flex-1 min-h-[16rem] relative overflow-hidden flex flex-col items-center justify-center px-6 py-8 text-center">
           {/* Atmospheric gradient — uses the same brand vars as the token
               card so the success state feels of-a-piece with review/processing. */}
           <div
@@ -195,7 +195,7 @@ export default function TransactionProgressScreen({
           </div>
         </div>
       ) : hasFailed ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+        <div className="flex-1 min-h-[16rem] flex flex-col items-center justify-center gap-3 px-6 py-8 text-center">
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
             <AlertCircle className="w-5 h-5 text-red-500" strokeWidth={2} />
           </div>
@@ -209,7 +209,7 @@ export default function TransactionProgressScreen({
           </div>
         </div>
       ) : (
-        <div className="p-3">
+        <div className="px-5 py-3">
           <div className="flex flex-col">
             {steps.map((step, index) => {
               const isLast = index === steps.length - 1;
@@ -253,7 +253,7 @@ export default function TransactionProgressScreen({
 
       {/* Error Message */}
       {error && (
-        <div className="mx-3 mb-3 p-3 bg-red-50 border border-red-200 rounded-(--brand-radius) flex items-center gap-2">
+        <div className="mx-5 mb-5 p-3 bg-red-50 border border-red-200 rounded-(--brand-radius) flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
           <p className="text-xs text-red-800 flex-1">{error}</p>
         </div>
@@ -261,7 +261,7 @@ export default function TransactionProgressScreen({
 
       {/* Footer - only show when completed or failed */}
       {(isCompleted || hasFailed) && (
-        <div className="p-3 border-t border-(--brand-border)">
+        <div className="px-5 py-3 border-t border-(--brand-border)">
           {hasFailed && onRetry ? (
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose} className="flex-1">
@@ -357,23 +357,50 @@ export interface StepUpdateParams {
   totalSteps?: number;
 }
 
-/** Helper to safely update step status at index (type-safe) */
+/**
+ * Helper to safely update step status at index. Returns `true` if the
+ * status actually changed (mutated `steps`); `false` if `steps[idx]`
+ * already had the target status and no write happened. Callers use the
+ * return to detect no-op updates and skip rerender churn.
+ */
 function setStepStatus(
   steps: TransactionStep[],
   idx: number,
   status: StepStatus,
-): void {
+): boolean {
   const step = steps[idx];
-  if (step) {
-    steps[idx] = { ...step, status };
-  }
+  if (!step || step.status === status) return false;
+  steps[idx] = { ...step, status };
+  return true;
+}
+
+/**
+ * Mark every step as `completed`. Returns `currentSteps` unchanged
+ * (same reference) when all steps are already completed — lets
+ * `setSteps((prev) => updateTransactionSteps(prev, …))` short-circuit
+ * the re-render via React's same-reference no-op.
+ */
+function markAllCompleted(currentSteps: TransactionStep[]): TransactionStep[] {
+  if (currentSteps.every((s) => s.status === "completed")) return currentSteps;
+  return currentSteps.map((s) => ({ ...s, status: "completed" as const }));
 }
 
 export function updateTransactionSteps(
   currentSteps: TransactionStep[],
   update: StepUpdateParams,
 ): TransactionStep[] {
+  // Lazy clone: only allocate a new array when we actually need to
+  // mutate. `setStepStatus` flips `dirty` when it writes. If no branch
+  // wrote, we return `currentSteps` unchanged — React's
+  // `setSteps((p) => p)` then treats this as a no-op and skips the
+  // re-render. Without this, every poll tick (~30 per checkout) burned
+  // a re-render of the whole TransactionProgressScreen subtree even
+  // when the SDK status hadn't budged.
   const steps = [...currentSteps];
+  let dirty = false;
+  const set = (idx: number, status: StepStatus): void => {
+    if (setStepStatus(steps, idx, status)) dirty = true;
+  };
 
   // Find step indices
   const authorizeIdx = steps.findIndex((s) => s.id === "authorize");
@@ -392,77 +419,98 @@ export function updateTransactionSteps(
         activeIdx >= 0
           ? activeIdx
           : steps.findIndex((s) => s.status === "pending");
-      if (targetIdx >= 0) {
-        setStepStatus(steps, targetIdx, "failed");
-      }
+      if (targetIdx >= 0) set(targetIdx, "failed");
     }
-    return steps;
+    return dirty ? steps : currentSteps;
   }
 
-  // Handle bridging status (cross-chain waiting for destination)
+  // Handle bridging status (cross-chain waiting for destination).
+  //
+  // When `convert` exists (sourceSymbol ≠ destinationSymbol it's the
+  // active step. When it's absent (same-symbol bridge, e.g. USDC on
+  // Base → USDC on Solana), promote `complete` to active instead —
+  // otherwise the user sees a grey "pending" dot during the bridge
+  // wait when they should be seeing a spinner.
   if (isBridging && status === "RUNNING") {
-    if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "completed");
-    if (convertIdx >= 0) setStepStatus(steps, convertIdx, "active");
-    if (completeIdx >= 0) setStepStatus(steps, completeIdx, "pending");
-    return steps;
+    if (authorizeIdx >= 0) set(authorizeIdx, "completed");
+    if (convertIdx >= 0) {
+      set(convertIdx, "active");
+      if (completeIdx >= 0) set(completeIdx, "pending");
+    } else if (completeIdx >= 0) {
+      set(completeIdx, "active");
+    }
+    return dirty ? steps : currentSteps;
   }
 
   // Handle TOKEN_ALLOWANCE (approval) process
   if (processType === "TOKEN_ALLOWANCE") {
     if (approveIdx >= 0) {
       if (status === "ACTION_REQUIRED" || status === "RUNNING") {
-        setStepStatus(steps, approveIdx, "active");
+        set(approveIdx, "active");
       } else if (status === "DONE") {
-        setStepStatus(steps, approveIdx, "completed");
-        if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "active");
+        set(approveIdx, "completed");
+        if (authorizeIdx >= 0) set(authorizeIdx, "active");
       }
       // FAILED is handled globally at the top of the function
     } else if (authorizeIdx >= 0 && status !== "DONE") {
       // No dedicated approve step - approval is part of authorize
-      setStepStatus(steps, authorizeIdx, "active");
+      set(authorizeIdx, "active");
     }
-    return steps;
+    return dirty ? steps : currentSteps;
   }
 
   // Handle TRANSFER (same-token same-chain) — only authorize + complete steps
   if (processType === "TRANSFER") {
     if (status === "ACTION_REQUIRED" || status === "RUNNING") {
-      if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "active");
+      if (authorizeIdx >= 0) set(authorizeIdx, "active");
     } else if (status === "DONE") {
-      return steps.map((s) => ({ ...s, status: "completed" as const }));
+      return markAllCompleted(currentSteps);
     }
-    return steps;
+    return dirty ? steps : currentSteps;
   }
 
-  // Handle SWAP or CROSS_CHAIN process
+  // Handle SWAP or CROSS_CHAIN process.
+  //
+  // Same fall-through pattern as the bridging branch above: when
+  // there's no `convert` step (same-symbol routes), promote
+  // `complete` to active during the wait so the user sees a
+  // spinner instead of a grey pending dot.
   if (processType === "SWAP" || processType === "CROSS_CHAIN") {
     if (status === "ACTION_REQUIRED") {
-      if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "active");
-      if (convertIdx >= 0) setStepStatus(steps, convertIdx, "pending");
+      if (authorizeIdx >= 0) set(authorizeIdx, "active");
+      if (convertIdx >= 0) set(convertIdx, "pending");
     } else if (status === "RUNNING") {
-      if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "completed");
-      if (convertIdx >= 0) setStepStatus(steps, convertIdx, "active");
+      if (authorizeIdx >= 0) set(authorizeIdx, "completed");
+      if (convertIdx >= 0) {
+        set(convertIdx, "active");
+      } else if (completeIdx >= 0) {
+        set(completeIdx, "active");
+      }
     } else if (status === "DONE") {
       if (isCrossChain) {
         // Cross-chain: source done, wait for bridge
-        if (authorizeIdx >= 0) setStepStatus(steps, authorizeIdx, "completed");
-        if (convertIdx >= 0) setStepStatus(steps, convertIdx, "active");
+        if (authorizeIdx >= 0) set(authorizeIdx, "completed");
+        if (convertIdx >= 0) {
+          set(convertIdx, "active");
+        } else if (completeIdx >= 0) {
+          set(completeIdx, "active");
+        }
       } else {
         // Same-chain swap complete: mark ALL steps as completed
-        return steps.map((s) => ({ ...s, status: "completed" as const }));
+        return markAllCompleted(currentSteps);
       }
     }
     // FAILED is handled globally at the top of the function
-    return steps;
+    return dirty ? steps : currentSteps;
   }
 
   // Final completion (e.g., "RECEIVING" process or other completion signal)
   // Mark all steps as done when SDK signals full completion
   if (status === "DONE") {
-    return steps.map((s) => ({ ...s, status: "completed" as const }));
+    return markAllCompleted(currentSteps);
   }
 
-  return steps;
+  return dirty ? steps : currentSteps;
 }
 
 export type { TokenInfo };

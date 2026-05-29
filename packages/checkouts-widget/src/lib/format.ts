@@ -18,7 +18,7 @@
  */
 export function formatRawTokenAmount(
   rawAmount: string,
-  decimals: number
+  decimals: number,
 ): string {
   const raw = BigInt(rawAmount);
   const divisor = BigInt(10 ** decimals);
@@ -124,7 +124,7 @@ export function formatBalance(balance: number): string {
 export function truncateAddress(
   address: string,
   startChars = 6,
-  endChars = 4
+  endChars = 4,
 ): string {
   if (!address) return "";
   if (address.length <= startChars + endChars) return address;

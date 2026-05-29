@@ -11,6 +11,7 @@ import {
 } from "@dynamic-labs/iconic";
 import { cn } from "@dynamic-demos/utils";
 import { ArrowRightIcon } from "./icons";
+import { ChainBadge } from "../lib/chain-icons";
 
 /**
  * Map of well-known native-token symbols to Dynamic's `Iconic` chain icons.
@@ -33,6 +34,12 @@ interface TokenInfo {
   amount: string;
   usdValue: string;
   iconUrl?: string;
+  /**
+   * Chain id used to render the chain micro-badge in the bottom-right
+   * of the token icon (same treatment as `AssetSelectorScreen` rows).
+   * Optional for backward-compat — when omitted the badge is skipped.
+   */
+  chainId?: number;
 }
 
 interface TokenConversionCardProps {
@@ -99,7 +106,12 @@ function TokenDisplay({
       )}
     >
       <div className="flex flex-col items-center gap-1.5">
-        <TokenIcon iconUrl={token.iconUrl} name={token.name} symbol={token.symbol} />
+        <TokenIcon
+          iconUrl={token.iconUrl}
+          name={token.name}
+          symbol={token.symbol}
+          chainId={token.chainId}
+        />
         <div className="flex flex-col items-center text-center">
           <span className="text-xs text-(--brand-muted) tracking-[-0.12px]">
             {token.name}
@@ -137,10 +149,12 @@ function TokenIcon({
   iconUrl,
   name,
   symbol,
+  chainId,
 }: {
   iconUrl?: string;
   name: string;
   symbol: string;
+  chainId?: number;
 }) {
   const IconicIcon = ICONIC_TOKEN_ICONS[symbol.toUpperCase()];
 
@@ -150,29 +164,17 @@ function TokenIcon({
   const [attempt, setAttempt] = useState(0);
   const currentSrc = sources[attempt];
 
-  if (IconicIcon) {
-    return (
-      <IconicIcon
-        className="w-7 h-7 rounded-full"
-        title={name}
-        aria-label={name}
-      />
-    );
-  }
-
-  if (!currentSrc) {
-    return (
-      <div
-        className="w-7 h-7 rounded-full bg-linear-to-br from-purple-400 to-blue-500 flex items-center justify-center text-[10px] font-medium text-white"
-        aria-label={name}
-        title={name}
-      >
-        {symbol.slice(0, 3).toUpperCase()}
-      </div>
-    );
-  }
-
-  return (
+  const inner = IconicIcon ? (
+    <IconicIcon className="w-7 h-7 rounded-full" title={name} aria-label={name} />
+  ) : !currentSrc ? (
+    <div
+      className="w-7 h-7 rounded-full bg-linear-to-br from-purple-400 to-blue-500 flex items-center justify-center text-[10px] font-medium text-white"
+      aria-label={name}
+      title={name}
+    >
+      {symbol.slice(0, 3).toUpperCase()}
+    </div>
+  ) : (
     <img
       key={currentSrc}
       src={currentSrc}
@@ -180,6 +182,15 @@ function TokenIcon({
       className="w-7 h-7 rounded-full object-contain"
       onError={() => setAttempt((n) => n + 1)}
     />
+  );
+
+  // Wrap in a relative 28x28 container so <ChainBadge> can anchor to
+  // bottom-right with the same treatment as the asset-selector rows.
+  return (
+    <span className="relative inline-flex h-7 w-7">
+      {inner}
+      {typeof chainId === "number" && <ChainBadge chainId={chainId} />}
+    </span>
   );
 }
 

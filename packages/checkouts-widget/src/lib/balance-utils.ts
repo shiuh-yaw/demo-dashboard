@@ -43,6 +43,7 @@
  * ```
  */
 
+import { ZERO_ADDRESS } from "./chain";
 
 // =============================================================================
 // TYPES
@@ -319,6 +320,119 @@ export function transformToTokenAssets(
   }
 
   // Sort by USD value, highest first
+  assets.sort((a, b) => {
+    const aValue = parseFloat(a.usdValue.replace(/[$,]/g, ""));
+    const bValue = parseFloat(b.usdValue.replace(/[$,]/g, ""));
+    return bValue - aValue;
+  });
+
+  return assets;
+}
+
+/**
+ * Flat-shape TokenBalance — matches the SDK 1.3.0 `getBalances`
+ * return shape (a single-level array, not the nested
+ * `chainBalances[].networks[].balances[]` of `getMultichainBalances`).
+ * Mirrored locally so we don't depend on the api-core type directly.
+ */
+export interface FlatTokenBalance {
+  networkId?: number;
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoURI: string;
+  balance: number;
+  rawBalance: number;
+  price?: number;
+  marketValue?: number;
+  isNative?: boolean;
+}
+
+/**
+ * Transform an SDK 1.3.0 `getBalances` response (flat
+ * `TokenBalance[]`) into `TokenAsset[]` for the asset-picker UI.
+ *
+ * This is the multichain-aware sibling of `transformToTokenAssets`.
+ * Where the older nested response carried network id in the
+ * `network.networkId` envelope, the flat response embeds it on each
+ * row — we read `b.networkId` directly. The caller passes a fallback
+ * network id for SDK responses that omit it (single-network calls).
+ *
+ * @example
+ * ```ts
+ * const balances = await getBalances({
+ *   walletAccount,
+ *   networkIds: ["1", "8453", "137"],
+ *   includeNative: true,
+ *   includePrices: true,
+ *   filterSpamTokens: true,
+ * });
+ * const assets = transformFlatBalancesToTokenAssets(balances, {
+ *   minUsdValue: paymentAmount,
+ * });
+ * ```
+ */
+export function transformFlatBalancesToTokenAssets(
+  balances: FlatTokenBalance[],
+  options: TokenFilterOptions & { fallbackNetworkId?: number } = {},
+): TokenAsset[] {
+  const {
+    minUsdValue = 0,
+    excludeZeroBalance = true,
+    fallbackNetworkId,
+  } = options;
+
+  const assets: TokenAsset[] = [];
+
+  for (const b of balances) {
+    const balance = b.balance ?? 0;
+    const marketValue = b.marketValue ?? 0;
+    const decimals = b.decimals ?? 18;
+
+    if (excludeZeroBalance && balance <= 0) continue;
+    if (marketValue < minUsdValue) continue;
+
+    const pricePerToken = b.price ?? (balance > 0 ? marketValue / balance : 0);
+    // SDK returns rawBalance as a number; widen to BigInt-derived
+    // string to keep `TokenAsset.rawBalance` shape stable for callers
+    // (some downstream paths treat it as a numeric string).
+    const rawBalance =
+      typeof b.rawBalance === "number"
+        ? BigInt(Math.floor(b.rawBalance)).toString()
+        : BigInt(Math.floor(balance * Math.pow(10, decimals))).toString();
+    const chainId = b.networkId ?? fallbackNetworkId ?? 0;
+    // Native tokens can be identified three ways in the 1.3.0
+    // `getBalances` response, depending on chain/version:
+    //   1. Explicit `isNative: true` flag (preferred).
+    //   2. Empty/undefined `address` (some chains).
+    //   3. EVM zero address `0x00…00` (matches the SDK's native
+    //      marker convention documented in `getSwapQuote.d.ts`).
+    // Treat any of these as native and surface `tokenAddress` as
+    // undefined so downstream code (id formatting, quote requests,
+    // chain badge rendering) handles native tokens consistently.
+    const isNative =
+      b.isNative === true ||
+      !b.address ||
+      b.address.toLowerCase() === ZERO_ADDRESS;
+    const tokenAddress = isNative ? undefined : b.address;
+
+    assets.push({
+      id: `${b.symbol}-${chainId}-${tokenAddress ?? "native"}`,
+      name: b.name || b.symbol || "Unknown Token",
+      symbol: b.symbol || "???",
+      balance: formatTokenBalance(balance),
+      rawBalance,
+      decimals,
+      usdValue: formatUsdValue(marketValue),
+      pricePerToken,
+      iconUrl: b.logoURI,
+      chainId,
+      tokenAddress,
+    });
+  }
+
+  // Highest-USD-value first; matches the nested-shape transform.
   assets.sort((a, b) => {
     const aValue = parseFloat(a.usdValue.replace(/[$,]/g, ""));
     const bValue = parseFloat(b.usdValue.replace(/[$,]/g, ""));

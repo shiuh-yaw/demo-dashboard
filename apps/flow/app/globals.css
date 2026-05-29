@@ -1,0 +1,225 @@
+@import "tailwindcss";
+@import "@dynamic-labs-sdk/droplet/styles/globals.css";
+
+@source "../../../packages/ui/src/**/*.tsx";
+@source "../../../packages/ui/src/**/*.ts";
+@source "../../../packages/checkouts-widget/src/**/*.tsx";
+@source "../../../packages/checkouts-widget/src/**/*.ts";
+/*
+ * Droplet's compiled dist uses Tailwind utility classes (`bg-card`,
+ * `data-[state=open]:fade-in-0`, etc.) inside its component source.
+ * Tailwind v4 doesn't scan node_modules by default, so without this
+ * @source, Droplet's Dialog overlay + content render transparent.
+ */
+@source "../node_modules/@dynamic-labs-sdk/droplet/dist/**/*.{js,mjs}";
+
+/*
+ * Light-mode-only brand token contract. Per-scenario brand overrides are
+ * layered on top via `<ThemeStyleTag overridesOnly>` inside each
+ * scenario page (see components/chrome/ScenarioThemeWrapper.tsx).
+ *
+ * Tone matches apps/checkouts: charcoal-on-near-white with a Dynamic
+ * blue accent. The `--widget-*` tokens are consumed by
+ * `@dynamic-demos/ui`'s WidgetCard if/when we use it as a fallback.
+ */
+:root {
+  --dynamic-blue: #4779FF;
+  --dynamic-blue-hover: #2F61E8;
+
+  --brand-page-bg: #F4F5F7;
+  --brand-surface: #FFFFFF;
+  --brand-fg: #0E121B;
+  --brand-fg-secondary: #525866;
+  --brand-muted: #99A0AE;
+  --brand-border: #E1E4EA;
+  --brand-divider: #F2F3F5;
+  --brand-row-bg: #F9FAFB;
+  --brand-row-hover: #F4F5F7;
+  --brand-primary: var(--dynamic-blue);
+  --brand-primary-hover: var(--dynamic-blue-hover);
+  --brand-primary-fg: #FFFFFF;
+  --brand-accent: #4779FF;
+  --brand-accent-fg: #FFFFFF;
+  --brand-success: #16A34A;
+  --brand-warning: #F59E0B;
+  --brand-error: #DC2626;
+
+  /*
+   * Brand contract tokens consumed by `@dynamic-demos/checkouts-widget`'s
+   * shared screens (TokenConversionCard's tinted gradient, radii, etc.).
+   * Missing entries silently render as transparent — that's why the
+   * tinted token card never showed up before these were set. Tinted in
+   * Dynamic blue here so the widget reads as on-brand.
+   */
+  --brand-card-gradient-start: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface));
+  --brand-card-gradient-end: color-mix(in srgb, var(--brand-primary) 2%, var(--brand-surface));
+  --brand-radius-sm: 6px;
+  --brand-radius: 10px;
+  --brand-radius-lg: 22px;
+
+  /* `--widget-*` shims for shared @dynamic-demos/ui components. */
+  --widget-page-bg: var(--brand-page-bg);
+  --widget-bg: var(--brand-surface);
+  --widget-fg: var(--brand-fg);
+  --widget-muted: var(--brand-muted);
+  --widget-row-hover: var(--brand-row-hover);
+  --widget-border: var(--brand-border);
+  --widget-primary: var(--brand-primary);
+  --widget-primary-hover: var(--brand-primary-hover);
+  --widget-accent: var(--brand-accent);
+}
+
+@layer base {
+  html {
+    font-family:
+      var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system,
+      sans-serif;
+    background: var(--brand-page-bg);
+    color: var(--brand-fg);
+  }
+  body {
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family:
+      var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Tailwind v4 dropped the UA pointer cursor on buttons; restore it
+     for every interactive control we render. Disabled buttons keep the
+     default cursor. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+}
+
+/*
+ * Scenario card connector animation. Paused by default; runs only when
+ * an ancestor with `.group` is hovered (each ScenarioCard's outer Link
+ * provides that group). All keyframes share the 1.8s cycle so the
+ * source pulse, charging line, leading particle, receive burst, and
+ * landing chevron flash stay phase-locked.
+ */
+@keyframes flow-source-pulse {
+  0% { r: 1.6; opacity: 0; }
+  10% { opacity: 0.7; }
+  100% { r: 6.5; opacity: 0; }
+}
+
+@keyframes flow-line-draw {
+  0% { stroke-dashoffset: 35; opacity: 0; }
+  8% { opacity: 1; }
+  62% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes flow-particle-travel {
+  0% { cx: 3; opacity: 0; }
+  8% { opacity: 1; }
+  62% { cx: 38; opacity: 1; }
+  80%, 100% { cx: 38; opacity: 0; }
+}
+
+@keyframes flow-receive-burst {
+  0%, 60% { r: 0; opacity: 0; }
+  72% { r: 4.5; opacity: 0.55; }
+  92%, 100% { r: 0; opacity: 0; }
+}
+
+@keyframes flow-chevron-flash {
+  0%, 60% { transform: scale(1); opacity: 0.55; }
+  72% { transform: scale(1.18); opacity: 1; }
+  95%, 100% { transform: scale(1); opacity: 0.55; }
+}
+
+.flow-anim-source-pulse {
+  animation: flow-source-pulse 1.8s ease-out infinite;
+  animation-play-state: paused;
+}
+.flow-anim-line-draw {
+  animation: flow-line-draw 1.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation-play-state: paused;
+}
+.flow-anim-particle-travel {
+  animation: flow-particle-travel 1.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation-play-state: paused;
+}
+.flow-anim-receive-burst {
+  animation: flow-receive-burst 1.8s ease-out infinite;
+  animation-play-state: paused;
+}
+.flow-anim-chevron-flash {
+  opacity: 0.55;
+  animation: flow-chevron-flash 1.8s ease-out infinite;
+  animation-play-state: paused;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.group:hover .flow-anim-source-pulse,
+.group:hover .flow-anim-line-draw,
+.group:hover .flow-anim-particle-travel,
+.group:hover .flow-anim-receive-burst,
+.group:hover .flow-anim-chevron-flash {
+  animation-play-state: running;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-anim-source-pulse,
+  .flow-anim-line-draw,
+  .flow-anim-particle-travel,
+  .flow-anim-receive-burst,
+  .flow-anim-chevron-flash {
+    animation: none;
+  }
+}
+
+/*
+ * Shiki output container. Shiki emits `<pre class="shiki"><code><span
+ * class="line">…</span>…</code></pre>` with inline styles for theme
+ * colours; we layer line numbers (CSS counter) and frame padding on top
+ * without touching the highlighter output.
+ */
+.shiki-block pre.shiki {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background-color: transparent !important;
+}
+.shiki-block pre.shiki code {
+  counter-reset: shiki-line;
+  display: grid;
+  min-width: max-content;
+}
+.shiki-block pre.shiki .line {
+  counter-increment: shiki-line;
+  padding-right: 1.5rem;
+}
+.shiki-block pre.shiki .line::before {
+  content: counter(shiki-line);
+  display: inline-block;
+  width: 2.25em;
+  padding-right: 1.5em;
+  margin-left: 0.5em;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.22);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.shiki-block pre.shiki .line:empty::after {
+  content: "\200B";
+}

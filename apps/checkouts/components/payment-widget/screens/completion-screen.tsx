@@ -13,7 +13,7 @@ import { useState } from "react";
 import { WidgetCard } from "@dynamic-demos/ui";
 import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { Button } from "@dynamic-demos/ui";
-import { CheckCircle, ExternalLink, Copy, Check } from "lucide-react";
+import { ExternalLink, Copy, Check } from "lucide-react";
 import type { WidgetConfig } from "@/lib/widget-config";
 
 // =============================================================================
@@ -79,13 +79,7 @@ export function CompletionScreen({
     <WidgetCard isTransitioning={isTransitioning}>
       <div className="flex flex-col">
         <ScreenHeader
-          icon={
-            <CheckCircle
-              size={18}
-              className="text-[#46B463]"
-              strokeWidth={1.5}
-            />
-          }
+          eyebrow="Complete"
           title={`${actionLabel} Complete`}
           subtitle={`Your ${actionLabel.toLowerCase()} has been processed`}
           onClose={onClose}

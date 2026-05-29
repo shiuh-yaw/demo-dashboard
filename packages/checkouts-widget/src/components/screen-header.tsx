@@ -5,26 +5,39 @@ import { type ReactNode } from "react";
 import { cn } from "@dynamic-demos/utils";
 
 interface ScreenHeaderProps {
-  /** Icon component to display */
-  icon: ReactNode;
-  /** Main title text */
+  /**
+   * Small uppercase eyebrow label above the title (10px, muted,
+   * letterspaced). Matches the asset-selector's "PAY WITH" header.
+   * Pass `mode.toUpperCase()` from the host for "PAYMENT" / "DEPOSIT"
+   * / "WITHDRAW" or any other short context label.
+   */
+  eyebrow?: ReactNode;
+  /** Primary title. */
   title: ReactNode;
-  /** Subtitle/description text */
+  /** Optional explanatory line under the title. */
   subtitle?: ReactNode;
-  /** Close button handler - if undefined, no close button shown */
+  /** Close-button handler. When undefined, no button renders. */
   onClose?: () => void;
-  /** Show a placeholder for the close button to maintain layout */
+  /** Reserve close-button space even when `onClose` is absent (keeps
+   *  the title centered between two equal margins). */
   showClosePlaceholder?: boolean;
-  /** Hide the bottom border (useful when extending header with additional content) */
+  /** Hide the bottom border (useful when the next section provides
+   *  its own divider). */
   noBorder?: boolean;
 }
 
 /**
- * Reusable header component for modal screens
- * Displays an icon, title, optional subtitle, and close button
+ * Shared screen header — eyebrow + title + optional subtitle on the
+ * left, close X on the right. Matches the asset-selector's "PAY WITH"
+ * / "Pick a token" pattern so every screen in the widget reads with
+ * the same hierarchy.
+ *
+ * The previous shape — a 38px white-card icon + medium title — was
+ * inconsistent with the picker header that hosts apps had been
+ * landing on. This is the normalized version.
  */
 export default function ScreenHeader({
-  icon,
+  eyebrow,
   title,
   subtitle,
   onClose,
@@ -34,35 +47,41 @@ export default function ScreenHeader({
   return (
     <div
       className={cn(
-        "flex items-start justify-between p-3",
+        // 20px (p-5) matches the outer padding the picker screens use
+        // when mounted inside <CheckoutWidget>. Keeps the "eyebrow ↔
+        // card edge" distance consistent across every header in the
+        // widget so the review/processing screens don't read as
+        // tighter than the picker.
+        "flex items-start justify-between gap-3 p-5",
         !noBorder && "border-b border-(--brand-border)",
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className="w-[38px] h-[38px] min-w-[38px] flex items-center justify-center rounded-[9px] bg-(--brand-surface) border border-(--brand-border) shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)]">
-          {icon}
-        </div>
-        <div className="flex flex-col">
-          <h2 className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-5">
-              {subtitle}
-            </p>
-          )}
-        </div>
+      <div className="flex min-w-0 flex-col gap-1">
+        {eyebrow && (
+          <span className="text-[10px] uppercase tracking-[0.18em] text-(--brand-muted) font-medium">
+            {eyebrow}
+          </span>
+        )}
+        <h2 className="text-base font-semibold text-(--brand-fg) tracking-[-0.01em] leading-snug">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-snug">
+            {subtitle}
+          </p>
+        )}
       </div>
       {onClose ? (
         <button
           type="button"
           onClick={onClose}
-          className="p-1 hover:bg-(--brand-row-hover) rounded transition-colors cursor-pointer"
+          aria-label="Close"
+          className="shrink-0 p-1 hover:bg-(--brand-row-hover) rounded transition-colors cursor-pointer"
         >
           <X className="w-4 h-4 text-(--brand-muted)" />
         </button>
       ) : showClosePlaceholder ? (
-        <div className="w-6 h-6" />
+        <div className="w-6 h-6 shrink-0" />
       ) : null}
     </div>
   );

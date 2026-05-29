@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef } from "react";
 import { cn } from "@dynamic-demos/utils";
-import { DollarCircleIcon } from "./icons";
 import ScreenHeader from "./screen-header";
 import { Button } from "@dynamic-demos/ui";
 
@@ -17,7 +16,13 @@ interface DepositAmountScreenProps {
   minAmount?: number;
   /** Maximum deposit amount */
   maxAmount?: number;
-  /** Called when user confirms the deposit amount */
+  /**
+   * Action verb (e.g. `"payment"`, `"deposit"`, `"withdraw"`). Drives
+   * the eyebrow + title copy so the same screen reads correctly
+   * regardless of the host's payment mode. Default `"deposit"`.
+   */
+  mode?: string;
+  /** Called when user confirms the amount */
   onConfirm?: (amount: number) => void;
 }
 
@@ -25,6 +30,7 @@ export default function DepositAmountScreen({
   presets = DEFAULT_PRESETS,
   minAmount = DEFAULT_MIN_AMOUNT,
   maxAmount = DEFAULT_MAX_AMOUNT,
+  mode = "deposit",
   onConfirm,
 }: DepositAmountScreenProps) {
   const [amount, setAmount] = useState<string>("");
@@ -93,13 +99,13 @@ export default function DepositAmountScreen({
   return (
     <div className="flex flex-col">
       <ScreenHeader
-        icon={<DollarCircleIcon size={18} className="text-(--brand-fg)" />}
-        title="Deposit from wallet"
-        subtitle="Enter an amount you want to deposit"
+        eyebrow={mode.toUpperCase()}
+        title={`Enter an amount`}
+        subtitle={`Choose how much you want to ${mode}.`}
       />
 
       {/* Amount Input Area */}
-      <div className="flex flex-col gap-2 items-center justify-center p-3">
+      <div className="flex flex-col gap-2 items-center justify-center px-5 py-3">
         <div
           onClick={handleContainerClick}
           className={cn(
@@ -168,7 +174,7 @@ export default function DepositAmountScreen({
       </div>
 
       {/* Footer Button */}
-      <div className="p-3 border-t border-(--brand-border)">
+      <div className="px-5 py-3 border-t border-(--brand-border)">
         <Button
           onClick={handleConfirm}
           disabled={!canConfirm}

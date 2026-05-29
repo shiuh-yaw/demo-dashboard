@@ -28,15 +28,15 @@ import type {
 } from "../checkout-flow";
 import type { WalletAccount } from "@dynamic-labs-sdk/client";
 import type { ExecutionUpdate } from "../lib/types";
-import { mapTransactionToUpdate } from "../checkout-flow/status-map";
+import {
+  extractFailureMessage,
+  isFailedTerminal,
+  mapTransactionToUpdate,
+} from "../checkout-flow/status-map";
 import { createCheckoutStorage } from "../checkout-flow/storage";
 import { formatErrorMessage, isUserRejection } from "../lib/format";
 
-const TERMINAL_EXECUTION_STATES = new Set([
-  "cancelled",
-  "expired",
-  "failed",
-]);
+const TERMINAL_EXECUTION_STATES = new Set(["cancelled", "expired", "failed"]);
 const TERMINAL_SETTLEMENT_STATES = new Set(["completed", "failed"]);
 
 const isTerminal = (tx: CheckoutTransaction): boolean =>
@@ -51,7 +51,14 @@ export interface BeginCheckoutParams {
   currency: string;
   /** Dynamic Checkout id (provisioned via the Dynamic REST API). Required by the backend even though the SDK type marks it optional. */
   checkoutId?: string;
-  destinationAddresses: CreateCheckoutTransactionParams["destinationAddresses"];
+  /**
+   * Per-transaction destination override. Omit to fall back to the
+   * destinations configured on the Checkout server-side (the common
+   * case for merchant payments). When provided, the address must match
+   * the Dynamic API's pattern (`^[A-Za-z0-9_]{18,100}$`); empty strings
+   * are rejected by the backend, so undefined is the right way to skip.
+   */
+  destinationAddresses?: CreateCheckoutTransactionParams["destinationAddresses"];
   memo?: object;
   source: Omit<WalletSourceParams, "transactionId">;
   fromTokenAddress: string;
@@ -85,6 +92,13 @@ export interface UseCheckoutFlowOptions {
    *  support multiple Dynamic environments should pass their environment id here so
    *  in-flight transactions don't bleed across environments. */
   storageNamespace?: string;
+  /**
+   * Slippage tolerance forwarded to `getCheckoutTransactionQuote` on
+   * every quote request (initial, quote-expired retry, and manual
+   * refresh). Expressed as a decimal — `0.02` = 2%. Omit to let the
+   * SDK apply its default.
+   */
+  slippage?: number;
 }
 
 export interface UseCheckoutFlowReturn {
@@ -97,9 +111,21 @@ export interface UseCheckoutFlowReturn {
   /** Loading flag during begin / submit calls. */
   isLoading: boolean;
   /** Create → attach wallet → quote in one call. Returns null on error. */
-  beginCheckout: (params: BeginCheckoutParams) => Promise<BeginCheckoutResult | null>;
+  beginCheckout: (
+    params: BeginCheckoutParams,
+  ) => Promise<BeginCheckoutResult | null>;
   /** Submit the transaction and poll until terminal. Returns the final CheckoutTransaction on success, null on rejection / error. */
   submit: (params: SubmitParams) => Promise<CheckoutTransaction | null>;
+  /**
+   * Re-fetch the quote for the current transaction. Used immediately
+   * before submit on Solana flows to refresh the server-baked
+   * blockhash (Solana blockhashes expire in ~60–90s, and the user
+   * lingering on the review screen can stale-out the initial quote's
+   * `signingPayload.serializedTransaction`, surfacing as
+   * "Transaction simulation failed: Blockhash not found" during
+   * broadcast). Returns the fresh transaction or null on error.
+   */
+  refreshQuote: (fromTokenAddress: string) => Promise<CheckoutTransaction | null>;
   /** Cancel the in-flight transaction (non-fatal if already cancelled). */
   cancel: () => Promise<void>;
   /** Reset state (clear error, transactionId, quote). */
@@ -109,7 +135,7 @@ export interface UseCheckoutFlowReturn {
 export function useCheckoutFlow(
   options: UseCheckoutFlowOptions = {},
 ): UseCheckoutFlowReturn {
-  const { storageNamespace = "default" } = options;
+  const { storageNamespace = "default", slippage } = options;
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [quote, setQuote] = useState<CheckoutTransaction | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +159,9 @@ export function useCheckoutFlow(
     let cancelled = false;
     (async () => {
       try {
-        const tx = await getTransaction({ transactionId: persisted.transactionId });
+        const tx = await getTransaction({
+          transactionId: persisted.transactionId,
+        });
         if (cancelled) return;
         setTransactionId(tx.id);
         setQuote(tx);
@@ -147,17 +175,20 @@ export function useCheckoutFlow(
   }, [storage]);
 
   const beginCheckout = useCallback(
-    async (params: BeginCheckoutParams): Promise<BeginCheckoutResult | null> => {
+    async (
+      params: BeginCheckoutParams,
+    ): Promise<BeginCheckoutResult | null> => {
       setError(null);
       setIsLoading(true);
       try {
-        const created: CheckoutTransactionCreateResponse = await createTransaction({
-          amount: params.amount,
-          currency: params.currency,
-          checkoutId: params.checkoutId,
-          destinationAddresses: params.destinationAddresses,
-          memo: params.memo,
-        });
+        const created: CheckoutTransactionCreateResponse =
+          await createTransaction({
+            amount: params.amount,
+            currency: params.currency,
+            checkoutId: params.checkoutId,
+            destinationAddresses: params.destinationAddresses,
+            memo: params.memo,
+          });
         sessionTokenRef.current = created.sessionToken;
         const txId = created.transaction.id;
         setTransactionId(txId);
@@ -173,6 +204,7 @@ export function useCheckoutFlow(
         const quoted = await getQuote({
           transactionId: txId,
           fromTokenAddress: params.fromTokenAddress,
+          ...(slippage !== undefined ? { slippage } : {}),
         });
         setQuote(quoted);
 
@@ -184,7 +216,7 @@ export function useCheckoutFlow(
         setIsLoading(false);
       }
     },
-    [storage],
+    [storage, slippage],
   );
 
   const submit = useCallback(
@@ -226,36 +258,81 @@ export function useCheckoutFlow(
           : "SWAP"
         : "TRANSFER";
 
+      const onStepChange = (step: "approval" | "transaction") => {
+        if (step === "approval") {
+          onUpdate({
+            stepIndex: 0,
+            totalSteps,
+            status: "ACTION_REQUIRED",
+            processType: "TOKEN_ALLOWANCE",
+          });
+          currentStepIndexRef.current = 0;
+        } else if (step === "transaction") {
+          onUpdate({
+            stepIndex: 0,
+            totalSteps,
+            status: "DONE",
+            processType: "TOKEN_ALLOWANCE",
+          });
+          onUpdate({
+            stepIndex: 1,
+            totalSteps,
+            status: "ACTION_REQUIRED",
+            processType: swapProcessType,
+          });
+          currentStepIndexRef.current = 1;
+        }
+      };
+
+      // Dynamic's Checkout quotes are short-lived (60s on the wire as of
+      // 2026-05). If the user dwells on the review screen, the prepare
+      // call inside sdkSubmit returns 422 "Quote has expired; request a
+      // new quote before signing." Catch it once, refresh the quote
+      // using the existing fromToken (held in widget state from the
+      // initial getQuote), and retry. After one failed retry, surface
+      // the error normally so the user sees the failure instead of an
+      // infinite loop.
+      const isQuoteExpiredError = (err: unknown): boolean => {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : typeof err === "string"
+              ? err
+              : "";
+        return /quote.*expired|expired.*quote/i.test(msg);
+      };
+
       try {
-        await sdkSubmit({
-          transactionId: txId,
-          walletAccount,
-          onStepChange: (step) => {
-            if (step === "approval") {
-              onUpdate({
-                stepIndex: 0,
-                totalSteps,
-                status: "ACTION_REQUIRED",
-                processType: "TOKEN_ALLOWANCE",
-              });
-              currentStepIndexRef.current = 0;
-            } else if (step === "transaction") {
-              onUpdate({
-                stepIndex: 0,
-                totalSteps,
-                status: "DONE",
-                processType: "TOKEN_ALLOWANCE",
-              });
-              onUpdate({
-                stepIndex: 1,
-                totalSteps,
-                status: "ACTION_REQUIRED",
-                processType: swapProcessType,
-              });
-              currentStepIndexRef.current = 1;
-            }
-          },
-        });
+        try {
+          await sdkSubmit({
+            transactionId: txId,
+            walletAccount,
+            onStepChange,
+          });
+        } catch (err) {
+          if (!isQuoteExpiredError(err)) throw err;
+          // Quote's stale — pull fromToken off the in-state quote and
+          // request a fresh one before retrying. If the in-state quote
+          // is missing or has no fromToken, rethrow the original error
+          // (we have nothing to refresh against).
+          const fromTokenAddress = quote?.fromToken;
+          if (!fromTokenAddress) throw err;
+          const fresh = await getQuote({
+            transactionId: txId,
+            fromTokenAddress,
+            ...(slippage !== undefined ? { slippage } : {}),
+          });
+          setQuote(fresh);
+          // Reset the step index — a refreshed quote means the user is
+          // back at the "before submit" state, not partway through a
+          // failed submit.
+          currentStepIndexRef.current = 0;
+          await sdkSubmit({
+            transactionId: txId,
+            walletAccount,
+            onStepChange,
+          });
+        }
 
         // Post-submit settlement polling. The official Checkout Flow demo
         // (apps/checkout-demo) uses TanStack Query refetchInterval to do this.
@@ -287,8 +364,32 @@ export function useCheckoutFlow(
           // a refresh restores the transaction and resumes polling.
           console.warn(
             `[useCheckoutFlow] Settlement polling timed out after ${POLL_TIMEOUT_MS}ms`,
-            { transactionId: txId, executionState: latest.executionState, settlementState: latest.settlementState },
+            {
+              transactionId: txId,
+              executionState: latest.executionState,
+              settlementState: latest.settlementState,
+            },
           );
+        }
+        // Polling reached a TERMINAL FAILURE (e.g. BRIDGE_FAILED reported
+        // by Dynamic's backend, or executionState=expired/cancelled).
+        // Without this branch we'd return the failed tx and the host
+        // widget would call onSettlementCompleted on a tx that didn't
+        // settle — that's the "we silently bounced back to the wallet
+        // screen with no error" bug. Treat failed-terminal identically
+        // to a thrown error: set flow.error, fire onError, emit a FAILED
+        // ExecutionUpdate, and return null so the host's success
+        // callback doesn't fire.
+        if (isFailedTerminal(latest)) {
+          setError(extractFailureMessage(latest));
+          onError?.();
+          onUpdate({
+            stepIndex: currentStepIndexRef.current,
+            totalSteps,
+            status: "FAILED",
+            processType: needsConversion ? "SWAP" : "TRANSFER",
+          });
+          return null;
         }
         return latest;
       } catch (err) {
@@ -310,7 +411,28 @@ export function useCheckoutFlow(
         setIsLoading(false);
       }
     },
-    [transactionId, storage],
+    // quote is read inside the closure for the quote-expired retry path
+    // — it holds the fromToken we re-quote against.
+    [transactionId, storage, quote, slippage],
+  );
+
+  const refreshQuote = useCallback(
+    async (fromTokenAddress: string): Promise<CheckoutTransaction | null> => {
+      if (!transactionId) return null;
+      try {
+        const fresh = await getQuote({
+          transactionId,
+          fromTokenAddress,
+          ...(slippage !== undefined ? { slippage } : {}),
+        });
+        setQuote(fresh);
+        return fresh;
+      } catch (err) {
+        setError(formatErrorMessage(err));
+        return null;
+      }
+    },
+    [transactionId, slippage],
   );
 
   const cancel = useCallback(async (): Promise<void> => {
@@ -333,5 +455,15 @@ export function useCheckoutFlow(
     storage.clear();
   }, [storage]);
 
-  return { transactionId, quote, error, isLoading, beginCheckout, submit, cancel, reset };
+  return {
+    transactionId,
+    quote,
+    error,
+    isLoading,
+    beginCheckout,
+    submit,
+    refreshQuote,
+    cancel,
+    reset,
+  };
 }

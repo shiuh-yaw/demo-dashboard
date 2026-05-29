@@ -16,6 +16,9 @@
     "test:watch": "vitest"
   },
   "peerDependencies": {
+    "@dynamic-labs-sdk/client": ">=0.25.0",
+    "@dynamic-labs-sdk/evm": ">=0.25.0",
+    "@dynamic-labs-sdk/solana": ">=0.25.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
@@ -24,24 +27,31 @@
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-labs/iconic": "catalog:",
     "lucide-react": "0.541.0",
+    "qrcode.react": "4.2.0",
     "zod": "3.25.76"
   },
   "peerDependenciesMeta": {
+    "@dynamic-labs-sdk/client": { "optional": false },
+    "@dynamic-labs-sdk/evm": { "optional": false },
+    "@dynamic-labs-sdk/solana": { "optional": false },
     "react": { "optional": false },
     "react-dom": { "optional": false }
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
-    "@dynamic-labs-sdk/client": "catalog:",
-    "@dynamic-labs-sdk/evm": "catalog:",
+    "@dynamic-labs-sdk/client": "1.4.0",
+    "@dynamic-labs-sdk/evm": "1.4.0",
+    "@dynamic-labs-sdk/solana": "1.4.0",
     "@testing-library/react": "16.0.1",
     "@types/node": "20.19.25",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "fastestsmallesttextencoderdecoder": "catalog:",
     "jsdom": "26.0.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "ws": "catalog:"
   }
 }

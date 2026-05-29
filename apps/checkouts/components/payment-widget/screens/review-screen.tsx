@@ -12,7 +12,7 @@
 import { WidgetCard } from "@dynamic-demos/ui";
 import { ReviewPaymentScreen } from "@dynamic-demos/checkouts-widget";
 import type { WidgetConfig } from "@/lib/widget-config";
-import { isExchangeToken, type TokenAsset } from "@/lib/balance-utils";
+import { isExchangeToken, type TokenAsset } from "@dynamic-demos/checkouts-widget";
 import type { ReviewQuote } from "@/lib/types";
 import { formatTokenAmount, formatUsd, formatApproxUsd } from "@/lib/format";
 import {

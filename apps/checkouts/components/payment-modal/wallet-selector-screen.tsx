@@ -10,7 +10,7 @@
  * 2. Select WalletConnect -> select wallet from catalog -> QR code / deep link
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   getAvailableWalletProvidersData,
   connectAndVerifyWithWalletProvider,

@@ -19,7 +19,7 @@ import {
   getKrakenWhitelistedAddresses,
   createKrakenExchangeTransfer,
 } from "@/lib/dynamicClient";
-import { transformKrakenToTokenAssets } from "@/lib/balance-utils";
+import { transformKrakenToTokenAssets } from "@dynamic-demos/checkouts-widget";
 import type { ExchangeAdapter, ExchangeTransferParams } from "./types";
 
 function getKrakenErrorMessage(err: unknown): string {

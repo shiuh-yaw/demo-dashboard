@@ -41,7 +41,7 @@ import { useRouter } from "next/navigation";
 import { Check, Copy, LogOut, Plus } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { truncateAddress, formatUsd } from "@/lib/format";
-import { findTokenBalance, type TokenBalance } from "@/lib/balance-utils";
+import { findTokenBalance, type TokenBalance } from "@dynamic-demos/checkouts-widget";
 import {
   getEmbeddedWalletAddress,
   getMultichainBalances,

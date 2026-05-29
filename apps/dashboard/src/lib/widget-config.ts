@@ -24,7 +24,8 @@ export const EVM_TOKENS = {
 
 /** Default recipient addresses */
 export const RECIPIENT_ADDRESSES = {
-  /** Default EVM deposit address */
+  /** Default EVM deposit address — runtime constant; snippets render
+   *  a placeholder, not this. */
   DEFAULT_EVM_DEPOSIT: "0x5C260969b90152a46D52BC476C94524C8E796b3d",
   /** Default payment recipient address */
   DEFAULT_PAYMENT: "0x9C040E69a7e1866717E0A7a09D3484C718A1e8E7",

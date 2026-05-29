@@ -19,7 +19,7 @@ import {
   shouldResetOnScreen,
 } from "./utils";
 import type { WalletGroup } from "@/components/connect-wallet-screen";
-import type { TokenAsset } from "@/lib/balance-utils";
+import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import {
   type TransactionStep,
   updateTransactionSteps,

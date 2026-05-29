@@ -22,13 +22,12 @@ import {
   logBalanceDebug,
   isExchangeToken,
   type TokenAsset,
-} from "@/lib/balance-utils";
+} from "@dynamic-demos/checkouts-widget";
 import { cn } from "@dynamic-demos/utils";
 import { INITIAL_TOKENS_SHOWN } from "@/lib/config";
 import { formatUsd, truncateAddress } from "@/lib/format";
 import { type WidgetMode } from "@/lib/widget-config";
 import { ChevronDown } from "lucide-react";
-import { DollarCircleIcon } from "@/components/icons";
 import { ScreenHeader } from "@dynamic-demos/checkouts-widget";
 import { Skeleton, ListRow } from "@dynamic-demos/ui";
 import { getExchangeAdapter, EXCHANGES } from "@/lib/exchanges";
@@ -277,7 +276,7 @@ export default function AssetSelectorScreen({
       {/* Header Section (includes wallet switcher) */}
       <div className="border-b border-(--brand-border)">
         <ScreenHeader
-          icon={<DollarCircleIcon size={18} className="text-(--brand-fg)" />}
+          eyebrow="Pay with"
           title={
             <>
               {actionLabel}{" "}
