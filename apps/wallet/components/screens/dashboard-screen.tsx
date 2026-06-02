@@ -45,6 +45,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
     navigation.goToTxHistory(address, chain, networkId);
   };
 
+  const handleScan = (address: string, chain: string, networkId: number) => {
+    navigation.goToScanQr(address, chain, networkId);
+  };
+
   return (
     <WidgetCard
       icon={
@@ -68,6 +72,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             onAuthorize={handleAuthorize}
             onSetupMfa={handleSetupMfa}
             onRowClick={handleRowClick}
+            onScan={handleScan}
           />
         )}
 

@@ -29,6 +29,7 @@ import { Authorize7702Screen } from "@/components/screens/authorize-7702-screen"
 import { SetupMfaScreen } from "@/components/screens/setup-mfa-screen";
 import { SendTxScreen } from "@/components/screens/send-tx-screen";
 import { TxHistoryScreen } from "@/components/screens/tx-history-screen";
+import { ScanQrScreen } from "@/components/screens/scan-qr-screen";
 
 export function WalletApp() {
   const isClientReady = useClientInitialized();
@@ -109,6 +110,9 @@ export function WalletApp() {
           chain={screen.type === "send-tx" ? screen.chain : ""}
           navigation={navigation}
           fromMfaSetup={screen.type === "send-tx" ? screen.fromMfaSetup : false}
+          initialRecipient={
+            screen.type === "send-tx" ? screen.initialRecipient : undefined
+          }
           txResult={
             screen.type === "tx-result"
               ? { txHash: screen.txHash, networkData: screen.networkData }
@@ -129,6 +133,15 @@ export function WalletApp() {
 
       {screen.type === "tx-history" && (
         <TxHistoryScreen
+          walletAddress={screen.walletAddress}
+          chain={screen.chain}
+          networkId={screen.networkId}
+          navigation={navigation}
+        />
+      )}
+
+      {screen.type === "scan-qr" && (
+        <ScanQrScreen
           walletAddress={screen.walletAddress}
           chain={screen.chain}
           networkId={screen.networkId}

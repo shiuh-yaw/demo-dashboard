@@ -20,6 +20,7 @@ interface ScrollableWalletListProps {
   onAuthorize?: (address: string) => void;
   onSetupMfa?: (address: string, chain: string) => void;
   onRowClick?: (address: string, chain: string, networkId: number) => void;
+  onScan?: (address: string, chain: string, networkId: number) => void;
 }
 
 type ChainFilter = "all" | string;
@@ -33,6 +34,7 @@ export function ScrollableWalletList({
   onAuthorize,
   onSetupMfa,
   onRowClick,
+  onScan,
 }: ScrollableWalletListProps) {
   const [filter, setFilter] = useState<ChainFilter>("all");
 
@@ -109,6 +111,7 @@ export function ScrollableWalletList({
             }
             onSetupMfa={onSetupMfa}
             onRowClick={onRowClick}
+            onScan={onScan}
           />
         ))}
       </ScrollableWithFade>

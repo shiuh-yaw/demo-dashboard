@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Shield, Zap } from "lucide-react";
+import { Send, Shield, Zap, ScanLine } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import { Tooltip } from "@dynamic-demos/ui";
 import { CopyButton } from "@dynamic-demos/ui";
@@ -22,6 +22,7 @@ interface WalletRowProps {
   onAuthorize?: () => void;
   onSetupMfa?: (address: string, chain: string) => void;
   onRowClick?: (address: string, chain: string, networkId: number) => void;
+  onScan?: (address: string, chain: string, networkId: number) => void;
 }
 
 /**
@@ -41,6 +42,7 @@ export function WalletRow({
   onAuthorize,
   onSetupMfa,
   onRowClick,
+  onScan,
 }: WalletRowProps) {
   const { networkData } = useActiveNetwork(walletAccount);
   const { needsSetup: needsMfaSetup, requiresMfa } = useMfaStatus();
@@ -80,7 +82,7 @@ export function WalletRow({
     !showMfaSetup && !isLoading && canAuthorize && onAuthorize;
   const showSend = !showMfaSetup && !showAuthorize;
 
-  const isRowClickable = isSvm && !!onRowClick && !!networkData;
+  const isRowClickable = (isEvm || isSvm) && !!onRowClick && !!networkData;
 
   const handleRowClick = () => {
     if (isRowClickable && networkData) {
@@ -141,7 +143,7 @@ export function WalletRow({
 
       {/* Right: Actions — stopPropagation prevents row click when clicking buttons */}
       <div
-        className="flex items-center gap-1 shrink-0"
+        className="flex items-center gap-0 shrink-0"
         role="group"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
@@ -151,8 +153,31 @@ export function WalletRow({
           text={walletAccount.address}
           label="Copy address"
           showTooltip
-          className="rounded-full"
+          className="rounded-full p-1.5"
         />
+
+        {/* Scan-to-send — needs networkData for the target networkId */}
+        {onScan && networkData && (
+          <Tooltip content="Scan to send">
+            <button
+              type="button"
+              onClick={() =>
+                onScan(
+                  walletAccount.address,
+                  chain,
+                  Number(networkData.networkId),
+                )
+              }
+              className={cn(
+                "p-1.5 rounded-full transition-colors cursor-pointer",
+                "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
+              )}
+              aria-label="Scan QR to send"
+            >
+              <ScanLine className="w-4 h-4" />
+            </button>
+          </Tooltip>
+        )}
 
         {/* Primary action button - changes based on what's needed */}
         {showMfaSetup ? (
@@ -161,7 +186,7 @@ export function WalletRow({
               type="button"
               onClick={() => onSetupMfa?.(walletAccount.address, chain)}
               className={cn(
-                "p-2 rounded-full transition-colors cursor-pointer",
+                "p-1.5 rounded-full transition-colors cursor-pointer",
                 "text-(--brand-accent) hover:bg-(--brand-accent)/10",
               )}
               aria-label="Set up authenticator"
@@ -175,7 +200,7 @@ export function WalletRow({
               type="button"
               onClick={onAuthorize}
               className={cn(
-                "p-2 rounded-full transition-colors cursor-pointer",
+                "p-1.5 rounded-full transition-colors cursor-pointer",
                 "text-(--brand-accent) hover:bg-(--brand-accent)/10",
               )}
               aria-label="Enable smart account"
@@ -189,7 +214,7 @@ export function WalletRow({
               type="button"
               onClick={onSend}
               className={cn(
-                "p-2 rounded-full transition-colors cursor-pointer",
+                "p-1.5 rounded-full transition-colors cursor-pointer",
                 "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
               )}
               aria-label="Send transaction"

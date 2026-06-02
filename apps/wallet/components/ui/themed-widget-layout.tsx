@@ -22,15 +22,15 @@ export function ThemedWidgetLayout({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center p-6"
+      className="min-h-[100dvh] flex flex-col items-center p-6 overscroll-none"
       style={{ backgroundColor: "var(--brand-page-bg)" }}
     >
       <div className="flex-1 flex flex-col items-center justify-center gap-4 w-full">
         <div className="shrink-0 mb-2">
-          {branding?.logo ? (
+          {branding?.logo === "custom" && branding.logoUrl ? (
             <img
-              src={branding.logo}
-              alt="Brand logo"
+              src={branding.logoUrl}
+              alt={branding.name ? `${branding.name} logo` : "Brand logo"}
               className="h-12 object-contain"
             />
           ) : (

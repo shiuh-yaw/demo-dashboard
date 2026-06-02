@@ -16,6 +16,7 @@ Embedded-wallet demo. End users sign in via Dynamic, get a non-custodial wallet,
 - Wallet creation — Dynamic embedded wallet (EVM by default).
 - Balance display (multi-chain).
 - Transaction signing + JWT-protected API access.
+- Scan-to-send — a QR scan icon on the Transactions screen opens an inline scan screen (`scan-qr` navigation screen, rendered in the wallet WidgetCard) that scans a bare recipient address (validated against the wallet's chain) via native `BarcodeDetector` with an `@zxing/browser` fallback, with inline manual-entry fallback, then opens the Send screen with the recipient prefilled. No payment-URI / chain / amount parsing.
 - `/jwt` route demonstrates JWT-bound API calls (showcase for sales team).
 
 ## Public surface

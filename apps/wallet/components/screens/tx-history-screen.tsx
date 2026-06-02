@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Send,
   Wallet,
+  ScanLine,
 } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import {
@@ -163,6 +164,19 @@ export function TxHistoryScreen({
               showTooltip
               className="rounded-full"
             />
+
+            <Tooltip content="Scan to send">
+              <button
+                type="button"
+                onClick={() =>
+                  navigation.goToScanQr(walletAddress, chain, activeNetworkId)
+                }
+                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
+                aria-label="Scan QR to send"
+              >
+                <ScanLine className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
 
             <Tooltip content="Send transaction">
               <button

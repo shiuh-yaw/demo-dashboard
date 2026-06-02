@@ -27,10 +27,17 @@ export type Screen =
       chain: string;
       fromMfaSetup?: boolean;
       returnToTxHistory?: { networkId: number };
+      initialRecipient?: string;
     }
   | { type: "tx-result"; txHash: string; networkData: NetworkData }
   | {
       type: "tx-history";
+      walletAddress: string;
+      chain: string;
+      networkId: number;
+    }
+  | {
+      type: "scan-qr";
       walletAddress: string;
       chain: string;
       networkId: number;
@@ -58,9 +65,15 @@ export interface NavigationReturn {
     chain: string,
     fromMfaSetup?: boolean,
     returnToTxHistory?: { networkId: number },
+    initialRecipient?: string,
   ) => void;
   goToTxResult: (txHash: string, networkData: NetworkData) => void;
   goToTxHistory: (
+    walletAddress: string,
+    chain: string,
+    networkId: number,
+  ) => void;
+  goToScanQr: (
     walletAddress: string,
     chain: string,
     networkId: number,
@@ -154,6 +167,7 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
       chain: string,
       fromMfaSetup?: boolean,
       returnToTxHistory?: { networkId: number },
+      initialRecipient?: string,
     ) => {
       transitionTo({
         type: "send-tx",
@@ -161,6 +175,7 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
         chain,
         fromMfaSetup,
         returnToTxHistory,
+        initialRecipient,
       });
     },
     [transitionTo],
@@ -176,6 +191,13 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
   const goToTxHistory = useCallback(
     (walletAddress: string, chain: string, networkId: number) => {
       transitionTo({ type: "tx-history", walletAddress, chain, networkId });
+    },
+    [transitionTo],
+  );
+
+  const goToScanQr = useCallback(
+    (walletAddress: string, chain: string, networkId: number) => {
+      transitionTo({ type: "scan-qr", walletAddress, chain, networkId });
     },
     [transitionTo],
   );
@@ -198,5 +220,6 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     goToSendTx,
     goToTxResult,
     goToTxHistory,
+    goToScanQr,
   };
 }

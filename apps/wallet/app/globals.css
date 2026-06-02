@@ -54,3 +54,17 @@
   --widget-muted: var(--brand-muted);
   --widget-border: var(--brand-border);
 }
+
+/*
+ * iOS Safari zooms the whole page when focusing a form control whose
+ * font-size is below 16px. Force >=16px on touch-sized viewports to prevent
+ * the zoom-on-focus. The attribute-selector specificity intentionally beats
+ * Tailwind's `text-sm` utility on our inputs.
+ */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}

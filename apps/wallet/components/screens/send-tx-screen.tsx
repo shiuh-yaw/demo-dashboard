@@ -42,6 +42,7 @@ interface SendTxScreenProps {
     networkData: NetworkData;
   };
   fromMfaSetup?: boolean;
+  initialRecipient?: string;
   onBack?: () => void;
 }
 
@@ -182,12 +183,13 @@ export function SendTxScreen({
   navigation,
   txResult,
   fromMfaSetup = false,
+  initialRecipient,
   onBack,
 }: SendTxScreenProps) {
   const handleClose = onBack ?? navigation.goToDashboard;
 
   // Form state
-  const [recipient, setRecipient] = useState("");
+  const [recipient, setRecipient] = useState(initialRecipient ?? "");
   const [amount, setAmount] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [showMfaSetup, setShowMfaSetup] = useState(false);
