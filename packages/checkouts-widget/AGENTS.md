@@ -116,6 +116,7 @@ import { PaymentWidget } from "@dynamic-demos/checkouts-widget";
 - Don't bypass `<PaymentWidget />` for hosts that want the standard amount → review → processing flow — composing leaf screens directly is an escape hatch, not the happy path.
 - Don't read env vars inside the package. Every input is a prop.
 - Don't add a `<DynamicProvider>` inside the package — the host owns Dynamic client init.
+- Don't treat the WalletConnect `uri` as a completed connection — it only renders the QR. The SDK's `connect*WithWalletConnect*` functions return `{ uri, approval }`; you MUST await `approval()`, which resolves once the buyer scans + approves and is the only thing that creates the Dynamic wallet account and emits `walletAccountsChanged`. `WalletPickerScreen` owns this; dropping `approval()` regresses to "scan QR → nothing happens".
 
 ## Open questions / known gaps
 

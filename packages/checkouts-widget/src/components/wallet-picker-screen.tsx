@@ -35,8 +35,6 @@ import {
   connectWithWalletProvider,
   getAvailableWalletProvidersData,
   getPrimaryWalletAccount,
-  offEvent,
-  onEvent,
   type WalletAccount,
   type WalletConnectCatalogWallet,
   type WalletProviderData,
@@ -215,10 +213,17 @@ export default function WalletPickerScreen({
     }
   }
 
-  // Snapshot the currently-connected wallet so we know which account is
-  // "new" once the WC handshake settles — `walletAccountsChanged` fires
-  // for every account change, not just connects.
+  // Snapshot the currently-connected wallet's address before a WC
+  // connect so the SDK-own-modal fallback (the no-URI branch below) can
+  // tell a brand-new connection from the account that was already
+  // primary.
   const priorWalletAddressRef = useRef<string | null>(null);
+
+  // Monotonic id for the in-flight WalletConnect attempt. Bumped when
+  // the buyer backs out (or starts a different wallet) so an orphaned
+  // `approval()` that resolves later is recognised as stale and ignored
+  // rather than yanking the buyer forward.
+  const wcAttemptRef = useRef(0);
 
   async function connectDiscovered(group: CatalogGroup) {
     setConnecting(`wc:${group.id}`);
@@ -229,17 +234,21 @@ export default function WalletPickerScreen({
     // group supports it; otherwise fall back to the first chain we
     // have a working connect function for.
     const wallet = pickWalletForChain(group, preferredChain);
+    // Claim this attempt so a later back-out / re-pick can void it.
+    const attempt = ++wcAttemptRef.current;
     try {
-      // The SDK call resolves quickly with the WC connection URI; the
-      // actual wallet connection happens out-of-band when the buyer
-      // scans the QR or follows the deeplink. We then listen for the
-      // account-changed event below to call onConnected.
+      // Dynamic's WalletConnect connect resolves in TWO phases. Phase 1
+      // returns immediately with a `uri` (render as a QR) plus an
+      // `approval()` continuation. Phase 2 — awaiting `approval()` —
+      // resolves only after the buyer scans + approves, and is the ONLY
+      // point at which the SDK creates the Dynamic wallet account(s) and
+      // emits walletAccountsChanged. Both phases must be driven.
       const wcConnectFn = pickWalletConnectFn(wallet.chain, verifyOnConnect);
       if (!wcConnectFn) {
         setError(`${wallet.chain} WalletConnect not supported yet.`);
         return;
       }
-      const result = (await wcConnectFn()) as { uri?: string } | undefined;
+      const result = await wcConnectFn();
       if (!result?.uri) {
         // No URI back — typically means the SDK pulled the buyer
         // through its own modal; check if a wallet showed up.
@@ -260,30 +269,28 @@ export default function WalletPickerScreen({
           result.uri,
         )}`;
       }
+      // Phase 2 — drive the handshake to completion. Awaiting
+      // `approval()` is the step that was missing: without it the buyer
+      // scans successfully but the picker never hears back, so the flow
+      // never advances ("scan → nothing happens").
+      const { walletAccounts } = await result.approval();
+      // A back-out or a newer attempt supersedes this one — drop the
+      // stale result instead of advancing the flow.
+      if (attempt !== wcAttemptRef.current) return;
+      const connected = walletAccounts[0] ?? getPrimaryWalletAccount();
+      if (connected) {
+        setWcConnect(null);
+        onConnected(connected);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection failed.");
+      if (attempt === wcAttemptRef.current) {
+        setError(err instanceof Error ? err.message : "Connection failed.");
+      }
     } finally {
-      setConnecting(null);
+      // Don't clear a newer attempt's spinner if this one was superseded.
+      if (attempt === wcAttemptRef.current) setConnecting(null);
     }
   }
-
-  // Listen for the account-changed event while the QR is up; fire
-  // `onConnected` once a NEW wallet (different from the snapshot above)
-  // appears.
-  useEffect(() => {
-    if (!wcConnect) return;
-    const listener = () => {
-      const w = getPrimaryWalletAccount();
-      if (w && w.address !== priorWalletAddressRef.current) {
-        setWcConnect(null);
-        onConnected(w);
-      }
-    };
-    onEvent({ event: "walletAccountsChanged", listener });
-    return () => {
-      offEvent({ event: "walletAccountsChanged", listener });
-    };
-  }, [wcConnect, onConnected]);
 
   const maxHeight =
     initialMoreWalletsShown * ROW_HEIGHT_PX +
@@ -299,7 +306,11 @@ export default function WalletPickerScreen({
           uri={wcConnect.uri}
           wallet={wcConnect.wallet}
           onCancel={() => {
+            // Void the in-flight approval so a late resolution is
+            // ignored, and re-enable the list underneath.
+            wcAttemptRef.current += 1;
             setWcConnect(null);
+            setConnecting(null);
             priorWalletAddressRef.current = null;
           }}
         />
@@ -687,7 +698,17 @@ function isMobileViewport(): boolean {
  * Host apps must register the matching extension on their Dynamic
  * client (`addWalletConnectEvmExtension`, `addWalletConnectSolanaExtension`).
  */
-type WalletConnectConnectFn = () => Promise<{ uri?: string } | unknown>;
+/**
+ * The shape Dynamic's WalletConnect connect functions resolve with: a
+ * `uri` to render as a QR immediately, plus an `approval()` continuation
+ * that resolves — with the freshly-created wallet accounts — only AFTER
+ * the buyer scans and approves in their wallet. Derived from the SDK so
+ * it tracks the real contract rather than re-stating it.
+ */
+type WalletConnectConnectionResult = Awaited<
+  ReturnType<typeof connectWithWalletConnectEvm>
+>;
+type WalletConnectConnectFn = () => Promise<WalletConnectConnectionResult>;
 
 function pickWalletConnectFn(
   chain: string,
