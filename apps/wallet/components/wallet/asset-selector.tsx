@@ -22,6 +22,10 @@ interface AssetSelectorProps {
   disabled?: boolean;
   /** Called when user wants to enter a token address manually */
   onManualEntry?: () => void;
+  /** Fallback symbol to show when no balance data is available (e.g. "BTC") */
+  fallbackSymbol?: string;
+  /** Fallback icon URL to show when no balance data is available */
+  fallbackIcon?: string;
 }
 
 // =============================================================================
@@ -55,6 +59,8 @@ export function AssetSelector({
   loading,
   disabled,
   onManualEntry,
+  fallbackSymbol,
+  fallbackIcon,
 }: AssetSelectorProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,42 +85,49 @@ export function AssetSelector({
     setOpen(false);
   };
 
+  // Single asset — render a static pill without chevron or dropdown
+  const isSingleAsset = !loading && assets.length <= 1;
+
   return (
     <div ref={containerRef} className="absolute right-1 top-1 bottom-1">
-      {/* Pill trigger */}
+      {/* Pill trigger (or static label when only 1 asset) */}
       <button
         type="button"
-        onClick={() => setOpen(!open)}
-        disabled={disabled}
+        onClick={() => !isSingleAsset && setOpen(!open)}
+        disabled={disabled || isSingleAsset}
         className={cn(
           "h-full flex items-center gap-1.5 pl-2 pr-2 rounded-[calc(var(--brand-radius)-4px)]",
           "bg-(--brand-row-bg) border border-(--brand-border)",
-          "hover:bg-(--brand-row-hover) transition-colors cursor-pointer",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
+          !isSingleAsset && "hover:bg-(--brand-row-hover) cursor-pointer",
+          isSingleAsset && "cursor-default",
+          "transition-colors",
+          "disabled:opacity-100",
         )}
       >
-        {selected?.logoURI ? (
+        {(selected?.logoURI || fallbackIcon) ? (
           <img
-            src={selected.logoURI}
-            alt={selected.symbol}
+            src={selected?.logoURI || fallbackIcon}
+            alt={selected?.symbol || fallbackSymbol}
             className="w-5 h-5 rounded-full"
           />
         ) : (
           <Coins className="w-4 h-4 text-(--brand-muted)" />
         )}
         <span className="text-xs font-medium text-(--brand-fg) max-w-[4rem] truncate">
-          {selected?.symbol ?? (loading ? "..." : "Asset")}
+          {selected?.symbol ?? fallbackSymbol ?? (loading ? "..." : "Asset")}
         </span>
-        <ChevronDown
-          className={cn(
-            "w-3.5 h-3.5 text-(--brand-muted) transition-transform",
-            open && "rotate-180",
-          )}
-        />
+        {!isSingleAsset && (
+          <ChevronDown
+            className={cn(
+              "w-3.5 h-3.5 text-(--brand-muted) transition-transform",
+              open && "rotate-180",
+            )}
+          />
+        )}
       </button>
 
-      {/* Dropdown — opens upward */}
-      {open && (
+      {/* Dropdown — opens upward (hidden when only 1 asset) */}
+      {open && !isSingleAsset && (
         <div className="absolute z-10 bottom-full mb-1 right-0 w-56 max-h-48 overflow-y-auto bg-(--brand-surface) border border-(--brand-border) rounded-(--brand-radius) shadow-[0_-4px_20px_rgba(0,0,0,0.12)]">
           {loading ? (
             <div className="p-2.5 text-center text-xs text-(--brand-muted)">

@@ -18,6 +18,12 @@ import {
 
 import { addEvmExtension } from "@dynamic-labs-sdk/evm";
 import { addSolanaExtension } from "@dynamic-labs-sdk/solana";
+import { addSuiExtension } from "@dynamic-labs-sdk/sui";
+import { addBitcoinExtension } from "@dynamic-labs-sdk/bitcoin";
+import { addAptosExtension } from "@dynamic-labs-sdk/aptos";
+import { addTronExtension } from "@dynamic-labs-sdk/tron";
+import { addStarknetExtension } from "@dynamic-labs-sdk/starknet";
+import { addTonExtension } from "@dynamic-labs-sdk/ton";
 import { addZerodevExtension } from "@dynamic-labs-sdk/zerodev";
 import {
   createDynamicClientSingleton,
@@ -44,6 +50,12 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
   extend: (client) => {
     addEvmExtension(client);
     addSolanaExtension(client);
+    addSuiExtension(client);
+    addBitcoinExtension(client);
+    addAptosExtension(client);
+    addTronExtension(client);
+    addStarknetExtension(client);
+    addTonExtension(client);
     addZerodevExtension(client);
   },
 });

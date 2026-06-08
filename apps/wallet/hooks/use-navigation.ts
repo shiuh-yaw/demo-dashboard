@@ -41,7 +41,8 @@ export type Screen =
       walletAddress: string;
       chain: string;
       networkId: number;
-    };
+    }
+  | { type: "add-wallet" };
 
 // =============================================================================
 // NAVIGATION HOOK
@@ -78,6 +79,7 @@ export interface NavigationReturn {
     chain: string,
     networkId: number,
   ) => void;
+  goToAddWallet: () => void;
 }
 
 const TRANSITION_DURATION = 150;
@@ -202,6 +204,10 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     [transitionTo],
   );
 
+  const goToAddWallet = useCallback(() => {
+    transitionTo({ type: "add-wallet" });
+  }, [transitionTo]);
+
   // Screen is ready when it matches expected state for auth
   // - Logged in: should NOT be on auth/otp-verify screens
   // - Logged out: should be on auth or otp-verify screens
@@ -221,5 +227,6 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     goToTxResult,
     goToTxHistory,
     goToScanQr,
+    goToAddWallet,
   };
 }

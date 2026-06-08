@@ -18,8 +18,18 @@ catalog:
   "@dynamic-labs-sdk/evm": "0.25.0"
   "@dynamic-labs-sdk/solana": "0.25.0"
   "@dynamic-labs-sdk/wallet-connect": "0.25.0"
+  "@dynamic-labs-sdk/sui": "0.25.0"
+  "@dynamic-labs-sdk/bitcoin": "0.25.0"
+  "@dynamic-labs-sdk/aptos": "0.25.0"
+  "@dynamic-labs-sdk/tron": "0.25.0"
+  "@dynamic-labs-sdk/starknet": "0.25.0"
+  "@dynamic-labs-sdk/ton": "0.25.0"
   "@dynamic-labs-sdk/zerodev": "0.25.0"
   "@dynamic-labs/iconic": "4.61.1"
+
+  # Chain libraries (pinned to versions bundled by @dynamic-labs-sdk/* 0.25.0)
+  "@mysten/sui": "1.45.1"
+  "starknet": "6.23.1"
 
   # Framework
   # Versions downshifted from 15.5.18 / 19.1.7 to JFrog-compatible pins.

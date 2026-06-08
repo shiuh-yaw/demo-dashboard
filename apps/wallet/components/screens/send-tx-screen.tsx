@@ -311,18 +311,23 @@ export function SendTxScreen({
     }
   };
 
-  // Check for SVM gas sponsorship (Solana)
-  const svmSponsored = !isEvm && isSvmGasSponsorshipEnabled();
+  // Check for SVM gas sponsorship (Solana only — not other non-EVM chains)
+  const isSolana = chain === "SOL";
+  const svmSponsored = isSolana && isSvmGasSponsorshipEnabled();
 
-  // Determine sponsorship status for display (EVM and Solana)
+  // Determine sponsorship status for display (EVM and Solana only)
   const sponsorshipStatus = useMemo(() => {
     if (isEvm) {
       if (sponsorshipLoading) return { type: "loading" as const };
       if (isSponsored && zerodevWallet) return { type: "sponsored" as const };
       return { type: "standard" as const };
     }
-    return svmSponsored ? { type: "sponsored" as const } : undefined;
-  }, [isEvm, sponsorshipLoading, isSponsored, zerodevWallet, svmSponsored]);
+    if (isSolana) {
+      return svmSponsored ? { type: "sponsored" as const } : undefined;
+    }
+    // Non-EVM/SOL chains (BTC, SUI, APT, TRX, STARK, TON) — no sponsorship
+    return undefined;
+  }, [isEvm, isSolana, sponsorshipLoading, isSponsored, zerodevWallet, svmSponsored]);
 
   // Authorization is ready if already authorized on-chain OR we have a signed auth
   const isAuthReady = isAuthorized || !!signedAuth;
@@ -565,6 +570,8 @@ export function SendTxScreen({
                     onSelect={handleSelectToken}
                     loading={tokensLoading}
                     disabled={sendTx.isPending}
+                    fallbackSymbol={networkData?.nativeCurrency?.symbol}
+                    fallbackIcon={networkData?.iconUrl}
                     onManualEntry={() => {
                       setUseManualEntry(true);
                       setPickedAssetAddress(null);

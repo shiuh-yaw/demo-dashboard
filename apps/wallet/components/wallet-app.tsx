@@ -30,6 +30,7 @@ import { SetupMfaScreen } from "@/components/screens/setup-mfa-screen";
 import { SendTxScreen } from "@/components/screens/send-tx-screen";
 import { TxHistoryScreen } from "@/components/screens/tx-history-screen";
 import { ScanQrScreen } from "@/components/screens/scan-qr-screen";
+import { AddWalletScreen } from "@/components/screens/add-wallet-screen";
 
 export function WalletApp() {
   const isClientReady = useClientInitialized();
@@ -147,6 +148,10 @@ export function WalletApp() {
           networkId={screen.networkId}
           navigation={navigation}
         />
+      )}
+
+      {screen.type === "add-wallet" && (
+        <AddWalletScreen navigation={navigation} />
       )}
     </div>
   );

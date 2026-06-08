@@ -34,6 +34,12 @@ export {
   isWaasWalletAccount,
   isEvmWalletAccount,
   isSolanaWalletAccount,
+  isSuiWalletAccount,
+  isBitcoinWalletAccount,
+  isAptosWalletAccount,
+  isTronWalletAccount,
+  isStarknetWalletAccount,
+  isTonWalletAccount,
 } from "./wallets";
 
 // Networks
@@ -99,6 +105,12 @@ export type {
   WalletAccount,
   EvmWalletAccount,
   SolanaWalletAccount,
+  SuiWalletAccount,
+  BitcoinWalletAccount,
+  AptosWalletAccount,
+  TronWalletAccount,
+  StarknetWalletAccount,
+  TonWalletAccount,
   Chain,
 } from "./wallets";
 export type { NetworkData } from "./networks";

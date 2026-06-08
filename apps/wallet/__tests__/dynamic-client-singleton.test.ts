@@ -8,6 +8,7 @@
  *   - The app's `createSafeWrapper` returns its fallback value on the server.
  *   - The app's `createAsyncSafeWrapper` rejects with the canonical message
  *     when no client exists.
+ *   - All chain extension packages resolve correctly.
  *
  * If these break in the future the cause is almost certainly a regression in
  * `@dynamic-demos/dynamic/client-singleton` rather than wallet itself, which
@@ -36,5 +37,27 @@ describe("wallet dynamic singleton (SSR / Node)", () => {
   it("createAsyncSafeWrapper rejects when no client is available", async () => {
     const wrapped = createAsyncSafeWrapper(async () => "live");
     await expect(wrapped()).rejects.toThrow(/not initialized/i);
+  });
+});
+
+describe("chain extension imports", () => {
+  it("all embedded wallet extension packages are importable", async () => {
+    const evm = await import("@dynamic-labs-sdk/evm");
+    const solana = await import("@dynamic-labs-sdk/solana");
+    const sui = await import("@dynamic-labs-sdk/sui");
+    const bitcoin = await import("@dynamic-labs-sdk/bitcoin");
+    const aptos = await import("@dynamic-labs-sdk/aptos");
+    const tron = await import("@dynamic-labs-sdk/tron");
+    const starknet = await import("@dynamic-labs-sdk/starknet");
+    const ton = await import("@dynamic-labs-sdk/ton");
+
+    expect(evm.addEvmExtension).toBeTypeOf("function");
+    expect(solana.addSolanaExtension).toBeTypeOf("function");
+    expect(sui.addSuiExtension).toBeTypeOf("function");
+    expect(bitcoin.addBitcoinExtension).toBeTypeOf("function");
+    expect(aptos.addAptosExtension).toBeTypeOf("function");
+    expect(tron.addTronExtension).toBeTypeOf("function");
+    expect(starknet.addStarknetExtension).toBeTypeOf("function");
+    expect(ton.addTonExtension).toBeTypeOf("function");
   });
 });

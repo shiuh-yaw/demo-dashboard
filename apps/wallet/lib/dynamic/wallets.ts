@@ -26,6 +26,30 @@ import {
   isSolanaWalletAccount as sdkIsSolanaWalletAccount,
   type SolanaWalletAccount,
 } from "@dynamic-labs-sdk/solana";
+import {
+  isSuiWalletAccount as sdkIsSuiWalletAccount,
+  type SuiWalletAccount,
+} from "@dynamic-labs-sdk/sui";
+import {
+  isBitcoinWalletAccount as sdkIsBitcoinWalletAccount,
+  type BitcoinWalletAccount,
+} from "@dynamic-labs-sdk/bitcoin";
+import {
+  isAptosWalletAccount as sdkIsAptosWalletAccount,
+  type AptosWalletAccount,
+} from "@dynamic-labs-sdk/aptos";
+import {
+  isTronWalletAccount as sdkIsTronWalletAccount,
+  type TronWalletAccount,
+} from "@dynamic-labs-sdk/tron";
+import {
+  isStarknetWalletAccount as sdkIsStarknetWalletAccount,
+  type StarknetWalletAccount,
+} from "@dynamic-labs-sdk/starknet";
+import {
+  isTonWalletAccount as sdkIsTonWalletAccount,
+  type TonWalletAccount,
+} from "@dynamic-labs-sdk/ton";
 import { getClient, createSafeWrapper } from "./client";
 
 /**
@@ -70,4 +94,33 @@ export const isEvmWalletAccount = sdkIsEvmWalletAccount;
 /** Check if wallet account is Solana */
 export const isSolanaWalletAccount = sdkIsSolanaWalletAccount;
 
-export type { WalletAccount, EvmWalletAccount, SolanaWalletAccount, Chain };
+/** Check if wallet account is SUI */
+export const isSuiWalletAccount = sdkIsSuiWalletAccount;
+
+/** Check if wallet account is Bitcoin */
+export const isBitcoinWalletAccount = sdkIsBitcoinWalletAccount;
+
+/** Check if wallet account is Aptos */
+export const isAptosWalletAccount = sdkIsAptosWalletAccount;
+
+/** Check if wallet account is Tron */
+export const isTronWalletAccount = sdkIsTronWalletAccount;
+
+/** Check if wallet account is Starknet */
+export const isStarknetWalletAccount = sdkIsStarknetWalletAccount;
+
+/** Check if wallet account is TON */
+export const isTonWalletAccount = sdkIsTonWalletAccount;
+
+export type {
+  WalletAccount,
+  EvmWalletAccount,
+  SolanaWalletAccount,
+  SuiWalletAccount,
+  BitcoinWalletAccount,
+  AptosWalletAccount,
+  TronWalletAccount,
+  StarknetWalletAccount,
+  TonWalletAccount,
+  Chain,
+};

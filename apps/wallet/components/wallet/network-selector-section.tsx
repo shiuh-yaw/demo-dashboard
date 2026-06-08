@@ -4,10 +4,7 @@ import { Zap } from "lucide-react";
 import { NetworkSelector } from "@/components/wallet/network-selector";
 import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useNetworks } from "@/hooks/use-networks";
-import type {
-  EvmWalletAccount,
-  SolanaWalletAccount,
-} from "@/lib/dynamic";
+import type { WalletAccount } from "@/lib/dynamic";
 
 type SponsorshipStatus =
   | { type: "loading" }
@@ -18,7 +15,7 @@ type SponsorshipStatus =
 
 interface NetworkSelectorSectionProps {
   /** Wallet account for network selector */
-  walletAccount: EvmWalletAccount | SolanaWalletAccount;
+  walletAccount: WalletAccount;
   /** Called when network changes */
   onNetworkChange: () => void;
   /** Sponsorship status */

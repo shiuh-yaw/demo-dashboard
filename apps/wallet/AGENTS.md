@@ -100,5 +100,5 @@ export async function GET() {
 ## Open questions / known gaps
 
 - Phase 4-app wallet completed: `globals.css` is now thin, importing `@dynamic-demos/theme/defaults.css` and overriding only the `--brand-*` token values that encode wallet's brand. All component refs use the `--brand-*` namespace (D-007). SSR `<ThemeStyleTag>` is intentionally not wired — wallet has no `middleware.ts` and no per-config theme overlay today; it would land if wallet ever gains per-tenant theming.
-- Multi-chain support today is whatever Dynamic env allows; Solana extension landed in Phase 1D.
+- Multi-chain support includes all embedded wallet providers: EVM, Solana, SUI, Bitcoin, Aptos, Tron, Starknet, TON. Native token transfers are supported on all chains. ERC-20/SPL token transfers are EVM and Solana only. Gas sponsorship is EVM (via ZeroDev) and Solana only.
 - No tests in CI today. Add at least smoke coverage for the JWT-protected route in a follow-up.

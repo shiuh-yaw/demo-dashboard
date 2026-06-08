@@ -79,7 +79,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
         <div className="h-px bg-(--brand-border)" />
 
         <div className="flex items-center gap-2">
-          <CreateWalletButtons className="flex-1" />
+          <CreateWalletButtons className="flex-1" navigation={navigation} />
           <Button
             variant="outline"
             size="icon"
