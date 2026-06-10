@@ -13,6 +13,7 @@ import {
 } from "@/lib/types/dashboard";
 
 import { resolveBrand } from "./brand-resolver";
+import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_WALLET_CONFIG.theme!.primaryColor!;
@@ -108,15 +109,13 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
 
   toStored(record, brand) {
     const config = record.config as WalletConfig | null | undefined;
-    const hydratedTheme: WalletConfig["theme"] = brand
-      ? {
-          ...config?.theme,
-          primaryColor: brand.primaryColor,
-          primaryHoverColor: brand.primaryHoverColor ?? undefined,
-          accentColor: brand.accentColor ?? undefined,
-          ...(record.themeOverrides as object | null | undefined),
-        }
-      : config?.theme;
+    const hydratedTheme = hydrateBrandTheme(
+      brand,
+      config?.theme as Record<string, unknown> | undefined,
+      record.themeOverrides,
+      { foregroundKey: "foreground" },
+    );
+    const logoUrl = brandLogoUrl(brand);
     return {
       id: record.id,
       name: record.name ?? walletMapper.untitledLabel,
@@ -124,7 +123,10 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
       ownerId: record.ownerId || undefined,
       config: {
         theme: hydratedTheme,
-        branding: config?.branding,
+        branding: {
+          ...config?.branding,
+          ...(logoUrl != null && { logo: logoUrl }),
+        },
       },
       createdAt: record.createdAt.toISOString(),
       updatedAt: record.updatedAt.toISOString(),

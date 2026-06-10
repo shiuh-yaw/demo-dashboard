@@ -274,6 +274,157 @@ describe("remittanceMapper round-trip", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Brand theme + logo hydration — extended palette fields
+// ---------------------------------------------------------------------------
+
+describe("walletMapper brand theme hydration", () => {
+  let brands: BrandService;
+  let demoConfigs: DemoConfigService;
+
+  beforeEach(() => {
+    const redis = createFakeRedis();
+    brands = new RedisBrandService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
+  });
+
+  it("hydrates all extended brand palette fields", async () => {
+    const input = await walletMapper.toCreateInput(brands, {
+      ownerId: "o1",
+      name: "Wallet",
+      description: null,
+      config: {
+        theme: { primaryColor: "#abcdef" },
+        branding: { logo: "https://x.com/l.svg" },
+      },
+    });
+    const record = await demoConfigs.create(input);
+    const brand = await brands.get(record.brandId);
+    // Enrich the brand with extended palette
+    const updated = await brands.update(brand!.id, {
+      pageBackground: "#f0f0f0",
+      background: "#ffffff",
+      foreground: "#111111",
+      mutedTextColor: "#888888",
+      borderColor: "#cccccc",
+      rowBackground: "#eeeeee",
+      rowHoverBackground: "#dddddd",
+      gradientFrom: "#aaa",
+      gradientTo: "#bbb",
+    });
+    const stored = walletMapper.toStored(record, updated);
+    expect(stored.config.theme).toMatchObject({
+      primaryColor: "#abcdef",
+      pageBackground: "#f0f0f0",
+      background: "#ffffff",
+      foreground: "#111111",
+      mutedTextColor: "#888888",
+      borderColor: "#cccccc",
+      rowBackground: "#eeeeee",
+      rowHoverBackground: "#dddddd",
+      gradientFrom: "#aaa",
+      gradientTo: "#bbb",
+    });
+  });
+
+  it("hydrates brand logo into wallet branding", async () => {
+    const input = await walletMapper.toCreateInput(brands, {
+      ownerId: "o1",
+      name: "Wallet",
+      description: null,
+      config: {
+        theme: { primaryColor: "#abcdef" },
+        branding: {},
+      },
+    });
+    const record = await demoConfigs.create(input);
+    const brand = await brands.get(record.brandId);
+    const updated = await brands.update(brand!.id, {
+      logo: "custom",
+      logoUrl: "https://brand.com/logo.svg",
+    });
+    const stored = walletMapper.toStored(record, updated);
+    expect(stored.config.branding?.logo).toBe("https://brand.com/logo.svg");
+  });
+});
+
+describe("visaDirectMapper brand theme hydration", () => {
+  let brands: BrandService;
+  let demoConfigs: DemoConfigService;
+
+  beforeEach(() => {
+    const redis = createFakeRedis();
+    brands = new RedisBrandService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
+  });
+
+  it("hydrates extended brand fields and logoUrl", async () => {
+    const input = await visaDirectMapper.toCreateInput(brands, {
+      ownerId: "o1",
+      name: "VD",
+      description: null,
+      config: {
+        branding: { bannerText: "test" },
+        theme: { primaryColor: "#abcabc" },
+      },
+    });
+    const record = await demoConfigs.create(input);
+    const brand = await brands.get(record.brandId);
+    const updated = await brands.update(brand!.id, {
+      foreground: "#222222",
+      logo: "custom",
+      logoUrl: "https://brand.com/vd.svg",
+    });
+    const stored = visaDirectMapper.toStored(record, updated);
+    expect(stored.config.theme.foregroundColor).toBe("#222222");
+    expect(stored.config.branding.logoUrl).toBe("https://brand.com/vd.svg");
+    expect(stored.config.branding.bannerText).toBe("test");
+  });
+});
+
+describe("remittanceMapper brand theme hydration", () => {
+  let brands: BrandService;
+  let demoConfigs: DemoConfigService;
+
+  beforeEach(() => {
+    const redis = createFakeRedis();
+    brands = new RedisBrandService(redis);
+    demoConfigs = new RedisDemoConfigService(redis, {
+      enableLegacyFallback: false,
+    });
+  });
+
+  it("hydrates secondaryColor from brand alongside extended palette", async () => {
+    const input = await remittanceMapper.toCreateInput(brands, {
+      ownerId: "o1",
+      name: "Remit",
+      description: null,
+      config: {
+        theme: { primaryColor: "#1a56db", secondaryColor: "#1e40af" },
+        branding: { logoUrl: "https://r.com/l.svg" },
+      },
+    });
+    const record = await demoConfigs.create(input);
+    const brand = await brands.get(record.brandId);
+    const updated = await brands.update(brand!.id, {
+      foreground: "#333333",
+      pageBackground: "#f5f5f5",
+      secondaryColor: "#new-secondary",
+      logo: "custom",
+      logoUrl: "https://brand.com/r.svg",
+    });
+    const stored = remittanceMapper.toStored(record, updated);
+    expect(stored.config.theme?.foregroundColor).toBe("#333333");
+    expect(stored.config.theme?.pageBackground).toBe("#f5f5f5");
+    expect(stored.config.theme?.secondaryColor).toBe("#new-secondary");
+    expect(stored.config.branding?.logoUrl).toBe("https://brand.com/r.svg");
+  });
+});
+
 describe("brand resolution determinism — cross-kind", () => {
   let brands: BrandService;
 

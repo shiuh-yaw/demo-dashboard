@@ -15,6 +15,7 @@ import {
 } from "@/lib/types/dashboard";
 
 import { resolveBrand } from "./brand-resolver";
+import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_REMITTANCE_CONFIG.theme!.primaryColor!;
@@ -107,16 +108,21 @@ export const remittanceMapper: DemoConfigMapper<
 
   toStored(record, brand) {
     const config = record.config as RemittanceConfig | null | undefined;
-    const hydratedTheme: RemittanceConfig["theme"] = brand
+    const baseTheme = hydrateBrandTheme(
+      brand,
+      config?.theme,
+      record.themeOverrides,
+    );
+    // Layer remittance-specific secondaryColor from the Brand.
+    const hydratedTheme: RemittanceConfig["theme"] = baseTheme
       ? {
-          ...config?.theme,
-          primaryColor: brand.primaryColor,
-          primaryHoverColor: brand.primaryHoverColor ?? undefined,
-          secondaryColor: brand.secondaryColor ?? config?.theme?.secondaryColor,
-          accentColor: brand.accentColor ?? undefined,
-          ...(record.themeOverrides as object | null | undefined),
+          ...baseTheme,
+          ...(brand?.secondaryColor != null && {
+            secondaryColor: brand.secondaryColor,
+          }),
         }
-      : config?.theme;
+      : baseTheme;
+    const logoUrl = brandLogoUrl(brand);
     return {
       id: record.id,
       name: record.name ?? remittanceMapper.untitledLabel,
@@ -124,7 +130,10 @@ export const remittanceMapper: DemoConfigMapper<
       ownerId: record.ownerId || undefined,
       config: {
         theme: hydratedTheme,
-        branding: config?.branding,
+        branding: {
+          ...config?.branding,
+          ...(logoUrl != null && { logoUrl }),
+        },
       },
       createdAt: record.createdAt.toISOString(),
       updatedAt: record.updatedAt.toISOString(),

@@ -19,6 +19,7 @@ import type {
 } from "@/lib/types/dashboard";
 
 import { resolveBrand } from "./brand-resolver";
+import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_THEME.primaryColor;
@@ -155,19 +156,21 @@ export const checkoutMapper: Omit<
   toStored(record, brand) {
     const payload = record.config as CheckoutConfigPayload | null | undefined;
     const mode: CheckoutMode = payload?._checkoutMode ?? "payment";
-    const hydratedTheme = brand
-      ? {
-          ...payload?.theme,
-          primaryColor: brand.primaryColor,
-          primaryHoverColor: brand.primaryHoverColor ?? undefined,
-          accentColor: brand.accentColor ?? undefined,
-          ...(record.themeOverrides as object | null | undefined),
-        }
-      : payload?.theme;
+    const hydratedTheme = hydrateBrandTheme(
+      brand,
+      payload?.theme as Record<string, unknown> | undefined,
+      record.themeOverrides,
+      { foregroundKey: "foreground" },
+    );
+    const logoUrl = brandLogoUrl(brand);
     const config: WidgetConfig = payload
       ? {
           ...(payload as WidgetConfig),
           theme: hydratedTheme,
+          branding: {
+            ...payload.branding,
+            ...(logoUrl != null && { logo: logoUrl }),
+          },
         }
       : DEFAULT_WIDGET_CONFIG;
     return {

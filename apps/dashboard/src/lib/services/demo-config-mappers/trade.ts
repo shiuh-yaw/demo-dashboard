@@ -18,6 +18,7 @@ import {
 } from "@/lib/types/dashboard";
 
 import { resolveBrand } from "./brand-resolver";
+import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
 import type { DemoConfigMapper } from "./types";
 
 // Neutral fallback when no theme is supplied. Matches the dashboard's
@@ -113,6 +114,13 @@ export const tradeMapper: DemoConfigMapper<TradeConfig, StoredTradeConfig> = {
 
   toStored(record, brand) {
     const config = record.config as TradeConfig | null | undefined;
+    const configTheme = (config as { theme?: Record<string, unknown> } | null | undefined)?.theme;
+    const hydratedTheme = hydrateBrandTheme(
+      brand,
+      configTheme,
+      record.themeOverrides,
+    );
+    const logoUrl = brandLogoUrl(brand);
     return {
       id: record.id,
       name: record.name ?? tradeMapper.untitledLabel,
@@ -123,15 +131,13 @@ export const tradeMapper: DemoConfigMapper<TradeConfig, StoredTradeConfig> = {
             ...config,
             branding: {
               ...config?.branding,
-              logoUrl: brand.logoUrl ?? config?.branding?.logoUrl,
+              ...(logoUrl != null
+                ? { logoUrl }
+                : brand.logoUrl != null
+                  ? { logoUrl: brand.logoUrl }
+                  : {}),
             },
-            // Surface brand's primaryColor as an embedded theme for legacy
-            // consumers that read `config.theme.primaryColor`.
-            theme: {
-              ...(config as { theme?: object } | null | undefined)?.theme,
-              primaryColor: brand.primaryColor,
-              ...(record.themeOverrides as object | null | undefined),
-            },
+            theme: hydratedTheme,
           } as TradeConfig)
         : (config ?? DEFAULT_TRADE_CONFIG),
       createdAt: record.createdAt.toISOString(),

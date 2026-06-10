@@ -13,6 +13,7 @@ import {
 } from "@/lib/types/dashboard";
 
 import { resolveBrand } from "./brand-resolver";
+import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_VISA_DIRECT_CONFIG.theme.primaryColor!;
@@ -99,21 +100,22 @@ export const visaDirectMapper: DemoConfigMapper<
 
   toStored(record, brand) {
     const config = record.config as VisaDirectConfig | null | undefined;
-    const hydratedTheme: VisaDirectConfig["theme"] = brand
-      ? {
-          ...config?.theme,
-          primaryColor: brand.primaryColor,
-          ...(record.themeOverrides as object | null | undefined),
-        }
-      : (config?.theme ?? DEFAULT_VISA_DIRECT_CONFIG.theme);
+    const hydratedTheme: VisaDirectConfig["theme"] = hydrateBrandTheme(
+      brand,
+      config?.theme,
+      record.themeOverrides,
+    ) ?? (config?.theme ?? DEFAULT_VISA_DIRECT_CONFIG.theme);
+    const logoUrl = brandLogoUrl(brand);
     return {
       id: record.id,
       name: record.name ?? visaDirectMapper.untitledLabel,
       description: record.description ?? undefined,
       ownerId: record.ownerId || undefined,
       config: {
-        branding:
-          config?.branding ?? DEFAULT_VISA_DIRECT_CONFIG.branding,
+        branding: {
+          ...(config?.branding ?? DEFAULT_VISA_DIRECT_CONFIG.branding),
+          ...(logoUrl != null && { logoUrl }),
+        },
         theme: hydratedTheme,
       },
       createdAt: record.createdAt.toISOString(),

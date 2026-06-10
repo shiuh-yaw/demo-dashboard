@@ -24,6 +24,7 @@ import {
 } from "@/lib/types/dashboard";
 
 import { resolveBrand } from "./brand-resolver";
+import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_EARN_CONFIG.theme!.primaryColor!;
@@ -146,18 +147,12 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
 
   toStored(record, brand) {
     const config = record.config as EarnConfig | null | undefined;
-    // Hydrate theme: prefer Brand-derived theme when we have one (post-
-    // cutover path), fall back to the embedded `config.theme` for legacy
-    // rows (pre-cutover, surfaced via the Redis legacy-fallback).
-    const hydratedTheme: EarnConfig["theme"] = brand
-      ? {
-          ...config?.theme,
-          primaryColor: brand.primaryColor,
-          primaryHoverColor: brand.primaryHoverColor ?? undefined,
-          accentColor: brand.accentColor ?? undefined,
-          ...(record.themeOverrides as object | null | undefined),
-        }
-      : config?.theme;
+    const hydratedTheme = hydrateBrandTheme(
+      brand,
+      config?.theme,
+      record.themeOverrides,
+    );
+    const logoUrl = brandLogoUrl(brand);
     return {
       id: record.id,
       name: record.name ?? earnMapper.untitledLabel,
@@ -165,7 +160,11 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
       ownerId: record.ownerId || undefined,
       config: {
         theme: hydratedTheme,
-        branding: config?.branding,
+        branding: {
+          ...config?.branding,
+          logo: (brand?.logo ?? config?.branding?.logo ?? "dynamic") as import("@/lib/types/dashboard").EarnBrand,
+          ...(logoUrl != null && { logoUrl }),
+        },
         layout: config?.layout,
       },
       createdAt: record.createdAt.toISOString(),
