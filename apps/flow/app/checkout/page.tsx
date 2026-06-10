@@ -1,4 +1,4 @@
-import { EthereumIcon, FireblocksIcon } from "@dynamic-labs/iconic";
+import { BaseChainIcon, EthereumIcon } from "@dynamic-labs/iconic";
 import type { ParsedFlowConfig } from "@/lib/flow-config/schema";
 import { DEFAULT_FLOW_CONFIGS } from "@/lib/flow-config/defaults";
 import {
@@ -118,7 +118,7 @@ function ScenarioHero({ config }: { config: ParsedFlowConfig }) {
         />
         <ChipArrow />
         <RouteChip
-          icon={<FireblocksIcon className="h-5 w-5" />}
+          icon={<BaseChainIcon className="h-5 w-5" />}
           label="Merchant vault"
           detail={assetLine}
         />

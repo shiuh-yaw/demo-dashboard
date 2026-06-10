@@ -16,12 +16,13 @@
  */
 
 import { useState } from "react";
-import { CheckoutWidget } from "@dynamic-demos/checkouts-widget";
 import { env } from "@/lib/env";
 import { BackButton } from "@/components/back-button";
+import { ExchangeCheckoutWidget } from "@/components/exchange-checkout-widget";
 import { ScenarioCard } from "@/components/scenario-card";
 import { USDC_BASE } from "@/lib/tokens";
 import { TicketIllustration } from "./ticket-illustration";
+import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 
 // Same-chain USDC-on-Base — no swap, no bridge. `needsConversion` /
 // `isCrossChain` drive whether the widget's swap pre-flight + cross-
@@ -40,8 +41,19 @@ const CHECKOUT_ID =
 // internal demo.
 const DEMO_DESTINATION_ADDRESS = "0x5C260969b90152a46D52BC476C94524C8E796b3d";
 
+/** Check if the current URL contains Dynamic OAuth redirect params. */
+function isOAuthRedirectUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.has("dynamicOauthCode");
+}
+
 export function CheckoutWidgetDemo() {
-  const [paying, setPaying] = useState(false);
+  // Auto-mount the widget when returning from an OAuth redirect so the
+  // exchange flow can resume.
+  const [paying, setPaying] = useState(
+    () => hasPendingExchangeRedirect() || isOAuthRedirectUrl(),
+  );
 
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
@@ -76,7 +88,7 @@ function WidgetStage({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex flex-col gap-2">
       <BackButton onClick={onBack} label="Back to product" />
-      <CheckoutWidget
+      <ExchangeCheckoutWidget
         // Widget's own "Powered by" + "Terms / Privacy" footers are
         // suppressed because apps/flow renders its own legal close at
         // the end of <TransactionDisclaimer /> (see disclaimer.tsx).
@@ -107,6 +119,12 @@ function WidgetStage({ onBack }: { onBack: () => void }) {
         // `handleDismiss`). Wiring it to `onBack` returns the demo to
         // the product card on either path.
         onCancelled={onBack}
+        // Exchange-specific: use the same destination address for
+        // exchange withdrawals so Kraken transfers land in the same
+        // settlement wallet.
+        exchangeDestinationAddress={DEMO_DESTINATION_ADDRESS}
+        exchangeSettlementChain="EVM"
+        exchangeSettlementChainId={8453}
       />
     </div>
   );

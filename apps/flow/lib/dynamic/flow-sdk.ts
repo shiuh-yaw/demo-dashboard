@@ -34,6 +34,20 @@ import {
   cancelCheckoutTransaction as sdkCancelCheckoutTransaction,
   // WalletConnect catalog
   getWalletConnectCatalog as sdkGetWalletConnectCatalog,
+  // Exchange / Social OAuth
+  authenticateWithSocial as sdkAuthenticateWithSocial,
+  completeSocialAuthentication as sdkCompleteSocialAuthentication,
+  detectOAuthRedirect as sdkDetectOAuthRedirect,
+  getUserSocialAccounts as sdkGetUserSocialAccounts,
+  // Kraken funding
+  getKrakenAccounts as sdkGetKrakenAccounts,
+  getKrakenWhitelistedAddresses as sdkGetKrakenWhitelistedAddresses,
+  createKrakenExchangeTransfer as sdkCreateKrakenExchangeTransfer,
+  type KrakenAccount,
+  type KrakenTransferRequest,
+  type ExchangeTransferResponse,
+  type TransferDestinationResponse,
+  type GetKrakenAccountsParams,
   // Events
   onEvent as sdkOnEvent,
   offEvent as sdkOffEvent,
@@ -54,6 +68,7 @@ import {
   createWaasWalletAccounts as sdkCreateWaasWalletAccounts,
   isWaasWalletAccount as sdkIsWaasWalletAccount,
 } from "@dynamic-labs-sdk/client/waas";
+import { waitForDynamicClientInitialized } from "./client";
 import { connectAndVerifyWithWalletConnectEvm as sdkConnectAndVerifyWithWalletConnectEvm } from "@dynamic-labs-sdk/evm/wallet-connect";
 
 export type {
@@ -68,6 +83,11 @@ export type {
   OffEventParams,
   WalletConnectCatalog,
   WalletConnectCatalogWallet,
+  KrakenAccount,
+  KrakenTransferRequest,
+  ExchangeTransferResponse,
+  TransferDestinationResponse,
+  GetKrakenAccountsParams,
 };
 
 /**
@@ -462,4 +482,87 @@ export function isSuccessState(tx: CheckoutTransaction): boolean {
 
 export function isFailedState(tx: CheckoutTransaction): boolean {
   return tx.executionState === "failed" || tx.settlementState === "failed";
+}
+
+// =============================================================================
+// EXCHANGE / SOCIAL OAUTH
+// =============================================================================
+
+export async function authenticateWithSocial(params: {
+  provider: string;
+  redirectUrl: string;
+}): Promise<void> {
+  if (typeof window === "undefined")
+    throw new Error("Dynamic client not initialized");
+  return sdkAuthenticateWithSocial({
+    provider: params.provider as Parameters<
+      typeof sdkAuthenticateWithSocial
+    >[0]["provider"],
+    redirectUrl: params.redirectUrl,
+  });
+}
+
+export async function detectOAuthRedirect(url?: URL): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    await waitForDynamicClientInitialized();
+    const currentUrl = url ?? new URL(window.location.href);
+    return sdkDetectOAuthRedirect({ url: currentUrl });
+  } catch {
+    return false;
+  }
+}
+
+export async function completeSocialAuthentication(
+  url?: URL,
+): Promise<unknown> {
+  if (typeof window === "undefined")
+    throw new Error("Dynamic client not initialized");
+  await waitForDynamicClientInitialized();
+  const currentUrl = url ?? new URL(window.location.href);
+  return sdkCompleteSocialAuthentication({ url: currentUrl });
+}
+
+export interface SocialAccount {
+  accountId?: string;
+  displayName?: string;
+  emails: string[];
+  photos: string[];
+  provider: string;
+  username?: string;
+  verifiedCredentialId: string;
+}
+
+export function getUserSocialAccounts(): SocialAccount[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return sdkGetUserSocialAccounts() as SocialAccount[];
+  } catch {
+    return [];
+  }
+}
+
+// =============================================================================
+// KRAKEN EXCHANGE
+// =============================================================================
+
+export async function getKrakenAccounts(
+  params?: GetKrakenAccountsParams,
+): Promise<KrakenAccount[]> {
+  if (typeof window === "undefined") return [];
+  return sdkGetKrakenAccounts(params);
+}
+
+export async function getKrakenWhitelistedAddresses(): Promise<TransferDestinationResponse> {
+  if (typeof window === "undefined")
+    throw new Error("Dynamic client not initialized");
+  return sdkGetKrakenWhitelistedAddresses();
+}
+
+export async function createKrakenExchangeTransfer(
+  params: KrakenTransferRequest,
+): Promise<ExchangeTransferResponse> {
+  if (typeof window === "undefined")
+    throw new Error("Dynamic client not initialized");
+  return sdkCreateKrakenExchangeTransfer(params);
 }

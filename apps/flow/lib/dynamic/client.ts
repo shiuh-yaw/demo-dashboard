@@ -12,6 +12,64 @@ import { createDynamicClientSingleton } from "@dynamic-demos/dynamic/client-sing
 import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 
 /**
+ * Patch all EIP-6963 announced providers so that `wallet_requestSnaps`
+ * calls targeting `@consensys/starknet-snap` are auto-rejected.
+ *
+ * The Dynamic environment may have Starknet enabled, causing the SDK's
+ * EVM extension to request the MetaMask Starknet snap on every
+ * initialization cycle. If the user cancels, the SDK re-detects and
+ * re-requests → infinite popup loop. The flow app doesn't need Starknet,
+ * so we suppress the snap request entirely.
+ *
+ * Only patches once per page load.
+ */
+function suppressStarknetSnap(): void {
+  if (typeof window === "undefined") return;
+
+  const STARKNET_SNAP_ID = "@consensys/starknet-snap";
+  const patched = new WeakSet<object>();
+
+  function patchProvider(provider: {
+    request: (...args: unknown[]) => unknown;
+  }) {
+    if (patched.has(provider)) return;
+    patched.add(provider);
+
+    const originalRequest = provider.request.bind(provider);
+    provider.request = ((...args: unknown[]) => {
+      const params = args[0] as { method?: string; params?: Record<string, unknown> } | undefined;
+      if (
+        params?.method === "wallet_requestSnaps" &&
+        params.params &&
+        STARKNET_SNAP_ID in params.params
+      ) {
+        return Promise.reject(new Error("Starknet snap suppressed by Flow app"));
+      }
+      return originalRequest(...args);
+    }) as typeof provider.request;
+  }
+
+  // Patch providers announced via EIP-6963
+  window.addEventListener("eip6963:announceProvider", ((event: Event) => {
+    const detail = (event as CustomEvent).detail;
+    if (detail?.provider?.request) {
+      patchProvider(detail.provider);
+    }
+  }) as EventListener);
+
+  // Patch window.ethereum if already present
+  const win = window as unknown as {
+    ethereum?: { request: (...args: unknown[]) => unknown };
+  };
+  if (win.ethereum?.request) {
+    patchProvider(win.ethereum);
+  }
+}
+
+// Run once at module load (before SDK init)
+suppressStarknetSnap();
+
+/**
  * Lazy, SSR-safe Dynamic SDK singleton.
  *
  * Mirrors apps/checkouts' canonical pattern verbatim: one

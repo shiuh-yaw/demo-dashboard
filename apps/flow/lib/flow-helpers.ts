@@ -20,7 +20,8 @@ export type HelperTag =
   | "WalletConnect"
   | "Balances"
   | "Balance"
-  | "Source UI";
+  | "Source UI"
+  | "Exchange";
 
 export interface HelperDef {
   /** Stable id for React keys + anchor links. */
@@ -299,6 +300,103 @@ const SHARED_WC_CATALOG: HelperDef = {
 };
 
 // =============================================================================
+// Exchange helper definitions — Kraken OAuth + balance + whitelisting + transfer.
+// Surfaced on Checkout + Deposit (exchanges are funding sources, not withdraw).
+// =============================================================================
+
+const EXCHANGE_OAUTH_CODE = `import {
+  signInWithSocialRedirect,
+  detectSocialRedirectUrl,
+  completeSocialRedirect,
+} from "@dynamic-labs-sdk/client";
+
+// 1. Redirect to Kraken OAuth
+await signInWithSocialRedirect({
+  provider: "kraken",
+  redirectUrl: window.location.origin + window.location.pathname,
+});
+
+// 2. On return, detect and complete the redirect
+const url = new URL(window.location.href);
+const isReturning = await detectSocialRedirectUrl({ url });
+if (isReturning) {
+  await completeSocialRedirect({ url });
+  // User's Kraken account is now connected
+}`;
+
+const KRAKEN_ACCOUNTS_CODE = `import { getKrakenAccounts } from "@dynamic-labs-sdk/client";
+
+const accounts = await getKrakenAccounts();
+// accounts[0].balances → [{ currency: "ETH", balance: 2.5 }, …]`;
+
+const KRAKEN_WHITELISTING_CODE = `import { getKrakenWhitelistedAddresses } from "@dynamic-labs-sdk/client";
+
+const { destinations, enforcesAddressWhitelist } =
+  await getKrakenWhitelistedAddresses();
+
+if (enforcesAddressWhitelist) {
+  // User can only withdraw to these pre-approved addresses
+  destinations.forEach((d) =>
+    console.log(d.address, d.tokens),
+  );
+}`;
+
+const KRAKEN_TRANSFER_CODE = `import {
+  createKrakenExchangeTransfer,
+  getKrakenAccounts,
+} from "@dynamic-labs-sdk/client";
+
+const accounts = await getKrakenAccounts();
+
+const transfer = await createKrakenExchangeTransfer({
+  accountId: accounts[0].id,
+  to: "0x742d35Cc6634C0532925a3b844Bc9e7595f7ABCD",
+  amount: 0.5,
+  currency: "ETH",
+});
+// transfer → { id, status: "pending" | "completed" | "failed" }`;
+
+const EXCHANGE_OAUTH: HelperDef = {
+  id: "exchange-oauth",
+  sig: ["signInWithSocialRedirect", '({ provider, redirectUrl })'],
+  tag: "Exchange",
+  desc: "Connect a Kraken exchange account via OAuth. Redirects to Kraken's authorization page; on return, call `detectSocialRedirectUrl` + `completeSocialRedirect` to finish the handshake.",
+  rawCode: EXCHANGE_OAUTH_CODE,
+  docsUrl:
+    "https://www.dynamic.xyz/docs/javascript/authentication-methods/social",
+};
+
+const KRAKEN_ACCOUNTS: HelperDef = {
+  id: "getKrakenAccounts",
+  sig: ["getKrakenAccounts", "()"],
+  tag: "Exchange",
+  desc: "Fetch the user's Kraken exchange balances. Returns accounts with per-currency balances — use `accountId` from the response when creating transfers.",
+  rawCode: KRAKEN_ACCOUNTS_CODE,
+  docsUrl:
+    "https://www.dynamic.xyz/docs/javascript/reference/client/get-kraken-accounts",
+};
+
+const KRAKEN_WHITELISTING: HelperDef = {
+  id: "getKrakenWhitelistedAddresses",
+  sig: ["getKrakenWhitelistedAddresses", "()"],
+  tag: "Exchange",
+  desc: "Check whether the user's Kraken account enforces address whitelisting and retrieve the approved destinations. When enforced, withdrawals can only go to pre-approved address+token pairs.",
+  rawCode: KRAKEN_WHITELISTING_CODE,
+  docsUrl:
+    "https://www.dynamic.xyz/docs/javascript/reference/client/get-kraken-whitelisted-addresses",
+};
+
+const KRAKEN_TRANSFER: HelperDef = {
+  id: "createKrakenExchangeTransfer",
+  sig: ["createKrakenExchangeTransfer", "({ accountId, to, amount, currency })"],
+  tag: "Exchange",
+  desc: "Execute a withdrawal from Kraken to an external wallet. Requires `accountId` from `getKrakenAccounts` and a destination that passes the whitelisting check.",
+  rawCode: KRAKEN_TRANSFER_CODE,
+  docsUrl:
+    "https://www.dynamic.xyz/docs/javascript/reference/client/create-kraken-exchange-transfer",
+};
+
+// =============================================================================
 // Per-scenario exports.
 // =============================================================================
 
@@ -318,6 +416,11 @@ export const CHECKOUT_EXTRAS: ScenarioExtras = {
       docsUrl:
         "https://www.dynamic.xyz/docs/javascript/reference/wallets/get-balances",
     },
+    // Exchange helpers — Kraken OAuth, balance, whitelisting, transfer.
+    EXCHANGE_OAUTH,
+    KRAKEN_ACCOUNTS,
+    KRAKEN_WHITELISTING,
+    KRAKEN_TRANSFER,
   ],
   ai: {
     eyebrow: "AI prompt · Checkout",
@@ -362,6 +465,11 @@ export const DEPOSIT_EXTRAS: ScenarioExtras = {
       docsUrl:
         "https://www.dynamic.xyz/docs/javascript/reference/wallets/get-balances",
     },
+    // Exchange helpers — Kraken OAuth, balance, whitelisting, transfer.
+    EXCHANGE_OAUTH,
+    KRAKEN_ACCOUNTS,
+    KRAKEN_WHITELISTING,
+    KRAKEN_TRANSFER,
   ],
   ai: {
     eyebrow: "AI prompt · Deposit",

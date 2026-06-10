@@ -1,4 +1,4 @@
-import { PhantomIcon } from "@dynamic-labs/iconic";
+import { BaseChainIcon, MetaMaskIcon } from "@dynamic-labs/iconic";
 import type { ParsedFlowConfig } from "@/lib/flow-config/schema";
 import { DEFAULT_FLOW_CONFIGS } from "@/lib/flow-config/defaults";
 import {
@@ -24,7 +24,6 @@ import {
   TopBar,
   prettyChain,
 } from "@/components/scenario-chrome";
-import { DynamicWalletIcon } from "@/components/icons/dynamic-wallet";
 import { DepositWidgetDemo } from "./components/widget-demo";
 
 /**
@@ -114,13 +113,13 @@ function DepositHero({ config }: { config: ParsedFlowConfig }) {
 
       <div className="flex items-center gap-3 pt-1">
         <RouteChip
-          icon={<PhantomIcon className="h-5 w-5" />}
+          icon={<MetaMaskIcon className="h-5 w-5" />}
           label="External wallet"
           detail="Any wallet, chain"
         />
         <ChipArrow />
         <RouteChip
-          icon={<DynamicWalletIcon size={20} />}
+          icon={<BaseChainIcon className="h-5 w-5" />}
           label="Embedded or vault"
           detail={assetLine}
         />

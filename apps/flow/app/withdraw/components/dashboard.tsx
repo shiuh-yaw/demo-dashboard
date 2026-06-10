@@ -23,7 +23,7 @@ import {
   UpArrow,
 } from "@/components/icons";
 import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
-import { USDC_ON_SOLANA } from "../settlement-options";
+import { USDC_ON_BASE } from "../settlement-options";
 
 export function Dashboard({
   walletAccount,
@@ -50,7 +50,7 @@ export function Dashboard({
           </span>
           <AddressChip
             address={walletAccount.address}
-            chainId={USDC_ON_SOLANA.chainId}
+            chainId={USDC_ON_BASE.chainId}
           />
         </div>
         <div className="flex flex-col gap-1">

@@ -10,7 +10,7 @@
  *   error       → FlowErrorPanel            (retry/back on mint failure)
  *   pay         → PaymentWidget             (sign + broadcast + settle)
  *
- * Source asset is always USDC@Solana (the platform anchor); the
+ * Source asset is always USDC@Base (the platform anchor); the
  * embedded wallet only holds USDC, so the asset picker is intentionally
  * omitted.
  */
@@ -29,7 +29,7 @@ import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
 import {
   CHAIN_OPTIONS,
   SETTLEMENT_OPTIONS,
-  USDC_ON_SOLANA,
+  USDC_ON_BASE,
   type SettlementOption,
 } from "../settlement-options";
 import {
@@ -87,7 +87,7 @@ export function WithdrawSubFlow({
   // No `asset` stage: the embedded wallet is USDC-only by design
   // ("we only accept USDC here"), so picking a source asset is a
   // single-row choice that adds friction with no value. `fromToken`
-  // is auto-set to USDC-on-Solana when the destination form is
+  // is auto-set to USDC-on-Base when the destination form is
   // submitted, advancing straight to `creating`.
   let stage: WithdrawStage;
   if (!settlement) stage = "settlement";
@@ -177,12 +177,10 @@ export function WithdrawSubFlow({
           onSubmit={(values) => {
             setDestination(values.address);
             setAmount(values.amount);
-            // Source is always USDC on Solana — the embedded WaaS
-            // wallet is SOL and only holds USDC. Skip the asset
-            // picker entirely. If the platform wallet ever flips
-            // back to EVM (see flow-sdk.ts notes), swap this to the
-            // EVM-equivalent USDC constant.
-            setFromToken(USDC_ON_SOLANA);
+            // Source is always USDC on Base — the embedded WaaS
+            // wallet is EVM (Base) and only holds USDC. Skip the
+            // asset picker entirely.
+            setFromToken(USDC_ON_BASE);
           }}
         />
       </div>
@@ -198,7 +196,7 @@ export function WithdrawSubFlow({
           // Back returns to the form. Clear destination/amount so
           // user can re-enter; keep fromToken set (no asset picker
           // to fall back to). On form resubmit it's re-set to the
-          // same USDC_ON_SOLANA, so no state drift.
+          // same USDC_ON_BASE, so no state drift.
           onBack={() => {
             setDestination("");
             setAmount("");

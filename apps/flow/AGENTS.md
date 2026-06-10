@@ -38,6 +38,19 @@ Coming in follow-up PRs:
 - 🔜 Phase 9: Brand theme switcher (Postgres `Brand` rows)
 - 🔜 Phase 10: Withdraw scenario (`WithdrawIntent` Prisma model + EIP-712 + FB webhook)
 
+## Exchange connector support
+
+Exchange connectors (currently Kraken) are supported as funding sources alongside external wallets. The implementation follows the adapter pattern from `apps/checkouts`:
+
+- **`lib/exchanges/`** — adapter registry, types, Kraken adapter, OAuth redirect state persistence.
+- **`lib/dynamic/flow-sdk.ts`** — SSR-safe wrappers for exchange/OAuth SDK functions (`authenticateWithSocial`, `getKrakenAccounts`, `createKrakenExchangeTransfer`, etc.).
+- **`components/exchange-checkout-widget.tsx`** — wraps `<CheckoutWidget>` with exchange support. In wallet mode, renders the standard widget with exchange rows injected via `walletPickerExtrasAfter`. In exchange mode, renders a custom flow: asset list → whitelisting check → review → transfer execution.
+- **`components/exchange-rows.tsx`**, **`exchange-asset-list.tsx`**, **`exchange-whitelisting-screen.tsx`** — leaf components for the exchange path.
+
+Adding a new exchange: create `lib/exchanges/<name>.ts` implementing `ExchangeAdapter`, register in `lib/exchanges/index.ts`. No other changes needed — the `ExchangeCheckoutWidget` consumes adapters generically.
+
+Exchange-specific flows are owned by this app, not delegated to the package (mirrors the `apps/checkouts` pattern).
+
 Plan-of-record: `~/.claude/plans/users-etesenair-desktop-rd-product-brie-radiant-starfish.md`.
 
 ## Provider docs

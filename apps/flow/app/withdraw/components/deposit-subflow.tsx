@@ -2,7 +2,7 @@
 
 /**
  * Deposit sub-flow inside the withdraw demo's platform shell —
- * bridges funds INTO the embedded SOL wallet.
+ * bridges funds INTO the embedded EVM wallet on Base.
  *
  * Two wallets, two roles:
  *   sourceWalletAccount   — external auth wallet (Phantom/MetaMask/etc.).
@@ -13,16 +13,16 @@
  *                           without going through the picker), the
  *                           CheckoutWidget shows its picker and lets the
  *                           user re-connect.
- *   destinationAddress    — the embedded SOL wallet's address. Funds
- *                           settle here as USDC on Solana, regardless of
- *                           which chain/asset the user paid with.
+ *   destinationAddress    — the embedded EVM wallet's address on Base.
+ *                           Funds settle here as USDC on Base, regardless
+ *                           of which chain/asset the user paid with.
  *
  * ## Per-deposit Checkout minting
  *
  * Unlike `/checkout` and `/deposit` (the standalone routes — destination
  * is a fixed merchant/platform vault, so they reuse one pre-baked
  * Checkout id), the deposit destination here varies per user: it's the
- * user-specific embedded SOL wallet address we provisioned on connect.
+ * user-specific embedded EVM wallet address we provisioned on connect.
  *
  * Server-side Checkout config is the source of truth at settle time —
  * passing a client-side `destinationAddress` prop with a mismatched
@@ -30,12 +30,12 @@
  * pre-baked Checkout's destination is. So we mint a fresh Checkout
  * server-side on subflow mount via `POST /api/checkouts` (the same
  * route `/withdraw` uses) with `mode: "deposit"` and the embedded
- * wallet's SOL address as the destination.
+ * wallet's Base address as the destination.
  *
  * Lifecycle: creating → ready (or error → retry → creating).
  *
  * Dynamic Flow handles the swap/bridge from any source asset on any
- * supported source chain to USDC on Solana — so the user can deposit
+ * supported source chain to USDC on Base — so the user can deposit
  * from MetaMask on Base, Phantom on Solana, Fireblocks on Polygon,
  * etc., and the embedded wallet receives USDC.
  */
@@ -43,7 +43,7 @@
 import { CheckoutWidget } from "@dynamic-demos/checkouts-widget";
 import { WidgetCard } from "@dynamic-demos/ui";
 import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
-import { USDC_ON_SOLANA } from "../settlement-options";
+import { USDC_ON_BASE } from "../settlement-options";
 import { CreatingFlowPanel, FlowErrorPanel } from "./sub-flow-chrome";
 import { useCheckoutMinting } from "../use-checkout-minting";
 
@@ -62,13 +62,13 @@ export function DepositSubFlow({
     enabled: true,
     mode: "deposit",
     destinationAddress,
-    // Platform wallet is anchored on Solana — the destination address
-    // is a Solana base58 string, and we settle USDC on Solana mainnet.
+    // Platform wallet is anchored on Base — the destination address
+    // is an EVM 0x string, and we settle USDC on Base mainnet.
     // These two together drive the upstream Checkout's `destinations`
-    // entry (chainName=SOL) and settlement config (USDC@solana).
-    destinationChain: "SOL",
+    // entry (chainName=EVM) and settlement config (USDC@base).
+    destinationChain: "EVM",
     asset: "USDC",
-    chain: "solana",
+    chain: "base",
   });
 
   // Error stage — surface a retry button. Same panel shape as
@@ -105,13 +105,13 @@ export function DepositSubFlow({
     <CheckoutWidget
       walletAccount={sourceWalletAccount ?? undefined}
       checkoutId={checkoutId}
-      destinationToken={USDC_ON_SOLANA}
+      destinationToken={USDC_ON_BASE}
       destinationAddress={destinationAddress}
       // Threads into `createCheckoutTransaction({ destinationAddresses:
       // [{ address, chain }] })`, which the SDK serializes as
       // `chainName` on the wire. Must match the chain family of the
-      // address — Solana base58 → "SOL", EVM 0x… → "EVM".
-      destinationChain="SOL"
+      // address — EVM 0x… → "EVM".
+      destinationChain="EVM"
       currency="USD"
       mode="deposit"
       amountFirst

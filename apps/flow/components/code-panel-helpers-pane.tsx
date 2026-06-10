@@ -5,20 +5,45 @@
  * Each card shows the function signature, prose rationale, docs link,
  * and a Shiki-highlighted code snippet. No numbered ordering — these
  * are sibling utilities, not a sequence.
+ *
+ * When helpers span multiple tag groups (e.g. wallet helpers followed
+ * by exchange helpers), a lightweight section divider is rendered at
+ * the boundary so the two integration paths read as distinct sections.
  */
 
 import { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
 import type { HelperCard } from "./code-panel-types";
 
+/** Tag values that get their own labelled section divider. */
+const SECTION_TAGS = new Set(["Exchange"]);
+
 export function HelpersPane({ helpers }: { helpers: HelperCard[] }) {
   return (
     <ul className="flex flex-col gap-6 m-0 p-0" style={{ listStyle: "none" }}>
-      {helpers.map((h) => (
-        <li key={h.id}>
-          <HelperCardItem helper={h} />
-        </li>
-      ))}
+      {helpers.map((h, i) => {
+        const prev = i > 0 ? helpers[i - 1] : null;
+        const needsDivider =
+          SECTION_TAGS.has(h.tag) && (!prev || prev.tag !== h.tag);
+
+        return (
+          <li key={h.id}>
+            {needsDivider && <SectionDivider label={h.tag} />}
+            <HelperCardItem helper={h} />
+          </li>
+        );
+      })}
     </ul>
+  );
+}
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 pb-2 mb-2">
+      <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-(--brand-primary) whitespace-nowrap">
+        {label}
+      </span>
+      <span className="h-px flex-1 bg-(--brand-border)" />
+    </div>
   );
 }
 

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import {
+  BaseChainIcon,
   CoinbaseIcon,
   EthereumIcon,
   FireblocksIcon,
   MetaMaskIcon,
-  PhantomIcon,
 } from "@dynamic-labs/iconic";
 import { DynamicWalletIcon } from "@/components/icons/dynamic-wallet";
 import { DisclaimerCite, FullDisclaimer } from "@/components/disclaimer";
@@ -569,21 +569,21 @@ const MOCKUP_LABELS: Record<
   },
   deposit: {
     source: {
-      title: "Phantom wallet",
-      detail: "SOL on Solana",
-      icon: <PhantomIcon className="h-5 w-5" />,
+      title: "External wallet",
+      detail: "Any wallet, chain",
+      icon: <MetaMaskIcon className="h-5 w-5" />,
     },
     destination: {
       title: "Embedded wallet or vault",
       detail: "USDC on Base",
-      icon: <FireblocksIcon className="h-5 w-5" />,
+      icon: <BaseChainIcon className="h-5 w-5" />,
     },
   },
   withdraw: {
     source: {
-      title: "Embedded wallet",
+      title: "Platform wallet",
       detail: "USDC on Base",
-      icon: <DynamicWalletIcon />,
+      icon: <BaseChainIcon className="h-5 w-5" />,
     },
     destination: {
       title: "User wallet",

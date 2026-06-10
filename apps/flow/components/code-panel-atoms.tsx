@@ -5,7 +5,7 @@
  *
  *   - `CodeFrame`   wraps a Shiki-highlighted code block with a dark
  *                   filename header + copy button.
- *   - `DocsLink`    "Read the docs →" anchor styled to match the
+ *   - `DocsLink`    "Docs →" anchor styled to match the
  *                   scenario-CTA arrow family.
  *   - `renderProse` cheap markdown subset that turns `backtick` spans
  *                   inside step / helper / event prose into inline
@@ -54,7 +54,7 @@ export function CodeFrame({
 }
 
 /**
- * "Read the docs →" anchor — small primary-coloured pill rendered in
+ * "Docs →" anchor — small primary-coloured pill rendered in
  * the top-right of every step / helper / webhook card. The arrow
  * slides right on hover, matching the scenario-card CTA, the
  * route-chip arrow, and the dashboard action-row arrows so the
@@ -68,7 +68,7 @@ export function DocsLink({ href }: { href: string }) {
       rel="noreferrer noopener"
       className="group/docs inline-flex items-center gap-1 text-[12px] font-medium text-(--brand-primary) hover:text-(--brand-primary-hover) transition-colors shrink-0"
     >
-      Read the docs
+      Docs
       <span className="transition-transform group-hover/docs:translate-x-0.5">
         <DocsArrow />
       </span>

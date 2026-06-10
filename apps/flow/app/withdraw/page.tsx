@@ -1,4 +1,4 @@
-import { FireblocksIcon, MetaMaskIcon } from "@dynamic-labs/iconic";
+import { BaseChainIcon, MetaMaskIcon } from "@dynamic-labs/iconic";
 import type { ParsedFlowConfig } from "@/lib/flow-config/schema";
 import { DEFAULT_FLOW_CONFIGS } from "@/lib/flow-config/defaults";
 import {
@@ -111,8 +111,8 @@ function WithdrawHero({ config }: { config: ParsedFlowConfig }) {
 
       <div className="flex items-center gap-3 pt-1">
         <RouteChip
-          icon={<FireblocksIcon className="h-5 w-5" />}
-          label="Vault or embedded"
+          icon={<BaseChainIcon className="h-5 w-5" />}
+          label="Platform wallet"
           detail={assetLine}
         />
         <ChipArrow />

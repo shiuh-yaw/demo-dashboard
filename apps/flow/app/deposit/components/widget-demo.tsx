@@ -15,12 +15,13 @@
  */
 
 import { useState } from "react";
-import { CheckoutWidget } from "@dynamic-demos/checkouts-widget";
 import { env } from "@/lib/env";
 import { BackButton } from "@/components/back-button";
+import { ExchangeCheckoutWidget } from "@/components/exchange-checkout-widget";
 import { ScenarioCard } from "@/components/scenario-card";
 import { USDC_BASE } from "@/lib/tokens";
 import { BalanceIllustration } from "./balance-illustration";
+import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 
 // Default Checkout id for the deposit demo. Sandbox-provisioned; the
 // merchant Checkout works fine for this purpose because the `mode`
@@ -36,8 +37,20 @@ const CHECKOUT_ID =
 const DEMO_EMBEDDED_WALLET_ADDRESS =
   "0x5C260969b90152a46D52BC476C94524C8E796b3d";
 
+/** Check if the current URL contains Dynamic OAuth redirect params. */
+function isOAuthRedirectUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.has("dynamicOauthCode");
+}
+
 export function DepositWidgetDemo() {
-  const [depositing, setDepositing] = useState(false);
+  // Auto-mount the widget when returning from an OAuth redirect so the
+  // exchange flow can resume. Without this, the widget never mounts and
+  // the redirect params go unprocessed.
+  const [depositing, setDepositing] = useState(
+    () => hasPendingExchangeRedirect() || isOAuthRedirectUrl(),
+  );
 
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
@@ -65,7 +78,7 @@ function WidgetStage({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex flex-col gap-2">
       <BackButton onClick={onBack} label="Back to platform" />
-      <CheckoutWidget
+      <ExchangeCheckoutWidget
         // Widget's own "Powered by" + "Terms / Privacy" footers are
         // suppressed because apps/flow renders its own legal close at
         // the end of <TransactionDisclaimer /> (see disclaimer.tsx).
@@ -93,6 +106,11 @@ function WidgetStage({ onBack }: { onBack: () => void }) {
         // Connect-only — funding the platform doesn't need SIWE;
         // the user signs the actual deposit tx anyway.
         verifyOnConnect={false}
+        // Exchange-specific: exchange withdrawals settle to the
+        // same embedded wallet address.
+        exchangeDestinationAddress={DEMO_EMBEDDED_WALLET_ADDRESS}
+        exchangeSettlementChain="EVM"
+        exchangeSettlementChainId={8453}
       />
     </div>
   );

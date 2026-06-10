@@ -33,12 +33,12 @@ export const DEFAULT_FLOW_CONFIGS = {
     scenario: "withdraw",
     source: { type: "embedded-wallet" },
     destination: { type: "external-address" },
-    // Platform wallet is anchored on USDC@Solana — see
+    // Platform wallet is anchored on USDC@Base — see
     // `app/withdraw/components/use-embedded-wallet-balances.ts` and
-    // `app/withdraw/settlement-options.ts` USDC_ON_SOLANA. The
+    // `app/withdraw/settlement-options.ts` USDC_ON_BASE. The
     // hero chip + Step 01 snippet read from this, so it has to
     // match what the live widget actually moves.
-    asset: { symbol: "USDC", chain: "solana" },
+    asset: { symbol: "USDC", chain: "base" },
     amount: { mode: "user-input", presets: [50, 100, 500] },
     compliance: { sanctionsScreening: true, spamTokenFilter: true },
   },

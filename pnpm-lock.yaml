@@ -678,6 +678,9 @@ importers:
       fastestsmallesttextencoderdecoder:
         specifier: 'catalog:'
         version: 1.0.22
+      lucide-react:
+        specifier: 0.541.0
+        version: 0.541.0(react@19.1.6)
       motion:
         specifier: 12.0.0
         version: 12.0.0(react-dom@19.1.6(react@19.1.6))(react@19.1.6)

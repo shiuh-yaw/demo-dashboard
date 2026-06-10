@@ -8,14 +8,15 @@
  * and a stable callback identity so unrelated SDK re-renders don't
  * churn the initial fetch.
  *
- * Pinned to Solana mainnet because the platform embedded wallet is a
- * SOL WaaS account. If the platform anchor ever flips back to EVM
- * (see flow-sdk.ts notes), swap the `networkId` for the EVM equivalent.
+ * Pinned to Base (chainId 8453) because the platform embedded wallet
+ * is an EVM WaaS account on Base.
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { DYNAMIC_SOLANA_NETWORK_ID } from "@dynamic-demos/checkouts-widget";
 import { getBalances, type WalletAccount } from "@/lib/dynamic/flow-sdk";
+
+/** Base mainnet chainId — used as the networkId for balance fetches. */
+const BASE_NETWORK_ID = 8453;
 
 /**
  * Token-balance row as returned by the SDK. Projected from
@@ -39,12 +40,11 @@ export function useEmbeddedWalletBalances(walletAccount: WalletAccount) {
       try {
         const balances = await getBalances({
           walletAccount,
-          // Pin to Solana mainnet (networkId=101). Without an
-          // explicit networkId the SDK falls back to the wallet's
-          // "active network", which for a freshly-minted SOL WaaS
-          // wallet can race against the network-switch step. Pinning
-          // makes the balance fetch deterministic on every call.
-          networkId: DYNAMIC_SOLANA_NETWORK_ID,
+          // Pin to Base (networkId=8453). Without an explicit
+          // networkId the SDK falls back to the wallet's "active
+          // network", which can race against the network-switch
+          // step. Pinning makes the balance fetch deterministic.
+          networkId: BASE_NETWORK_ID,
           includeNative: true,
           includePrices: true,
           filterSpamTokens: true,
