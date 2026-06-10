@@ -36,9 +36,6 @@ export {
   isSolanaWalletAccount,
   isSuiWalletAccount,
   isBitcoinWalletAccount,
-  isAptosWalletAccount,
-  isTronWalletAccount,
-  isStarknetWalletAccount,
   isTonWalletAccount,
 } from "./wallets";
 
@@ -107,9 +104,6 @@ export type {
   SolanaWalletAccount,
   SuiWalletAccount,
   BitcoinWalletAccount,
-  AptosWalletAccount,
-  TronWalletAccount,
-  StarknetWalletAccount,
   TonWalletAccount,
   Chain,
 } from "./wallets";

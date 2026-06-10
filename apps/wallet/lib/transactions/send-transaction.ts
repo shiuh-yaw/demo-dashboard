@@ -8,18 +8,12 @@ import {
   isSolanaWalletAccount,
   isSuiWalletAccount,
   isBitcoinWalletAccount,
-  isAptosWalletAccount,
-  isTronWalletAccount,
-  isStarknetWalletAccount,
   isTonWalletAccount,
 } from "@/lib/dynamic";
 import { sendEvmTransaction } from "./send-evm-transaction";
 import { sendSolanaTransaction } from "./send-solana-transaction";
 import { sendSuiTransaction } from "./send-sui-transaction";
 import { sendBitcoinTransaction } from "./send-bitcoin-transaction";
-import { sendAptosTransaction } from "./send-aptos-transaction";
-import { sendTronTransaction } from "./send-tron-transaction";
-import { sendStarknetTransaction } from "./send-starknet-transaction";
 import { sendTonTransaction } from "./send-ton-transaction";
 
 // =============================================================================
@@ -108,36 +102,6 @@ export async function sendTransaction({
   // Bitcoin Chain
   if (isBitcoinWalletAccount(walletAccount)) {
     return sendBitcoinTransaction({
-      walletAccount,
-      amount,
-      recipient,
-      mfaCode,
-    });
-  }
-
-  // Aptos Chain
-  if (isAptosWalletAccount(walletAccount)) {
-    return sendAptosTransaction({
-      walletAccount,
-      amount,
-      recipient,
-      mfaCode,
-    });
-  }
-
-  // Tron Chain
-  if (isTronWalletAccount(walletAccount)) {
-    return sendTronTransaction({
-      walletAccount,
-      amount,
-      recipient,
-      mfaCode,
-    });
-  }
-
-  // Starknet Chain
-  if (isStarknetWalletAccount(walletAccount)) {
-    return sendStarknetTransaction({
       walletAccount,
       amount,
       recipient,

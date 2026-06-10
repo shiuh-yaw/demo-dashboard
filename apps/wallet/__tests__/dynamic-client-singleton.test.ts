@@ -41,23 +41,28 @@ describe("wallet dynamic singleton (SSR / Node)", () => {
 });
 
 describe("chain extension imports", () => {
-  it("all embedded wallet extension packages are importable", async () => {
+  it("all WaaS-capable extension packages are importable", async () => {
     const evm = await import("@dynamic-labs-sdk/evm");
     const solana = await import("@dynamic-labs-sdk/solana");
     const sui = await import("@dynamic-labs-sdk/sui");
     const bitcoin = await import("@dynamic-labs-sdk/bitcoin");
-    const aptos = await import("@dynamic-labs-sdk/aptos");
-    const tron = await import("@dynamic-labs-sdk/tron");
-    const starknet = await import("@dynamic-labs-sdk/starknet");
     const ton = await import("@dynamic-labs-sdk/ton");
 
     expect(evm.addEvmExtension).toBeTypeOf("function");
     expect(solana.addSolanaExtension).toBeTypeOf("function");
     expect(sui.addSuiExtension).toBeTypeOf("function");
     expect(bitcoin.addBitcoinExtension).toBeTypeOf("function");
-    expect(aptos.addAptosExtension).toBeTypeOf("function");
-    expect(tron.addTronExtension).toBeTypeOf("function");
-    expect(starknet.addStarknetExtension).toBeTypeOf("function");
     expect(ton.addTonExtension).toBeTypeOf("function");
+  });
+
+  it("injected-only extensions are NOT registered (no WaaS support)", async () => {
+    // These extensions only register injected/external wallet providers and
+    // have no embedded wallet (WaaS) support. Registering them in an embedded
+    // wallet demo causes unwanted side effects — e.g., the Starknet extension
+    // triggers MetaMask's @consensys/starknet-snap permission dialog.
+    const clientModule = await import("../lib/dynamic/client");
+    const client = clientModule.getClient();
+    // In Node/SSR the singleton returns null — just verify the module loads
+    expect(client).toBeNull();
   });
 });

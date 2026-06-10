@@ -35,18 +35,6 @@ import {
   type BitcoinWalletAccount,
 } from "@dynamic-labs-sdk/bitcoin";
 import {
-  isAptosWalletAccount as sdkIsAptosWalletAccount,
-  type AptosWalletAccount,
-} from "@dynamic-labs-sdk/aptos";
-import {
-  isTronWalletAccount as sdkIsTronWalletAccount,
-  type TronWalletAccount,
-} from "@dynamic-labs-sdk/tron";
-import {
-  isStarknetWalletAccount as sdkIsStarknetWalletAccount,
-  type StarknetWalletAccount,
-} from "@dynamic-labs-sdk/starknet";
-import {
   isTonWalletAccount as sdkIsTonWalletAccount,
   type TonWalletAccount,
 } from "@dynamic-labs-sdk/ton";
@@ -100,15 +88,6 @@ export const isSuiWalletAccount = sdkIsSuiWalletAccount;
 /** Check if wallet account is Bitcoin */
 export const isBitcoinWalletAccount = sdkIsBitcoinWalletAccount;
 
-/** Check if wallet account is Aptos */
-export const isAptosWalletAccount = sdkIsAptosWalletAccount;
-
-/** Check if wallet account is Tron */
-export const isTronWalletAccount = sdkIsTronWalletAccount;
-
-/** Check if wallet account is Starknet */
-export const isStarknetWalletAccount = sdkIsStarknetWalletAccount;
-
 /** Check if wallet account is TON */
 export const isTonWalletAccount = sdkIsTonWalletAccount;
 
@@ -118,9 +97,6 @@ export type {
   SolanaWalletAccount,
   SuiWalletAccount,
   BitcoinWalletAccount,
-  AptosWalletAccount,
-  TronWalletAccount,
-  StarknetWalletAccount,
   TonWalletAccount,
   Chain,
 };

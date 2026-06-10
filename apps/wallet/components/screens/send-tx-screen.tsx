@@ -325,7 +325,7 @@ export function SendTxScreen({
     if (isSolana) {
       return svmSponsored ? { type: "sponsored" as const } : undefined;
     }
-    // Non-EVM/SOL chains (BTC, SUI, APT, TRX, STARK, TON) — no sponsorship
+    // Non-EVM/SOL chains (BTC, SUI, TON) — no sponsorship
     return undefined;
   }, [isEvm, isSolana, sponsorshipLoading, isSponsored, zerodevWallet, svmSponsored]);
 

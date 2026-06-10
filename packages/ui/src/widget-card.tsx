@@ -151,7 +151,14 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
             </div>
 
             {rightActions ? (
-              <div className="absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5">
+              <div
+                className={cn(
+                  "absolute right-3 z-10 flex items-center gap-0.5",
+                  icon
+                    ? "top-2.5"
+                    : "top-1/2 -translate-y-1/2",
+                )}
+              >
                 {trailing}
                 {onClose ? (
                   <button

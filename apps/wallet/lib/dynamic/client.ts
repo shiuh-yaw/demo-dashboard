@@ -3,7 +3,7 @@
 /**
  * Dynamic SDK Client — Singleton & SSR-Safe Wrapper Factories
  *
- * Wires the app-specific extension list (EVM + Solana + ZeroDev) and metadata
+ * Wires the app-specific extension list and metadata
  * into the shared `@dynamic-demos/dynamic/client-singleton` factory. The
  * package factory owns the lazy / SSR / idempotency guarantees; this module
  * only declares which extensions and credentials this demo wants.
@@ -20,9 +20,6 @@ import { addEvmExtension } from "@dynamic-labs-sdk/evm";
 import { addSolanaExtension } from "@dynamic-labs-sdk/solana";
 import { addSuiExtension } from "@dynamic-labs-sdk/sui";
 import { addBitcoinExtension } from "@dynamic-labs-sdk/bitcoin";
-import { addAptosExtension } from "@dynamic-labs-sdk/aptos";
-import { addTronExtension } from "@dynamic-labs-sdk/tron";
-import { addStarknetExtension } from "@dynamic-labs-sdk/starknet";
 import { addTonExtension } from "@dynamic-labs-sdk/ton";
 import { addZerodevExtension } from "@dynamic-labs-sdk/zerodev";
 import {
@@ -52,9 +49,6 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
     addSolanaExtension(client);
     addSuiExtension(client);
     addBitcoinExtension(client);
-    addAptosExtension(client);
-    addTronExtension(client);
-    addStarknetExtension(client);
     addTonExtension(client);
     addZerodevExtension(client);
   },
