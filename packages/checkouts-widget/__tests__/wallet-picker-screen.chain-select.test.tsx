@@ -169,6 +169,32 @@ describe("WalletPickerScreen — chain selection for multi-chain wallets", () =>
     });
   });
 
+  it("does not connect multi-chain wallets when onChainSelectChange is omitted (regression guard)", () => {
+    // This covers the scenario where a host (e.g. PlatformShell) mounts
+    // WalletPickerScreen without the chain-selection props. Without
+    // onChainSelectChange, clicking a multi-chain wallet silently no-ops
+    // — the user sees nothing happen. Hosts MUST pass both
+    // selectedWalletForChain and onChainSelectChange for multi-chain
+    // wallets to work.
+    const onConnected = vi.fn();
+
+    render(
+      <WalletPickerScreen
+        onConnected={onConnected}
+        // No selectedWalletForChain / onChainSelectChange props
+      />,
+    );
+
+    // Phantom has both EVM + SOL providers
+    const phantomRow = screen.getByText("Phantom");
+    fireEvent.click(phantomRow.closest("button")!);
+
+    // Without onChainSelectChange, connectInstalled returns early
+    // without calling connectAndVerifyWithWalletProvider.
+    expect(connectAndVerifyWithWalletProviderMock).not.toHaveBeenCalled();
+    expect(onConnected).not.toHaveBeenCalled();
+  });
+
   it("renders info box with wallet name in chain selection view", () => {
     const phantomGroup: WalletGroup = {
       key: "phantom",

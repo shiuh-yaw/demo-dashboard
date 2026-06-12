@@ -30,7 +30,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { WalletPickerScreen } from "@dynamic-demos/checkouts-widget";
+import { WalletPickerScreen, type WalletGroup } from "@dynamic-demos/checkouts-widget";
 import { Button, WidgetCard } from "@dynamic-demos/ui";
 import { BackButton } from "@/components/back-button";
 import {
@@ -50,6 +50,11 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
   );
   const [provisioning, setProvisioning] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
+
+  // Chain selection state for multi-chain wallets (e.g. Phantom EVM + SOL).
+  // When the user clicks such a wallet the picker shows a chain sub-view;
+  // selecting a chain calls connectInstalled with the chosen chain override.
+  const [chainSelectWallet, setChainSelectWallet] = useState<WalletGroup | null>(null);
 
   // Initial brief loading window while we check for an existing
   // session on mount (see the rehydration effect below). After the
@@ -183,26 +188,39 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
         <div className="px-5 py-5">
           <WalletPickerScreen
             verifyOnConnect={true}
-            // Default `preferredChain="EVM"` (the SDK's recommended
-            // default). The auth chain is decoupled from the
-            // embedded wallet chain — we always mint a SOL embedded
-            // WaaS wallet in `handleConnected` regardless of which
-            // chain the user signed in through. Forcing SOL here
-            // broke connect for any wallet whose multi-chain
-            // provider didn't have a SOL account approved for this
-            // origin (Phantom without SOL on this origin, Fireblocks
-            // vault without a SOL account, etc.); the SDK then
-            // throws `NoAddressFoundError` from the empty addresses.
             onConnected={handleConnected}
+            selectedWalletForChain={chainSelectWallet}
+            onChainSelectChange={setChainSelectWallet}
             header={
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-[0.18em] text-(--brand-muted) font-medium">
-                  Sign in
-                </span>
-                <h3 className="text-base font-semibold text-(--brand-fg) tracking-[-0.01em]">
-                  Connect to your platform wallet
-                </h3>
-              </div>
+              chainSelectWallet ? (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-(--brand-muted) font-medium">
+                      Select a network
+                    </span>
+                    <h3 className="text-base font-semibold text-(--brand-fg) tracking-[-0.01em]">
+                      {chainSelectWallet.displayName}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setChainSelectWallet(null)}
+                    aria-label="Back"
+                    className="inline-flex items-center gap-1.5 self-end rounded-full border border-(--brand-border) bg-(--brand-surface) px-2.5 py-1 text-[11px] font-medium text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-hover) transition-colors cursor-pointer"
+                  >
+                    ← Back
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-(--brand-muted) font-medium">
+                    Sign in
+                  </span>
+                  <h3 className="text-base font-semibold text-(--brand-fg) tracking-[-0.01em]">
+                    Connect to your platform wallet
+                  </h3>
+                </div>
+              )
             }
           />
         </div>
