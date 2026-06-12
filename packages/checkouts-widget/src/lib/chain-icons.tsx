@@ -28,6 +28,7 @@ type IconComponent = ComponentType<{ className?: string }>;
  * networks expand; unmapped ids return `null` and the badge is omitted.
  */
 const CHAIN_ICONS: Record<number, IconComponent> = {
+  // Mainnets
   1: EthereumIcon,
   8453: BaseChainIcon,
   137: PolygonIcon,
@@ -35,6 +36,11 @@ const CHAIN_ICONS: Record<number, IconComponent> = {
   10: OptimismIcon,
   56: BnbIcon,
   [DYNAMIC_SOLANA_NETWORK_ID]: SolanaIcon,
+  // Testnets — same icon as the parent chain
+  11155111: EthereumIcon, // Ethereum Sepolia
+  84532: BaseChainIcon, // Base Sepolia
+  421614: ArbitrumIcon, // Arbitrum Sepolia
+  11155420: OptimismIcon, // OP Sepolia
 };
 
 export function getChainIcon(chainId: number): IconComponent | null {

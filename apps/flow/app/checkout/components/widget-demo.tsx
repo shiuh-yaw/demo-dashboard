@@ -10,19 +10,27 @@
  * host it inside the demo's product page instead of its standalone
  * widget shell.
  *
+ * The destination address is the connected wallet's own address — funds
+ * settle back to the wallet that originated the transaction.
+ *
  * Configuration via env (optional — a sandbox Checkout id is baked in
  * so the slot works out-of-the-box):
  *   NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID  — pre-created Checkout id
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { env } from "@/lib/env";
 import { BackButton } from "@/components/back-button";
 import { ExchangeCheckoutWidget } from "@/components/exchange-checkout-widget";
 import { ScenarioCard } from "@/components/scenario-card";
-import { USDC_BASE } from "@/lib/tokens";
+import { useTestnetMode } from "@/components/testnet-toggle";
+import { USDC_BASE, USDC_ARB_SEPOLIA } from "@/lib/tokens";
+import { isTestnetSupportedToken } from "@/lib/testnet";
+import { useTestnetCheckout } from "@/lib/use-testnet-checkout";
+import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import { TicketIllustration } from "./ticket-illustration";
 import { hasPendingExchangeRedirect } from "@/lib/exchanges";
+import { logout } from "@/lib/dynamic/flow-sdk";
 
 // Same-chain USDC-on-Base — no swap, no bridge. `needsConversion` /
 // `isCrossChain` drive whether the widget's swap pre-flight + cross-
@@ -32,14 +40,6 @@ import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 // override per-environment by setting NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID.
 const CHECKOUT_ID =
   env.NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID ?? "5c5930ef-5de5-4fd5-826e-4d7668f49fb3";
-
-// TODO: TEMPORARY — using a placeholder destination address here so the
-// SDK's createCheckoutTransaction call satisfies the API's address-format
-// regex (^[A-Za-z0-9_]{18,100}$). The right long-term shape is to bake
-// `destinationConfig.destinations` into the Checkout server-side at
-// creation time, then drop this prop entirely. Replace before any non-
-// internal demo.
-const DEMO_DESTINATION_ADDRESS = "0x5C260969b90152a46D52BC476C94524C8E796b3d";
 
 /** Check if the current URL contains Dynamic OAuth redirect params. */
 function isOAuthRedirectUrl(): boolean {
@@ -54,11 +54,12 @@ export function CheckoutWidgetDemo() {
   const [paying, setPaying] = useState(
     () => hasPendingExchangeRedirect() || isOAuthRedirectUrl(),
   );
+  const { isTestnet, toggle: toggleTestnet } = useTestnetMode();
 
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
       {paying ? (
-        <WidgetStage onBack={() => setPaying(false)} />
+        <WidgetStage onBack={() => setPaying(false)} isTestnet={isTestnet} onToggleTestnet={toggleTestnet} />
       ) : (
         <ScenarioCard
           eyebrow="Demo purchase"
@@ -80,26 +81,79 @@ export function CheckoutWidgetDemo() {
 
 // =============================================================================
 // Widget stage — drops in <CheckoutWidget /> from the package, which owns
-// the full connect → pick → pay flow. Everything below the "Back to
-// product" button is package-managed.
+// the full connect → pick → pay flow. The destination address is resolved
+// dynamically to the connected wallet's address (funds settle back to the
+// wallet originating the transaction).
 // =============================================================================
 
-function WidgetStage({ onBack }: { onBack: () => void }) {
+function WidgetStage({
+  onBack,
+  isTestnet,
+  onToggleTestnet,
+}: {
+  onBack: () => void;
+  isTestnet: boolean;
+  onToggleTestnet: () => void;
+}) {
+  const [walletAddress, setWalletAddress] = useState("");
+
+  const {
+    checkoutId: testnetCheckoutId,
+    loading: testnetLoading,
+    error: testnetError,
+  } = useTestnetCheckout({ isTestnet, mode: "payment" });
+
+  const tokenFilter = useCallback(
+    (token: TokenAsset) =>
+      isTestnet
+        ? isTestnetSupportedToken(token.chainId, token.symbol)
+        : true,
+    [isTestnet],
+  );
+
+  const effectiveCheckoutId = isTestnet && testnetCheckoutId ? testnetCheckoutId : CHECKOUT_ID;
+  const effectiveDestinationToken = isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE;
+  const effectiveSettlementChainId = isTestnet ? 421614 : 8453;
+
+  const handleDisconnect = useCallback(() => {
+    setWalletAddress("");
+    logout();
+  }, []);
+
   return (
     <div className="flex flex-col gap-2">
-      <BackButton onClick={onBack} label="Back to product" />
+      <div className="flex items-center justify-between">
+        <BackButton onClick={onBack} label="Back to product" />
+
+      </div>
+      {testnetLoading ? (
+        <div className="flex items-center justify-center py-12 text-sm text-[var(--brand-muted,#99a0ae)]">
+          Creating testnet checkout…
+        </div>
+      ) : testnetError && isTestnet ? (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <p className="text-sm text-red-500">{testnetError}</p>
+          <p className="text-xs text-[var(--brand-muted,#99a0ae)]">DYNAMIC_API_TOKEN may not be configured</p>
+        </div>
+      ) : (
       <ExchangeCheckoutWidget
-        // Widget's own "Powered by" + "Terms / Privacy" footers are
-        // suppressed because apps/flow renders its own legal close at
-        // the end of <TransactionDisclaimer /> (see disclaimer.tsx).
         hidePoweredBy
         hideLegalLinks
-        checkoutId={CHECKOUT_ID}
-        destinationToken={USDC_BASE}
-        // TODO: TEMPORARY — see `DEMO_DESTINATION_ADDRESS` above. Drop
-        // this prop once the Checkout has server-side destinations
-        // configured.
-        destinationAddress={DEMO_DESTINATION_ADDRESS}
+        skipAutoConnect
+        onDisconnect={handleDisconnect}
+        checkoutId={effectiveCheckoutId}
+        destinationToken={effectiveDestinationToken}
+        tokenFilter={tokenFilter}
+        // Testnet tokens have no real market price (marketValue=0),
+        // so the amount-derived USD floor would hide them all. Skip
+        // the filter entirely when in testnet mode.
+        skipMinUsdValueFilter={isTestnet}
+        // Destination = the connected wallet's own address. Resolved
+        // dynamically once the user connects; the widget's internal
+        // PaymentWidget only consumes this after wallet + token
+        // selection, so it's always populated by the time it's needed.
+        onWalletConnected={setWalletAddress}
+        destinationAddress={walletAddress}
         destinationChain="EVM"
         currency="USD"
         amount="0.10"
@@ -119,13 +173,15 @@ function WidgetStage({ onBack }: { onBack: () => void }) {
         // `handleDismiss`). Wiring it to `onBack` returns the demo to
         // the product card on either path.
         onCancelled={onBack}
-        // Exchange-specific: use the same destination address for
-        // exchange withdrawals so Kraken transfers land in the same
-        // settlement wallet.
-        exchangeDestinationAddress={DEMO_DESTINATION_ADDRESS}
+        // Exchange-specific: exchange withdrawals settle to the
+        // connected wallet's address on Base. Pass undefined when no
+        // wallet is connected so the widget can guard against empty
+        // destinations (the ?? in handleConfirmTransfer falls through).
+        exchangeDestinationAddress={walletAddress || undefined}
         exchangeSettlementChain="EVM"
-        exchangeSettlementChainId={8453}
+        exchangeSettlementChainId={effectiveSettlementChainId}
       />
+      )}
     </div>
   );
 }

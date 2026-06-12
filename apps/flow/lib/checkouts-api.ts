@@ -32,20 +32,22 @@ export const DYNAMIC_DESTINATION_ADDRESS_PATTERN = /^[A-Za-z0-9_]{18,100}$/;
 
 export interface CreateDestinationCheckoutInput {
   /** Address funds settle to. Validated upstream against the SDK's
-   *  18–100 char alphanumeric+underscore pattern. */
-  destinationAddress: string;
+   *  18–100 char alphanumeric+underscore pattern. Optional for
+   *  testnet checkouts where the destination is resolved per-
+   *  transaction via `destinationAddresses` in `beginCheckout`. */
+  destinationAddress?: string;
   /** Chain family of the destination — drives the upstream
    *  `destinations[].chainName`. */
-  destinationChain: "EVM" | "SOL";
+  destinationChain?: "EVM" | "SOL";
   /** Flow mode label. Threads through to the upstream Checkout's
    *  `mode` field so the dashboard can distinguish withdraw vs.
    *  deposit transactions in audit views. */
-  mode: "withdraw" | "deposit";
+  mode: "withdraw" | "deposit" | "payment";
   /** Settlement asset symbol — defaults to "USDC" if omitted. */
   asset?: string;
   /** Settlement chain key — defaults to "base" if omitted. Must be a
    *  key recognized by `chainIdFor`/`settlementTokenAddressFor` in
-   *  `lib/flow-snippets.ts` (e.g. "base", "ethereum", "solana"). */
+   *  `lib/flow-snippets.ts` (e.g. "base", "base-sepolia", "solana"). */
   chain?: string;
 }
 

@@ -582,8 +582,8 @@ const MOCKUP_LABELS: Record<
   withdraw: {
     source: {
       title: "Platform wallet",
-      detail: "USDC on Base",
-      icon: <BaseChainIcon className="h-5 w-5" />,
+      detail: "USDC on Solana",
+      icon: <DynamicWalletIcon size={20} />,
     },
     destination: {
       title: "User wallet",

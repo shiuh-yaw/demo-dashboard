@@ -454,9 +454,10 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
   );
 
   // Always build destinationTokenInfo so the completion screen can show the
-  // hero amount even for same-token deposits (USDC→USDC etc.). The review
-  // screen's TokenConversionCard hides the destination card when its symbol
-  // matches the source's, so this doesn't change the review layout.
+  // hero amount even for same-token deposits (USDC→USDC etc.).
+  // TokenConversionCard shows both sides when symbols OR chainIds differ,
+  // supporting cross-chain same-token routes (e.g. USDC on Polygon → USDC on
+  // Base via LI.FI).
   const destinationTokenInfo = buildTokenInfo(
     destinationToken,
     needsConversion ? destinationDisplayAmount : sourceDisplayAmount,
@@ -507,10 +508,6 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
 
       {stage === "review" && !flow.quote && (
         <div className="flex flex-col h-full flex-1">
-          {/* Header — use the REAL ScreenHeader. The text doesn't depend on
-              the loaded quote (we already know mode + source/destination
-              token symbols), so showing the real text keeps the skeleton →
-              review transition smooth. Only the inner sections below pulse. */}
           <ScreenHeader
             eyebrow={mode.toUpperCase()}
             title={`Review your ${mode}`}
@@ -522,6 +519,38 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
             onClose={handleCancel}
           />
 
+          {flow.error && !flow.isLoading ? (
+            <div className="flex flex-col flex-1 px-5 py-6 gap-4">
+              <div className="flex flex-col items-center gap-3 rounded-xl bg-red-50 px-4 py-6 text-center">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-red-500">
+                    <path d="M10 6v4m0 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p className="text-[13px] font-medium text-red-800">
+                  {flow.error}
+                </p>
+              </div>
+              <div className="flex-1" />
+              <div className="flex gap-[7px]">
+                <Button
+                  variant="secondary"
+                  onClick={handleCancel}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleRetry}
+                  className="flex-1"
+                >
+                  Try again
+                </Button>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="flex flex-col flex-1 animate-pulse">
             {/* Token card — same gradient + outer flex as TokenConversionCard.
               Each inner text bar sits in a leading wrapper (h-4 for text-xs,
@@ -654,6 +683,8 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
               <p className="text-xs text-(--brand-muted)">Getting quote…</p>
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
 

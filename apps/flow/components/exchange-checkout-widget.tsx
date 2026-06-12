@@ -183,6 +183,9 @@ export function ExchangeCheckoutWidget({
   const handleExchangeSelect = useCallback(
     async (exchange: ExchangeProvider) => {
       try {
+        // Mark the URL so deep-linking and the code panel can target #exchange
+        window.history.replaceState(null, "", `#exchange`);
+
         saveExchangeRedirectState({
           exchangeKey: exchange.key,
           depositAmount: effectiveAmount,
@@ -281,6 +284,12 @@ export function ExchangeCheckoutWidget({
     try {
       const destinationAddress =
         exchangeDestinationAddress ?? widgetProps.destinationAddress;
+
+      if (!destinationAddress) {
+        throw new Error(
+          "No destination address available. Connect a wallet first.",
+        );
+      }
 
       const result = await exchange.adapter.createTransfer({
         to: destinationAddress,
@@ -468,6 +477,24 @@ export function ExchangeCheckoutWidget({
       chainId: screen.token.chainId,
     };
 
+    // Build a destination token when the settlement chain differs from the
+    // source (exchange tokens use chainId 0). This makes the review card
+    // show both sides for cross-chain exchange transfers.
+    const destinationToken: TokenInfo | undefined =
+      exchangeSettlementChainId != null &&
+      exchangeSettlementChainId !== screen.token.chainId
+        ? {
+            name: widgetProps.destinationToken?.name ?? screen.token.name,
+            symbol:
+              widgetProps.destinationToken?.symbol ?? screen.token.symbol,
+            amount: amountStr,
+            usdValue: usdStr,
+            iconUrl:
+              widgetProps.destinationToken?.logoURI ?? screen.token.iconUrl,
+            chainId: exchangeSettlementChainId,
+          }
+        : undefined;
+
     const feeBreakdown = {
       itemTotal: { usd: usdStr, token: `${amountStr} ${screen.token.symbol}` },
       networkFee: { usd: "$0.00", token: `0 ${screen.token.symbol}` },
@@ -480,6 +507,7 @@ export function ExchangeCheckoutWidget({
           <ReviewPaymentScreen
             mode={mode}
             sourceToken={sourceToken}
+            destinationToken={destinationToken}
             destinationAddress={exchangeDestinationAddress}
             itemTotal={feeBreakdown.itemTotal}
             networkFee={feeBreakdown.networkFee}

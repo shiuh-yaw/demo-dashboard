@@ -114,7 +114,11 @@ export default function ReviewPaymentScreen({
   const actionLabel = mode;
   const confirmLabel = `Confirm ${capitalize(mode)}`;
   const showConversion =
-    destinationToken && destinationToken.symbol !== sourceToken.symbol;
+    destinationToken &&
+    (destinationToken.symbol !== sourceToken.symbol ||
+      (destinationToken.chainId != null &&
+        sourceToken.chainId != null &&
+        destinationToken.chainId !== sourceToken.chainId));
 
   // Get display values based on toggle
   const displayItemTotal = showTokenAmounts ? itemTotal.token : itemTotal.usd;
@@ -131,8 +135,10 @@ export default function ReviewPaymentScreen({
         eyebrow={mode.toUpperCase()}
         title={`Review your ${actionLabel}`}
         subtitle={
-          showConversion
-            ? `You're ${gerundOf(mode)} ${itemTotal.usd} with ${sourceToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
+          showConversion && destinationToken
+            ? destinationToken.symbol !== sourceToken.symbol
+              ? `You're ${gerundOf(mode)} ${itemTotal.usd} with ${sourceToken.symbol}. We'll automatically convert it to ${destinationToken.symbol}.`
+              : `You're ${gerundOf(mode)} ${itemTotal.usd} with ${sourceToken.symbol}. We'll route it cross-chain.`
             : `You're ${gerundOf(mode)} ${itemTotal.usd} with ${sourceToken.symbol}.`
         }
         onClose={onClose}

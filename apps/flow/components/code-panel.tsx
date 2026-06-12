@@ -12,6 +12,11 @@
  * open a paste-into-your-AI-assistant prompt; toggled via the
  * `SHOW_AI_CHIP` constant below.
  *
+ * Supports deep-linking via URL hash:
+ *   - `#helpers` → opens the Helpers tab
+ *   - `#exchange` → opens the Helpers tab and scrolls to Exchange
+ *   - `#sdk`, `#api`, `#webhooks` → opens respective tabs
+ *
  * This file is the orchestrator only — the pane bodies, atoms, and
  * notices live in sibling files (`code-panel-{atoms,notices,stepper,
  * helpers-pane,webhooks-pane,ai-dialog}.tsx`). External call sites
@@ -26,7 +31,7 @@ import {
   TabsTrigger,
   cn,
 } from "@dynamic-labs-sdk/droplet";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AiChipButton, AiPromptDialog } from "./code-panel-ai-dialog";
 import { HelpersPane } from "./code-panel-helpers-pane";
 import {
@@ -37,6 +42,27 @@ import {
 import { Stepper } from "./code-panel-stepper";
 import type { CodePanelProps } from "./code-panel-types";
 import { WebhooksPane } from "./code-panel-webhooks-pane";
+
+/** Map URL hash fragments to tab values. */
+const HASH_TO_TAB: Record<string, string> = {
+  sdk: "sdk",
+  api: "api",
+  webhooks: "webhooks",
+  helpers: "helpers",
+  exchange: "helpers",
+};
+
+function getInitialTab(): string {
+  if (typeof window === "undefined") return "sdk";
+  const hash = window.location.hash.replace("#", "").toLowerCase();
+  return HASH_TO_TAB[hash] ?? "sdk";
+}
+
+/** Update the URL hash without a full navigation. */
+function setHash(hash: string) {
+  if (typeof window === "undefined") return;
+  window.history.replaceState(null, "", `#${hash}`);
+}
 
 // Re-export the public types so call sites continue to import the
 // whole code-panel surface from one path.
@@ -73,10 +99,33 @@ export function CodePanel({
   webhookDocsUrl,
 }: CodePanelProps) {
   const [aiOpen, setAiOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    setHash(tab);
+  }, []);
+
+  // Scroll to hash target after the helpers tab renders.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash.replace("#", "").toLowerCase();
+    if (!hash) return;
+    // Small delay so the tab content has rendered before scrolling.
+    const timer = setTimeout(() => {
+      const el = document.getElementById(hash);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
 
   return (
     <>
-      <Tabs defaultValue="sdk" className="flex flex-col gap-5">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="flex flex-col gap-5"
+      >
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <TabsList
             className={cn(

@@ -58,7 +58,11 @@ export default function TokenConversionCard({
   className,
 }: TokenConversionCardProps) {
   const showConversion =
-    destinationToken && destinationToken.symbol !== sourceToken.symbol;
+    destinationToken &&
+    (destinationToken.symbol !== sourceToken.symbol ||
+      (destinationToken.chainId != null &&
+        sourceToken.chainId != null &&
+        destinationToken.chainId !== sourceToken.chainId));
 
   return (
     <div className={cn("flex items-center gap-3", className)}>
@@ -138,9 +142,26 @@ function iconifyCryptoUrl(symbol: string): string {
 }
 
 /**
+ * Well-known non-native tokens whose Iconify icon is reliable.
+ * Tried BEFORE the SDK-supplied `iconUrl` because testnet tokens
+ * often return a generic "?" placeholder that loads (HTTP 200) but
+ * is visually meaningless — the `onError` fallback never fires.
+ */
+const WELL_KNOWN_ICON_SYMBOLS = new Set([
+  "USDC",
+  "USDT",
+  "DAI",
+  "BUSD",
+  "WBTC",
+  "LINK",
+  "UNI",
+  "AAVE",
+]);
+
+/**
  * Token icon with progressive fallback:
- *   @dynamic-labs/iconic match  →  primary iconUrl  →  iconify cryptocurrency
- *   set  →  gradient + symbol initials
+ *   @dynamic-labs/iconic match  →  well-known iconify  →  primary iconUrl
+ *   →  iconify cryptocurrency set  →  gradient + symbol initials
  *
  * URL attempts shift forward via onError. The gradient + initials always
  * renders something legible if every source is blocked.
@@ -158,9 +179,16 @@ function TokenIcon({
 }) {
   const IconicIcon = ICONIC_TOKEN_ICONS[symbol.toUpperCase()];
 
-  const sources = [iconUrl, iconifyCryptoUrl(symbol)].filter(
-    (url): url is string => Boolean(url),
-  );
+  const iconifyUrl = iconifyCryptoUrl(symbol);
+  const isWellKnown = WELL_KNOWN_ICON_SYMBOLS.has(symbol.toUpperCase());
+  // For well-known tokens, prefer the iconify URL over the SDK-supplied
+  // icon — the SDK sometimes returns a generic "?" placeholder for
+  // testnet tokens that loads successfully but shows nothing useful.
+  const sources = (
+    isWellKnown
+      ? [iconifyUrl, iconUrl]
+      : [iconUrl, iconifyUrl]
+  ).filter((url): url is string => Boolean(url));
   const [attempt, setAttempt] = useState(0);
   const currentSrc = sources[attempt];
 

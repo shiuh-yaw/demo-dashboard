@@ -12,6 +12,7 @@
 import {
   // Auth
   isSignedIn as sdkIsSignedIn,
+  logout as sdkLogout,
   // Wallet
   getPrimaryWalletAccount as sdkGetPrimaryWalletAccount,
   getWalletAccounts as sdkGetWalletAccounts,
@@ -126,6 +127,15 @@ export function isSignedIn(): boolean {
     return sdkIsSignedIn();
   } catch {
     return false;
+  }
+}
+
+export async function logout(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    await sdkLogout();
+  } catch {
+    // Best-effort — the caller just wants to clear wallet state.
   }
 }
 

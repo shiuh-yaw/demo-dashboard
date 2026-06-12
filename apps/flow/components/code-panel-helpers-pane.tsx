@@ -38,7 +38,10 @@ export function HelpersPane({ helpers }: { helpers: HelperCard[] }) {
 
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 pb-2 mb-2">
+    <div
+      id={label.toLowerCase()}
+      className="flex items-center gap-3 pb-2 mb-2"
+    >
       <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-(--brand-primary) whitespace-nowrap">
         {label}
       </span>

@@ -47,6 +47,36 @@ export const USDC_POLYGON: Token = {
   logoURI: "https://api.iconify.design/cryptocurrency/usdc.svg",
 };
 
+export const USDC_BASE_SEPOLIA: Token = {
+  // Circle faucet USDC on Base Sepolia (testnet).
+  address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  chainId: 84532,
+  symbol: "USDC",
+  decimals: 6,
+  name: "USD Coin",
+  logoURI: "https://api.iconify.design/cryptocurrency/usdc.svg",
+};
+
+export const USDC_ETH_SEPOLIA: Token = {
+  // Circle faucet USDC on Ethereum Sepolia (testnet).
+  address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+  chainId: 11155111,
+  symbol: "USDC",
+  decimals: 6,
+  name: "USD Coin",
+  logoURI: "https://api.iconify.design/cryptocurrency/usdc.svg",
+};
+
+export const USDC_ARB_SEPOLIA: Token = {
+  // USDC on Arbitrum Sepolia (testnet).
+  address: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+  chainId: 421614,
+  symbol: "USDC",
+  decimals: 6,
+  name: "USD Coin",
+  logoURI: "https://api.iconify.design/cryptocurrency/usdc.svg",
+};
+
 export const USDC_SOLANA: Token = {
   // SPL mint for USDC on Solana mainnet (Circle).
   address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -114,6 +144,9 @@ export const SOL_SOLANA: Token = {
  */
 export const TOKEN_CATALOG = [
   USDC_BASE,
+  USDC_BASE_SEPOLIA,
+  USDC_ETH_SEPOLIA,
+  USDC_ARB_SEPOLIA,
   USDC_ETHEREUM,
   USDC_POLYGON,
   ETH_BASE,
@@ -129,6 +162,9 @@ export const TOKEN_CATALOG = [
  */
 const CHAIN_KEY_TO_CHAIN_ID: Record<string, number> = {
   base: 8453,
+  "base-sepolia": 84532,
+  "eth-sepolia": 11155111,
+  "arb-sepolia": 421614,
   ethereum: 1,
   polygon: 137,
   solana: 101,

@@ -179,6 +179,11 @@ export function formatErrorMessage(error: unknown): string {
     return "Network connection issue. Please check your connection and try again.";
   }
 
+  // No quotes available (e.g. slippage_too_tight on all settlement tokens)
+  if (lowerMessage.includes("no quotes available")) {
+    return "No route available for this token pair right now. Try a different token or amount.";
+  }
+
   // Slippage errors
   if (
     lowerMessage.includes("slippage") ||

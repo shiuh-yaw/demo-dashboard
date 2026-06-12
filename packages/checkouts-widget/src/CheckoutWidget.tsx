@@ -35,9 +35,10 @@
  * ```
  */
 
-import { useEffect, useState, type JSX, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX, type ReactNode } from "react";
 import {
   getPrimaryWalletAccount,
+  getWalletAccounts,
   offEvent,
   onEvent,
   type WalletAccount,
@@ -51,6 +52,7 @@ import { PaymentWidget } from "./PaymentWidget";
 import type { TokenAsset } from "./lib/balance-utils";
 import { ZERO_ADDRESS } from "./lib/chain";
 import { truncateAddress } from "./lib/format";
+import type { WalletGroup } from "./lib/wallet-providers";
 import type {
   BrandConfig,
   ExecutionUpdate,
@@ -119,6 +121,21 @@ export interface CheckoutWidgetProps {
    */
   hideDestination?: boolean;
 
+  /**
+   * Skip auto-picking the primary wallet on mount. Default `false`.
+   * When `true`, the widget always starts at the wallet picker even if
+   * a wallet is already connected in the Dynamic SDK (e.g. an embedded
+   * wallet persisted from a previous flow). The user must explicitly
+   * select a wallet via the picker each time.
+   */
+  skipAutoConnect?: boolean;
+  /**
+   * Callback fired when the user clicks the disconnect button in the
+   * asset selector header. The host can use this to clear SDK-level
+   * wallet state (e.g. call `logout()`).
+   */
+  onDisconnect?: () => void;
+
   // ---------------------------------------------------------------------------
   // Wallet picker config — passed through to <WalletPickerScreen />.
   // ---------------------------------------------------------------------------
@@ -151,6 +168,19 @@ export interface CheckoutWidgetProps {
   // ---------------------------------------------------------------------------
   /** Hide tokens whose USD value falls below this. Default 0. */
   minUsdValue?: number;
+  /**
+   * Skip the USD-value floor entirely — show tokens even when their
+   * `marketValue` is 0. Useful for testnet tokens that have balance
+   * but no real-world market price. When `true`, `minUsdValue` and
+   * the amount-derived floor are both ignored. Default `false`.
+   */
+  skipMinUsdValueFilter?: boolean;
+  /**
+   * Optional predicate to filter the token list after balances load.
+   * Return `true` to keep the token, `false` to hide it. Applied
+   * after `minUsdValue` filtering.
+   */
+  tokenFilter?: (token: TokenAsset) => boolean;
   /** Approximate row count before the token list scrolls. Default 5. */
   initialTokensShown?: number;
   /**
@@ -163,6 +193,7 @@ export interface CheckoutWidgetProps {
   assetSelectorHeader?: (args: {
     wallet: WalletAccount;
     goBack: () => void;
+    disconnect: () => void;
     mode: string;
     amount?: string;
     currency: string;
@@ -171,6 +202,9 @@ export interface CheckoutWidgetProps {
   // ---------------------------------------------------------------------------
   // Lifecycle callbacks — forwarded from <PaymentWidget />.
   // ---------------------------------------------------------------------------
+  /** Fires when the user picks (or changes) a wallet via the picker.
+   *  The address string is the wallet's `address` field. */
+  onWalletConnected?: (address: string) => void;
   onAmountSelected?: (amount: string) => void;
   onTransactionCreated?: (tx: CheckoutTransaction) => void;
   onQuoteLocked?: (quote: ReviewQuote) => void;
@@ -236,6 +270,8 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     storageNamespace,
     mode = "payment",
     hideDestination = false,
+    skipAutoConnect = false,
+    onDisconnect,
     walletAccount: walletAccountProp,
     preferredChain = "EVM",
     verifyOnConnect = true,
@@ -243,8 +279,11 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     walletPickerExtrasBefore,
     walletPickerExtrasAfter,
     minUsdValue = 0,
+    skipMinUsdValueFilter = false,
+    tokenFilter,
     initialTokensShown = 5,
     assetSelectorHeader,
+    onWalletConnected,
     onAmountSelected,
     onTransactionCreated,
     onQuoteLocked,
@@ -266,6 +305,11 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
   // `setPickedWallet` (the host's prop is the source of truth, so
   // attempts to clear it locally are no-ops in the picker stage).
   const [pickedWallet, setPickedWallet] = useState<WalletAccount | null>(null);
+  // Tracks whether the user has explicitly selected a wallet via the
+  // picker. When `skipAutoConnect` is on, `walletAccountsChanged`
+  // events are ignored until this flag is set — preventing the
+  // embedded wallet from a previous flow from auto-hijacking.
+  const userPickedRef = useRef(!skipAutoConnect);
   const wallet = walletAccountProp ?? pickedWallet;
   const [fromToken, setFromToken] = useState<Token | null>(null);
   // Amount captured BEFORE wallet selection when `amountFirst` is on.
@@ -290,30 +334,67 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
   const effectiveAmountNumber: number = effectiveAmount
     ? parseFloat(effectiveAmount)
     : 0;
-  const effectiveMinUsdValue = Math.max(
-    minUsdValue,
-    Number.isFinite(effectiveAmountNumber) ? effectiveAmountNumber : 0,
-  );
+  const effectiveMinUsdValue = skipMinUsdValueFilter
+    ? 0
+    : Math.max(
+        minUsdValue,
+        Number.isFinite(effectiveAmountNumber) ? effectiveAmountNumber : 0,
+      );
 
   // The SDK returns a fresh wallet object reference on every read; de-dup
   // by `.address` to avoid re-rendering downstream screens on every
   // `walletAccountsChanged` tick (which fires often during SDK init).
   // Without this the asset picker re-mounts in a loop and the cursor
   // flickers between pointer/default as buttons swap in and out.
+  //
+  // When `skipAutoConnect` is on, the initial call to
+  // `getPrimaryWalletAccount()` is skipped and the listener only
+  // applies updates after the user has explicitly picked via the
+  // wallet picker (tracked by `userPickedRef`).
   useEffect(() => {
     const apply = (next: WalletAccount | null) => {
+      if (!userPickedRef.current) return;
       setPickedWallet((prev) => {
         if (prev?.address === next?.address) return prev;
         return next;
       });
     };
-    apply(getPrimaryWalletAccount());
+    if (!skipAutoConnect) {
+      apply(getPrimaryWalletAccount());
+    }
     const listener = () => apply(getPrimaryWalletAccount());
     onEvent({ event: "walletAccountsChanged", listener });
     return () => {
       offEvent({ event: "walletAccountsChanged", listener });
     };
+  }, [skipAutoConnect]);
+
+  // All other connected wallet accounts (different chain or address from
+  // the picked wallet). Updated on every `walletAccountsChanged` tick so
+  // the asset selector can query balances across all connected chains.
+  const [allWalletAccounts, setAllWalletAccounts] = useState<WalletAccount[]>(
+    () => {
+      try { return getWalletAccounts() ?? []; } catch { return []; }
+    },
+  );
+
+  useEffect(() => {
+    const syncAll = () => {
+      try { setAllWalletAccounts(getWalletAccounts() ?? []); } catch { /* noop */ }
+    };
+    onEvent({ event: "walletAccountsChanged", listener: syncAll });
+    return () => { offEvent({ event: "walletAccountsChanged", listener: syncAll }); };
   }, []);
+
+  const additionalWalletAccounts = useMemo(
+    () =>
+      wallet
+        ? allWalletAccounts.filter(
+            (w) => w.address.toLowerCase() !== wallet.address.toLowerCase(),
+          )
+        : [],
+    [wallet, allWalletAccounts],
+  );
 
   // Swap flags computed from the picked token vs the settlement asset.
   // Same chain id + same address = direct transfer; anything else flips
@@ -343,6 +424,33 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     });
   }
 
+  const handleWalletPicked = useCallback((wallet: WalletAccount | null) => {
+    userPickedRef.current = true;
+    setPickedWallet(wallet);
+    if (wallet?.address) {
+      onWalletConnected?.(wallet.address);
+    }
+  }, [onWalletConnected]);
+
+  const handleDisconnect = useCallback(() => {
+    userPickedRef.current = false;
+    setPickedWallet(null);
+    setFromToken(null);
+    setEnteredAmount(amount ?? null);
+    onDisconnect?.();
+  }, [onDisconnect, amount]);
+
+  const handleSwitchWallet = useCallback(() => {
+    setPickedWallet(null);
+    setFromToken(null);
+  }, []);
+
+  // Chain selection state for multi-chain wallets in the picker.
+  // When a user clicks a wallet that has multiple chain providers
+  // (e.g. Phantom EVM + SOL), this holds the group so the picker
+  // renders the chain selection sub-view.
+  const [initialChainSelectWallet, setInitialChainSelectWallet] = useState<WalletGroup | null>(null);
+
   function handlePaymentCancelled() {
     // Flip back to the asset picker so the buyer can pick a different
     // token without unmounting the widget. The host can still subscribe
@@ -368,10 +476,22 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
         ) : !wallet ? (
           <div className="px-5 py-5">
             <WalletPickerScreen
-              onConnected={setPickedWallet}
+              onConnected={handleWalletPicked}
               preferredChain={preferredChain}
               verifyOnConnect={verifyOnConnect}
-              header={walletPickerHeader ?? <DefaultWalletPickerHeader />}
+              selectedWalletForChain={initialChainSelectWallet}
+              onChainSelectChange={setInitialChainSelectWallet}
+              header={
+                initialChainSelectWallet ? (
+                  <DefaultChainConnectHeader
+                    chain=""
+                    walletName={initialChainSelectWallet.displayName}
+                    onBack={() => setInitialChainSelectWallet(null)}
+                  />
+                ) : (
+                  walletPickerHeader ?? <DefaultWalletPickerHeader />
+                )
+              }
               extrasBefore={walletPickerExtrasBefore}
               extrasAfter={walletPickerExtrasAfter}
             />
@@ -380,14 +500,18 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
           <div className="px-5 py-5">
             <AssetSelectorScreen
               walletAccount={wallet}
+              additionalWalletAccounts={additionalWalletAccounts}
               onSelected={handleTokenSelected}
               minUsdValue={effectiveMinUsdValue}
+              tokenFilter={tokenFilter}
               initialTokensShown={initialTokensShown}
+
               header={
                 assetSelectorHeader
                   ? assetSelectorHeader({
                       wallet,
-                      goBack: () => setPickedWallet(null),
+                      goBack: handleSwitchWallet,
+                      disconnect: handleDisconnect,
                       mode,
                       amount: effectiveAmount,
                       currency,
@@ -395,7 +519,8 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
                   : (
                     <DefaultAssetSelectorHeader
                       wallet={wallet}
-                      onChangeWallet={() => setPickedWallet(null)}
+                      onSwitchWallet={handleSwitchWallet}
+                      onDisconnectWallet={handleDisconnect}
                       mode={mode}
                       amount={effectiveAmount}
                       currency={currency}
@@ -497,15 +622,55 @@ function DefaultWalletPickerHeader() {
   );
 }
 
+function DefaultChainConnectHeader({
+  chain,
+  walletName,
+  onBack,
+}: {
+  chain: string;
+  walletName?: string;
+  onBack: () => void;
+}) {
+  const label = chain === "SOL" ? "Solana" : chain === "EVM" ? "EVM" : "";
+  const eyebrow = walletName
+    ? `Select a network`
+    : `Connect ${label} wallet`;
+  const title = walletName
+    ? walletName
+    : `Add ${label} tokens`;
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--brand-muted,#99a0ae)] font-medium">
+          {eyebrow}
+        </span>
+        <h3 className="text-base font-semibold text-[var(--brand-fg,#0e121b)] tracking-[-0.01em]">
+          {title}
+        </h3>
+      </div>
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Back"
+        className="inline-flex items-center gap-1.5 self-end rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] px-2.5 py-1 text-[11px] font-medium text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors cursor-pointer"
+      >
+        ← Back
+      </button>
+    </div>
+  );
+}
+
 function DefaultAssetSelectorHeader({
   wallet,
-  onChangeWallet,
+  onSwitchWallet,
+  onDisconnectWallet,
   mode,
   amount,
   currency,
 }: {
   wallet: WalletAccount;
-  onChangeWallet: () => void;
+  onSwitchWallet: () => void;
+  onDisconnectWallet: () => void;
   mode: string;
   amount?: string;
   currency: string;
@@ -528,17 +693,67 @@ function DefaultAssetSelectorHeader({
           Pick a token
         </h3>
       </div>
-      <button
-        type="button"
-        onClick={onChangeWallet}
-        aria-label={`Change wallet (connected: ${truncateAddress(wallet.address)})`}
-        title="Change wallet"
-        className="inline-flex items-center gap-1.5 self-end rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] pl-2.5 pr-2 py-1 text-[11px] font-mono text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors [&_*]:pointer-events-none"
-      >
-        <span>{truncateAddress(wallet.address)}</span>
-        <SwapGlyph />
-      </button>
+      <div className="inline-flex items-center gap-1.5 self-end">
+        <button
+          type="button"
+          onClick={onSwitchWallet}
+          aria-label={`Change wallet (connected: ${truncateAddress(wallet.address)})`}
+          title="Change wallet"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] pl-2.5 pr-2 py-1 text-[11px] font-mono text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors cursor-pointer [&_*]:pointer-events-none"
+        >
+          <span>{truncateAddress(wallet.address)}</span>
+          <SwapGlyph />
+        </button>
+        <button
+          type="button"
+          onClick={onDisconnectWallet}
+          aria-label={`Disconnect wallet ${truncateAddress(wallet.address)}`}
+          title="Disconnect"
+          className="inline-flex items-center justify-center rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] p-1 text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors cursor-pointer"
+        >
+          <DisconnectGlyph />
+        </button>
+      </div>
     </div>
+  );
+}
+
+function DisconnectGlyph() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+      className="block"
+    >
+      {/* Lucide "log-out" */}
+      <path
+        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points="16 17 21 12 16 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="21"
+        y1="12"
+        x2="9"
+        y2="12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

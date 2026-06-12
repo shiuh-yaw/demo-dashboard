@@ -76,13 +76,13 @@ export async function POST(request: NextRequest) {
   } = body;
 
   if (
-    !destinationAddress ||
+    destinationAddress &&
     !DYNAMIC_DESTINATION_ADDRESS_PATTERN.test(destinationAddress)
   ) {
     return NextResponse.json(
       {
         error:
-          "destinationAddress is required and must match ^[A-Za-z0-9_]{18,100}$",
+          "destinationAddress must match ^[A-Za-z0-9_]{18,100}$",
       },
       { status: 400 },
     );
@@ -144,14 +144,14 @@ export async function POST(request: NextRequest) {
           destinations: [
             {
               chainName: destinationChain,
-              // Per Dynamic's Checkout schema, `destinations[].type`
-              // accepts `"address"` for raw recipient addresses (the
-              // user's external wallet for withdraw, or the user's
-              // embedded SOL wallet for the platform-deposit subflow).
-              // `"wallet"` is rejected with a 400 from the upstream
-              // API.
-              type: "address",
-              identifier: destinationAddress,
+              type: "address" as const,
+              // When no explicit destination is provided (e.g. testnet
+              // checkouts where the wallet isn't connected yet), use
+              // a placeholder. The per-transaction `destinationAddresses`
+              // in `beginCheckout` overrides this at execution time.
+              identifier:
+                destinationAddress ||
+                "0x0000000000000000000000000000000000000001",
             },
           ],
         },
@@ -161,9 +161,19 @@ export async function POST(request: NextRequest) {
 
   if (!upstream.ok) {
     const text = await upstream.text();
+    // Surface the upstream detail in the error message so the widget
+    // can display a useful diagnostic (not just "rejected").
+    let detail = "Dynamic API rejected the Checkout creation";
+    try {
+      const parsed = JSON.parse(text) as { message?: string; error?: string };
+      if (parsed.message) detail = parsed.message;
+      else if (parsed.error) detail = parsed.error;
+    } catch {
+      if (text.length > 0 && text.length < 200) detail = text;
+    }
     return NextResponse.json(
       {
-        error: "Dynamic API rejected the Checkout creation",
+        error: detail,
         upstream: text.slice(0, 1000),
       },
       { status: upstream.status },

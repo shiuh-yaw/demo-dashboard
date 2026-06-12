@@ -49,10 +49,23 @@ import { ChainBadge } from "../lib/chain-icons";
 export interface AssetSelectorScreenProps {
   /** Connected wallet account whose balances we fetch. */
   walletAccount: WalletAccount;
+  /**
+   * Additional wallet accounts whose balances are fetched and merged
+   * into the token list alongside the primary `walletAccount`. Useful
+   * for multi-chain scenarios where an EVM wallet and a Solana wallet
+   * are both connected and the user should see a unified token list.
+   */
+  additionalWalletAccounts?: WalletAccount[];
   /** Fires when the buyer picks a token. */
   onSelected: (token: TokenAsset) => void;
   /** Hide tokens whose USD value falls below this. Default 0. */
   minUsdValue?: number;
+  /**
+   * Optional predicate to filter the token list after balances load.
+   * Return `true` to keep the token, `false` to hide it. Applied
+   * after `minUsdValue` filtering.
+   */
+  tokenFilter?: (token: TokenAsset) => boolean;
   /**
    * Approximate number of tokens visible before the list scrolls. Used
    * to compute the scroll container's `max-height`; the remaining
@@ -83,11 +96,12 @@ function getWalletChain(wallet: WalletAccount): WalletChain | null {
 }
 
 /**
- * All network ids configured in the Dynamic dashboard for the given
- * chain family. Used to drive the balance-request payload — without it
- * the SDK has no idea which networks to query.
+ * All network ids configured in the Dynamic dashboard. When `chain` is
+ * provided, only returns ids for that chain family. When omitted,
+ * returns ids across ALL chain families — needed for multi-chain
+ * wallets like MetaMask that support EVM + Solana simultaneously.
  */
-function getEnabledNetworkIds(chain: WalletChain): number[] {
+function getEnabledNetworkIds(chain?: WalletChain): number[] {
   try {
     const all = getNetworksData() as unknown as Array<{
       chain?: string;
@@ -96,7 +110,7 @@ function getEnabledNetworkIds(chain: WalletChain): number[] {
     }>;
     if (!all?.length) return [];
     return all
-      .filter((n) => n.chain === chain)
+      .filter((n) => (chain ? n.chain === chain : true))
       .map((n) => {
         const id = n.networkId ?? n.id;
         return typeof id === "number" ? id : parseInt(String(id), 10);
@@ -112,10 +126,68 @@ function getEnabledNetworkIds(chain: WalletChain): number[] {
 const ROW_HEIGHT_PX = 62;
 const ROW_GAP_PX = 8;
 
+/**
+ * Fetch balances for a wallet account. Queries network IDs matching
+ * the wallet's chain type first, then also attempts all other enabled
+ * networks (multi-chain wallets like MetaMask may serve balances on
+ * chains beyond their primary type). Failures on the secondary query
+ * are silently ignored so a SOL wallet won't error on EVM networks.
+ */
+async function fetchWalletBalances(
+  wallet: WalletAccount,
+  minUsdValue: number,
+): Promise<TokenAsset[]> {
+  const chain = getWalletChain(wallet);
+  if (!chain) return [];
+
+  const primaryNetworkIds = getEnabledNetworkIds(chain);
+  const allNetworkIds = getEnabledNetworkIds();
+  const secondaryNetworkIds = allNetworkIds.filter(
+    (id) => !primaryNetworkIds.includes(id),
+  );
+
+  if (!primaryNetworkIds.length && !secondaryNetworkIds.length) return [];
+
+  const opts = (ids: number[]) => ({
+    walletAccount: wallet,
+    networkIds: ids.map(String),
+    includeNative: true,
+    includePrices: true,
+    filterSpamTokens: true,
+  });
+
+  // Fetch primary chain balances (must succeed).
+  const primaryBalances = primaryNetworkIds.length
+    ? ((await getBalances(opts(primaryNetworkIds))) as unknown as FlatTokenBalance[])
+    : [];
+
+  // Attempt secondary networks; silently ignore errors.
+  let secondaryBalances: FlatTokenBalance[] = [];
+  if (secondaryNetworkIds.length) {
+    try {
+      secondaryBalances =
+        (await getBalances(opts(secondaryNetworkIds))) as unknown as FlatTokenBalance[];
+    } catch {
+      // Expected for wallets that don't support these networks.
+    }
+  }
+
+  const allBalances = [...primaryBalances, ...secondaryBalances];
+
+  return transformFlatBalancesToTokenAssets(allBalances, {
+    minUsdValue,
+    excludeZeroBalance: true,
+    fallbackNetworkId:
+      allNetworkIds.length === 1 ? allNetworkIds[0] : undefined,
+  });
+}
+
 export default function AssetSelectorScreen({
   walletAccount,
+  additionalWalletAccounts,
   onSelected,
   minUsdValue = 0,
+  tokenFilter,
   initialTokensShown = 5,
   header,
   footer,
@@ -125,6 +197,13 @@ export default function AssetSelectorScreen({
   const [tokens, setTokens] = useState<TokenAsset[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Stable key for additional wallets so the effect only re-fires when
+  // the set of addresses actually changes.
+  const additionalAddressesKey = additionalWalletAccounts
+    ?.map((w) => w.address)
+    .sort()
+    .join(",") ?? "";
+
   useEffect(() => {
     if (!walletAccount?.address) return;
     const chain = getWalletChain(walletAccount);
@@ -132,7 +211,7 @@ export default function AssetSelectorScreen({
       setError("Unsupported wallet chain");
       return;
     }
-    const networkIds = getEnabledNetworkIds(chain);
+    const networkIds = getEnabledNetworkIds();
     if (!networkIds.length) {
       setError("No networks configured");
       return;
@@ -143,27 +222,34 @@ export default function AssetSelectorScreen({
     setError(null);
     (async () => {
       try {
-        // 1.3.0 multichain `getBalances`: accepts `networkIds: string[]`
-        // and returns a flat `TokenBalance[]` across all requested
-        // networks for the wallet's chain. Doesn't require a checkout
-        // session token, unlike the older `getMultichainBalances`.
-        const balances = (await getBalances({
-          walletAccount,
-          networkIds: networkIds.map(String),
-          includeNative: true,
-          includePrices: true,
-          filterSpamTokens: true,
-        })) as unknown as FlatTokenBalance[];
-        if (cancelled) return;
-        const assets = transformFlatBalancesToTokenAssets(balances, {
-          minUsdValue,
-          excludeZeroBalance: true,
-          // Single-network responses can omit `networkId` on each
-          // row; surface the only requested id as the fallback.
-          fallbackNetworkId:
-            networkIds.length === 1 ? networkIds[0] : undefined,
+        // Fetch balances from all wallets in parallel.
+        const allWallets = [walletAccount, ...(additionalWalletAccounts ?? [])];
+        // De-dup by address so we don't double-fetch the same wallet.
+        const seen = new Set<string>();
+        const unique = allWallets.filter((w) => {
+          const addr = w.address.toLowerCase();
+          if (seen.has(addr)) return false;
+          seen.add(addr);
+          return true;
         });
-        setTokens(assets);
+
+        const results = await Promise.allSettled(
+          unique.map((w) => fetchWalletBalances(w, minUsdValue)),
+        );
+        if (cancelled) return;
+
+        // Merge all successful results; de-dup by chainId+address.
+        const merged = new Map<string, TokenAsset>();
+        for (const result of results) {
+          if (result.status !== "fulfilled") continue;
+          for (const asset of result.value) {
+            const key = `${asset.chainId}:${(asset.tokenAddress ?? asset.symbol).toLowerCase()}`;
+            if (!merged.has(key)) {
+              merged.set(key, asset);
+            }
+          }
+        }
+        setTokens(Array.from(merged.values()));
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -176,7 +262,15 @@ export default function AssetSelectorScreen({
     return () => {
       cancelled = true;
     };
-  }, [walletAccount?.address, minUsdValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletAccount?.address, additionalAddressesKey, minUsdValue]);
+
+  // Apply the caller's filter predicate at render time so changes
+  // don't require a balance refetch.
+  const afterCallerFilter =
+    tokens && tokenFilter ? tokens.filter(tokenFilter) : tokens;
+
+  const filteredTokens = afterCallerFilter;
 
   // Cap the visible list at ~`initialTokensShown` rows; everything past
   // that is reachable by scrolling. -2px on the height pulls the
@@ -186,7 +280,8 @@ export default function AssetSelectorScreen({
     initialTokensShown * ROW_HEIGHT_PX +
     Math.max(0, initialTokensShown - 1) * ROW_GAP_PX -
     2;
-  const shouldScroll = tokens !== null && tokens.length > initialTokensShown;
+  const shouldScroll =
+    filteredTokens !== null && filteredTokens.length > initialTokensShown;
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -198,19 +293,19 @@ export default function AssetSelectorScreen({
         )}
         style={shouldScroll ? { maxHeight: `${maxHeight}px` } : undefined}
       >
-        {tokens === null ? (
+        {filteredTokens === null ? (
           Array.from({ length: skeletonCount }).map((_, i) => (
             <TokenRowSkeleton key={i} />
           ))
         ) : error ? (
           <EmptyState title="Couldn't load balances" body={error} />
-        ) : tokens.length === 0 ? (
+        ) : filteredTokens.length === 0 ? (
           <EmptyState
             title="No spendable tokens"
             body="Switch wallets or top up to continue."
           />
         ) : (
-          tokens.map((token) => (
+          filteredTokens.map((token) => (
             <TokenRow
               key={token.id}
               token={token}
@@ -264,6 +359,27 @@ function TokenRow({
   );
 }
 
+/**
+ * Well-known non-native tokens whose Iconify icon is reliable.
+ * Tried BEFORE the SDK-supplied `iconUrl` because testnet tokens
+ * often return a generic "?" placeholder that loads (HTTP 200) but
+ * is visually meaningless — the `onError` fallback never fires.
+ */
+const WELL_KNOWN_ICON_SYMBOLS = new Set([
+  "USDC",
+  "USDT",
+  "DAI",
+  "BUSD",
+  "WBTC",
+  "LINK",
+  "UNI",
+  "AAVE",
+]);
+
+function iconifyCryptoUrl(symbol: string): string {
+  return `https://api.iconify.design/cryptocurrency/${symbol.toLowerCase()}.svg`;
+}
+
 function TokenIcon({
   iconUrl,
   fallback,
@@ -275,24 +391,30 @@ function TokenIcon({
   symbol: string;
   chainId: number;
 }) {
-  const [src, setSrc] = useState<string | undefined>(iconUrl);
+  // For well-known tokens, prefer the iconify URL over the SDK-supplied
+  // icon — testnet tokens often return a valid-but-useless "?" placeholder.
+  const isWellKnown = WELL_KNOWN_ICON_SYMBOLS.has(symbol.toUpperCase());
+  const effectiveUrl = isWellKnown ? iconifyCryptoUrl(symbol) : iconUrl;
+  const effectiveFallback = isWellKnown ? (iconUrl ?? fallback) : fallback;
+
+  const [src, setSrc] = useState<string | undefined>(effectiveUrl);
   const [errored, setErrored] = useState(false);
 
   // Reset state when the asset changes (e.g. user switches wallet).
   useEffect(() => {
-    setSrc(iconUrl);
+    setSrc(effectiveUrl);
     setErrored(false);
-  }, [iconUrl]);
+  }, [effectiveUrl]);
 
   const onError = useCallback(
     (_e: SyntheticEvent<HTMLImageElement>) => {
-      if (fallback && src !== fallback) {
-        setSrc(fallback);
+      if (effectiveFallback && src !== effectiveFallback) {
+        setSrc(effectiveFallback);
         return;
       }
       setErrored(true);
     },
-    [fallback, src],
+    [effectiveFallback, src],
   );
 
   return (

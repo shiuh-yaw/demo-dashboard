@@ -111,6 +111,12 @@ export function chainIdFor(chain: string): string {
   switch (chain) {
     case "base":
       return "8453";
+    case "base-sepolia":
+      return "84532";
+    case "eth-sepolia":
+      return "11155111";
+    case "arb-sepolia":
+      return "421614";
     case "ethereum":
       return "1";
     case "polygon":
@@ -138,6 +144,32 @@ export function chainFamilyFor(chain: string): string {
       return "SOL";
     default:
       return "EVM";
+  }
+}
+
+/** Chain key for a given chain ID (reverse of `chainIdFor`). */
+export function chainKeyForId(chainId: number): string {
+  switch (chainId) {
+    case 8453:
+      return "base";
+    case 84532:
+      return "base-sepolia";
+    case 11155111:
+      return "eth-sepolia";
+    case 421614:
+      return "arb-sepolia";
+    case 1:
+      return "ethereum";
+    case 137:
+      return "polygon";
+    case 42161:
+      return "arbitrum";
+    case 10:
+      return "optimism";
+    case 101:
+      return "solana";
+    default:
+      return "base";
   }
 }
 

@@ -74,6 +74,18 @@ export interface WalletPickerScreenProps {
   /** Approximate row count before the discovered list scrolls. Default 5. */
   initialMoreWalletsShown?: number;
   verifyOnConnect?: boolean;
+  /**
+   * Currently selected wallet for chain selection. When set, the picker
+   * renders the chain selection sub-view instead of the wallet list.
+   * Managed externally by the parent (e.g. CheckoutWidget) so it can
+   * update the header's back button accordingly.
+   */
+  selectedWalletForChain?: WalletGroup | null;
+  /**
+   * Called when a multi-chain wallet is clicked (needs chain selection)
+   * or when the user navigates back from chain selection (null).
+   */
+  onChainSelectChange?: (wallet: WalletGroup | null) => void;
   /** Extra classes for the outer container. */
   className?: string;
 }
@@ -91,6 +103,8 @@ export default function WalletPickerScreen({
   preferredChain = "EVM",
   initialMoreWalletsShown = 5,
   verifyOnConnect = true,
+  selectedWalletForChain,
+  onChainSelectChange,
   className,
 }: WalletPickerScreenProps) {
   // Read installed providers synchronously at mount so the empty-state
@@ -162,11 +176,17 @@ export default function WalletPickerScreen({
     [catalog.catalog, query],
   );
 
-  async function connectInstalled(group: WalletGroup) {
-    // Prefer the host's `preferredChain` (default EVM); fall back to
-    // whatever chain the SDK ordered first.
+  async function connectInstalled(group: WalletGroup, chainOverride?: string) {
+    // Multi-chain wallets (e.g. Phantom EVM + SOL) show a chain
+    // selection step. If the user hasn't picked a chain yet, route
+    // to the selection sub-view.
+    if (!chainOverride && group.providers.length > 1) {
+      onChainSelectChange?.(group);
+      return;
+    }
+    const chain = chainOverride ?? preferredChain;
     const provider =
-      group.providers.find((p) => p.chain === preferredChain) ??
+      group.providers.find((p) => p.chain === chain) ??
       group.providers[0];
     if (!provider) return;
     setConnecting(group.key);
@@ -314,6 +334,73 @@ export default function WalletPickerScreen({
             priorWalletAddressRef.current = null;
           }}
         />
+      </div>
+    );
+  }
+
+  // Chain selection sub-view — mirrors apps/checkouts'
+  // WalletSelectorScreen pattern: click a multi-chain wallet → pick
+  // a chain → connect with the chain-specific provider key.
+  if (selectedWalletForChain) {
+    const CHAIN_ICON_URLS: Record<string, string> = {
+      EVM: "https://app.dynamic.xyz/assets/networks/eth.svg",
+      SOL: "https://app.dynamic.xyz/assets/networks/solana.svg",
+    };
+    const CHAIN_LABELS: Record<string, string> = {
+      EVM: "EVM",
+      SOL: "Solana",
+    };
+    return (
+      <div className={cn("flex flex-col gap-4", className)}>
+        {header}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 rounded-xl bg-[var(--brand-row-bg,#f9fafb)] px-4 py-3">
+            {selectedWalletForChain.icon && (
+              <img
+                src={selectedWalletForChain.icon}
+                alt=""
+                className="h-8 w-8 rounded-lg object-contain"
+              />
+            )}
+            <p className="text-[13px] font-medium text-[var(--brand-fg,#0e121b)]">
+              {selectedWalletForChain.displayName} supports multiple chains.
+              Select your preferred chain to connect.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {selectedWalletForChain.providers.map((provider) => {
+              const chainLabel = CHAIN_LABELS[provider.chain ?? ""] ?? provider.chain ?? "Unknown";
+              const chainIcon = CHAIN_ICON_URLS[provider.chain ?? ""];
+              return (
+                <button
+                  key={provider.key}
+                  type="button"
+                  disabled={connecting !== null}
+                  onClick={() => void connectInstalled(selectedWalletForChain, provider.chain)}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-[var(--brand-row-bg,#f9fafb)] px-4 py-3 text-sm font-medium text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-3">
+                    {chainIcon && (
+                      <img
+                        src={chainIcon}
+                        alt=""
+                        className="h-7 w-7 rounded-full object-contain"
+                      />
+                    )}
+                    <span className="text-[15px]">{chainLabel}</span>
+                  </span>
+                  {connecting === selectedWalletForChain.key && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-surface,#ffffff)] border border-[var(--brand-border,#e1e4ea)] px-2.5 py-1 text-[11px] font-medium text-[var(--brand-muted,#99a0ae)]">
+                      <span aria-hidden className="size-1.5 rounded-full bg-[var(--brand-primary,#3b82f6)]" />
+                      Connecting…
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {error && <p className="text-xs text-[var(--brand-error,#ef4444)]">{error}</p>}
       </div>
     );
   }

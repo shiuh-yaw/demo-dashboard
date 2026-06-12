@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 
 afterEach(() => cleanup());
 
@@ -15,6 +15,11 @@ vi.mock("@/checkout-flow", () => ({
 }));
 
 import { PaymentWidget } from "@/PaymentWidget";
+import {
+  createTransaction,
+  attachWalletSource,
+  getQuote,
+} from "@/checkout-flow";
 
 const requiredProps = {
   checkoutId: "ck_test",
@@ -67,5 +72,30 @@ describe("PaymentWidget", () => {
       <PaymentWidget {...requiredProps} amount="100.00" hideDestination />,
     );
     expect(screen.queryByText(/destination/i)).toBeNull();
+  });
+
+  it("shows an error message with Back + Try again when the quote fails", async () => {
+    vi.mocked(createTransaction).mockResolvedValueOnce({
+      transaction: { id: "tx_fail" },
+      sessionToken: "tok_fail",
+    } as any);
+    vi.mocked(attachWalletSource).mockResolvedValueOnce({} as any);
+    vi.mocked(getQuote).mockRejectedValueOnce(
+      new Error(
+        "No quotes available for any settlement token. Reasons: USDC@EVM-8453; slippage_too_tight.",
+      ),
+    );
+
+    render(<PaymentWidget {...requiredProps} amount="10.00" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/no route available for this token pair/i),
+      ).toBeDefined();
+    });
+
+    expect(screen.getByText("Back")).toBeDefined();
+    expect(screen.getByText("Try again")).toBeDefined();
+    expect(screen.queryByText(/getting quote/i)).toBeNull();
   });
 });
