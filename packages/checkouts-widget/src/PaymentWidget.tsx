@@ -60,10 +60,18 @@ import type { CheckoutTransaction } from "./checkout-flow";
 // =============================================================================
 
 export interface PaymentWidgetProps {
-  /** Dynamic Checkout id. Required for transaction creation. */
-  checkoutId: string;
-  /** Connected wallet account used to sign the checkout transaction. */
+  /** Connected wallet account used to sign the flow transaction. */
   walletAccount: WalletAccount;
+  /**
+   * Server-side Flow creation. Required unless `checkoutId` is set.
+   * Invoked when the user reaches the review stage (amount is known).
+   */
+  createFlow?: (params: {
+    amount: string;
+    currency: string;
+  }) => Promise<string>;
+  /** @deprecated Prefer `createFlow`. Legacy reusable Checkout config id. */
+  checkoutId?: string;
   /** ISO currency code for the payment amount (e.g. "USD"). */
   currency: string;
   /** Destination address that receives the settlement token. */
@@ -158,6 +166,7 @@ function gerund(mode: string): string {
 
 export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
   const {
+    createFlow,
     checkoutId,
     walletAccount,
     currency,
@@ -222,6 +231,7 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
         const result = await flow.beginCheckout({
           amount,
           currency,
+          createFlow,
           checkoutId,
           // Empty `destinationAddress` → omit the override entirely so the
           // Checkout's server-side `destinationConfig.destinations` is

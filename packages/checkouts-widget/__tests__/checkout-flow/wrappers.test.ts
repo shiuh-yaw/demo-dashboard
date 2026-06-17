@@ -2,14 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@dynamic-labs-sdk/client", () => ({
   createCheckoutTransaction: vi.fn(),
-  attachCheckoutTransactionSource: vi.fn(),
-  getCheckoutTransactionQuote: vi.fn(),
-  submitCheckoutTransaction: vi.fn(),
-  getCheckoutTransaction: vi.fn(),
-  cancelCheckoutTransaction: vi.fn(),
+  attachFlowSource: vi.fn(),
+  getFlowQuote: vi.fn(),
+  submitFlowTransaction: vi.fn(),
+  getFlow: vi.fn(),
+  cancelFlow: vi.fn(),
 }));
-
-// no Dynamic client coupling inside the package — wrappers call SDK directly
 
 import * as sdk from "@dynamic-labs-sdk/client";
 import {
@@ -25,7 +23,7 @@ describe("checkout-flow wrappers", () => {
 
   it("createTransaction forwards params to SDK", async () => {
     (sdk.createCheckoutTransaction as any).mockResolvedValue({
-      transaction: { id: "tx_1" },
+      transaction: { id: "flow_1" },
       sessionToken: "dct_x",
       sessionExpiresAt: new Date(),
     });
@@ -41,50 +39,58 @@ describe("checkout-flow wrappers", () => {
       destinationAddresses: [{ address: "0xabc", chain: "ETH" }],
       memo: { externalId: "ext_1" },
     });
-    expect(res.transaction.id).toBe("tx_1");
+    expect(res.transaction.id).toBe("flow_1");
   });
 
-  it("attachWalletSource forwards wallet params", async () => {
-    (sdk.attachCheckoutTransactionSource as any).mockResolvedValue({ id: "tx_1" });
+  it("attachWalletSource forwards wallet params to attachFlowSource", async () => {
+    (sdk.attachFlowSource as any).mockResolvedValue({
+      flow: { id: "flow_1" },
+      sessionToken: "dft_x",
+    });
     await attachWalletSource({
-      transactionId: "tx_1",
+      transactionId: "flow_1",
       fromAddress: "0xabc",
       fromChainId: "1",
       fromChainName: "ETH" as any,
     });
-    expect(sdk.attachCheckoutTransactionSource).toHaveBeenCalledWith({
-      sourceType: "wallet",
-      transactionId: "tx_1",
+    expect(sdk.attachFlowSource).toHaveBeenCalledWith({
+      flowId: "flow_1",
       fromAddress: "0xabc",
       fromChainId: "1",
       fromChainName: "ETH",
+      sourceType: "wallet",
     });
   });
 
-  it("getQuote forwards params", async () => {
-    (sdk.getCheckoutTransactionQuote as any).mockResolvedValue({ id: "tx_1" });
-    await getQuote({ transactionId: "tx_1", fromTokenAddress: "0xtoken" });
-    expect(sdk.getCheckoutTransactionQuote).toHaveBeenCalledWith({
-      transactionId: "tx_1",
+  it("getQuote forwards params to getFlowQuote", async () => {
+    (sdk.getFlowQuote as any).mockResolvedValue({ id: "flow_1" });
+    await getQuote({
+      transactionId: "flow_1",
       fromTokenAddress: "0xtoken",
+      fromChainId: "8453",
+    });
+    expect(sdk.getFlowQuote).toHaveBeenCalledWith({
+      flowId: "flow_1",
+      fromTokenAddress: "0xtoken",
+      fromChainId: "8453",
     });
   });
 
-  it("submit forwards params + onStepChange", async () => {
-    (sdk.submitCheckoutTransaction as any).mockResolvedValue({ id: "tx_1" });
+  it("submit forwards params + onStepChange to submitFlowTransaction", async () => {
+    (sdk.submitFlowTransaction as any).mockResolvedValue({ id: "flow_1" });
     const onStepChange = vi.fn();
     const walletAccount: any = { address: "0xabc" };
-    await submit({ transactionId: "tx_1", walletAccount, onStepChange });
-    expect(sdk.submitCheckoutTransaction).toHaveBeenCalledWith({
-      transactionId: "tx_1",
+    await submit({ transactionId: "flow_1", walletAccount, onStepChange });
+    expect(sdk.submitFlowTransaction).toHaveBeenCalledWith({
+      flowId: "flow_1",
       walletAccount,
       onStepChange,
     });
   });
 
-  it("cancel forwards transactionId", async () => {
-    (sdk.cancelCheckoutTransaction as any).mockResolvedValue({ id: "tx_1" });
-    await cancel({ transactionId: "tx_1" });
-    expect(sdk.cancelCheckoutTransaction).toHaveBeenCalledWith({ transactionId: "tx_1" });
+  it("cancel forwards flowId to cancelFlow", async () => {
+    (sdk.cancelFlow as any).mockResolvedValue({ id: "flow_1" });
+    await cancel({ transactionId: "flow_1" });
+    expect(sdk.cancelFlow).toHaveBeenCalledWith({ flowId: "flow_1" });
   });
 });

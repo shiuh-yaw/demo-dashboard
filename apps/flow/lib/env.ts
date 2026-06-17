@@ -20,12 +20,13 @@ export const env = createEnv({
       .enum(["development", "production", "test"])
       .default("development"),
     /**
-     * Environment-scoped admin API token used by /api/checkouts to
-     * create per-withdraw Flow Checkouts. Server-only — never bundle
-     * into the client. Required for the withdraw scenario; optional
-     * otherwise (checkout / deposit use a pre-baked Checkout id).
+     * Environment-scoped admin API token used by POST /api/checkouts to
+     * create Flows server-side. Must belong to the same Dynamic environment
+     * as NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID and include flow.write scope.
+     * DYNAMIC_API_KEY is accepted as a fallback (matches other demo apps).
      */
     DYNAMIC_API_TOKEN: z.string().min(1).optional(),
+    DYNAMIC_API_KEY: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string().min(1, {
@@ -35,7 +36,9 @@ export const env = createEnv({
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    DYNAMIC_API_TOKEN: process.env.DYNAMIC_API_TOKEN,
+    DYNAMIC_API_TOKEN:
+      process.env.DYNAMIC_API_TOKEN ?? process.env.DYNAMIC_API_KEY,
+    DYNAMIC_API_KEY: process.env.DYNAMIC_API_KEY,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID:

@@ -148,35 +148,45 @@ describe("Arbitrum Sepolia chain resolvers", () => {
 });
 
 // ---------------------------------------------------------------------------
-// CreateDestinationCheckoutInput — accepts testnet inputs
+// CreateFlowInput — amount required at flow creation
 // ---------------------------------------------------------------------------
 
-import type { CreateDestinationCheckoutInput } from "../lib/checkouts-api";
+import type { CreateFlowInput } from "../lib/checkouts-api";
 
-describe("CreateDestinationCheckoutInput type shape", () => {
-  it("accepts a testnet deposit without destinationAddress", () => {
-    const input: CreateDestinationCheckoutInput = {
+describe("CreateFlowInput type shape", () => {
+  it("accepts a testnet deposit with amount", () => {
+    const input: CreateFlowInput = {
       mode: "deposit",
+      amount: "25",
+      currency: "USD",
+      destinationAddress: "0x1234567890abcdef1234567890abcdef12345678",
+      destinationChain: "EVM",
       chain: "arb-sepolia",
       asset: "USDC",
     };
-    expect(input.destinationAddress).toBeUndefined();
+    expect(input.amount).toBe("25");
     expect(input.mode).toBe("deposit");
   });
 
   it("accepts payment mode for checkout scenario", () => {
-    const input: CreateDestinationCheckoutInput = {
+    const input: CreateFlowInput = {
       mode: "payment",
+      amount: "0.10",
+      currency: "USD",
+      destinationAddress: "0x1234567890abcdef1234567890abcdef12345678",
+      destinationChain: "EVM",
       chain: "arb-sepolia",
     };
     expect(input.mode).toBe("payment");
   });
 
-  it("still accepts the legacy withdraw shape with address", () => {
-    const input: CreateDestinationCheckoutInput = {
+  it("accepts withdraw shape with destination", () => {
+    const input: CreateFlowInput = {
       destinationAddress: "0x1234567890abcdef1234567890abcdef12345678",
       destinationChain: "EVM",
       mode: "withdraw",
+      amount: "100",
+      currency: "USD",
       chain: "base",
     };
     expect(input.destinationAddress).toBeDefined();

@@ -13,7 +13,7 @@ Wallet-source payment widget extracted from `apps/checkouts/`. Consumed directly
 ## Capabilities
 
 - Self-contained `amount → review → processing → done` state machine driven by `useCheckoutFlow`.
-- SSR-safe wrappers over the Dynamic Checkout Flow SDK (`@dynamic-labs-sdk/client`) under `./checkout-flow`.
+- SSR-safe wrappers over the Dynamic Flow SDK (`@dynamic-labs-sdk/client`) under `./checkout-flow`.
 - Lifecycle callbacks (`onAmountSelected`, `onTransactionCreated`, `onQuoteLocked`, `onExecutionUpdate`, `onSettlementCompleted`, `onCancelled`, `onError`) so hosts can mirror to a dashboard or emit analytics.
 - `localStorage` persistence of in-flight `transactionId` keyed by `storageNamespace` — survives reloads inside a single checkout session.
 - `hideDestination` prop suppresses the "Destination" row on the review + loading screens for merchant flows where the settlement vault address is not buyer-relevant.

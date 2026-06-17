@@ -37,10 +37,12 @@ import {
   ensureEvmEmbeddedWallet,
   getPrimaryWalletAccount,
   isSignedIn,
+  logout,
   offEvent,
   onEvent,
   type WalletAccount,
 } from "@/lib/dynamic/flow-sdk";
+import { waitForDynamicClientInitialized } from "@/lib/dynamic/client";
 import { AuthenticatedShell } from "./authenticated-shell";
 
 export function PlatformShell({ onBack }: { onBack: () => void }) {
@@ -72,6 +74,31 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
   // it's immediately readable inside the same render's listeners.
   const bootStartedRef = useRef(false);
 
+  // Cleared after logout on mount — rehydration must not run against a
+  // connect-only wallet leaked from /checkout or /deposit.
+  const [sessionReady, setSessionReady] = useState(false);
+
+  // Always restart the Dynamic session when entering the platform shell.
+  // Checkout/deposit use connect-only (`verifyOnConnect={false}`); if that
+  // wallet is still in the shared SDK singleton, WaaS provisioning fails
+  // with "Session ID is required".
+  useEffect(() => {
+    let cancelled = false;
+    bootStartedRef.current = false;
+    (async () => {
+      await waitForDynamicClientInitialized();
+      await logout();
+      if (cancelled) return;
+      setWallet(null);
+      setExternalWallet(null);
+      setProvisionError(null);
+      setSessionReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Ensure the platform embedded wallet exists for the signed-in user.
   // Per Dynamic's WaaS docs, `createWaasWalletAccounts` must be called
   // explicitly after auth — it is not automatic.
@@ -98,6 +125,12 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
   // (it's the deposit source) AND ensure the embedded wallet exists.
   const handleConnected = useCallback(
     async (connectedExternalWallet: WalletAccount) => {
+      if (!connectedExternalWallet.verifiedCredentialId) {
+        setProvisionError(
+          "Wallet connected but not signed in. Approve the signature request to create your platform wallet.",
+        );
+        return;
+      }
       bootStartedRef.current = true;
       setExternalWallet(connectedExternalWallet);
       await provisionEmbedded();
@@ -126,6 +159,7 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
   // undefined. Gate on `verifiedCredentialId` so only genuinely
   // verified accounts trigger provisioning.
   useEffect(() => {
+    if (!sessionReady) return;
     if (typeof window === "undefined") return;
     let cancelled = false;
 
@@ -160,7 +194,7 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
       window.clearTimeout(timer);
       offEvent({ event: "walletAccountsChanged", listener });
     };
-  }, [provisionEmbedded]);
+  }, [sessionReady, provisionEmbedded]);
 
   // Retry hook for the error panel — the user is already signed in
   // and we've already captured their external wallet, so we just
@@ -174,10 +208,9 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
   // only runs once we actually have a wallet to query.
   if (!wallet) {
     let inner: React.ReactNode;
-    if (initializing || provisioning) {
-      // Initial session check + WaaS provisioning share the same
-      // spinner — both states represent "we're about to land on the
-      // dashboard, just need a moment."
+    if (!sessionReady || initializing || provisioning) {
+      // Brief spinner while clearing a leaked checkout/deposit session
+      // (`!sessionReady`) or while rehydrating / provisioning WaaS.
       inner = <ProvisioningPanel />;
     } else if (provisionError) {
       inner = (
@@ -187,7 +220,7 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
       inner = (
         <div className="px-5 py-5">
           <WalletPickerScreen
-            verifyOnConnect={true}
+            verifyOnConnect
             onConnected={handleConnected}
             selectedWalletForChain={chainSelectWallet}
             onChainSelectChange={setChainSelectWallet}
@@ -217,8 +250,12 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
                     Sign in
                   </span>
                   <h3 className="text-base font-semibold text-(--brand-fg) tracking-[-0.01em]">
-                    Connect to your platform wallet
+                    Sign in to your platform wallet
                   </h3>
+                  <p className="text-xs text-(--brand-muted) max-w-[34ch]">
+                    Approve the wallet signature — required to provision your
+                    embedded wallet. Checkout and deposit stay connect-only.
+                  </p>
                 </div>
               )
             }

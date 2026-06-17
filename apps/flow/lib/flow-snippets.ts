@@ -2,7 +2,7 @@
  * Shared SDK + REST snippet generators for the Flow walkthrough panels.
  *
  * Each scenario page (`/checkout`, `/deposit`, `/withdraw`) renders a
- * 6-step walkthrough — the underlying API calls are identical across
+ * 5-step walkthrough — the underlying API calls are identical across
  * scenarios; only `mode`, the `destinations[]` identifier, the source
  * actor label, and the surrounding prose differ. The prose lives in
  * each page's `STEP_DEFS`; the actual code samples are produced here
@@ -12,7 +12,7 @@
 import type { ParsedFlowConfig } from "./flow-config/schema";
 import { findTokenByAssetChain } from "./tokens";
 
-export type StepTuple = [string, string, string, string, string, string];
+export type StepTuple = [string, string, string, string, string];
 
 /**
  * Canonical Dynamic docs URLs per integration step, in step order.
@@ -33,37 +33,25 @@ export type StepTuple = [string, string, string, string, string, string];
  * All URLs WebFetch-verified against www.dynamic.xyz/docs/...
  */
 export const STEP_SDK_DOCS_URLS: readonly string[] = [
-  // 01 — Create the Flow. The JS SDK doesn't expose a helper for
-  // Checkout config creation (it's a server-side mint via the REST
-  // API), so both tabs land on the same API reference page.
-  "https://www.dynamic.xyz/docs/api-reference/checkout/create-a-checkout",
-  // 02 — createCheckoutTransaction
-  "https://www.dynamic.xyz/docs/javascript/reference/client/create-checkout-transaction",
-  // 03 — attachCheckoutTransactionSource
-  "https://www.dynamic.xyz/docs/javascript/reference/client/attach-checkout-transaction-source",
-  // 04 — getCheckoutTransactionQuote
-  "https://www.dynamic.xyz/docs/javascript/reference/client/get-checkout-transaction-quote",
-  // 05 — submitCheckoutTransaction (collapses prepare/sign/broadcast)
-  "https://www.dynamic.xyz/docs/javascript/reference/client/submit-checkout-transaction",
-  // 06 — getCheckoutTransaction (poll until terminal)
-  "https://www.dynamic.xyz/docs/javascript/reference/client/get-checkout-transaction",
+  // 01 — Create the flow (server-side; no client SDK helper).
+  "https://www.dynamic.xyz/docs/javascript/reference/flow-getting-started",
+  // 02 — attachFlowSource
+  "https://www.dynamic.xyz/docs/javascript/reference/client/attach-flow-source",
+  // 03 — getFlowQuote
+  "https://www.dynamic.xyz/docs/javascript/reference/client/get-flow-quote",
+  // 04 — submitFlowTransaction (prepare + sign + broadcast)
+  "https://www.dynamic.xyz/docs/javascript/reference/client/submit-flow-transaction",
+  // 05 — getFlow (read status)
+  "https://www.dynamic.xyz/docs/javascript/reference/client/get-flow",
 ];
 
 export const STEP_API_DOCS_URLS: readonly string[] = [
-  // 01 — POST /environments/{envId}/checkouts (config creation)
-  "https://www.dynamic.xyz/docs/api-reference/checkout/create-a-checkout",
-  // 02 — POST /checkouts/{checkoutId}/transactions
-  "https://www.dynamic.xyz/docs/api-reference/sdk/create-a-checkout-transaction",
-  // 03 — POST /transactions/{id}/source
-  "https://www.dynamic.xyz/docs/api-reference/sdk/attach-a-source-to-a-checkout-transaction",
-  // 04 — POST /transactions/{id}/quote
-  "https://www.dynamic.xyz/docs/api-reference/sdk/get-a-quote-for-a-checkout-transaction",
-  // 05 — REST splits the SDK's submit into prepare → sign → broadcast.
-  // Link to `prepare` (the first server-side call); the page covers
-  // the broadcast step alongside, and the snippet shows both.
-  "https://www.dynamic.xyz/docs/api-reference/sdk/prepare-a-checkout-transaction-for-signing",
-  // 06 — GET /transactions/{id} (poll until terminal)
-  "https://www.dynamic.xyz/docs/api-reference/sdk/get-a-checkout-transaction-by-id",
+  // 01–05 — Fireblocks Flow API guide (create → attach → quote → submit → poll).
+  "https://www.dynamic.xyz/docs/overview/fireblocks-flow-api",
+  "https://www.dynamic.xyz/docs/overview/fireblocks-flow-api",
+  "https://www.dynamic.xyz/docs/overview/fireblocks-flow-api",
+  "https://www.dynamic.xyz/docs/overview/fireblocks-flow-api",
+  "https://www.dynamic.xyz/docs/overview/fireblocks-flow-api",
 ];
 
 /**
@@ -218,17 +206,11 @@ export function tokenDecimalsFor(asset: string): number {
   }
 }
 
-/**
- * Map our intent-named mode ("payment" | "deposit" | "withdraw") to
- * what the Dynamic Checkouts API actually accepts. Dynamic's API
- * only knows about `payment | deposit` — user-to-user withdrawals
- * are conceptually a deposit from the user's wallet into another
- * address, so they map onto the deposit primitive at the API
- * boundary. The snippet comment below makes this explicit so devs
- * copying the code don't get a 400.
- */
-function upstreamCheckoutMode(mode: string): "payment" | "deposit" {
-  return mode === "withdraw" ? "deposit" : (mode as "payment" | "deposit");
+/** Map scenario intent to the Flow API `mode` path segment. */
+function flowModePath(mode: string): "payment" | "deposit" | "withdraw" {
+  if (mode === "withdraw") return "withdraw";
+  if (mode === "deposit") return "deposit";
+  return "payment";
 }
 
 export function renderSdkSteps(ctx: FlowSnippetContext): StepTuple {
@@ -252,18 +234,13 @@ export function renderSdkSteps(ctx: FlowSnippetContext): StepTuple {
     tokenAddress = `<token-address-for-${asset}-on-${chain}>`;
   }
   const tokenDecimals = tokenDecimalsFor(asset);
-  const apiMode = upstreamCheckoutMode(mode);
-  const modeComment =
-    mode === "withdraw"
-      ? `      // Dynamic's API only accepts "payment" | "deposit" —\n` +
-        `      // a withdraw is modeled as a deposit into the user's\n` +
-        `      // destination wallet.\n`
-      : "";
+  const flowMode = flowModePath(mode);
 
-  // Step 01 — server-side, no client SDK equivalent. Use fetch.
-  const step1 = `// Runs on your server — one-time per Flow config.
+  // Step 01 — server-side flow creation (amount + settlement + destination).
+  const step1 = `// Runs on your server — one Flow per payment/deposit/withdraw.
+// Requires an API token with flow.write scope.
 const res = await fetch(
-  \`https://api.dynamic.xyz/v0/environments/\${process.env.ENV_ID}/checkouts\`,
+  \`https://app.dynamic.xyz/api/v0/server/\${process.env.ENV_ID}/flow/${flowMode}\`,
   {
     method: "POST",
     headers: {
@@ -271,7 +248,8 @@ const res = await fetch(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-${modeComment}      mode: "${apiMode}",
+      amount: "5.00",
+      currency: "USD",
       settlementConfig: {
         strategy: "preferred_order",
         settlements: [
@@ -296,79 +274,53 @@ ${modeComment}      mode: "${apiMode}",
     }),
   },
 );
-const { id: flowId } = await res.json();`;
+const { flow } = await res.json();
+const flowId = flow.id;
+// Pass flowId to your frontend.`;
 
   const step2 = `import { addEvmExtension } from "@dynamic-labs-sdk/evm";
-import { createCheckoutTransaction } from "@dynamic-labs-sdk/client";
+import { attachFlowSource } from "@dynamic-labs-sdk/client";
 
 addEvmExtension();
 
-// Open a transaction against the Flow id returned in Step 01. Returns
-// both the transaction and a one-time sessionToken — store the latter.
-const { transaction, sessionToken } = await createCheckoutTransaction({
-  checkoutId: flowId,
-  amount: "5.00",
-  currency: "USD",
-});`;
-
-  const step3 = `import {
-  attachCheckoutTransactionSource,
-  getActiveNetworkData,
-  getPrimaryWalletAccount,
-} from "@dynamic-labs-sdk/client";
-
-const wallet = getPrimaryWalletAccount()!;
-const { networkData } = await getActiveNetworkData({ walletAccount: wallet });
-
-await attachCheckoutTransactionSource({
-  transactionId: transaction.id,
+// Declare the payer's wallet + chain. Returns an updated flow and
+// stores a session token (dft_…) for subsequent calls automatically.
+await attachFlowSource({
+  flowId,
   fromAddress: wallet.address,
-  fromChainId: String(networkData.networkId),
+  fromChainId: String(fromChainId), // from the picked token — not getActiveNetworkData()
   fromChainName: wallet.chain,
+  sourceType: "wallet",
 });
 // 403 → source blocked by risk/sanctions screening.`;
 
-  const step4 = `import {
-  getBalances,
-  getCheckoutTransactionQuote,
-} from "@dynamic-labs-sdk/client";
+  const step3 = `import { getFlowQuote } from "@dynamic-labs-sdk/client";
 
-// First non-zero balance — production would let the user pick which
-// token to pay with.
-const [fromToken] = await getBalances({ walletAccount: wallet });
-
-const quoted = await getCheckoutTransactionQuote({
-  transactionId: transaction.id,
+const quoted = await getFlowQuote({
+  flowId,
   fromTokenAddress: fromToken.address,
+  fromChainId: String(fromToken.networkId),
   slippage: 0.005, // 0.5%
 });
 // quoted.quote.expiresAt — re-quote if the user takes longer than 60s.`;
 
-  const step5 = `import { submitCheckoutTransaction } from "@dynamic-labs-sdk/client";
+  const step4 = `import { submitFlowTransaction } from "@dynamic-labs-sdk/client";
 
-// One helper handles all three sub-stages:
-//   1. prepare  → fetch the signing payload
-//   2. sign     → wallet popup appears here
-//   3. broadcast → notify Dynamic of the on-chain txHash
-await submitCheckoutTransaction({
-  transactionId: transaction.id,
+// prepare → sign (wallet popup) → broadcast in one helper.
+await submitFlowTransaction({
+  flowId,
   walletAccount: wallet,
 });`;
 
-  const step6 = `import {
-  getCheckoutTransaction,
-  isTerminalState,
-} from "@dynamic-labs-sdk/client";
+  const step5 = `import { getFlow } from "@dynamic-labs-sdk/client";
 
-// Poll every 3s — or subscribe via the lifecycle webhook.
-let tx = await getCheckoutTransaction({ transactionId: transaction.id });
-while (!isTerminalState(tx)) {
-  await new Promise((r) => setTimeout(r, 3000));
-  tx = await getCheckoutTransaction({ transactionId: transaction.id });
-}
-// tx.settlementState === "completed" | "failed"`;
+const flow = await getFlow({ flowId });
 
-  return [step1, step2, step3, step4, step5, step6];
+// flow.executionState — lifecycle phase (e.g. "source_confirmed", "failed")
+// flow.settlementState  — "none" | "completed" | "failed"
+// flow.settlement       — { txHash?, … } once settled`;
+
+  return [step1, step2, step3, step4, step5];
 }
 
 export function renderApiSteps(ctx: FlowSnippetContext): StepTuple {
@@ -394,24 +346,18 @@ export function renderApiSteps(ctx: FlowSnippetContext): StepTuple {
   }
   const tokenDecimals = tokenDecimalsFor(asset);
   const nativeTokenAddress = "0x0000000000000000000000000000000000000000";
-  const apiMode = upstreamCheckoutMode(mode);
-  // cURL JSON has no `//` comments, so we drop a `#`-prefixed line
-  // above the curl invocation when the mode mapping applies.
-  const modeNote =
-    mode === "withdraw"
-      ? `# Dynamic's API only accepts "payment" | "deposit" —\n# a withdraw is modeled as a deposit into the user's destination wallet.\n`
-      : "";
+  const flowMode = flowModePath(mode);
 
-  const step1 = `export ENV_ID="..."
-export ADMIN_BASE="https://api.dynamic.xyz/v0/environments/$ENV_ID"
-export SDK_BASE="https://api.dynamic.xyz/sdk/$ENV_ID"
+  const step1 = `ENV_ID="your-environment-id"
+SERVER_BASE="https://app.dynamic.xyz/api/v0/server/$ENV_ID"
 
-${modeNote}# Server-side — uses your environment-scoped API token.
-FLOW=$(curl -sX POST "$ADMIN_BASE/checkouts" \\
+# Server-side — requires DYNAMIC_API_TOKEN with flow.write scope.
+FLOW=$(curl -sX POST "$SERVER_BASE/flow/${flowMode}" \\
   -H "Authorization: Bearer $DYNAMIC_API_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "mode": "${apiMode}",
+    "amount": "5.00",
+    "currency": "USD",
     "settlementConfig": {
       "strategy": "preferred_order",
       "settlements": [
@@ -434,61 +380,75 @@ FLOW=$(curl -sX POST "$ADMIN_BASE/checkouts" \\
       ]
     }
   }')
-FLOW_ID=$(echo "$FLOW" | jq -r .id)
-# → checkout_...`;
+FLOW_ID=$(echo "$FLOW" | jq -r .flow.id)
+# → flow.id (UUID)`;
 
-  const step2 = `# User-facing — no auth required; the response carries the session token.
-RESP=$(curl -sX POST "$SDK_BASE/checkouts/$FLOW_ID/transactions" \\
-  -H "Content-Type: application/json" \\
-  -d '{ "amount": "5.00", "currency": "USD" }')
-SESSION=$(echo "$RESP" | jq -r .sessionToken)
-TX_ID=$(echo "$RESP" | jq -r .transaction.id)
-# → sessionToken (dct_...) and transaction id (ctx_...)`;
+  const step2 = `# Prerequisites: FLOW_ID (step 01)
 
-  const step3 = `curl -sX POST "$SDK_BASE/transactions/$TX_ID/source" \\
-  -H "x-dynamic-checkout-session-token: $SESSION" \\
+ENV_ID="your-environment-id"
+SDK_BASE="https://app.dynamic.xyz/api/v0/sdk/$ENV_ID"
+
+# No session token yet — attach returns one (dft_…).
+RESP=$(curl -sX POST "$SDK_BASE/flow/$FLOW_ID/source" \\
   -H "Content-Type: application/json" \\
   -d '{
     "sourceType": "wallet",
     "fromAddress": "${sourceFromAddress}",
     "fromChainId": "${chainId}",
     "fromChainName": "${chainName}"
-  }'
-# 200 → executionState: "source_attached"
+  }')
+SESSION=$(echo "$RESP" | jq -r .sessionToken)
+# → executionState: "source_attached"
 # 403 → blocked by risk/sanctions screening`;
 
-  const step4 = `curl -sX POST "$SDK_BASE/transactions/$TX_ID/quote" \\
-  -H "x-dynamic-checkout-session-token: $SESSION" \\
+  const step3 = `# Prerequisites: FLOW_ID (step 01), SESSION (step 02)
+
+ENV_ID="your-environment-id"
+SDK_BASE="https://app.dynamic.xyz/api/v0/sdk/$ENV_ID"
+
+curl -sX POST "$SDK_BASE/flow/$FLOW_ID/quote" \\
+  -H "x-dynamic-flow-session-token: $SESSION" \\
   -H "Content-Type: application/json" \\
   -d '{
     "fromTokenAddress": "${nativeTokenAddress}",
+    "fromChainId": "${chainId}",
     "slippage": 0.005
   }'
 # → quote.fromAmount, quote.toAmount, quote.fees, quote.expiresAt (60s)`;
 
-  const step5 = `# 5a. Prepare the signing payload.
-curl -sX POST "$SDK_BASE/transactions/$TX_ID/prepare" \\
-  -H "x-dynamic-checkout-session-token: $SESSION" \\
+  const step4 = `# Prerequisites: FLOW_ID (step 01), SESSION (step 02)
+
+ENV_ID="your-environment-id"
+SDK_BASE="https://app.dynamic.xyz/api/v0/sdk/$ENV_ID"
+
+# 4a. Prepare the signing payload.
+curl -sX POST "$SDK_BASE/flow/$FLOW_ID/prepare" \\
+  -H "x-dynamic-flow-session-token: $SESSION" \\
   -H "Content-Type: application/json" \\
   -d '{}'
 # → quote.signingPayload (evmTransaction, evmApproval?, …)
 
-# 5b. Sign with the user's wallet (off-API — viem, wagmi, Dynamic SDK).
+# 4b. Sign with the user's wallet (off-API — viem, wagmi, Dynamic SDK).
 #     If evmApproval is present, sign + broadcast it first.
 TX_HASH="0x…signed-hash…"
 
-# 5c. Notify Dynamic that the on-chain transaction is broadcast.
-curl -sX POST "$SDK_BASE/transactions/$TX_ID/broadcast" \\
-  -H "x-dynamic-checkout-session-token: $SESSION" \\
+# 4c. Notify Dynamic that the on-chain transaction is broadcast.
+curl -sX POST "$SDK_BASE/flow/$FLOW_ID/broadcast" \\
+  -H "x-dynamic-flow-session-token: $SESSION" \\
   -H "Content-Type: application/json" \\
   --data @- <<EOF
 { "txHash": "$TX_HASH" }
 EOF
-# point of no return — cannot be cancelled after this`;
+# → point of no return — cannot be cancelled after this`;
 
-  const step6 = `curl -s "$SDK_BASE/transactions/$TX_ID" \\
-  -H "x-dynamic-checkout-session-token: $SESSION"
-# → { executionState, settlementState, settlement: { txHash?, … }, … }`;
+  const step5 = `# Prerequisites: FLOW_ID (step 01), SESSION (step 02)
 
-  return [step1, step2, step3, step4, step5, step6];
+ENV_ID="your-environment-id"
+SDK_BASE="https://app.dynamic.xyz/api/v0/sdk/$ENV_ID"
+
+curl -s "$SDK_BASE/flow/$FLOW_ID" \\
+  -H "x-dynamic-flow-session-token: $SESSION"
+# → executionState, settlementState, settlement: { txHash?, … }`;
+
+  return [step1, step2, step3, step4, step5];
 }

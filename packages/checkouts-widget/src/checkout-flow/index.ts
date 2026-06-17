@@ -1,70 +1,104 @@
 "use client";
 
 /**
- * Dynamic Checkout Flow — thin SSR-safe wrappers.
+ * Dynamic Flow — thin SSR-safe wrappers.
  *
- * Mirrors the pattern in `lib/dynamicClient.ts`: each wrapper forwards to the
- * underlying Dynamic SDK function and re-exports the parameter / response
- * types. Centralises the SDK surface this app uses so test mocks and future
- * SDK changes have a single touchpoint.
+ * Mirrors the pattern in host `flow-sdk.ts` files: each wrapper forwards
+ * to the underlying Dynamic SDK function and re-exports parameter /
+ * response types. Centralises the SDK surface this package uses so test
+ * mocks and future SDK changes have a single touchpoint.
  *
- * IMPORTANT: All Checkout Flow API calls go through this module. The rest of
- * the app should import from "@/lib/checkout-flow", not directly from
- * "@dynamic-labs-sdk/client".
+ * IMPORTANT: All Flow API calls go through this module. The rest of the
+ * app should import from `@dynamic-demos/checkouts-widget/checkout-flow`,
+ * not directly from `@dynamic-labs-sdk/client`.
+ *
+ * Step 1 (flow creation with amount) still uses the deprecated
+ * `createCheckoutTransaction` bridge when the host passes a reusable
+ * Checkout config id + per-session amount. Attach → quote → submit →
+ * poll use the canonical Flow SDK functions (`flowId` === transaction id).
  */
 
 import {
   createCheckoutTransaction as sdkCreate,
-  attachCheckoutTransactionSource as sdkAttach,
-  getCheckoutTransactionQuote as sdkGetQuote,
-  submitCheckoutTransaction as sdkSubmit,
-  getCheckoutTransaction as sdkGet,
-  cancelCheckoutTransaction as sdkCancel,
-  type CheckoutTransaction,
+  attachFlowSource as sdkAttachFlow,
+  getFlowQuote as sdkGetFlowQuote,
+  submitFlowTransaction as sdkSubmitFlow,
+  getFlow as sdkGetFlow,
+  cancelFlow as sdkCancelFlow,
+  type Flow,
   type CheckoutTransactionCreateResponse,
   type CreateCheckoutTransactionParams,
-  type GetCheckoutTransactionQuoteParams,
-  type SubmitCheckoutTransactionParams,
-  type CancelCheckoutTransactionParams,
-  type GetCheckoutTransactionParams,
-  type AttachCheckoutTransactionSourceParams,
 } from "@dynamic-labs-sdk/client";
 import type { Chain } from "@dynamic-labs-sdk/client";
 
+/** Canonical Flow record; kept as CheckoutTransaction for host compatibility. */
+export type CheckoutTransaction = Flow;
+
 export type {
-  CheckoutTransaction,
   CheckoutTransactionCreateResponse,
   CreateCheckoutTransactionParams,
 };
 
 export type WalletSourceParams = {
+  /** Flow id (legacy name: transactionId). */
   transactionId: string;
   fromAddress: string;
   fromChainId: string;
   fromChainName: Chain;
 };
 
+export type GetQuoteParams = {
+  transactionId: string;
+  fromTokenAddress: string;
+  /** Chain the source token lives on — required by the Flow quote API. */
+  fromChainId?: string;
+  slippage?: number;
+};
+
+export type SubmitParams = {
+  transactionId: string;
+  walletAccount: Parameters<typeof sdkSubmitFlow>[0]["walletAccount"];
+  onStepChange?: (step: "approval" | "transaction") => void;
+};
+
 export const createTransaction = (
   params: CreateCheckoutTransactionParams,
 ): Promise<CheckoutTransactionCreateResponse> => sdkCreate(params);
 
-export const attachWalletSource = (
+export const attachWalletSource = async (
   params: WalletSourceParams,
-): Promise<CheckoutTransaction> =>
-  sdkAttach({ sourceType: "wallet", ...params } as AttachCheckoutTransactionSourceParams);
+): Promise<CheckoutTransaction> => {
+  const { flow } = await sdkAttachFlow({
+    flowId: params.transactionId,
+    fromAddress: params.fromAddress,
+    fromChainId: params.fromChainId,
+    fromChainName: params.fromChainName,
+    sourceType: "wallet",
+  });
+  return flow;
+};
 
-export const getQuote = (
-  params: GetCheckoutTransactionQuoteParams,
-): Promise<CheckoutTransaction> => sdkGetQuote(params);
+export const getQuote = (params: GetQuoteParams): Promise<CheckoutTransaction> =>
+  sdkGetFlowQuote({
+    flowId: params.transactionId,
+    fromTokenAddress: params.fromTokenAddress,
+    fromChainId: params.fromChainId,
+    slippage: params.slippage,
+  });
 
-export const submit = (
-  params: SubmitCheckoutTransactionParams,
-): Promise<CheckoutTransaction> => sdkSubmit(params);
+export const submit = (params: SubmitParams): Promise<CheckoutTransaction> =>
+  sdkSubmitFlow({
+    flowId: params.transactionId,
+    walletAccount: params.walletAccount,
+    onStepChange: params.onStepChange,
+  });
 
-export const getTransaction = (
-  params: GetCheckoutTransactionParams,
-): Promise<CheckoutTransaction> => sdkGet(params);
+export const getTransaction = (params: {
+  transactionId: string;
+}): Promise<CheckoutTransaction> =>
+  sdkGetFlow({ flowId: params.transactionId });
 
-export const cancel = (
-  params: CancelCheckoutTransactionParams,
-): Promise<CheckoutTransaction> => sdkCancel(params);
+export const cancel = (params: {
+  transactionId: string;
+}): Promise<CheckoutTransaction> =>
+  sdkCancelFlow({ flowId: params.transactionId });

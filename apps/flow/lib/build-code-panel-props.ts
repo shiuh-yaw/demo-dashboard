@@ -44,7 +44,7 @@ import type {
  * @param extras  Per-scenario helpers + AI prompt block (see
  *                `flow-helpers.ts`).
  * @param scenario The intent-named scenario id; used to look up the
- *                 6-step copy from `scenario-steps.ts`.
+ *                 5-step copy from `scenario-steps.ts`.
  */
 export async function buildCodePanelProps(
   ctx: FlowSnippetContext,

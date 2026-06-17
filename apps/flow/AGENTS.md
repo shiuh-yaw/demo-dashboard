@@ -26,7 +26,7 @@ The headline pitch: the same SDK call works whether you swap source from "extern
 Experimental V1. Implemented today:
 
 - ✅ Public landing (hero + chat input + scenario chips + CSS-driven event ticker + scroll-pinned persona sections)
-- ✅ Checkout scenario (Pitch + provisional Code view) — full Flow SDK lifecycle: `createCheckoutTransaction` → `attachCheckoutTransactionSource` → `getCheckoutTransactionQuote` → `submitCheckoutTransaction` → poll
+- ✅ Checkout scenario (Pitch + provisional Code view) — full Flow SDK lifecycle: server create → `attachFlowSource` → `getFlowQuote` → `submitFlowTransaction` → poll
 - ✅ Deposit scenario (same machinery, user-input amount framing)
 - ✅ Withdraw placeholder (full vault/intent/webhook orchestration shipped in follow-up PR)
 - ✅ Fireblocks + Dynamic brand chrome, light + dark mode, no-FOUC init script
@@ -60,8 +60,8 @@ Both `/checkout` and `/deposit` support a testnet toggle:
 - **URL param:** `?testnet=true` switches to testnet-only asset display. Shareable/bookmarkable.
 - **Toggle pill:** visible above the widget card, next to the back button. Clicking it updates the URL param.
 - **Filtering:** when testnet mode is on, `tokenFilter` on `CheckoutWidget` restricts the wallet asset list to testnet chain IDs only (Base Sepolia 84532, Arbitrum Sepolia 421614, OP Sepolia 11155420, Ethereum Sepolia 11155111). Exchange tokens (chainId 0) are unaffected.
-- **Settlement:** testnet mode settles on Arbitrum Sepolia (chainId 421614) with USDC (`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`). A fresh Checkout is minted per-session via `useTestnetCheckout` → `POST /api/checkouts` with `chain: "arb-sepolia"`.
-- **Implementation:** `components/testnet-toggle.tsx` (hook + UI), `lib/testnet.ts` (chain ID set), `lib/use-testnet-checkout.ts` (per-session checkout creation).
+- **Settlement:** testnet mode settles on Arbitrum Sepolia (chainId 421614) with USDC (`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`). Flows are created at review time via `createFlow` → `POST /api/checkouts` with `chain: "arb-sepolia"` (not pre-minted on mount).
+- **Implementation:** `components/testnet-toggle.tsx` (hook + UI), `lib/testnet.ts` (chain ID set), `lib/bind-create-flow.ts` (binds static config into the widget's `createFlow` callback).
 
 LI.FI cross-chain routes on testnets use the Intents solver exclusively (not traditional bridges/DEXs). Best pair: Base Sepolia ↔ Arbitrum Sepolia, up to 20 USDC.
 
@@ -69,20 +69,16 @@ LI.FI cross-chain routes on testnets use the Intents solver exclusively (not tra
 
 Always consult the upstream docs before changing Flow wiring:
 
-- **Overview:** https://www.dynamic.xyz/docs/overview/deposit-with-crypto
+- **Overview:** https://www.dynamic.xyz/docs/overview/fireblocks-flow
 - **JS SDK reference:**
-  - https://www.dynamic.xyz/docs/javascript/reference/client/create-checkout-transaction
-  - https://www.dynamic.xyz/docs/javascript/reference/client/checkout-flow
-  - https://www.dynamic.xyz/docs/javascript/reference/client/attach-checkout-transaction-source
-  - https://www.dynamic.xyz/docs/javascript/reference/client/get-checkout-transaction-quote
-  - https://www.dynamic.xyz/docs/javascript/reference/client/submit-checkout-transaction
-  - https://www.dynamic.xyz/docs/javascript/reference/client/get-checkout-transaction
-  - https://www.dynamic.xyz/docs/javascript/reference/client/cancel-checkout-transaction
+  - https://www.dynamic.xyz/docs/javascript/reference/flow-getting-started
+  - https://www.dynamic.xyz/docs/javascript/reference/client/attach-flow-source
+  - https://www.dynamic.xyz/docs/javascript/reference/client/get-flow-quote
+  - https://www.dynamic.xyz/docs/javascript/reference/client/submit-flow-transaction
+  - https://www.dynamic.xyz/docs/javascript/reference/client/get-flow
+  - https://www.dynamic.xyz/docs/javascript/reference/client/cancel-flow
 - **REST API:**
-  - https://www.dynamic.xyz/docs/api-reference/checkout/create-a-checkout
-  - https://www.dynamic.xyz/docs/api-reference/checkout/get-a-checkout-by-id
-  - https://www.dynamic.xyz/docs/api-reference/checkout/update-a-checkout
-  - https://www.dynamic.xyz/docs/api-reference/checkout/delete-a-checkout
+  - https://www.dynamic.xyz/docs/overview/fireblocks-flow-api
 - **Recipes:** https://www.dynamic.xyz/docs/recipes/integrations/checkouts/checkout-api
 
 ## Public surface
@@ -102,8 +98,7 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 | Variable | Required for | Server-only? |
 |---|---|---|
 | `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` | Dynamic SDK boot (all scenarios) | No (NEXT_PUBLIC) |
-| `NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID` | Override the sandbox Checkout id on `/checkout` — optional, a default is baked in | No (NEXT_PUBLIC) |
-| `DYNAMIC_API_TOKEN` | Mint per-withdraw Checkouts via `POST /api/checkouts` (required for withdraw flow + testnet mode) | Yes |
+| `DYNAMIC_API_TOKEN` | Server-side Flow creation via `POST /api/checkouts` (required for all scenarios + testnet mode) | Yes |
 
 ## Architecture invariants
 

@@ -1,7 +1,7 @@
 /**
  * Flow SDK Wrapper.
  *
- * SSR-safe wrapper around Dynamic's checkout-flow surface. Forked from
+ * SSR-safe wrapper around Dynamic's Flow SDK surface. Forked from
  * apps/shop/lib/checkout-sdk.ts — the canonical reference for using the
  * real Checkout Transaction API at SDK v0.25+. Keep the two files
  * roughly in sync; divergences here are deliberate (no exchange-specific
@@ -26,13 +26,15 @@ import {
   getActiveNetworkData as sdkGetActiveNetworkData,
   getNetworksData as sdkGetNetworksData,
   switchActiveNetwork as sdkSwitchActiveNetwork,
-  // Checkout
+  // Flow (attach → quote → submit → poll). Step 1 still uses the
+  // deprecated createCheckoutTransaction bridge when a reusable Checkout
+  // config id + per-session amount are supplied by the host.
   createCheckoutTransaction as sdkCreateCheckoutTransaction,
-  attachCheckoutTransactionSource as sdkAttachCheckoutTransactionSource,
-  getCheckoutTransactionQuote as sdkGetCheckoutTransactionQuote,
-  submitCheckoutTransaction as sdkSubmitCheckoutTransaction,
-  getCheckoutTransaction as sdkGetCheckoutTransaction,
-  cancelCheckoutTransaction as sdkCancelCheckoutTransaction,
+  attachFlowSource as sdkAttachFlowSource,
+  getFlowQuote as sdkGetFlowQuote,
+  submitFlowTransaction as sdkSubmitFlowTransaction,
+  getFlow as sdkGetFlow,
+  cancelFlow as sdkCancelFlow,
   // WalletConnect catalog
   getWalletConnectCatalog as sdkGetWalletConnectCatalog,
   // Exchange / Social OAuth
@@ -60,6 +62,7 @@ import {
   type CheckoutTransactionCreateResponse,
   type CheckoutExecutionState,
   type CheckoutSettlementState,
+  type Flow,
   type OnEventParams,
   type OffEventParams,
   type WalletConnectCatalog,
@@ -76,6 +79,7 @@ export type {
   WalletAccount,
   WalletProviderData,
   Chain,
+  Flow,
   CheckoutTransaction,
   CheckoutTransactionCreateResponse,
   CheckoutExecutionState,
@@ -417,36 +421,53 @@ export async function attachCheckoutTransactionSource(params: {
   fromAddress: string;
   fromChainId: string;
   fromChainName: Chain;
-}): Promise<CheckoutTransaction> {
-  return sdkAttachCheckoutTransactionSource(params);
+}): Promise<Flow> {
+  const { flow } = await sdkAttachFlowSource({
+    flowId: params.transactionId,
+    fromAddress: params.fromAddress,
+    fromChainId: params.fromChainId,
+    fromChainName: params.fromChainName,
+    sourceType: "wallet",
+  });
+  return flow;
 }
 
 export async function getCheckoutTransactionQuote(params: {
   transactionId: string;
   fromTokenAddress: string;
+  fromChainId?: string;
   slippage?: number;
-}): Promise<CheckoutTransaction> {
-  return sdkGetCheckoutTransactionQuote(params);
+}): Promise<Flow> {
+  return sdkGetFlowQuote({
+    flowId: params.transactionId,
+    fromTokenAddress: params.fromTokenAddress,
+    fromChainId: params.fromChainId,
+    slippage: params.slippage,
+  });
 }
 
 export async function submitCheckoutTransaction(params: {
   transactionId: string;
   walletAccount: WalletAccount;
   onStepChange?: (step: "approval" | "transaction") => void;
-}): Promise<CheckoutTransaction> {
-  return sdkSubmitCheckoutTransaction(params);
+}): Promise<Flow> {
+  return sdkSubmitFlowTransaction({
+    flowId: params.transactionId,
+    walletAccount: params.walletAccount,
+    onStepChange: params.onStepChange,
+  });
 }
 
 export async function getCheckoutTransaction(params: {
   transactionId: string;
-}): Promise<CheckoutTransaction> {
-  return sdkGetCheckoutTransaction(params);
+}): Promise<Flow> {
+  return sdkGetFlow({ flowId: params.transactionId });
 }
 
 export async function cancelCheckoutTransaction(params: {
   transactionId: string;
-}): Promise<CheckoutTransaction> {
-  return sdkCancelCheckoutTransaction(params);
+}): Promise<Flow> {
+  return sdkCancelFlow({ flowId: params.transactionId });
 }
 
 // =============================================================================
@@ -463,7 +484,7 @@ const TERMINAL_SETTLEMENT_STATES: CheckoutSettlementState[] = [
   "failed",
 ];
 
-export function isTerminalState(tx: CheckoutTransaction): boolean {
+export function isTerminalState(tx: Flow | CheckoutTransaction): boolean {
   if (
     TERMINAL_EXECUTION_STATES.includes(
       tx.executionState as CheckoutExecutionState,
@@ -483,14 +504,14 @@ export function isTerminalState(tx: CheckoutTransaction): boolean {
   return false;
 }
 
-export function isSuccessState(tx: CheckoutTransaction): boolean {
+export function isSuccessState(tx: Flow | CheckoutTransaction): boolean {
   return (
     tx.settlementState === "completed" ||
     (tx.executionState === "source_confirmed" && tx.settlementState === "none")
   );
 }
 
-export function isFailedState(tx: CheckoutTransaction): boolean {
+export function isFailedState(tx: Flow | CheckoutTransaction): boolean {
   return tx.executionState === "failed" || tx.settlementState === "failed";
 }
 

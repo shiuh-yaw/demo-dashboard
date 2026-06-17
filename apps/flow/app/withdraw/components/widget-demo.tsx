@@ -16,18 +16,28 @@
  *      wallet as USDC@Base. Withdraw routes the platform USDC out to
  *      any external wallet on any (chain, token) pair.
  *
- * Per-transaction Checkouts are minted server-side (`POST /api/checkouts`)
- * for both deposit + withdraw because the destination address varies
- * per user / per transaction. See `./use-checkout-minting.ts`.
+ * Flows are created server-side at review time (`POST /api/checkouts`)
+ * for deposit + withdraw once destination and amount are known.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScenarioCard } from "@/components/scenario-card";
 import { WithdrawIllustration } from "./withdraw-illustration";
 import { PlatformShell } from "./platform-shell";
+import { logout } from "@/lib/dynamic/flow-sdk";
+import { waitForDynamicClientInitialized } from "@/lib/dynamic/client";
 
 export function WithdrawWidgetDemo() {
   const [started, setStarted] = useState(false);
+
+  // Drop connect-only wallet state from /checkout or /deposit when the
+  // user navigates here — withdraw owns its own auth + WaaS lifecycle.
+  useEffect(() => {
+    void (async () => {
+      await waitForDynamicClientInitialized();
+      await logout();
+    })();
+  }, []);
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
       {started ? (

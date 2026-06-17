@@ -67,7 +67,7 @@ export interface ScenarioExtras {
 export interface WebhookEventDef {
   /** Stable id for React keys. */
   id: string;
-  /** Wire event name (e.g. `checkout.transaction.settlement.updated`). */
+  /** Wire event name (e.g. `flow.settlement.updated`). */
   name: string;
   /** Pill label categorising the event axis. */
   tag: "Execution" | "Settlement" | "Risk";
@@ -113,10 +113,9 @@ function eventSchemaUrl(eventName: string): string {
 }
 
 // =============================================================================
-// Webhooks — scenario-agnostic. Dynamic POSTs the same three axis
-// events for every Checkout transaction; the *reactions* differ per
-// scenario (covered in each scenario's AI prompt), but the wire
-// shape is identical.
+// Webhooks — scenario-agnostic. Dynamic POSTs the same three Flow axis
+// events for every flow; the *reactions* differ per scenario (covered in
+// each scenario's AI prompt), but the wire shape is identical.
 // =============================================================================
 
 /**
@@ -147,20 +146,23 @@ export async function POST(req: NextRequest) {
   }
 
   const payload = JSON.parse(raw) as {
-    event: string;
-    axis: "execution" | "settlement" | "risk";
-    transactionId: string;
-    previousState: string;
-    newState: string;
-    additionalData?: Record<string, unknown>;
+    eventName: string;
+    messageId: string;
+    data: {
+      axis: "execution" | "settlement" | "risk";
+      flowId: string;
+      previousState: string;
+      newState: string;
+      additionalData?: Record<string, unknown>;
+    };
   };
 
   if (
-    payload.event === "checkout.transaction.settlement.updated" &&
-    payload.newState === "completed"
+    payload.eventName === "flow.settlement.updated" &&
+    payload.data.newState === "completed"
   ) {
     // Credit the user, send the receipt, mark the order fulfilled.
-    await onSettled(payload.transactionId);
+    await onSettled(payload.data.flowId);
   }
 
   return NextResponse.json({ ok: true });
@@ -169,56 +171,65 @@ export async function POST(req: NextRequest) {
 export const WEBHOOK_EVENTS: readonly WebhookEventDef[] = [
   {
     id: "execution",
-    name: "checkout.transaction.execution.updated",
+    name: "flow.execution.updated",
     tag: "Execution",
     desc: "Fires on every state change along the execution axis — source attach, quote lock, signing payload ready, broadcast received. Useful for surfacing live progress in your UI.",
     rawPayload: `{
-  "event": "checkout.transaction.execution.updated",
-  "axis": "execution",
-  "transactionId": "tx_01H8X...",
-  "previousState": "quoted",
-  "newState": "signing",
-  "additionalData": {
-    "fromChainId": "8453"
+  "eventName": "flow.execution.updated",
+  "messageId": "5a2a5360-bb7e-4ea6-9bd3-0146bf2f734f",
+  "data": {
+    "axis": "execution",
+    "flowId": "fl_01H8X...",
+    "previousState": "quoted",
+    "newState": "signing",
+    "additionalData": {
+      "fromChainId": "8453"
+    }
   }
 }`,
-    docsUrl: eventSchemaUrl("checkout.transaction.execution.updated"),
+    docsUrl: eventSchemaUrl("flow.execution.updated"),
   },
   {
     id: "settlement",
-    name: "checkout.transaction.settlement.updated",
+    name: "flow.settlement.updated",
     tag: "Settlement",
     desc: "Fires on every state change along the settlement axis. The terminal `completed` and `failed` transitions land here — this is the production replacement for polling.",
     rawPayload: `{
-  "event": "checkout.transaction.settlement.updated",
-  "axis": "settlement",
-  "transactionId": "tx_01H8X...",
-  "previousState": "settling",
-  "newState": "completed",
-  "additionalData": {
-    "destinationAddress": "0xF1CB...",
-    "txHash": "0xa1b2..."
+  "eventName": "flow.settlement.updated",
+  "messageId": "5a2a5360-bb7e-4ea6-9bd3-0146bf2f734f",
+  "data": {
+    "axis": "settlement",
+    "flowId": "fl_01H8X...",
+    "previousState": "settling",
+    "newState": "completed",
+    "additionalData": {
+      "destinationAddress": "0xF1CB...",
+      "txHash": "0xa1b2..."
+    }
   }
 }`,
-    docsUrl: eventSchemaUrl("checkout.transaction.settlement.updated"),
+    docsUrl: eventSchemaUrl("flow.settlement.updated"),
   },
   {
     id: "risk",
-    name: "checkout.transaction.risk.updated",
+    name: "flow.risk.updated",
     tag: "Risk",
     desc: "Risk + sanctions screening result. Fires when the source wallet is attached and again when the settlement destination is evaluated. A `blocked` transition is the surface for a compliance reject.",
     rawPayload: `{
-  "event": "checkout.transaction.risk.updated",
-  "axis": "risk",
-  "transactionId": "tx_01H8X...",
-  "previousState": "unknown",
-  "newState": "cleared",
-  "additionalData": {
-    "score": 12,
-    "sanctions": []
+  "eventName": "flow.risk.updated",
+  "messageId": "5a2a5360-bb7e-4ea6-9bd3-0146bf2f734f",
+  "data": {
+    "axis": "risk",
+    "flowId": "fl_01H8X...",
+    "previousState": "unknown",
+    "newState": "cleared",
+    "additionalData": {
+      "score": 12,
+      "sanctions": []
+    }
   }
 }`,
-    docsUrl: eventSchemaUrl("checkout.transaction.risk.updated"),
+    docsUrl: eventSchemaUrl("flow.risk.updated"),
   },
 ];
 
@@ -428,23 +439,23 @@ export const CHECKOUT_EXTRAS: ScenarioExtras = {
     sub: "Paste this into your AI assistant from the root of your existing project. Encodes the full integration sequence for accepting any-crypto payments and settling to your merchant vault.",
     rawPrompt: `Integrate Dynamic Flow Checkout into this project to accept any-crypto payments and settle to a configured merchant vault address.
 
-Stack: TypeScript + Next.js (App Router) + Dynamic Checkouts SDK at v1.3.0+.
+Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK at v1.12.0+.
 
 Integration sequence:
-1. Server: mint a Flow config once via POST /environments/{envId}/checkouts using DYNAMIC_API_TOKEN. Merchant vault address goes into destinationConfig. Store the returned flowId.
-2. Client: on checkout, call createCheckoutTransaction({ checkoutId: flowId, amount, currency }) → store sessionToken.
+1. Server: create a flow via POST /server/{envId}/flow/payment using DYNAMIC_API_TOKEN (flow.write scope). Include amount, currency, settlementConfig, and destinationConfig. Store the returned flow.id.
+2. Client: pass flowId to the frontend after the buyer initiates checkout.
 3. Wallet connect: render a picker driven by getAvailableWalletProvidersData(). On selection, connectWithWalletProvider({ walletProviderKey }).
-4. Source-attach: attachCheckoutTransactionSource({ transactionId, fromAddress, fromChainId, fromChainName }). The fromChainId MUST come from the picked source token, NOT getActiveNetworkData().
-5. Quote: getCheckoutTransactionQuote({ transactionId, fromTokenAddress }). 60s TTL; on 422 "Quote has expired", re-quote and retry once.
-6. submitCheckoutTransaction({ transactionId, walletAccount }).
-7. Poll getCheckoutTransaction at 3s intervals. Success: settlementState === "completed". Failure: executionState in ["failed","expired","cancelled"] or settlementState === "failed". Surface failure.message.
-8. Webhook endpoint at /api/webhooks/dynamic. Verify x-dynamic-signature-256 (HMAC-SHA256 over raw body using DYNAMIC_WEBHOOK_SECRET). React to "settlement.completed".
+4. Source-attach: attachFlowSource({ flowId, fromAddress, fromChainId, fromChainName, sourceType: "wallet" }). fromChainId MUST come from the picked source token, NOT getActiveNetworkData(). SDK stores the session token automatically.
+5. Quote: getFlowQuote({ flowId, fromTokenAddress, fromChainId }). 60s TTL; on 422 "Quote has expired", re-quote and retry once.
+6. submitFlowTransaction({ flowId, walletAccount }).
+7. Poll getFlow({ flowId }) at 3s intervals. Success: settlementState === "completed". Failure: executionState in ["failed","expired","cancelled"] or settlementState === "failed". Surface failure.message.
+8. Webhook endpoint at /api/webhooks/dynamic. Verify x-dynamic-signature-256 (HMAC-SHA256 over raw body using DYNAMIC_WEBHOOK_SECRET). React to eventName "flow.settlement.updated" when data.newState === "completed" (use data.flowId with getFlow if you need the full record).
 
 Constraints: mainnet networks only; secrets server-side; lockfile-pinned SDK versions.
 
-Deliverables: lib/dynamic/checkout.ts, /api/checkouts POST route, /api/webhooks/dynamic POST route, tests covering the create → attach → quote → submit sequence.
+Deliverables: lib/dynamic/flow.ts, /api/flows POST route, /api/webhooks/dynamic POST route, tests covering the create → attach → quote → submit sequence.
 
-Reference: https://docs.dynamic.xyz/checkouts`,
+Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-js-sdk`,
   },
 };
 
@@ -477,23 +488,23 @@ export const DEPOSIT_EXTRAS: ScenarioExtras = {
     sub: "Scaffolds the deposit funnel for any external wallet to your platform's embedded-wallet balance. Paste into your AI assistant from your project root.",
     rawPrompt: `Integrate Dynamic Flow Deposit into this project as a funnel from external wallets to a user's platform-managed embedded wallet balance.
 
-Stack: TypeScript + Next.js (App Router) + Dynamic Checkouts SDK v1.3.0+.
+Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK v1.12.0+.
 
 Integration sequence:
 1. After user authenticates, provision their embedded wallet ONCE: createWaasWalletAccounts({ chains: ["EVM"] }) unconditionally. Don't guard on accounts.length — the SDK's accounts list is stale immediately after auth.
-2. Server: mint a Flow config per session. Set mode: "deposit", destinationConfig pointed at the user's embedded wallet address.
-3. Client: createCheckoutTransaction({ checkoutId: flowId, amount, currency }) → sessionToken.
+2. Server: create a flow via POST /server/{envId}/flow/deposit. Set destinationConfig to the user's embedded wallet address. Include amount and settlementConfig.
+3. Client: pass flowId to the frontend.
 4. External wallet: render a wallet picker. On selection, connectWithWalletProvider. THIS is the source wallet.
 5. List tokens: getBalances({ walletAccount: external, includePrices: true }) so the user picks which token to deposit.
-6. attachCheckoutTransactionSource. fromChainId from the picked token, not getActiveNetworkData.
-7. Quote + submit + poll. Same shape as Checkout (60s quote TTL; poll terminal at 3s).
-8. Webhook endpoint. React to "embedded.credited" to update UI balance and persist the credit.
+6. attachFlowSource({ flowId, fromAddress, fromChainId, fromChainName, sourceType: "wallet" }). fromChainId from the picked token, not getActiveNetworkData().
+7. Quote + submit + poll. getFlowQuote → submitFlowTransaction → poll getFlow. Same shape as Checkout (60s quote TTL; poll terminal at 3s).
+8. Webhook endpoint. React to eventName "flow.settlement.updated" when data.newState === "completed" to update UI balance and persist the credit.
 
 Constraints: mainnet only; secrets server-side; lockfile-pinned SDK versions.
 
-Deliverables: lib/dynamic/deposit.ts exposing ensureEmbeddedWallet, runDeposit, verifyWebhook. /api/checkouts POST route. /api/webhooks/dynamic POST route. Tests covering ensureEmbeddedWallet idempotency.
+Deliverables: lib/dynamic/deposit.ts exposing ensureEmbeddedWallet, runDeposit, verifyWebhook. /api/flows POST route. /api/webhooks/dynamic POST route. Tests covering ensureEmbeddedWallet idempotency.
 
-Reference: https://docs.dynamic.xyz/checkouts`,
+Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-js-sdk`,
   },
 };
 
@@ -520,23 +531,23 @@ export const WITHDRAW_EXTRAS: ScenarioExtras = {
     sub: "Scaffolds the withdraw pipeline: convert the user's platform-balance stablecoin into whatever token+chain they request, send to their external address.",
     rawPrompt: `Integrate Dynamic Flow Withdraw into this project as a pipeline from a user's platform-balance USDC to a user-specified external address (any chain, any token).
 
-Stack: TypeScript + Next.js (App Router) + Dynamic Checkouts SDK v1.3.0+.
+Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK v1.12.0+.
 
 Integration sequence:
 1. The user MUST have a platform embedded wallet. Call ensureEmbeddedWallet("EVM") at session start.
 2. Read the platform balance: getBalances({ walletAccount: embedded, networkId: 8453, forceRefresh: true }). Pin networkId or the SDK falls back to mainnet 1.
 3. UI: user picks destination (chain + token) and external address; user picks amount (cap at platform balance with a 1% safety buffer to align with quote slippage).
-4. Server: mint a per-withdraw Flow via POST /api/checkouts with { mode: "withdraw", destinationAddress, destinationChain, asset, chain }.
-5. Client: createCheckoutTransaction → sessionToken.
-6. attachCheckoutTransactionSource with the embedded wallet as the source.
-7. Quote: 60s TTL — auto-retry on 422 "Quote has expired".
-8. Submit + poll. Terminal success: settlementState === "completed". Terminal failure: executionState in ["failed","expired","cancelled"] or settlementState === "failed".
-9. Webhook endpoint. React to "settlement.completed" → update user UI. React to "bridge.failed" → refund platform balance.
+4. Server: create a per-withdraw flow via POST /server/{envId}/flow/withdraw with destinationAddress, settlementConfig, and amount.
+5. Client: pass flowId to the frontend.
+6. attachFlowSource with the embedded wallet as the source.
+7. Quote: getFlowQuote — 60s TTL, auto-retry on 422 "Quote has expired".
+8. submitFlowTransaction + poll getFlow. Terminal success: settlementState === "completed". Terminal failure: executionState in ["failed","expired","cancelled"] or settlementState === "failed".
+9. Webhook endpoint. React to eventName "flow.settlement.updated" when data.newState === "completed" → update user UI; on data.newState === "failed" → surface retry / refund path.
 
 Constraints: mainnet only; quote-expiry retry mandatory; pin networkId on getBalances; Max button safety multiplier.
 
-Deliverables: lib/dynamic/withdraw.ts, /api/checkouts POST route, /api/webhooks/dynamic POST route, hook for quote-expiry + terminal-failure surfacing.
+Deliverables: lib/dynamic/withdraw.ts, /api/flows POST route, /api/webhooks/dynamic POST route, hook for quote-expiry + terminal-failure surfacing.
 
-Reference: https://docs.dynamic.xyz/checkouts`,
+Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-api`,
   },
 };

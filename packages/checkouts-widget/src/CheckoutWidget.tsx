@@ -29,7 +29,7 @@
  *   amount="10.00"
  *   mode="payment"
  *   hideDestination
- *   verifyOnConnect={false}
+ *   verifyOnConnect
  *   onSettlementCompleted={(tx) => router.push(`/receipt/${tx.id}`)}
  * />
  * ```
@@ -69,8 +69,13 @@ export interface CheckoutWidgetProps {
   // ---------------------------------------------------------------------------
   // Payment config — passed through to <PaymentWidget />.
   // ---------------------------------------------------------------------------
-  /** Dynamic Checkout id. */
-  checkoutId: string;
+  /** Server-side Flow creation — invoked once amount is known. */
+  createFlow?: (params: {
+    amount: string;
+    currency: string;
+  }) => Promise<string>;
+  /** @deprecated Prefer `createFlow`. */
+  checkoutId?: string;
   /** Settlement token the destination receives. */
   destinationToken: Token;
   /** Destination address that receives the settlement token. */
@@ -255,6 +260,7 @@ const DEFAULT_LEGAL_LINKS: Array<{ label: string; href: string }> = [
 
 export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
   const {
+    createFlow,
     checkoutId,
     destinationToken,
     destinationAddress,
@@ -535,6 +541,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
             // machine restarts cleanly when the buyer backs out + picks
             // again.
             key={`${fromToken.chainId}-${fromToken.address || fromToken.symbol}`}
+            createFlow={createFlow}
             checkoutId={checkoutId}
             walletAccount={wallet}
             currency={currency}

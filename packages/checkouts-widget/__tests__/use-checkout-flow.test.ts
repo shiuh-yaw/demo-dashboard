@@ -77,6 +77,7 @@ describe("useCheckoutFlow.beginCheckout", () => {
     expect(cf.getQuote).toHaveBeenCalledWith({
       transactionId: "tx_1",
       fromTokenAddress: "0xtoken",
+      fromChainId: "1",
     });
     expect(begin!).toMatchObject({
       transactionId: "tx_1",

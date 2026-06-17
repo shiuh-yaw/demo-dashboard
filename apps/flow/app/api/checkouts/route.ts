@@ -1,26 +1,8 @@
 /**
- * POST /api/checkouts — mint a per-withdraw Flow Checkout.
+ * POST /api/checkouts — create a Flow server-side once amount is known.
  *
- * The withdraw flow points settlement at a user-entered external
- * address that changes per transaction, so we can't reuse one
- * pre-baked Checkout id like /checkout and /deposit do. This route
- * creates a fresh Checkout server-side (the API token is admin-scoped
- * and never goes to the client) and returns the `checkoutId` for the
- * widget to mount against.
- *
- * Request body shape (mirrors `lib/flow-snippets.ts`'s render logic so
- * the live + displayed snippets stay aligned):
- *   {
- *     destinationAddress: string;        // user's external wallet
- *     destinationChain:   "EVM" | "SOL"; // chain family of that wallet
- *     asset?:             string;        // settlement asset, default "USDC"
- *     chain?:             string;        // settlement chain, default "base"
- *     mode?:              string;        // Flow mode label, default "withdraw"
- *   }
- *
- * Auth: `DYNAMIC_API_TOKEN` — server-side env var. 503 if missing so
- * dev/test can detect misconfiguration loudly without bricking the
- * page render.
+ * Requires `amount` + `currency`. Creates via
+ * `POST /server/{envId}/flow/{mode}` (flow.write API token).
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -33,12 +15,14 @@ import {
   tokenDecimalsFor,
 } from "@/lib/flow-snippets";
 
-interface CreateCheckoutBody {
+interface CreateFlowBody {
   destinationAddress?: string;
   destinationChain?: string;
   asset?: string;
   chain?: string;
   mode?: string;
+  amount?: string;
+  currency?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -57,9 +41,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: CreateCheckoutBody;
+  let body: CreateFlowBody;
   try {
-    body = (await request.json()) as CreateCheckoutBody;
+    body = (await request.json()) as CreateFlowBody;
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON body" },
@@ -73,7 +57,16 @@ export async function POST(request: NextRequest) {
     asset = "USDC",
     chain = "base",
     mode = "withdraw",
+    amount,
+    currency = "USD",
   } = body;
+
+  if (!amount) {
+    return NextResponse.json(
+      { error: "amount is required — create the Flow after the user picks an amount" },
+      { status: 400 },
+    );
+  }
 
   if (
     destinationAddress &&
@@ -88,20 +81,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Dynamic's Checkout API only accepts `payment | deposit`. There's
-  // no "withdraw" primitive — user-to-user withdrawals are modeled as
-  // a deposit from the user's wallet into another address, so they
-  // map onto the deposit mode at the upstream boundary. Internal
-  // callers still use intent-named modes ("withdraw" / "deposit");
-  // we collapse them here.
-  const upstreamMode = mode === "withdraw" ? "deposit" : mode;
+  const flowMode =
+    mode === "withdraw" ? "withdraw" : mode === "deposit" ? "deposit" : "payment";
 
   const chainName = chainFamilyFor(chain);
   const chainIdValue = chainIdFor(chain);
-  // settlementTokenAddressFor throws on unknown (asset, chain) pairs to
-  // surface drift between UI pickers and the resolver. Convert the
-  // throw to a 400 so the widget can render a clean message instead of
-  // bubbling a 500.
+
   let tokenAddress: string;
   try {
     tokenAddress = settlementTokenAddressFor(asset, chain);
@@ -118,8 +103,8 @@ export async function POST(request: NextRequest) {
   }
   const tokenDecimals = tokenDecimalsFor(asset);
 
-  const upstream = await fetch(
-    `https://app.dynamicauth.com/api/v0/environments/${envId}/checkouts`,
+  const flowRes = await fetch(
+    `https://app.dynamic.xyz/api/v0/server/${envId}/flow/${flowMode}`,
     {
       method: "POST",
       headers: {
@@ -127,7 +112,8 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        mode: upstreamMode,
+        amount,
+        currency,
         settlementConfig: {
           strategy: "preferred_order",
           settlements: [
@@ -144,11 +130,7 @@ export async function POST(request: NextRequest) {
           destinations: [
             {
               chainName: destinationChain,
-              type: "address" as const,
-              // When no explicit destination is provided (e.g. testnet
-              // checkouts where the wallet isn't connected yet), use
-              // a placeholder. The per-transaction `destinationAddresses`
-              // in `beginCheckout` overrides this at execution time.
+              type: "address",
               identifier:
                 destinationAddress ||
                 "0x0000000000000000000000000000000000000001",
@@ -159,11 +141,9 @@ export async function POST(request: NextRequest) {
     },
   );
 
-  if (!upstream.ok) {
-    const text = await upstream.text();
-    // Surface the upstream detail in the error message so the widget
-    // can display a useful diagnostic (not just "rejected").
-    let detail = "Dynamic API rejected the Checkout creation";
+  if (!flowRes.ok) {
+    const text = await flowRes.text();
+    let detail = "Dynamic API rejected the Flow creation";
     try {
       const parsed = JSON.parse(text) as { message?: string; error?: string };
       if (parsed.message) detail = parsed.message;
@@ -171,22 +151,31 @@ export async function POST(request: NextRequest) {
     } catch {
       if (text.length > 0 && text.length < 200) detail = text;
     }
+    if (
+      (flowRes.status === 401 || flowRes.status === 403) &&
+      (detail === "Unauthorized" ||
+        detail.includes("Insufficient scope permissions"))
+    ) {
+      detail =
+        `Dynamic API token rejected for environment ${envId}. ` +
+        "Set DYNAMIC_API_TOKEN (or DYNAMIC_API_KEY) to an API key created " +
+        "in that same Dynamic environment with flow.write scope — not the " +
+        "dashboard operator env token.";
+    }
     return NextResponse.json(
-      {
-        error: detail,
-        upstream: text.slice(0, 1000),
-      },
-      { status: upstream.status },
+      { error: detail, upstream: text.slice(0, 1000) },
+      { status: flowRes.status },
     );
   }
 
-  const json = (await upstream.json()) as { id?: string };
-  if (!json?.id) {
+  const flowJson = (await flowRes.json()) as { flow?: { id?: string } };
+  const flowId = flowJson.flow?.id;
+  if (!flowId) {
     return NextResponse.json(
-      { error: "Dynamic API returned no checkout id" },
+      { error: "Dynamic API returned no flow id" },
       { status: 502 },
     );
   }
 
-  return NextResponse.json({ checkoutId: json.id });
+  return NextResponse.json({ flowId });
 }

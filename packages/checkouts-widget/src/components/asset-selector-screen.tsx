@@ -3,18 +3,11 @@
 /**
  * Asset Selector Screen
  *
- * Fetches the buyer's multichain balances via the SDK 1.4.0
- * `getBalances({ networkIds })` primitive — a flat-shape call that
- * works WITHOUT a checkout session token, transforms them into
- * `TokenAsset[]`, and renders a picker. Host apps pass the connected
- * `walletAccount`; the component handles chain discovery, network id
- * enumeration, loading skeletons, empty states, and icon fallback
- * rendering.
- *
- * The older `getMultichainBalances` path required auth and used a
- * nested response shape. 1.4.0's multichain `getBalances` is the
- * recommended primitive now — see
- * `dynamic-sdk/packages/client/src/modules/balances/getBalances/getBalances.ts`.
+ * Fetches the buyer's multichain balances via the SDK
+ * `getBalances({ networkIds })` primitive and transforms them into
+ * `TokenAsset[]`. Requires an authenticated Dynamic session — hosts
+ * should connect with `verifyOnConnect={true}` (SIWE) so the SDK can
+ * attach the JWT the balances API expects.
  *
  * @example
  * ```tsx
@@ -238,6 +231,10 @@ export default function AssetSelectorScreen({
         );
         if (cancelled) return;
 
+        const rejections = results.filter(
+          (r): r is PromiseRejectedResult => r.status === "rejected",
+        );
+
         // Merge all successful results; de-dup by chainId+address.
         const merged = new Map<string, TokenAsset>();
         for (const result of results) {
@@ -249,6 +246,18 @@ export default function AssetSelectorScreen({
             }
           }
         }
+
+        if (merged.size === 0 && rejections.length > 0) {
+          const first = rejections[0]?.reason;
+          setError(
+            first instanceof Error
+              ? first.message
+              : "Failed to load balances",
+          );
+          setTokens([]);
+          return;
+        }
+
         setTokens(Array.from(merged.values()));
       } catch (err) {
         if (!cancelled) {

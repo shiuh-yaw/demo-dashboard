@@ -80,7 +80,7 @@ export function WebhooksIntroNotice() {
     <PanelNotice eyebrow="Webhooks" eyebrowSuffix="push-driven settlement">
       Configure a webhook URL in your Dynamic dashboard and Dynamic POSTs each
       axis transition as it happens — the production replacement for the polling
-      loop in step 06.
+      loop in step 05.
     </PanelNotice>
   );
 }

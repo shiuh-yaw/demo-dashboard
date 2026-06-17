@@ -4,7 +4,7 @@
  * Dynamic Checkout Flow lifecycle hook.
  *
  * Owns the create → attach → quote → submit → events → cancel lifecycle of a
- * single checkout transaction. Produces ExecutionUpdate payloads in the same
+ * single Flow (legacy name: checkout transaction). Produces ExecutionUpdate
  * shape the existing payment-widget UI already consumes, so the screens and
  * step animations are unchanged.
  *
@@ -49,7 +49,15 @@ const delay = (ms: number): Promise<void> =>
 export interface BeginCheckoutParams {
   amount: string;
   currency: string;
-  /** Dynamic Checkout id (provisioned via the Dynamic REST API). Required by the backend even though the SDK type marks it optional. */
+  /**
+   * Server-side Flow creation. Called at the start of `beginCheckout`
+   * once amount is known. Must return the new `flowId`.
+   */
+  createFlow?: (params: {
+    amount: string;
+    currency: string;
+  }) => Promise<string>;
+  /** @deprecated Prefer {@link BeginCheckoutParams.createFlow}. Reusable Checkout config + client create. */
   checkoutId?: string;
   /**
    * Per-transaction destination override. Omit to fall back to the
@@ -93,7 +101,7 @@ export interface UseCheckoutFlowOptions {
    *  in-flight transactions don't bleed across environments. */
   storageNamespace?: string;
   /**
-   * Slippage tolerance forwarded to `getCheckoutTransactionQuote` on
+   * Slippage tolerance forwarded to `getFlowQuote` on
    * every quote request (initial, quote-expired retry, and manual
    * refresh). Expressed as a decimal — `0.02` = 2%. Omit to let the
    * SDK apply its default.
@@ -143,6 +151,8 @@ export function useCheckoutFlow(
 
   const sessionTokenRef = useRef<string | null>(null);
   const currentStepIndexRef = useRef(0);
+  /** Source chain id from the last beginCheckout — used when re-quoting. */
+  const sourceChainIdRef = useRef<string | null>(null);
 
   // Per-namespace localStorage for the in-flight transactionId. Reloading the
   // widget restores the existing transaction via getCheckoutTransaction.
@@ -181,16 +191,27 @@ export function useCheckoutFlow(
       setError(null);
       setIsLoading(true);
       try {
-        const created: CheckoutTransactionCreateResponse =
-          await createTransaction({
+        let txId: string;
+
+        if (params.createFlow) {
+          txId = await params.createFlow({
             amount: params.amount,
             currency: params.currency,
-            checkoutId: params.checkoutId,
-            destinationAddresses: params.destinationAddresses,
-            memo: params.memo,
           });
-        sessionTokenRef.current = created.sessionToken;
-        const txId = created.transaction.id;
+        } else {
+          const created: CheckoutTransactionCreateResponse =
+            await createTransaction({
+              amount: params.amount,
+              currency: params.currency,
+              checkoutId: params.checkoutId,
+              destinationAddresses: params.destinationAddresses,
+              memo: params.memo,
+            });
+          sessionTokenRef.current = created.sessionToken;
+          txId = created.transaction.id;
+        }
+
+        sourceChainIdRef.current = params.source.fromChainId;
         setTransactionId(txId);
         storage.set({ transactionId: txId });
 
@@ -204,6 +225,7 @@ export function useCheckoutFlow(
         const quoted = await getQuote({
           transactionId: txId,
           fromTokenAddress: params.fromTokenAddress,
+          fromChainId: params.source.fromChainId,
           ...(slippage !== undefined ? { slippage } : {}),
         });
         setQuote(quoted);
@@ -320,6 +342,7 @@ export function useCheckoutFlow(
           const fresh = await getQuote({
             transactionId: txId,
             fromTokenAddress,
+            fromChainId: sourceChainIdRef.current ?? undefined,
             ...(slippage !== undefined ? { slippage } : {}),
           });
           setQuote(fresh);
@@ -423,6 +446,7 @@ export function useCheckoutFlow(
         const fresh = await getQuote({
           transactionId,
           fromTokenAddress,
+          fromChainId: sourceChainIdRef.current ?? undefined,
           ...(slippage !== undefined ? { slippage } : {}),
         });
         setQuote(fresh);
@@ -452,6 +476,7 @@ export function useCheckoutFlow(
     setError(null);
     setIsLoading(false);
     sessionTokenRef.current = null;
+    sourceChainIdRef.current = null;
     storage.clear();
   }, [storage]);
 

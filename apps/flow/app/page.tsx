@@ -153,7 +153,7 @@ function BuildPathsSection() {
         "Same primitives as the API, with less plumbing",
       ],
       docHref:
-        "https://www.dynamic.xyz/docs/javascript/reference/client/checkout-flow",
+        "https://www.dynamic.xyz/docs/javascript/reference/flow-getting-started",
       docLabel: "Read the SDK reference",
     },
     {

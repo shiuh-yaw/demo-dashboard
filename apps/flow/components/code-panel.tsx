@@ -3,8 +3,8 @@
 /**
  * Right-rail panel on every scenario page. Four sibling tabs:
  *
- *   - SDK      : the 6-step integration in TypeScript form
- *   - API      : the same 6 steps as `curl` snippets
+ *   - SDK      : the 5-step integration in TypeScript form
+ *   - API      : the same 5 steps as `curl` snippets
  *   - Webhooks : verified-handler reference + per-axis event payloads
  *   - Helpers  : standalone Dynamic SDK calls (auth, picker, balances)
  *
@@ -52,13 +52,6 @@ const HASH_TO_TAB: Record<string, string> = {
   exchange: "helpers",
 };
 
-function getInitialTab(): string {
-  if (typeof window === "undefined") return "sdk";
-  const hash = window.location.hash.replace("#", "").toLowerCase();
-  return HASH_TO_TAB[hash] ?? "sdk";
-}
-
-/** Update the URL hash without a full navigation. */
 function setHash(hash: string) {
   if (typeof window === "undefined") return;
   window.history.replaceState(null, "", `#${hash}`);
@@ -99,7 +92,15 @@ export function CodePanel({
   webhookDocsUrl,
 }: CodePanelProps) {
   const [aiOpen, setAiOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(getInitialTab);
+  const [activeTab, setActiveTab] = useState("sdk");
+
+  // Hash deep-links (#sdk, #webhooks, …) must be read after mount so the
+  // server and client agree on the initial tab ("sdk") during hydration.
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "").toLowerCase();
+    const tab = HASH_TO_TAB[hash];
+    if (tab) setActiveTab(tab);
+  }, []);
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
