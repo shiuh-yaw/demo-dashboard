@@ -8,7 +8,7 @@
  *   form        → DestinationForm           (external address + amount)
  *   pay         → PaymentWidget             (creates Flow at review, then sign + settle)
  *
- * Source asset is always USDC@Base (the platform anchor); the
+ * Source asset is always USDC@Solana (the platform anchor); the
  * embedded wallet only holds USDC, so the asset picker is intentionally
  * omitted.
  */
@@ -28,7 +28,7 @@ import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
 import {
   CHAIN_OPTIONS,
   SETTLEMENT_OPTIONS,
-  USDC_ON_BASE,
+  USDC_ON_SOLANA,
   type SettlementOption,
 } from "../settlement-options";
 import { SubFlowHeader } from "./sub-flow-chrome";
@@ -141,7 +141,7 @@ export function WithdrawSubFlow({
           onSubmit={(values) => {
             setDestination(values.address);
             setAmount(values.amount);
-            setFromToken(USDC_ON_BASE);
+            setFromToken(USDC_ON_SOLANA);
           }}
         />
       </div>

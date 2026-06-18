@@ -118,6 +118,12 @@ import { PaymentWidget } from "@dynamic-demos/checkouts-widget";
 - Don't add a `<DynamicProvider>` inside the package — the host owns Dynamic client init.
 - Don't treat the WalletConnect `uri` as a completed connection — it only renders the QR. The SDK's `connect*WithWalletConnect*` functions return `{ uri, approval }`; you MUST await `approval()`, which resolves once the buyer scans + approves and is the only thing that creates the Dynamic wallet account and emits `walletAccountsChanged`. `WalletPickerScreen` owns this; dropping `approval()` regresses to "scan QR → nothing happens".
 
+## Cross-chain EVM→SOL approval handling
+
+Cross-chain EVM→Solana bridges (e.g. Base USDC → Solana USDC via LiFi/Across) require an on-chain ERC-20 approval on the source EVM chain before the bridge transaction can execute. The Dynamic SDK's `evmExecuteSwapTransaction` emits `onStepChange("approval")` then `onStepChange("transaction")` for these flows — same as single-chain swaps.
+
+The `needsApproval` flag in `PaymentWidget.handleReviewConfirm` controls whether the UI generates an "Approve token" step. It must be `true` whenever the source chain is EVM and a conversion is needed, regardless of whether the flow is cross-chain. The correct test is `needsConversion && !isSolanaChainId(fromToken.chainId)`. Using `!isCrossChain` instead incorrectly skips the approval step for cross-chain EVM→SOL flows, causing a `totalSteps` mismatch that stalls the processing UI after the spending-cap approval.
+
 ## Open questions / known gaps
 
 - A `WidgetMode` type is inline-duplicated in `review-payment-screen.tsx` and `transaction-progress-screen.tsx`. Consolidate to `src/lib/types.ts` in a follow-up.

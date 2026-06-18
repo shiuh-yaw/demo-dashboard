@@ -2,7 +2,7 @@
 
 /**
  * Deposit sub-flow inside the withdraw demo's platform shell —
- * bridges funds INTO the embedded EVM wallet on Base.
+ * bridges funds INTO the embedded SOL wallet.
  *
  * Flow is created server-side when the user reaches review (amount known),
  * via `createFlow` passed to CheckoutWidget — not on mount.
@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { CheckoutWidget } from "@dynamic-demos/checkouts-widget";
 import { bindCreateFlow } from "@/lib/bind-create-flow";
 import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
-import { USDC_ON_BASE } from "../settlement-options";
+import { USDC_ON_SOLANA } from "../settlement-options";
 
 export function DepositSubFlow({
   sourceWalletAccount,
@@ -28,9 +28,9 @@ export function DepositSubFlow({
       bindCreateFlow({
         mode: "deposit",
         destinationAddress,
-        destinationChain: "EVM",
+        destinationChain: "SOL",
         asset: "USDC",
-        chain: "base",
+        chain: "solana",
       }),
     [destinationAddress],
   );
@@ -39,9 +39,9 @@ export function DepositSubFlow({
     <CheckoutWidget
       walletAccount={sourceWalletAccount ?? undefined}
       createFlow={createFlow}
-      destinationToken={USDC_ON_BASE}
+      destinationToken={USDC_ON_SOLANA}
       destinationAddress={destinationAddress}
-      destinationChain="EVM"
+      destinationChain="SOL"
       currency="USD"
       mode="deposit"
       amountFirst

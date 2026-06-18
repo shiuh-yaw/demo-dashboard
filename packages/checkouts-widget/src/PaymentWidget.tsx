@@ -357,7 +357,12 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
       }
     }
 
-    const needsApproval = needsConversion && !isCrossChain;
+    // Cross-chain EVM→SOL bridges (e.g. USDC on Base → USDC on Solana via
+    // LiFi) still require an on-chain ERC-20 approval on the source chain.
+    // The previous `!isCrossChain` guard wrongly skipped the approval step
+    // for cross-chain flows, causing a totalSteps mismatch when the SDK
+    // emitted onStepChange("approval").
+    const needsApproval = needsConversion && !isSolanaChainId(fromToken.chainId);
     const initialSteps = generateTransactionSteps(
       mode,
       needsApproval,

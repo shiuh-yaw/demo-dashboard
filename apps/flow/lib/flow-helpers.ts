@@ -238,10 +238,16 @@ export const WEBHOOK_EVENTS: readonly WebhookEventDef[] = [
 // (six on withdraw) in parallel with the existing stepper highlights.
 // =============================================================================
 
-const CREATE_WAAS_CODE = `import { createWaasWalletAccounts } from "@dynamic-labs-sdk/client/waas";
+const CREATE_WAAS_EVM_CODE = `import { createWaasWalletAccounts } from "@dynamic-labs-sdk/client/waas";
 
 await createWaasWalletAccounts({
   chains: ["EVM"],
+});`;
+
+const CREATE_WAAS_SOL_CODE = `import { createWaasWalletAccounts } from "@dynamic-labs-sdk/client/waas";
+
+await createWaasWalletAccounts({
+  chains: ["SOL"],
 });`;
 
 const WALLET_PROVIDERS_CODE = `import { getAvailableWalletProvidersData } from "@dynamic-labs-sdk/client";
@@ -271,7 +277,7 @@ const GET_BALANCES_WITHDRAW_CODE = `import { getBalances } from "@dynamic-labs-s
 
 const bal = await getBalances({
   walletAccount: embedded,
-  networkId: 8453,
+  networkId: 101, // Solana mainnet
   forceRefresh: true,
 });`;
 
@@ -280,12 +286,22 @@ const bal = await getBalances({
 // The fourth (`getBalances`) varies only on /withdraw.
 // =============================================================================
 
-const SHARED_CREATE_WAAS: HelperDef = {
+const SHARED_CREATE_WAAS_EVM: HelperDef = {
   id: "createWaasWalletAccounts",
   sig: ["createWaasWalletAccounts", "({ chains })"],
   tag: "Embedded",
   desc: "Provisions an embedded WaaS wallet for users who don't bring their own. Call once per user after authentication; the SDK is a no-op if the wallet already exists on the chosen chain.",
-  rawCode: CREATE_WAAS_CODE,
+  rawCode: CREATE_WAAS_EVM_CODE,
+  docsUrl:
+    "https://www.dynamic.xyz/docs/javascript/reference/waas/creating-waas-wallet-accounts",
+};
+
+const SHARED_CREATE_WAAS_SOL: HelperDef = {
+  id: "createWaasWalletAccounts",
+  sig: ["createWaasWalletAccounts", "({ chains })"],
+  tag: "Embedded",
+  desc: "Provisions an embedded SOL WaaS wallet — the platform anchor for withdraw. Call once per user after authentication; the SDK is a no-op if the wallet already exists.",
+  rawCode: CREATE_WAAS_SOL_CODE,
   docsUrl:
     "https://www.dynamic.xyz/docs/javascript/reference/waas/creating-waas-wallet-accounts",
 };
@@ -510,7 +526,7 @@ Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-js-sdk`,
 
 export const WITHDRAW_EXTRAS: ScenarioExtras = {
   helpers: [
-    SHARED_CREATE_WAAS,
+    SHARED_CREATE_WAAS_SOL,
     SHARED_WALLET_PROVIDERS,
     SHARED_WC_CATALOG,
     {
@@ -534,8 +550,8 @@ export const WITHDRAW_EXTRAS: ScenarioExtras = {
 Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK v1.12.0+.
 
 Integration sequence:
-1. The user MUST have a platform embedded wallet. Call ensureEmbeddedWallet("EVM") at session start.
-2. Read the platform balance: getBalances({ walletAccount: embedded, networkId: 8453, forceRefresh: true }). Pin networkId or the SDK falls back to mainnet 1.
+1. The user MUST have a platform embedded wallet. Call ensureEmbeddedWallet("SOL") at session start.
+2. Read the platform balance: getBalances({ walletAccount: embedded, networkId: 101, forceRefresh: true }). Pin networkId to Solana mainnet (101).
 3. UI: user picks destination (chain + token) and external address; user picks amount (cap at platform balance with a 1% safety buffer to align with quote slippage).
 4. Server: create a per-withdraw flow via POST /server/{envId}/flow/withdraw with destinationAddress, settlementConfig, and amount.
 5. Client: pass flowId to the frontend.

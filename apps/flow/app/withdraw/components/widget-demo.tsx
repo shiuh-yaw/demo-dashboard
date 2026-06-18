@@ -8,12 +8,12 @@
  * dashboard / deposit / withdraw sub-flows.
  *
  * Narrative:
- *   1. User connects once (Dynamic provisions an embedded EVM WaaS
- *      wallet on Base via SIWE).
+ *   1. User connects once (Dynamic provisions an embedded SOL WaaS
+ *      wallet via SIWE).
  *   2. They land on a platform-style dashboard showing aggregate USDC
  *      balance, with Deposit + Withdraw actions.
  *   3. Deposit bridges any source asset on any chain INTO the embedded
- *      wallet as USDC@Base. Withdraw routes the platform USDC out to
+ *      wallet as USDC@Solana. Withdraw routes the platform USDC out to
  *      any external wallet on any (chain, token) pair.
  *
  * Flows are created server-side at review time (`POST /api/checkouts`)

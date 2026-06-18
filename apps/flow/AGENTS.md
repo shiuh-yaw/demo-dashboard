@@ -28,7 +28,7 @@ Experimental V1. Implemented today:
 - ✅ Public landing (hero + chat input + scenario chips + CSS-driven event ticker + scroll-pinned persona sections)
 - ✅ Checkout scenario (Pitch + provisional Code view) — full Flow SDK lifecycle: server create → `attachFlowSource` → `getFlowQuote` → `submitFlowTransaction` → poll
 - ✅ Deposit scenario (same machinery, user-input amount framing)
-- ✅ Withdraw placeholder (full vault/intent/webhook orchestration shipped in follow-up PR)
+- ✅ Withdraw scenario — SOL embedded wallet (USDC@Solana anchor), settlement picker (chain → token), destination form, deferred Flow creation at review time
 - ✅ Fireblocks + Dynamic brand chrome, light + dark mode, no-FOUC init script
 
 Coming in follow-up PRs:
@@ -36,7 +36,7 @@ Coming in follow-up PRs:
 - 🔜 Phase 6: FlowBuilder + LivePreview + EventLog + CodePanel (shiki-rendered TS/cURL/Droplet tabs)
 - 🔜 Phase 7: Chat-to-flow (`@anthropic-ai/sdk@0.71.2` with prompt caching → IntentCard)
 - 🔜 Phase 9: Brand theme switcher (Postgres `Brand` rows)
-- 🔜 Phase 10: Withdraw scenario (`WithdrawIntent` Prisma model + EIP-712 + FB webhook)
+- 🔜 Phase 10: WithdrawIntent Prisma model + webhook for vault-mediated withdrawals
 
 ## Exchange connector support
 
@@ -88,7 +88,7 @@ Always consult the upstream docs before changing Flow wiring:
 | `/` | Landing — hero, scenario tiles, persona scroll story | Public |
 | `/checkout?id=<cfg>` | Merchant checkout scenario (Pitch ↔ Code) | Public (auth-on-action) |
 | `/deposit?id=<cfg>` | Platform deposit scenario | Public (auth-on-action) |
-| `/withdraw?id=<cfg>` | Withdraw — placeholder until Phase 10 | Public |
+| `/withdraw?id=<cfg>` | Withdraw — SOL embedded wallet → any chain/token | Public (auth-on-action) |
 | `/api/withdraws/[id]` | Withdraw intent state (Phase 10) | Auth-required |
 
 ## Env reference
@@ -116,6 +116,6 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 - **Dynamic destination address** (both `app/checkout/widget-demo.tsx` and `app/deposit/widget-demo.tsx`): the destination is the connected wallet's own address — resolved at runtime via the `onWalletConnected` callback from `CheckoutWidget`. In the exchange (OAuth) flow no crypto wallet is connected, so `exchangeDestinationAddress` is passed as `undefined` and the `ExchangeCheckoutWidget` guards against empty destinations before executing the transfer. In production, the exchange path destination would be the user's provisioned embedded wallet.
 - **Wallet selection is explicit** — both `/deposit` and `/checkout` pass `skipAutoConnect` to `CheckoutWidget` so the widget always starts at the wallet picker, even if a wallet (e.g. an embedded wallet from the withdraw flow) is already connected in the Dynamic SDK. A disconnect button (X icon) next to the address pill lets the user clear the selected wallet and return to the picker; the host `onDisconnect` callback calls `logout()` to clear SDK-level wallet state.
 - **Multi-chain wallet selection** — `WalletPickerScreen` requires `selectedWalletForChain` + `onChainSelectChange` props for multi-chain wallets (e.g. Phantom EVM + SOL) to work. Without these props, clicking a multi-chain wallet is a silent no-op. All hosts that mount `WalletPickerScreen` directly (including `/withdraw`'s `PlatformShell`) must manage chain-selection state and pass both props, plus render a chain-select header with a back button when `selectedWalletForChain` is set.
-- **Withdraw via Fireblocks vault** does NOT use EIP-7702 / NCW — it uses a plain EIP-712 typed-data intent signed by the user's embedded wallet (Dynamic SDK). NCW is deprecated in this project; see project memory `project_no_fireblocks_ncw`.
+- **Withdraw embedded wallet is Solana** — `ensureSolEmbeddedWallet()` provisions a SOL WaaS wallet; balances are fetched with `networkId: 101` (`DYNAMIC_SOLANA_NETWORK_ID`). The platform anchor is `USDC_ON_SOLANA` from `settlement-options.ts`. Do NOT switch to EVM/Base without updating all withdraw components (deposit-subflow, withdraw-subflow, dashboard, use-embedded-wallet-balances, flow-config defaults) — see `withdraw-wallet-anchor.test.ts` for the regression guard.
 - **Reuse `@dynamic-demos/checkouts-widget`** for any wallet-source payment flow surface; `apps/shop/lib/checkout-sdk.ts` (in production via `apps/spark26`) remains the reference for the SDK wrapper shape itself.
 - **`@dynamic-labs-sdk/evm@0.25.0` registry workaround**: the lockfile pins a `tarball: https://registry.npmjs.org/...` URL for this one package because the JFrog mirror's cached copy has a different integrity hash than npmjs.org's immutable upstream. Drop the override once the JFrog mirror is repaired (clear + re-mirror that package on JFrog).

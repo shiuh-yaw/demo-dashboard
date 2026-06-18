@@ -84,9 +84,9 @@ export const CHAIN_OPTIONS: Array<{
 }));
 
 /**
- * USDC on Base — the active default for the platform embedded
+ * USDC on Solana — the active default for the platform embedded
  * wallet (deposit destination, withdraw source, Dashboard balance
  * asset). Re-exported from the canonical `lib/tokens.ts` catalog
  * so existing consumers keep working.
  */
-export { USDC_BASE as USDC_ON_BASE };
+export { USDC_SOLANA as USDC_ON_SOLANA };

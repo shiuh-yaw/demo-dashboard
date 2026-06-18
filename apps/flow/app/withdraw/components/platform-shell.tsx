@@ -16,10 +16,10 @@
  *
  * Two wallet identities are tracked across the session:
  *
- *   wallet (embedded EVM WaaS on Base) — "platform wallet" identity
- *     surfaced on the dashboard. WithdrawSubFlow uses this as its
- *     source. DepositSubFlow uses its ADDRESS as the destination for
- *     incoming funds.
+ *   wallet (embedded SOL WaaS) — "platform wallet" identity surfaced
+ *     on the dashboard. WithdrawSubFlow uses this as its source.
+ *     DepositSubFlow uses its ADDRESS as the destination for incoming
+ *     funds.
  *
  *   externalWallet (Phantom/MetaMask/Fireblocks/etc.) — the wallet
  *     the user signed in through. DepositSubFlow uses this as the
@@ -34,7 +34,7 @@ import { WalletPickerScreen, type WalletGroup } from "@dynamic-demos/checkouts-w
 import { Button, WidgetCard } from "@dynamic-demos/ui";
 import { BackButton } from "@/components/back-button";
 import {
-  ensureEvmEmbeddedWallet,
+  ensureSolEmbeddedWallet,
   getPrimaryWalletAccount,
   isSignedIn,
   logout,
@@ -108,7 +108,7 @@ export function PlatformShell({ onBack }: { onBack: () => void }) {
     setProvisioning(true);
     setProvisionError(null);
     try {
-      setWallet(await ensureEvmEmbeddedWallet());
+      setWallet(await ensureSolEmbeddedWallet());
     } catch (e) {
       setProvisionError(
         e instanceof Error
