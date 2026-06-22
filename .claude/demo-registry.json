@@ -534,6 +534,20 @@
       }
     },
     {
+      "name": "@dynamic-demos/sumsub",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "experimental",
+      "provider": {
+        "name": "SumSub",
+        "docs": "https://docs.sumsub.com/",
+        "api_reference": "https://api.sumsub.com/openapi.json",
+        "agent_docs": "https://docs.sumsub.com/llms.txt",
+        "status_page": "none"
+      }
+    },
+    {
       "name": "@dynamic-demos/theme",
       "kind": "package",
       "flow_role": "theming",

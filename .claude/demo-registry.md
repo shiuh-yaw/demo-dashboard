@@ -73,6 +73,7 @@
 | `db` | — | n/a | stable |
 | `fireblocks` | Fireblocks | custodial | stable |
 | `polymarket` | Polymarket | n/a | stable |
+| `sumsub` | SumSub | n/a | experimental |
 | `transactions` | — | n/a | stable |
 | `types` | — | n/a | stable |
 | `utils` | — | n/a | stable |
