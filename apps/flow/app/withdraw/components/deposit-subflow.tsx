@@ -11,6 +11,7 @@
 import { useMemo } from "react";
 import { CheckoutWidget } from "@dynamic-demos/checkouts-widget";
 import { bindCreateFlow } from "@/lib/bind-create-flow";
+import { settlementFromToken, destination } from "@/lib/checkouts-api";
 import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
 import { USDC_ON_SOLANA } from "../settlement-options";
 
@@ -27,10 +28,12 @@ export function DepositSubFlow({
     () =>
       bindCreateFlow({
         mode: "deposit",
-        destinationAddress,
-        destinationChain: "SOL",
-        asset: "USDC",
-        chain: "solana",
+        settlementConfig: {
+          settlements: [settlementFromToken(USDC_ON_SOLANA, "SOL")],
+        },
+        destinationConfig: {
+          destinations: [destination("SOL", destinationAddress)],
+        },
       }),
     [destinationAddress],
   );

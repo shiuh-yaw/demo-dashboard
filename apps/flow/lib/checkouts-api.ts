@@ -6,16 +6,31 @@
  */
 export const DYNAMIC_DESTINATION_ADDRESS_PATTERN = /^[A-Za-z0-9_]{18,100}$/;
 
+export interface Settlement {
+  chainName: string;
+  chainId: string;
+  symbol: string;
+  tokenAddress: string;
+  tokenDecimals: number;
+}
+
+export interface Destination {
+  chainName: string;
+  type: string;
+  identifier: string;
+}
+
 export interface CreateFlowInput {
   mode: "payment" | "deposit" | "withdraw";
   amount: string;
   currency: string;
-  destinationAddress: string;
-  destinationChain: "EVM" | "SOL";
-  /** Settlement asset symbol — defaults to "USDC" if omitted. */
-  asset?: string;
-  /** Settlement chain key — defaults to "base". Must match `chainIdFor` in flow-snippets. */
-  chain?: string;
+  settlementConfig: {
+    strategy?: string;
+    settlements: Settlement[];
+  };
+  destinationConfig: {
+    destinations: Destination[];
+  };
 }
 
 /**
@@ -46,19 +61,24 @@ export async function createFlow(input: CreateFlowInput): Promise<string> {
   return json.flowId;
 }
 
-/** @deprecated Use {@link createFlow}. */
-export const createDestinationCheckout = async (
-  input: Omit<CreateFlowInput, "amount" | "currency"> & {
-    amount?: string;
-    currency?: string;
-  },
-): Promise<string> => {
-  if (!input.amount) {
-    throw new Error("createFlow requires amount — mint after the user picks an amount");
-  }
-  return createFlow({
-    ...input,
-    amount: input.amount,
-    currency: input.currency ?? "USD",
-  });
-};
+/** Build a `Settlement` entry from a Token + chain family name. */
+export function settlementFromToken(
+  token: { address: string; chainId: number; symbol: string; decimals: number },
+  chainName: string,
+): Settlement {
+  return {
+    chainName,
+    chainId: String(token.chainId),
+    symbol: token.symbol,
+    tokenAddress: token.address,
+    tokenDecimals: token.decimals,
+  };
+}
+
+/** Build a `Destination` entry. */
+export function destination(
+  chainName: string,
+  identifier: string,
+): Destination {
+  return { chainName, type: "address", identifier };
+}

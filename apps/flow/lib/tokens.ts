@@ -187,3 +187,19 @@ export function findTokenByAssetChain(
     ) ?? null
   );
 }
+
+/**
+ * Map a numeric chain ID to the Dynamic Flow API's chain family name.
+ * Not limited to EVM/SOL — extend the map as new chain families
+ * (e.g. TRON) are added to the Dynamic platform.
+ */
+const CHAIN_ID_TO_FAMILY: Record<number, string> = {
+  // Solana
+  101: "SOL",
+  // TRON — placeholder for when TRON settlement is enabled.
+  // 728126428: "TRON",
+};
+
+export function chainFamilyForId(chainId: number): string {
+  return CHAIN_ID_TO_FAMILY[chainId] ?? "EVM";
+}

@@ -3,26 +3,44 @@
  *
  * Requires `amount` + `currency`. Creates via
  * `POST /server/{envId}/flow/{mode}` (flow.write API token).
+ *
+ * Accepts settlement + destination config in the same shape the
+ * Dynamic Flow API expects — callers pass `settlementConfig` and
+ * `destinationConfig` directly so new chains (TRON, etc.) work
+ * without route changes.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 import { DYNAMIC_DESTINATION_ADDRESS_PATTERN } from "@/lib/checkouts-api";
-import {
-  chainFamilyFor,
-  chainIdFor,
-  settlementTokenAddressFor,
-  tokenDecimalsFor,
-} from "@/lib/flow-snippets";
+
+interface Settlement {
+  chainName: string;
+  chainId: string;
+  symbol: string;
+  tokenAddress: string;
+  tokenDecimals: number;
+}
+
+interface Destination {
+  chainName: string;
+  type: string;
+  identifier: string;
+}
 
 interface CreateFlowBody {
-  destinationAddress?: string;
-  destinationChain?: string;
-  asset?: string;
-  chain?: string;
   mode?: string;
   amount?: string;
   currency?: string;
+  /** Settlement config — passed through to the Dynamic Flow API. */
+  settlementConfig?: {
+    strategy?: string;
+    settlements?: Settlement[];
+  };
+  /** Destination config — passed through to the Dynamic Flow API. */
+  destinationConfig?: {
+    destinations?: Destination[];
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -52,13 +70,11 @@ export async function POST(request: NextRequest) {
   }
 
   const {
-    destinationAddress,
-    destinationChain = "EVM",
-    asset = "USDC",
-    chain = "base",
     mode = "withdraw",
     amount,
     currency = "USD",
+    settlementConfig,
+    destinationConfig,
   } = body;
 
   if (!amount) {
@@ -68,40 +84,37 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (
-    destinationAddress &&
-    !DYNAMIC_DESTINATION_ADDRESS_PATTERN.test(destinationAddress)
-  ) {
+  if (!settlementConfig?.settlements?.length) {
     return NextResponse.json(
-      {
-        error:
-          "destinationAddress must match ^[A-Za-z0-9_]{18,100}$",
-      },
+      { error: "settlementConfig.settlements is required" },
       { status: 400 },
     );
+  }
+
+  if (!destinationConfig?.destinations?.length) {
+    return NextResponse.json(
+      { error: "destinationConfig.destinations is required" },
+      { status: 400 },
+    );
+  }
+
+  for (const dest of destinationConfig.destinations) {
+    if (
+      dest.identifier &&
+      !DYNAMIC_DESTINATION_ADDRESS_PATTERN.test(dest.identifier)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            `destinationAddress "${dest.identifier}" must match ^[A-Za-z0-9_]{18,100}$`,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const flowMode =
     mode === "withdraw" ? "withdraw" : mode === "deposit" ? "deposit" : "payment";
-
-  const chainName = chainFamilyFor(chain);
-  const chainIdValue = chainIdFor(chain);
-
-  let tokenAddress: string;
-  try {
-    tokenAddress = settlementTokenAddressFor(asset, chain);
-  } catch (err) {
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : `Unknown settlement pair asset="${asset}" chain="${chain}"`,
-      },
-      { status: 400 },
-    );
-  }
-  const tokenDecimals = tokenDecimalsFor(asset);
 
   const flowRes = await fetch(
     `https://app.dynamic.xyz/api/v0/server/${envId}/flow/${flowMode}`,
@@ -115,28 +128,10 @@ export async function POST(request: NextRequest) {
         amount,
         currency,
         settlementConfig: {
-          strategy: "preferred_order",
-          settlements: [
-            {
-              chainName,
-              chainId: chainIdValue,
-              symbol: asset,
-              tokenAddress,
-              tokenDecimals,
-            },
-          ],
+          strategy: settlementConfig.strategy ?? "preferred_order",
+          settlements: settlementConfig.settlements,
         },
-        destinationConfig: {
-          destinations: [
-            {
-              chainName: destinationChain,
-              type: "address",
-              identifier:
-                destinationAddress ||
-                "0x0000000000000000000000000000000000000001",
-            },
-          ],
-        },
+        destinationConfig,
       }),
     },
   );

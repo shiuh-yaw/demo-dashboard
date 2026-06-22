@@ -14,9 +14,9 @@ import { BackButton } from "@/components/back-button";
 import { ExchangeCheckoutWidget } from "@/components/exchange-checkout-widget";
 import { ScenarioCard } from "@/components/scenario-card";
 import { useTestnetMode } from "@/components/testnet-toggle";
-import { USDC_BASE, USDC_ARB_SEPOLIA } from "@/lib/tokens";
+import { USDC_BASE, USDC_ARB_SEPOLIA, USDC_SOLANA, chainFamilyForId } from "@/lib/tokens";
 import { isTestnetSupportedToken } from "@/lib/testnet";
-import { createFlow } from "@/lib/checkouts-api";
+import { createFlow, settlementFromToken, destination } from "@/lib/checkouts-api";
 import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import { TicketIllustration } from "./ticket-illustration";
 import { hasPendingExchangeRedirect } from "@/lib/exchanges";
@@ -69,7 +69,22 @@ function WidgetStage({
   isTestnet: boolean;
 }) {
   const [walletAddress, setWalletAddress] = useState("");
-  const settlementChain = isTestnet ? "arb-sepolia" : "base";
+  const [walletChain, setWalletChain] = useState("EVM");
+
+  // Resolve settlement token from wallet chain.
+  // Testnet: always Arb Sepolia. Mainnet: match the wallet's chain.
+  const settlementToken = isTestnet
+    ? USDC_ARB_SEPOLIA
+    : walletChain === "SOL"
+      ? USDC_SOLANA
+      : USDC_BASE;
+  // Testnet forces EVM (arb-sepolia); mainnet uses the wallet's chain.
+  const destinationChainName = isTestnet ? "EVM" : walletChain;
+
+  const handleWalletConnected = useCallback((address: string, chain: string) => {
+    setWalletAddress(address);
+    setWalletChain(chain);
+  }, []);
 
   const createFlowCallback = useCallback(
     ({ amount, currency }: { amount: string; currency: string }) => {
@@ -82,13 +97,19 @@ function WidgetStage({
         mode: "payment",
         amount,
         currency,
-        destinationAddress: walletAddress,
-        destinationChain: "EVM",
-        asset: "USDC",
-        chain: settlementChain,
+        settlementConfig: {
+          settlements: [
+            settlementFromToken(settlementToken, chainFamilyForId(settlementToken.chainId)),
+          ],
+        },
+        destinationConfig: {
+          destinations: [
+            destination(destinationChainName, walletAddress),
+          ],
+        },
       });
     },
-    [walletAddress, settlementChain],
+    [walletAddress, destinationChainName, settlementToken],
   );
 
   const tokenFilter = useCallback(
@@ -99,11 +120,9 @@ function WidgetStage({
     [isTestnet],
   );
 
-  const effectiveDestinationToken = isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE;
-  const effectiveSettlementChainId = isTestnet ? 421614 : 8453;
-
   const handleDisconnect = useCallback(() => {
     setWalletAddress("");
+    setWalletChain("EVM");
     logout();
   }, []);
 
@@ -118,12 +137,12 @@ function WidgetStage({
         skipAutoConnect
         onDisconnect={handleDisconnect}
         createFlow={createFlowCallback}
-        destinationToken={effectiveDestinationToken}
+        destinationToken={settlementToken}
         tokenFilter={tokenFilter}
         skipMinUsdValueFilter={isTestnet}
-        onWalletConnected={setWalletAddress}
+        onWalletConnected={handleWalletConnected}
         destinationAddress={walletAddress}
-        destinationChain="EVM"
+        destinationChain={destinationChainName}
         currency="USD"
         amount="0.10"
         mode="payment"
@@ -132,8 +151,8 @@ function WidgetStage({
         verifyOnConnect={false}
         onCancelled={onBack}
         exchangeDestinationAddress={walletAddress || undefined}
-        exchangeSettlementChain="EVM"
-        exchangeSettlementChainId={effectiveSettlementChainId}
+        exchangeSettlementChain={destinationChainName}
+        exchangeSettlementChainId={settlementToken.chainId}
       />
     </div>
   );

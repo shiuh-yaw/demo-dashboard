@@ -152,17 +152,24 @@ describe("Arbitrum Sepolia chain resolvers", () => {
 // ---------------------------------------------------------------------------
 
 import type { CreateFlowInput } from "../lib/checkouts-api";
+import { settlementFromToken, destination } from "../lib/checkouts-api";
 
 describe("CreateFlowInput type shape", () => {
-  it("accepts a testnet deposit with amount", () => {
+  it("accepts a testnet deposit with settlementConfig + destinationConfig", () => {
     const input: CreateFlowInput = {
       mode: "deposit",
       amount: "25",
       currency: "USD",
-      destinationAddress: "0x1234567890abcdef1234567890abcdef12345678",
-      destinationChain: "EVM",
-      chain: "arb-sepolia",
-      asset: "USDC",
+      settlementConfig: {
+        settlements: [
+          settlementFromToken(USDC_ARB_SEPOLIA, "EVM"),
+        ],
+      },
+      destinationConfig: {
+        destinations: [
+          destination("EVM", "0x1234567890abcdef1234567890abcdef12345678"),
+        ],
+      },
     };
     expect(input.amount).toBe("25");
     expect(input.mode).toBe("deposit");
@@ -173,23 +180,37 @@ describe("CreateFlowInput type shape", () => {
       mode: "payment",
       amount: "0.10",
       currency: "USD",
-      destinationAddress: "0x1234567890abcdef1234567890abcdef12345678",
-      destinationChain: "EVM",
-      chain: "arb-sepolia",
+      settlementConfig: {
+        settlements: [
+          settlementFromToken(USDC_ARB_SEPOLIA, "EVM"),
+        ],
+      },
+      destinationConfig: {
+        destinations: [
+          destination("EVM", "0x1234567890abcdef1234567890abcdef12345678"),
+        ],
+      },
     };
     expect(input.mode).toBe("payment");
   });
 
-  it("accepts withdraw shape with destination", () => {
+  it("accepts withdraw shape with SOL destination", () => {
     const input: CreateFlowInput = {
-      destinationAddress: "0x1234567890abcdef1234567890abcdef12345678",
-      destinationChain: "EVM",
       mode: "withdraw",
       amount: "100",
       currency: "USD",
-      chain: "base",
+      settlementConfig: {
+        settlements: [
+          settlementFromToken(USDC_BASE, "EVM"),
+        ],
+      },
+      destinationConfig: {
+        destinations: [
+          destination("EVM", "0x1234567890abcdef1234567890abcdef12345678"),
+        ],
+      },
     };
-    expect(input.destinationAddress).toBeDefined();
+    expect(input.destinationConfig.destinations).toHaveLength(1);
   });
 });
 

@@ -22,7 +22,11 @@ import {
 } from "@dynamic-demos/checkouts-widget";
 import { Button } from "@dynamic-demos/ui";
 import { ArrowRight } from "@/components/icons";
-import { DYNAMIC_DESTINATION_ADDRESS_PATTERN } from "@/lib/checkouts-api";
+import {
+  DYNAMIC_DESTINATION_ADDRESS_PATTERN,
+  settlementFromToken,
+  destination as makeDestination,
+} from "@/lib/checkouts-api";
 import { bindCreateFlow } from "@/lib/bind-create-flow";
 import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
 import {
@@ -61,10 +65,24 @@ export function WithdrawSubFlow({
     if (!settlement || !destination) return undefined;
     return bindCreateFlow({
       mode: "withdraw",
-      destinationAddress: destination,
-      destinationChain: settlement.chainFamily,
-      asset: settlement.symbol,
-      chain: settlement.chainKey,
+      settlementConfig: {
+        settlements: [
+          settlementFromToken(
+            {
+              address: settlement.tokenAddress,
+              chainId: settlement.chainId,
+              symbol: settlement.symbol,
+              decimals: settlement.decimals,
+            },
+            settlement.chainFamily,
+          ),
+        ],
+      },
+      destinationConfig: {
+        destinations: [
+          makeDestination(settlement.chainFamily, destination),
+        ],
+      },
     });
   }, [settlement, destination]);
 

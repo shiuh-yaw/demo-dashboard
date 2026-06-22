@@ -208,8 +208,10 @@ export interface CheckoutWidgetProps {
   // Lifecycle callbacks — forwarded from <PaymentWidget />.
   // ---------------------------------------------------------------------------
   /** Fires when the user picks (or changes) a wallet via the picker.
-   *  The address string is the wallet's `address` field. */
-  onWalletConnected?: (address: string) => void;
+   *  `address` is the wallet's `address` field; `chain` is `"EVM"`,
+   *  `"SOL"`, `"TRON"`, etc. — use it to set `destinationChain` and
+   *  settlement config. */
+  onWalletConnected?: (address: string, chain: string) => void;
   onAmountSelected?: (amount: string) => void;
   onTransactionCreated?: (tx: CheckoutTransaction) => void;
   onQuoteLocked?: (quote: ReviewQuote) => void;
@@ -434,7 +436,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     userPickedRef.current = true;
     setPickedWallet(wallet);
     if (wallet?.address) {
-      onWalletConnected?.(wallet.address);
+      onWalletConnected?.(wallet.address, wallet.chain);
     }
   }, [onWalletConnected]);
 
