@@ -26,6 +26,7 @@ export {
 export {
   rampStatusToCanonical,
   ironAutorampStatusToCanonical,
+  ironTransactionStatusToCanonical,
   type CanonicalTransactionState,
 } from "./state-mapping";
 
@@ -46,8 +47,12 @@ export {
   verifyIronSignature,
   normalizeIronEvent,
   IRON_SIGNATURE_HEADER,
+  IRON_TIMESTAMP_HEADER,
+  IRON_ID_HEADER,
   type CanonicalEvent,
   type IronWebhookPayload,
+  type IronWebhookHeaders,
+  type IronWebhookEventType,
 } from "./webhooks";
 
 // Types
@@ -124,6 +129,15 @@ export type {
   ThirdPartyPayment,
   // KYC
   StartKYCRequest,
+  StartKYCTokenRequest,
+  KycIdentificationType,
+  IntendedUse,
+  EmploymentStatus,
+  SourceOfWealth,
+  ExpectedMonthlyTxCount,
+  ExpectedMonthlyTxVolume,
+  KycQuestionnaire,
+  EddQuestionnaire,
   KYCSession,
   // signings
   RequiredSigning,
@@ -136,4 +150,10 @@ export type {
   // sandbox
   UpdateIdentificationStatusRequest,
   Identification,
+  SandboxNamespace,
+  AutorampSandboxStatus,
+  FiatAddressSandboxStatus,
+  TransactionSandboxState,
+  CreateSandboxTransactionRequest,
+  SandboxTransaction,
 } from "./types";

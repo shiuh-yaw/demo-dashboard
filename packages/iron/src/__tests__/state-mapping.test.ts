@@ -8,6 +8,7 @@ import { describe, it, expect } from "vitest";
 import {
   rampStatusToCanonical,
   ironAutorampStatusToCanonical,
+  ironTransactionStatusToCanonical,
 } from "../state-mapping";
 import type { RampStatus } from "../types";
 
@@ -27,13 +28,13 @@ describe("rampStatusToCanonical", () => {
 
 describe("ironAutorampStatusToCanonical", () => {
   it("maps known Iron autoramp statuses", () => {
-    expect(ironAutorampStatusToCanonical("Created")).toBe("pending");
-    expect(ironAutorampStatusToCanonical("EditPending")).toBe("pending");
-    expect(ironAutorampStatusToCanonical("Authorized")).toBe("submitted");
+    expect(ironAutorampStatusToCanonical("Created")).toBe("initialized");
+    expect(ironAutorampStatusToCanonical("EditPending")).toBe("initialized");
+    expect(ironAutorampStatusToCanonical("Authorized")).toBe("pending");
     expect(ironAutorampStatusToCanonical("DepositAccountAdded")).toBe(
-      "submitted",
+      "pending",
     );
-    expect(ironAutorampStatusToCanonical("Approved")).toBe("confirmed");
+    expect(ironAutorampStatusToCanonical("Approved")).toBe("submitted");
     expect(ironAutorampStatusToCanonical("Rejected")).toBe("failed");
     expect(ironAutorampStatusToCanonical("Cancelled")).toBe("cancelled");
   });
@@ -41,5 +42,31 @@ describe("ironAutorampStatusToCanonical", () => {
   it("falls back to pending for unknown statuses", () => {
     expect(ironAutorampStatusToCanonical("Quantum")).toBe("pending");
     expect(ironAutorampStatusToCanonical("")).toBe("pending");
+  });
+});
+
+describe("ironTransactionStatusToCanonical", () => {
+  it("maps known Iron transaction statuses", () => {
+    expect(ironTransactionStatusToCanonical("FundsReviewInProgress")).toBe(
+      "pending",
+    );
+    expect(ironTransactionStatusToCanonical("ConversionInProgress")).toBe(
+      "submitted",
+    );
+    expect(ironTransactionStatusToCanonical("PayoutInProgress")).toBe(
+      "submitted",
+    );
+    expect(ironTransactionStatusToCanonical("Completed")).toBe("confirmed");
+    expect(ironTransactionStatusToCanonical("Failed")).toBe("failed");
+    expect(ironTransactionStatusToCanonical("RejectedAml")).toBe("failed");
+    expect(ironTransactionStatusToCanonical("RejectedFraud")).toBe("failed");
+    expect(ironTransactionStatusToCanonical("RejectedMinAmount")).toBe(
+      "failed",
+    );
+  });
+
+  it("falls back to pending for unknown statuses", () => {
+    expect(ironTransactionStatusToCanonical("Unknown")).toBe("pending");
+    expect(ironTransactionStatusToCanonical("")).toBe("pending");
   });
 });

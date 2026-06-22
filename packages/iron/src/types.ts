@@ -491,6 +491,63 @@ export interface StartKYCRequest {
   return_url?: string;
 }
 
+export type KycIdentificationType = "Link" | "Token";
+
+export type IntendedUse =
+  | "Investing"
+  | "PaymentToFriendsFamilyorOthers"
+  | "PurchaseDigitalAssets"
+  | "OnlinePurchasesOfGoodsOrServices"
+  | "Trading";
+
+export type EmploymentStatus =
+  | "Employed"
+  | "SelfEmployed"
+  | "Unemployed"
+  | "Retired"
+  | "Student";
+
+export type SourceOfWealth =
+  | "Salary"
+  | "Savings"
+  | "Investments"
+  | "CryptoTrading"
+  | "Other";
+
+export type ExpectedMonthlyTxCount =
+  | "LessThan5"
+  | "Between5And10"
+  | "MoreThan10";
+
+export type ExpectedMonthlyTxVolume =
+  | "LessThan500"
+  | "MoreThan500LessThan2000"
+  | "MoreThan2000";
+
+export interface KycQuestionnaire {
+  employment_status: EmploymentStatus;
+  yearly_gross_income: string;
+  source_of_wealth: SourceOfWealth;
+  expected_monthly_transaction_count: ExpectedMonthlyTxCount;
+  expected_monthly_transaction_volume: ExpectedMonthlyTxVolume;
+}
+
+export interface EddQuestionnaire {
+  occupation: string;
+  approximate_net_worth: string;
+  source_of_funds_proof?: string;
+}
+
+export interface StartKYCTokenRequest {
+  customer_id: string;
+  /** SumSub share token (single-use, invalidated after consumption). */
+  token: string;
+  intended_use: IntendedUse;
+  ip_address?: string;
+  kyc_questionnaire?: KycQuestionnaire;
+  edd_questionnaire?: EddQuestionnaire;
+}
+
 export interface KYCSession {
   id: string;
   customer_id: string;
@@ -576,9 +633,55 @@ export interface Identification {
     | "Approved"
     | "Declined"
     | "Expired";
-  url?: string;
+  with_edd?: boolean | null;
+  url?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type AutorampSandboxStatus =
+  | "Created"
+  | "EditPending"
+  | "Authorized"
+  | "DepositAccountAdded"
+  | "Approved"
+  | "Rejected"
+  | "Cancelled";
+
+export type FiatAddressSandboxStatus =
+  | "RegistrationPending"
+  | "Registered"
+  | "RegistrationFailed"
+  | "AuthorizationRequired"
+  | "AuthorizationFailed";
+
+export type TransactionSandboxState = "Pending" | "Completed" | "Failed";
+
+export interface CreateSandboxTransactionRequest {
+  autoramp_id: string;
+  /** Deposit amount in the autoramp's input currency (decimal string). */
+  amount: string;
+  amount_out?: string;
+  fee?: string;
+  fx_rate?: string;
+  initial_state?: TransactionSandboxState;
+  input_currency?:
+    | { type: "Fiat"; code: string }
+    | { type: "Crypto"; blockchain: string; token: string };
+  transaction_id?: string;
+  deposit_id?: string;
+}
+
+export interface SandboxTransaction {
+  id: string;
+  autoramp_id: string;
+  amount_in: string;
+  currency_in: string;
+  amount_out: string;
+  currency_out: string;
+  customer_id: string;
+  state: TransactionSandboxState;
+  created_at: string;
 }
 
 // =============================================================================
@@ -627,6 +730,11 @@ export interface CustomersNamespace {
 
 export interface KycNamespace {
   start(request: StartKYCRequest, idempotencyKey?: string): Promise<KYCSession>;
+  /** Submit a SumSub token sharing identification (skips hosted KYC). */
+  startWithToken(
+    request: StartKYCTokenRequest,
+    idempotencyKey?: string,
+  ): Promise<Identification>;
   getSession(sessionId: string): Promise<KYCSession>;
   getStatus(
     customerId: string,
@@ -738,6 +846,36 @@ export interface MetadataNamespace {
   listFiatCurrencies(): Promise<IronFiatCurrency[]>;
 }
 
+export interface SandboxNamespace {
+  /** Approve an autoramp (shorthand for setAutorampStatus with "Approved"). */
+  approveAutoramp(autorampId: string): Promise<void>;
+  /** Set an autoramp to any sandbox status. */
+  setAutorampStatus(
+    autorampId: string,
+    status: AutorampSandboxStatus,
+  ): Promise<void>;
+  /** Approve a fiat address (shorthand for setFiatAddressStatus with "Registered"). */
+  approveFiatAddress(fiatAddressId: string): Promise<void>;
+  /** Set a fiat address to any sandbox status. */
+  setFiatAddressStatus(
+    fiatAddressId: string,
+    status: FiatAddressSandboxStatus,
+  ): Promise<void>;
+  /** Create a mock transaction against an autoramp. */
+  createTransaction(
+    request: CreateSandboxTransactionRequest,
+    idempotencyKey?: string,
+  ): Promise<SandboxTransaction>;
+  /** Transition a sandbox transaction to a different state. */
+  setTransactionState(
+    transactionId: string,
+    state: TransactionSandboxState,
+    idempotencyKey?: string,
+  ): Promise<void>;
+  /** Reset the sandbox — deletes all customers, wallets, fiat accounts, transactions, and autoramps. */
+  reset(idempotencyKey?: string): Promise<void>;
+}
+
 export interface IIronFinanceClient {
   readonly customers: CustomersNamespace;
   readonly kyc: KycNamespace;
@@ -752,4 +890,5 @@ export interface IIronFinanceClient {
   readonly autoramps: AutorampsNamespace;
   readonly virtualAccounts: VirtualAccountsNamespace;
   readonly metadata: MetadataNamespace;
+  readonly sandbox: SandboxNamespace;
 }

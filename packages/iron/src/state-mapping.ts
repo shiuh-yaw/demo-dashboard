@@ -52,19 +52,40 @@ export function rampStatusToCanonical(
 
 /**
  * Map a raw Iron autoramp status string (e.g. "Authorized", "Approved") to
- * canonical state. Mirrors the private mapper in `IronFinanceClient`.
+ * canonical state. An autoramp is a standing rule, NOT a transaction — "Approved"
+ * means the rule is active and ready for deposits, not that a transfer completed.
  */
 export function ironAutorampStatusToCanonical(
   status: string,
 ): CanonicalTransactionState {
   const map: Record<string, CanonicalTransactionState> = {
-    Created: "pending",
-    EditPending: "pending",
-    Authorized: "submitted",
-    DepositAccountAdded: "submitted",
-    Approved: "confirmed",
+    Created: "initialized",
+    EditPending: "initialized",
+    Authorized: "pending",
+    DepositAccountAdded: "pending",
+    Approved: "submitted",
     Rejected: "failed",
     Cancelled: "cancelled",
+  };
+  return map[status] ?? "pending";
+}
+
+/**
+ * Map a raw Iron transaction status string to canonical state.
+ * Transactions are individual deposits/payouts against an autoramp.
+ */
+export function ironTransactionStatusToCanonical(
+  status: string,
+): CanonicalTransactionState {
+  const map: Record<string, CanonicalTransactionState> = {
+    FundsReviewInProgress: "pending",
+    ConversionInProgress: "submitted",
+    PayoutInProgress: "submitted",
+    Completed: "confirmed",
+    Failed: "failed",
+    RejectedAml: "failed",
+    RejectedFraud: "failed",
+    RejectedMinAmount: "failed",
   };
   return map[status] ?? "pending";
 }

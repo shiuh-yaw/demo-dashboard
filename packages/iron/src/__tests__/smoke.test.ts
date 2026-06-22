@@ -25,7 +25,7 @@ describe("@dynamic-demos/iron — public surface", () => {
     expect(typeof Iron.ironAutorampStatusToCanonical).toBe("function");
     expect(typeof Iron.verifyIronSignature).toBe("function");
     expect(typeof Iron.normalizeIronEvent).toBe("function");
-    expect(Iron.IRON_SIGNATURE_HEADER).toBe("x-iron-signature");
+    expect(Iron.IRON_SIGNATURE_HEADER).toBe("webhook-signature");
   });
 });
 

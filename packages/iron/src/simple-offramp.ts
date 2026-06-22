@@ -84,23 +84,39 @@ export function chainIdToBlockchain(chainId: number): SimpleOfframpBlockchain {
 export interface SimpleOfframpConfig {
   apiKey: string;
   customerId: string;
-  bankIban: string;
+  /** IBAN for SEPA bank accounts. */
+  bankIban?: string;
+  /** ACH routing number (required for ACH, mutually exclusive with bankIban). */
+  routingNumber?: string;
+  /** ACH account number (required for ACH, mutually exclusive with bankIban). */
+  accountNumber?: string;
   env?: IronEnvironment;
   fetchImpl?: typeof fetch;
 }
 
-function resolveConfig(config: SimpleOfframpConfig): {
+interface ResolvedConfig {
   apiKey: string;
   baseUrl: string;
   customerId: string;
-  bankIban: string;
+  bankIban?: string;
+  routingNumber?: string;
+  accountNumber?: string;
   fetchImpl: typeof fetch;
-} {
+}
+
+function resolveConfig(config: SimpleOfframpConfig): ResolvedConfig {
   if (!config.apiKey) {
     throw new Error("apiKey is required");
   }
-  if (!config.customerId || !config.bankIban) {
-    throw new Error("customerId and bankIban are required");
+  if (!config.customerId) {
+    throw new Error("customerId is required");
+  }
+  const hasIban = !!config.bankIban;
+  const hasAch = !!config.routingNumber && !!config.accountNumber;
+  if (!hasIban && !hasAch) {
+    throw new Error(
+      "Either bankIban (SEPA) or routingNumber + accountNumber (ACH) is required",
+    );
   }
 
   return {
@@ -108,6 +124,8 @@ function resolveConfig(config: SimpleOfframpConfig): {
     baseUrl: resolveIronBaseUrl(config.env ?? "sandbox"),
     customerId: config.customerId,
     bankIban: config.bankIban,
+    routingNumber: config.routingNumber,
+    accountNumber: config.accountNumber,
     fetchImpl: config.fetchImpl ?? globalThis.fetch.bind(globalThis),
   };
 }
@@ -172,7 +190,7 @@ function parseAutorampStatus(status: string): SimpleOfframpStatus {
     EditPending: "pending",
     Authorized: "processing",
     DepositAccountAdded: "processing",
-    Approved: "completed",
+    Approved: "processing",
     Rejected: "failed",
     Cancelled: "cancelled",
   };
@@ -188,15 +206,16 @@ export async function getOfframpQuote(
   blockchain: SimpleOfframpBlockchain,
   config: SimpleOfframpConfig,
 ): Promise<SimpleOfframpQuote> {
-  const { apiKey, baseUrl, customerId, bankIban, fetchImpl } =
+  const { apiKey, baseUrl, customerId, bankIban, accountNumber, fetchImpl } =
     resolveConfig(config);
 
+  const recipientAccount = bankIban ?? accountNumber ?? "";
   const params = new URLSearchParams({
     customer_id: customerId,
     source_currency_code: "USDC",
     source_currency_chain: blockchain,
     destination_currency_code: "USD",
-    recipient_account: bankIban,
+    recipient_account: recipientAccount,
     rate_expiry_policy: "Return",
     expiry_in_hours: "1",
     is_third_party: "false",
@@ -226,20 +245,34 @@ interface RawAutorampResponse {
  * Create a USDC → USD offramp. `config` carries the demo customer + IBAN —
  * consumers source these from their own env-reader and pass them in.
  */
+/**
+ * Build the correct account_identifier based on available credentials.
+ */
+function buildAccountIdentifier(cfg: ResolvedConfig) {
+  if (cfg.routingNumber && cfg.accountNumber) {
+    return {
+      type: "ACH" as const,
+      routing_number: cfg.routingNumber,
+      account_number: cfg.accountNumber,
+    };
+  }
+  return { type: "SEPA" as const, iban: cfg.bankIban! };
+}
+
 export async function createOfframp(
   quoteId: string,
   blockchain: SimpleOfframpBlockchain,
   config: SimpleOfframpConfig,
 ): Promise<SimpleOfframpResult> {
-  const { apiKey, baseUrl, customerId, bankIban, fetchImpl } =
-    resolveConfig(config);
+  const resolved = resolveConfig(config);
+  const { apiKey, baseUrl, customerId, fetchImpl } = resolved;
 
   const body = {
     customer_id: customerId,
     destination_currency: { type: "Fiat", code: "USD" },
     recipient_account: {
       type: "Fiat",
-      account_identifier: { type: "ACH", iban: bankIban },
+      account_identifier: buildAccountIdentifier(resolved),
     },
     source_currencies: [{ type: "Crypto", blockchain, token: "USDC" }],
     quote_id: quoteId,

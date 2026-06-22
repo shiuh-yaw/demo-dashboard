@@ -24,7 +24,7 @@ function mockFetch(json: unknown, status = 200) {
 }
 
 describe("IronFinanceClient namespace surface", () => {
-  it("MockIronClient exposes the 13 expected namespaces", () => {
+  it("MockIronClient exposes the 14 expected namespaces", () => {
     const mock = new MockIronClient();
     expect(mock.customers).toBeDefined();
     expect(mock.kyc).toBeDefined();
@@ -39,6 +39,7 @@ describe("IronFinanceClient namespace surface", () => {
     expect(mock.autoramps).toBeDefined();
     expect(mock.virtualAccounts).toBeDefined();
     expect(mock.metadata).toBeDefined();
+    expect(mock.sandbox).toBeDefined();
   });
 
   it("customers namespace exposes the expected methods", () => {
@@ -209,5 +210,245 @@ describe("IronFinanceClient — fetch contract via namespaces", () => {
           apiKey: "",
         }),
     ).toThrow(/IRON_API_KEY is required/);
+  });
+});
+
+describe("IronFinanceClient — sandbox namespace", () => {
+  it("MockIronClient exposes the sandbox namespace with all 7 methods", () => {
+    const mock = new MockIronClient();
+    expect(mock.sandbox).toBeDefined();
+    expect(typeof mock.sandbox.approveAutoramp).toBe("function");
+    expect(typeof mock.sandbox.setAutorampStatus).toBe("function");
+    expect(typeof mock.sandbox.approveFiatAddress).toBe("function");
+    expect(typeof mock.sandbox.setFiatAddressStatus).toBe("function");
+    expect(typeof mock.sandbox.createTransaction).toBe("function");
+    expect(typeof mock.sandbox.setTransactionState).toBe("function");
+    expect(typeof mock.sandbox.reset).toBe("function");
+  });
+
+  it("sandbox.approveAutoramp sends PUT with JSON string body", async () => {
+    const fetchImpl = mockFetch(null);
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.sandbox.approveAutoramp("ar_123");
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe(
+      "https://api.sandbox.iron.xyz/api/sandbox/autoramp/ar_123",
+    );
+    expect(call[1]?.method).toBe("PUT");
+    expect(call[1]?.body).toBe(JSON.stringify("Approved"));
+  });
+
+  it("sandbox.setAutorampStatus sends the given status", async () => {
+    const fetchImpl = mockFetch(null);
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.sandbox.setAutorampStatus("ar_123", "Rejected");
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe(
+      "https://api.sandbox.iron.xyz/api/sandbox/autoramp/ar_123",
+    );
+    expect(call[1]?.body).toBe(JSON.stringify("Rejected"));
+  });
+
+  it("sandbox.approveFiatAddress sends PUT with Registered", async () => {
+    const fetchImpl = mockFetch(null);
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.sandbox.approveFiatAddress("fa_456");
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe(
+      "https://api.sandbox.iron.xyz/api/sandbox/fiat-verification/fa_456",
+    );
+    expect(call[1]?.method).toBe("PUT");
+    expect(call[1]?.body).toBe(JSON.stringify("Registered"));
+  });
+
+  it("sandbox.createTransaction sends POST with request body and idempotency key", async () => {
+    const fetchImpl = mockFetch({
+      id: "txn_1",
+      autoramp_id: "ar_123",
+      amount_in: "100",
+      currency_in: "EUR",
+      amount_out: "99.75",
+      currency_out: "USDC",
+      customer_id: "cus_1",
+      state: "Pending",
+      created_at: "2026-01-15T10:30:00Z",
+    });
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    const result = await client.sandbox.createTransaction({
+      autoramp_id: "ar_123",
+      amount: "100",
+    });
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe(
+      "https://api.sandbox.iron.xyz/api/sandbox/transaction",
+    );
+    expect(call[1]?.method).toBe("POST");
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.autoramp_id).toBe("ar_123");
+    expect(body.amount).toBe("100");
+    const headers = (call[1]?.headers ?? {}) as Record<string, string>;
+    expect(headers["IDEMPOTENCY-KEY"]).toBeDefined();
+    expect(result.id).toBe("txn_1");
+    expect(result.state).toBe("Pending");
+  });
+
+  it("sandbox.setTransactionState sends PUT with state body", async () => {
+    const fetchImpl = mockFetch(null);
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.sandbox.setTransactionState("txn_1", "Completed");
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe(
+      "https://api.sandbox.iron.xyz/api/sandbox/transaction/txn_1/state",
+    );
+    expect(call[1]?.method).toBe("PUT");
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.state).toBe("Completed");
+  });
+
+  it("sandbox.reset sends POST to /api/sandbox/reset", async () => {
+    const fetchImpl = mockFetch(null);
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.sandbox.reset("idemp-reset");
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe("https://api.sandbox.iron.xyz/api/sandbox/reset");
+    expect(call[1]?.method).toBe("POST");
+    const headers = (call[1]?.headers ?? {}) as Record<string, string>;
+    expect(headers["IDEMPOTENCY-KEY"]).toBe("idemp-reset");
+  });
+});
+
+describe("IronFinanceClient — SumSub token sharing", () => {
+  it("MockIronClient.kyc exposes startWithToken", () => {
+    const mock = new MockIronClient();
+    expect(typeof mock.kyc.startWithToken).toBe("function");
+  });
+
+  it("kyc.startWithToken sends POST with type Token body", async () => {
+    const fetchImpl = mockFetch({
+      id: "ident_1",
+      customer_id: "cus_1",
+      status: "Processed",
+      with_edd: false,
+      url: null,
+      created_at: "2026-01-15T10:30:00Z",
+      updated_at: "2026-01-15T10:30:00Z",
+    });
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    const result = await client.kyc.startWithToken({
+      customer_id: "cus_1",
+      token: "sumsub-share-token-abc",
+      intended_use: "Investing",
+    });
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    expect(call[0]).toBe(
+      "https://api.sandbox.iron.xyz/api/customers/cus_1/identifications/v2",
+    );
+    expect(call[1]?.method).toBe("POST");
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.type).toBe("Token");
+    expect(body.token).toBe("sumsub-share-token-abc");
+    expect(body.intended_use).toBe("Investing");
+    expect(body).not.toHaveProperty("ip_address");
+    const headers = (call[1]?.headers ?? {}) as Record<string, string>;
+    expect(headers["IDEMPOTENCY-KEY"]).toBeDefined();
+    expect(result.id).toBe("ident_1");
+    expect(result.status).toBe("Processed");
+  });
+
+  it("kyc.startWithToken includes optional fields when provided", async () => {
+    const fetchImpl = mockFetch({
+      id: "ident_2",
+      customer_id: "cus_2",
+      status: "Pending",
+      with_edd: true,
+      url: "https://iron.xyz/kyc/complete",
+      created_at: "2026-01-15T10:30:00Z",
+      updated_at: "2026-01-15T10:30:00Z",
+    });
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    const result = await client.kyc.startWithToken({
+      customer_id: "cus_2",
+      token: "sumsub-share-token-def",
+      intended_use: "Trading",
+      ip_address: "1.2.3.4",
+      kyc_questionnaire: {
+        employment_status: "Employed",
+        yearly_gross_income: "50000",
+        source_of_wealth: "Salary",
+        expected_monthly_transaction_count: "LessThan5",
+        expected_monthly_transaction_volume: "LessThan500",
+      },
+      edd_questionnaire: {
+        occupation: "Software Engineer",
+        approximate_net_worth: "100000",
+      },
+    });
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.type).toBe("Token");
+    expect(body.ip_address).toBe("1.2.3.4");
+    expect(body.kyc_questionnaire.employment_status).toBe("Employed");
+    expect(body.edd_questionnaire.occupation).toBe("Software Engineer");
+    expect(result.status).toBe("Pending");
+    expect(result.url).toBe("https://iron.xyz/kyc/complete");
+    expect(result.with_edd).toBe(true);
+  });
+
+  it("kyc.startWithToken uses provided idempotency key", async () => {
+    const fetchImpl = mockFetch({
+      id: "ident_3",
+      customer_id: "cus_3",
+      status: "Processed",
+      created_at: "2026-01-15T10:30:00Z",
+      updated_at: "2026-01-15T10:30:00Z",
+    });
+    const client = new IronFinanceClient({
+      apiKey: "k",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await client.kyc.startWithToken(
+      {
+        customer_id: "cus_3",
+        token: "token-xyz",
+        intended_use: "PurchaseDigitalAssets",
+      },
+      "my-idemp-key",
+    );
+
+    const call = fetchImpl.mock.calls[0] as unknown as FetchCall;
+    const headers = (call[1]?.headers ?? {}) as Record<string, string>;
+    expect(headers["IDEMPOTENCY-KEY"]).toBe("my-idemp-key");
   });
 });

@@ -26,6 +26,7 @@ import type {
   BlockchainType,
   CreateOfframpRequest,
   CreateOnrampRequest,
+  CreateSandboxTransactionRequest,
   CryptoCurrency,
   CustomersNamespace,
   FiatAddress,
@@ -53,9 +54,12 @@ import type {
   QuotesNamespace,
   RampStatus,
   RegisterFiatAddressRequest,
+  SandboxNamespace,
+  SandboxTransaction,
   SigningsNamespace,
   SimpleBankAccountRequest,
   SimplifiedBankAccountRequest,
+  StartKYCTokenRequest,
   ThirdPartyPayment,
   ThirdPartyPaymentsNamespace,
   VerifiedAddressResponse,
@@ -84,6 +88,7 @@ export class IronFinanceClient implements IIronFinanceClient {
   readonly autoramps: AutorampsNamespace;
   readonly virtualAccounts: VirtualAccountsNamespace;
   readonly metadata: MetadataNamespace;
+  readonly sandbox: SandboxNamespace;
 
   constructor(config: IronClientConfig) {
     if (!config.apiKey) {
@@ -168,6 +173,32 @@ export class IronFinanceClient implements IIronFinanceClient {
           },
         );
         return this.handleResponse(response);
+      },
+
+      startWithToken: async (
+        request: StartKYCTokenRequest,
+        idempotencyKey,
+      ) => {
+        const body: Record<string, unknown> = {
+          type: "Token" as const,
+          token: request.token,
+          intended_use: request.intended_use,
+        };
+        if (request.ip_address) body.ip_address = request.ip_address;
+        if (request.kyc_questionnaire)
+          body.kyc_questionnaire = request.kyc_questionnaire;
+        if (request.edd_questionnaire)
+          body.edd_questionnaire = request.edd_questionnaire;
+
+        const response = await this.fetchImpl(
+          `${this.apiUrl}/api/customers/${request.customer_id}/identifications/v2`,
+          {
+            method: "POST",
+            headers: this.getHeaders(idempotencyKey || randomUUID()),
+            body: JSON.stringify(body),
+          },
+        );
+        return this.handleResponse<Identification>(response);
       },
 
       getSession: async (sessionId) => {
@@ -703,6 +734,86 @@ export class IronFinanceClient implements IIronFinanceClient {
         return this.handleResponse(response);
       },
     };
+
+    // ─── sandbox ──────────────────────────────────────────────────────────
+    this.sandbox = {
+      approveAutoramp: async (autorampId) => {
+        await this.fetchImpl(
+          `${this.apiUrl}/api/sandbox/autoramp/${autorampId}`,
+          {
+            method: "PUT",
+            headers: this.getHeaders(),
+            body: JSON.stringify("Approved"),
+          },
+        ).then((r) => this.assertOk(r));
+      },
+
+      setAutorampStatus: async (autorampId, status) => {
+        await this.fetchImpl(
+          `${this.apiUrl}/api/sandbox/autoramp/${autorampId}`,
+          {
+            method: "PUT",
+            headers: this.getHeaders(),
+            body: JSON.stringify(status),
+          },
+        ).then((r) => this.assertOk(r));
+      },
+
+      approveFiatAddress: async (fiatAddressId) => {
+        await this.fetchImpl(
+          `${this.apiUrl}/api/sandbox/fiat-verification/${fiatAddressId}`,
+          {
+            method: "PUT",
+            headers: this.getHeaders(),
+            body: JSON.stringify("Registered"),
+          },
+        ).then((r) => this.assertOk(r));
+      },
+
+      setFiatAddressStatus: async (fiatAddressId, status) => {
+        await this.fetchImpl(
+          `${this.apiUrl}/api/sandbox/fiat-verification/${fiatAddressId}`,
+          {
+            method: "PUT",
+            headers: this.getHeaders(),
+            body: JSON.stringify(status),
+          },
+        ).then((r) => this.assertOk(r));
+      },
+
+      createTransaction: async (
+        request: CreateSandboxTransactionRequest,
+        idempotencyKey,
+      ) => {
+        const response = await this.fetchImpl(
+          `${this.apiUrl}/api/sandbox/transaction`,
+          {
+            method: "POST",
+            headers: this.getHeaders(idempotencyKey || randomUUID()),
+            body: JSON.stringify(request),
+          },
+        );
+        return this.handleResponse<SandboxTransaction>(response);
+      },
+
+      setTransactionState: async (transactionId, state, idempotencyKey) => {
+        await this.fetchImpl(
+          `${this.apiUrl}/api/sandbox/transaction/${transactionId}/state`,
+          {
+            method: "PUT",
+            headers: this.getHeaders(idempotencyKey || randomUUID()),
+            body: JSON.stringify({ state }),
+          },
+        ).then((r) => this.assertOk(r));
+      },
+
+      reset: async (idempotencyKey) => {
+        await this.fetchImpl(`${this.apiUrl}/api/sandbox/reset`, {
+          method: "POST",
+          headers: this.getHeaders(idempotencyKey || randomUUID()),
+        }).then((r) => this.assertOk(r));
+      },
+    };
   }
 
   private getHeaders(idempotencyKey?: string): Record<string, string> {
@@ -723,6 +834,15 @@ export class IronFinanceClient implements IIronFinanceClient {
       );
     }
     return response.json() as Promise<T>;
+  }
+
+  private async assertOk(response: Response): Promise<void> {
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Iron Finance API error: ${response.status} - ${errorText}`,
+      );
+    }
   }
 
   private mapIronQuoteToQuote(
@@ -803,7 +923,7 @@ export class IronFinanceClient implements IIronFinanceClient {
       EditPending: "pending",
       Authorized: "processing",
       DepositAccountAdded: "processing",
-      Approved: "completed",
+      Approved: "processing",
       Rejected: "failed",
       Cancelled: "cancelled",
     };

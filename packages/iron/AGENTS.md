@@ -63,9 +63,11 @@ If region coverage changes, update this table and the `regions` field in frontma
 - Customer + KYC + wallet + bank account management.
 - Onramp + offramp quote/execute (autoramp + simple).
 - Third-party payments + named virtual accounts.
-- Webhook verification — `verifyIronSignature(rawBody, signature, secret)`.
+- SumSub token sharing — `kyc.startWithToken(request)` for reliance KYC via SumSub share tokens.
+- Sandbox operations — `sandbox.approveAutoramp`, `sandbox.approveFiatAddress`, `sandbox.createTransaction`, `sandbox.setTransactionState`, `sandbox.reset`.
+- Webhook verification — `verifyIronSignature(rawBody, headers, secret)` (Standard Webhooks spec).
 - Webhook normalisation — `normalizeIronEvent(payload)`.
-- Status mappers — `rampStatusToCanonical`, `ironAutorampStatusToCanonical`.
+- Status mappers — `rampStatusToCanonical`, `ironAutorampStatusToCanonical`, `ironTransactionStatusToCanonical`.
 
 ## Public surface
 
@@ -74,11 +76,11 @@ Stable, all live at the package root.
 - `IronFinanceClient`, `createIronClient`, `MockIronClient`. (stable)
 - `IronClientConfig`, `IIronFinanceClient`, plus each namespace interface (`CustomersNamespace`, `KycNamespace`, etc.). (stable)
 - `resolveIronBaseUrl`, `resolveIronEnvironment`, `IronEnvironment`. (stable)
-- `rampStatusToCanonical`, `ironAutorampStatusToCanonical`, `CanonicalTransactionState`. (stable)
+- `rampStatusToCanonical`, `ironAutorampStatusToCanonical`, `ironTransactionStatusToCanonical`, `CanonicalTransactionState`. (stable)
 - Simple offramp helpers — `getOfframpQuote`, `createOfframp`, `chainIdToBlockchain`, `SimpleOfframp*` types. (stable)
-- Webhooks — `verifyIronSignature`, `normalizeIronEvent`, `IRON_SIGNATURE_HEADER`, `CanonicalEvent`. (stable)
+- Webhooks — `verifyIronSignature`, `normalizeIronEvent`, `IRON_SIGNATURE_HEADER`, `IRON_TIMESTAMP_HEADER`, `IRON_ID_HEADER`, `CanonicalEvent`, `IronWebhookHeaders`. (stable)
 
-The 13 namespaces exposed by `IronFinanceClient` (and `MockIronClient`): `customers`, `kyc`, `identifications`, `signings`, `wallets`, `bank`, `onramp`, `offramp`, `quotes`, `thirdPartyPayments`, `autoramps`, `virtualAccounts`, `metadata`. See `IIronFinanceClient` in `src/types.ts` for method signatures.
+The 14 namespaces exposed by `IronFinanceClient` (and `MockIronClient`): `customers`, `kyc`, `identifications`, `signings`, `wallets`, `bank`, `onramp`, `offramp`, `quotes`, `thirdPartyPayments`, `autoramps`, `virtualAccounts`, `metadata`, `sandbox`. See `IIronFinanceClient` in `src/types.ts` for method signatures.
 
 ## Dashboard API surface
 
@@ -121,7 +123,13 @@ Demos do not import this package directly. They call the dashboard endpoints bel
 | `/api/iron/third-party-payments` | POST | Create a third-party payment | operator |
 | `/api/iron/third-party-payments/[id]` | GET | Get a third-party payment | operator |
 | `/api/iron/fiatcurrencies` | GET | List Iron-supported fiat currencies | demo / operator |
+| `/api/iron/customers/[id]/kyc/token` | POST | Start KYC via SumSub token sharing | demo |
 | `/api/iron/sandbox/identification/[id]` | POST | Force identification approval/rejection (sandbox only) | operator |
+| `/api/iron/sandbox/autoramp/[id]` | PUT | Approve or set autoramp status (sandbox only) | operator |
+| `/api/iron/sandbox/fiat-verification/[id]` | PUT | Approve or set fiat address status (sandbox only) | operator |
+| `/api/iron/sandbox/transaction` | POST | Create a mock transaction (sandbox only) | operator |
+| `/api/iron/sandbox/transaction/[id]/state` | PUT | Set transaction state (sandbox only) | operator |
+| `/api/iron/sandbox/reset` | POST | Reset all sandbox data (sandbox only) | operator |
 
 ## Required environment
 
@@ -189,4 +197,3 @@ const onramp = await iron.onramp.create({
 
 - Phase 1E re-binds the canonical state to `TransactionState` from `@dynamic-demos/transactions`.
 - Phase 5A wires the dashboard webhook framework to `verifyIronSignature` + `normalizeIronEvent`.
-- Onramp surface is exposed but not yet wired to a demo. If a future demo adds onramp, set `flow_role` accordingly (or split this package).

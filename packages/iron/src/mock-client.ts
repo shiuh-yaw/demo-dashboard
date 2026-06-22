@@ -18,6 +18,7 @@ import type {
   OfframpNamespace,
   OnrampNamespace,
   QuotesNamespace,
+  SandboxNamespace,
   SigningsNamespace,
   ThirdPartyPaymentsNamespace,
   VirtualAccountsNamespace,
@@ -74,6 +75,16 @@ export class MockIronClient implements IIronFinanceClient {
         updated_at: new Date().toISOString(),
       }) as never,
     getStatus: async () => ({ status: "pending" }) as never,
+    startWithToken: async (request) =>
+      ({
+        id: "mock-identification-1",
+        customer_id: request.customer_id,
+        status: "Processed",
+        with_edd: !!request.edd_questionnaire,
+        url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }) as never,
   };
 
   readonly identifications: IdentificationsNamespace = {
@@ -340,5 +351,26 @@ export class MockIronClient implements IIronFinanceClient {
 
   readonly metadata: MetadataNamespace = {
     listFiatCurrencies: async () => [],
+  };
+
+  readonly sandbox: SandboxNamespace = {
+    approveAutoramp: async () => {},
+    setAutorampStatus: async () => {},
+    approveFiatAddress: async () => {},
+    setFiatAddressStatus: async () => {},
+    createTransaction: async (request) =>
+      ({
+        id: "mock-txn-1",
+        autoramp_id: request.autoramp_id,
+        amount_in: request.amount,
+        currency_in: "EUR",
+        amount_out: request.amount,
+        currency_out: "USDC",
+        customer_id: "mock-cust-1",
+        state: request.initial_state ?? "Pending",
+        created_at: new Date().toISOString(),
+      }) as never,
+    setTransactionState: async () => {},
+    reset: async () => {},
   };
 }
