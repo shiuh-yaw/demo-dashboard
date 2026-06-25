@@ -309,7 +309,12 @@ export function transformToTokenAssets(
           balance: formatTokenBalance(balance),
           rawBalance,
           decimals,
-          usdValue: formatUsdValue(marketValue),
+          usdValue: displayUsdValue(
+            token.symbol || "???",
+            network.networkId,
+            balance,
+            marketValue,
+          ),
           pricePerToken,
           iconUrl: token.logoURI,
           chainId: network.networkId,
@@ -424,7 +429,7 @@ export function transformFlatBalancesToTokenAssets(
       balance: formatTokenBalance(balance),
       rawBalance,
       decimals,
-      usdValue: formatUsdValue(marketValue),
+      usdValue: displayUsdValue(b.symbol || "???", chainId, balance, marketValue),
       pricePerToken,
       iconUrl: b.logoURI,
       chainId,
@@ -462,6 +467,36 @@ function formatUsdValue(amount: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+/** Sepolia testnets — no USD price feed, so market value comes back as 0. */
+const SEPOLIA_CHAIN_IDS = new Set([
+  84532, // Base Sepolia
+  11155111, // Ethereum Sepolia
+  11155420, // OP Sepolia
+  421614, // Arbitrum Sepolia
+]);
+
+/** USD-pegged stablecoins whose balance ≈ their dollar value. */
+const USD_STABLECOINS = new Set(["USDC", "USDT", "USDB"]);
+
+/**
+ * USD value to display for a token row. On Sepolia testnets there's no price
+ * feed (market value is 0 → "$0.00"), so for a USD-pegged stablecoin we show
+ * the balance itself with a "$" prefix (USDC ≈ $1). Everywhere else uses the
+ * real market value.
+ */
+function displayUsdValue(
+  symbol: string,
+  chainId: number,
+  balance: number,
+  marketValue: number,
+): string {
+  if (SEPOLIA_CHAIN_IDS.has(chainId) && USD_STABLECOINS.has(symbol.toUpperCase())) {
+    // USDC ≈ $1 — show the balance as a 2-decimal dollar amount (e.g. $67.01).
+    return formatUsdValue(balance);
+  }
+  return formatUsdValue(marketValue);
 }
 
 // =============================================================================

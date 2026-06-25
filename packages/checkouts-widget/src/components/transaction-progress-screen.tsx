@@ -43,6 +43,8 @@ interface TransactionProgressScreenProps {
   explorerLink?: string;
   onClose?: () => void;
   onRetry?: () => void;
+  /** Force the source → destination layout even for an identical token. */
+  alwaysShowRoute?: boolean;
 }
 
 /**
@@ -89,6 +91,7 @@ export default function TransactionProgressScreen({
   explorerLink,
   onClose,
   onRetry,
+  alwaysShowRoute = false,
 }: TransactionProgressScreenProps) {
   const actionLabel = capitalize(mode);
 
@@ -119,6 +122,7 @@ export default function TransactionProgressScreen({
       {!isCompleted && !hasFailed && (
         <div className="px-5 py-3 border-b border-(--brand-border)">
           <TokenConversionCard
+            alwaysShowRoute={alwaysShowRoute}
             sourceToken={sourceToken}
             destinationToken={destinationToken}
           />

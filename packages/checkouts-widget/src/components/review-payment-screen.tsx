@@ -56,6 +56,8 @@ interface ReviewPaymentScreenProps {
   onClose?: () => void;
   onConfirm?: () => void;
   onClearError?: () => void;
+  /** Force the source → destination layout even for an identical token. */
+  alwaysShowRoute?: boolean;
 }
 
 /**
@@ -108,6 +110,7 @@ export default function ReviewPaymentScreen({
   onClose,
   onConfirm,
   onClearError,
+  alwaysShowRoute = false,
 }: ReviewPaymentScreenProps) {
   const [showTokenAmounts, setShowTokenAmounts] = useState(false);
 
@@ -115,7 +118,8 @@ export default function ReviewPaymentScreen({
   const confirmLabel = `Confirm ${capitalize(mode)}`;
   const showConversion =
     destinationToken &&
-    (destinationToken.symbol !== sourceToken.symbol ||
+    (alwaysShowRoute ||
+      destinationToken.symbol !== sourceToken.symbol ||
       (destinationToken.chainId != null &&
         sourceToken.chainId != null &&
         destinationToken.chainId !== sourceToken.chainId));
@@ -149,6 +153,7 @@ export default function ReviewPaymentScreen({
         <TokenConversionCard
           sourceToken={sourceToken}
           destinationToken={destinationToken}
+          alwaysShowRoute={alwaysShowRoute}
         />
       </div>
 

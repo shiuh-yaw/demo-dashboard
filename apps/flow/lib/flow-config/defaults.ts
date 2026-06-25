@@ -42,8 +42,20 @@ export const DEFAULT_FLOW_CONFIGS = {
     amount: { mode: "user-input", presets: [50, 100, 500] },
     compliance: { sanctionsScreening: true, spamTokenFilter: true },
   },
+  "kyc-deposit": {
+    scenario: "kyc-deposit",
+    source: { type: "external-wallet" },
+    destination: { type: "external-address" },
+    asset: { symbol: "USDC", chain: "base" },
+    amount: {
+      mode: "user-input",
+      presets: [25, 50, 100, 500],
+      minimums: { usd: 10 },
+    },
+    compliance: { sanctionsScreening: true, spamTokenFilter: true },
+  },
 } as const satisfies Record<
-  "checkout" | "deposit" | "withdraw",
+  "checkout" | "deposit" | "withdraw" | "kyc-deposit",
   ParsedFlowConfig
 >;
 
@@ -55,4 +67,5 @@ export const FLOW_SEED_CONFIG_IDS = {
   checkout: "flow_seed_checkout",
   deposit: "flow_seed_deposit",
   withdraw: "flow_seed_withdraw",
+  "kyc-deposit": "flow_seed_kyc_deposit",
 } as const;

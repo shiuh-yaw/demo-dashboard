@@ -318,6 +318,9 @@ importers:
       '@dynamic-demos/lifi':
         specifier: workspace:*
         version: link:../../packages/lifi
+      '@dynamic-demos/sumsub':
+        specifier: workspace:*
+        version: link:../../packages/sumsub
       '@dynamic-demos/theme':
         specifier: workspace:*
         version: link:../../packages/theme

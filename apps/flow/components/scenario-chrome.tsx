@@ -102,7 +102,7 @@ export function ChipArrow() {
 // =============================================================================
 
 interface FooterScenario {
-  id: "checkout" | "deposit" | "withdraw";
+  id: "checkout" | "deposit" | "withdraw" | "kyc-deposit";
   num: string;
   title: string;
   description: string;
@@ -134,14 +134,26 @@ const FOOTER_SCENARIOS: FooterScenario[] = [
       "Cash out from a vault, embedded wallet, or external source to any user-chosen wallet.",
     href: "/withdraw",
   },
+  {
+    id: "kyc-deposit",
+    num: "04",
+    title: "KYC Deposit",
+    description:
+      "Verify identity, then deposit USDC to a dedicated address. Merchant off-ramps to fiat.",
+    href: "/kyc-deposit",
+  },
 ];
 
 export function ScenarioSwitcher({
   active,
+  exclude = [],
 }: {
-  active: "checkout" | "deposit" | "withdraw";
+  active: "checkout" | "deposit" | "withdraw" | "kyc-deposit";
+  /** Additional scenario ids to hide (e.g. KYC Deposit hides plain Deposit). */
+  exclude?: Array<"checkout" | "deposit" | "withdraw" | "kyc-deposit">;
 }) {
-  const others = FOOTER_SCENARIOS.filter((s) => s.id !== active);
+  const hidden = new Set([active, ...exclude]);
+  const others = FOOTER_SCENARIOS.filter((s) => !hidden.has(s.id));
 
   return (
     <section className="mt-20 lg:mt-24">

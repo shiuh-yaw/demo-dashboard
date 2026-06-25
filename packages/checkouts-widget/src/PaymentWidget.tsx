@@ -123,6 +123,12 @@ export interface PaymentWidgetProps {
    * the destination there is the buyer's own embedded or external wallet.
    */
   hideDestination?: boolean;
+  /**
+   * Force the source → destination layout on the review screen even when the
+   * picked token is identical to the destination token (direct transfers).
+   * Default false.
+   */
+  alwaysShowRoute?: boolean;
 
   /** Fires once when the user submits the amount-picker screen. */
   onAmountSelected?: (amount: string) => void;
@@ -184,6 +190,7 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     slippage,
     mode = "deposit",
     hideDestination = false,
+    alwaysShowRoute = false,
     onAmountSelected,
     onTransactionCreated,
     onQuoteLocked,
@@ -709,6 +716,7 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
           sourceToken={sourceTokenInfo}
           destinationToken={destinationTokenInfo}
           destinationAddress={hideDestination ? undefined : destinationAddress}
+          alwaysShowRoute={alwaysShowRoute}
           itemTotal={itemTotalFee}
           networkFee={networkFee}
           totalAmount={totalAmountFee}
@@ -726,6 +734,7 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
           mode={mode}
           sourceToken={sourceTokenInfo}
           destinationToken={destinationTokenInfo}
+          alwaysShowRoute={alwaysShowRoute}
           steps={steps}
           error={flow.error}
           // `onClose` only renders for terminal states (done +

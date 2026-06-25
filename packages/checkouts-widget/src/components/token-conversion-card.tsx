@@ -46,6 +46,12 @@ interface TokenConversionCardProps {
   sourceToken: TokenInfo;
   destinationToken?: TokenInfo;
   className?: string;
+  /**
+   * Force the source → destination (both-sides) layout even when the two
+   * tokens are identical (same symbol + chain). Used by direct-transfer
+   * flows that still want to show what's sent and where it lands.
+   */
+  alwaysShowRoute?: boolean;
 }
 
 /**
@@ -56,10 +62,12 @@ export default function TokenConversionCard({
   sourceToken,
   destinationToken,
   className,
+  alwaysShowRoute = false,
 }: TokenConversionCardProps) {
   const showConversion =
-    destinationToken &&
-    (destinationToken.symbol !== sourceToken.symbol ||
+    !!destinationToken &&
+    (alwaysShowRoute ||
+      destinationToken.symbol !== sourceToken.symbol ||
       (destinationToken.chainId != null &&
         sourceToken.chainId != null &&
         destinationToken.chainId !== sourceToken.chainId));

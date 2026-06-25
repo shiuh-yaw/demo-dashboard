@@ -14,7 +14,7 @@ The operator orchestrator for the Dynamic Demos monorepo (D-001). Demo creators 
 
 - Operator UI for demo creators (per-demo-type forms under `/brands`, `/remittance`, `/checkouts`, `/earns`, `/trade`, `/visa-direct`, `/wallets`, `/widgets`).
 - Orchestration API (`/api/orchestrate/*`) — quotes, onramp, offramp, swap, transactions, wallet verify (Phase 5B; partial today).
-- Per-provider HTTP endpoints used by demo apps: `blindpay`, `iron`, `coinbase`, `checkouts`, `earns`, `remittance`, `trade`, `visa-direct`, `wallets`, `widgets`.
+- Per-provider HTTP endpoints used by demo apps: `blindpay`, `iron`, `coinbase`, `sumsub`, `checkouts`, `earns`, `remittance`, `trade`, `visa-direct`, `wallets`, `widgets`.
 - Webhook receivers (per-provider, raw-body parsing + signature verification + dedup + DB persistence + optional QStash fan-out) — framework lives in `src/lib/webhooks/`; BlindPay wired as the reference receiver (Phase 5A).
 - Cron jobs (`/api/cron/...`) for recurring tasks.
 - Internal admin routes under `/api/internal/...`.
@@ -42,7 +42,7 @@ API namespaces (server):
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` — dashboard's **own** Dynamic env (D-004) — required.
 - `DATABASE_URL` — Supabase pooler URL — required (D-013).
 - `DIRECT_URL` — Supabase direct URL for migrations — required.
-- Provider keys (D-003): `IRON_API_KEY`, `BLINDPAY_API_KEY` + `BLINDPAY_INSTANCE_ID`, `COINBASE_API_KEY` + `COINBASE_API_SECRET`, `LIFI_API_KEY`, `ALFREDPAY_API_KEY`. Sandbox-by-default (D-005).
+- Provider keys (D-003): `IRON_API_KEY`, `BLINDPAY_API_KEY` + `BLINDPAY_INSTANCE_ID`, `COINBASE_API_KEY` + `COINBASE_API_SECRET`, `LIFI_API_KEY`, `ALFREDPAY_API_KEY`, `SUMSUB_APP_TOKEN` + `SUMSUB_SECRET_KEY` (+ `SUMSUB_LEVEL_NAME`, default `id-only` — must match a level in the connected SumSub account, else applicant creation 404s). Sandbox-by-default (D-005).
 - Webhook secrets per provider (`*_WEBHOOK_SECRET`) — required when wiring receivers. `BLINDPAY_WEBHOOK_SECRET` is wired (Phase 5A); receivers fail closed with 401 if unset.
 - `FIREBLOCKS_API_KEY` / `FIREBLOCKS_API_SECRET` — for Trading Orders + DVP flows.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox flags off across all wired providers.

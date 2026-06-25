@@ -19,6 +19,7 @@
     "@dynamic-demos/db": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/iron": "workspace:*",
+    "@dynamic-demos/sumsub": "workspace:*",
     "@dynamic-demos/lifi": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/transactions": "workspace:*",

@@ -125,6 +125,11 @@ export interface CheckoutWidgetProps {
    * (and shouldn't be confused by) the merchant's settlement vault.
    */
   hideDestination?: boolean;
+  /**
+   * Force the source → destination layout on the review screen even when the
+   * picked token equals the destination token (direct transfers). Default false.
+   */
+  alwaysShowRoute?: boolean;
 
   /**
    * Skip auto-picking the primary wallet on mount. Default `false`.
@@ -167,6 +172,25 @@ export interface CheckoutWidgetProps {
   walletPickerExtrasBefore?: ReactNode;
   /** Optional content below the installed list, above "Show more". */
   walletPickerExtrasAfter?: ReactNode;
+
+  // ---------------------------------------------------------------------------
+  // Post-connect gate — optional screen between wallet connect and asset picker.
+  // ---------------------------------------------------------------------------
+  /**
+   * Optional render prop displayed after the wallet connects but before the
+   * asset selector. Useful for injecting a verification step (KYC, terms
+   * acceptance, etc.) that must complete before the user picks a token.
+   *
+   * Receives the connected `WalletAccount` and a `proceed` callback the
+   * host must call to advance to the asset picker.
+   *
+   * When not set (default), the widget transitions directly from wallet
+   * connect → asset selector as before.
+   */
+  postConnectScreen?: (
+    wallet: WalletAccount,
+    proceed: () => void,
+  ) => ReactNode;
 
   // ---------------------------------------------------------------------------
   // Asset selector config — passed through to <AssetSelectorScreen />.
@@ -278,6 +302,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     storageNamespace,
     mode = "payment",
     hideDestination = false,
+    alwaysShowRoute = false,
     skipAutoConnect = false,
     onDisconnect,
     walletAccount: walletAccountProp,
@@ -286,6 +311,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     walletPickerHeader,
     walletPickerExtrasBefore,
     walletPickerExtrasAfter,
+    postConnectScreen,
     minUsdValue = 0,
     skipMinUsdValueFilter = false,
     tokenFilter,
@@ -459,6 +485,11 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
   // renders the chain selection sub-view.
   const [initialChainSelectWallet, setInitialChainSelectWallet] = useState<WalletGroup | null>(null);
 
+  // Post-connect gate state. When `postConnectScreen` is provided, the
+  // widget stays on that screen until the host calls `proceed()`. This
+  // flips the flag and the widget falls through to the asset picker.
+  const [postConnectCleared, setPostConnectCleared] = useState(!postConnectScreen);
+
   function handlePaymentCancelled() {
     // Flip back to the asset picker so the buyer can pick a different
     // token without unmounting the widget. The host can still subscribe
@@ -504,6 +535,8 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
               extrasAfter={walletPickerExtrasAfter}
             />
           </div>
+        ) : postConnectScreen && !postConnectCleared ? (
+          postConnectScreen(wallet, () => setPostConnectCleared(true))
         ) : !fromToken ? (
           <div className="px-5 py-5">
             <AssetSelectorScreen
@@ -564,6 +597,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
             memo={memo}
             storageNamespace={storageNamespace}
             hideDestination={hideDestination}
+            alwaysShowRoute={alwaysShowRoute}
             onAmountSelected={onAmountSelected}
             onTransactionCreated={onTransactionCreated}
             onQuoteLocked={onQuoteLocked}

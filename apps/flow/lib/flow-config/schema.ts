@@ -16,7 +16,7 @@ import { z } from "zod";
  * and importing the Zod schema there would create a cycle.
  */
 
-export const FLOW_SCENARIOS = ["checkout", "deposit", "withdraw"] as const;
+export const FLOW_SCENARIOS = ["checkout", "deposit", "withdraw", "kyc-deposit"] as const;
 
 export const FLOW_SOURCE_TYPES = [
   "external-wallet",

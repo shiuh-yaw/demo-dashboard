@@ -24,7 +24,7 @@ export default function Landing() {
     <div className="min-h-dvh bg-(--brand-page-bg)">
       <main className="mx-auto max-w-6xl px-6 pt-10 pb-24">
         <Hero />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {SCENARIOS.map((scenario) => (
             <ScenarioCard key={scenario.href} {...scenario} />
           ))}
@@ -53,7 +53,7 @@ function Hero() {
         <span className="text-(--brand-primary)">Settle any stablecoin.</span>
       </h1>
       <p className="text-base lg:text-lg text-(--brand-fg-secondary) max-w-xl">
-        Three live scenarios — checkout, deposit, withdraw — built on
+        Three live scenarios — checkout, deposit, and withdraw — built on
         Fireblocks Flow infrastructure<DisclaimerCite />. Run any of them
         in the browser and read the integration side-by-side.
       </p>

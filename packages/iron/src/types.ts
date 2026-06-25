@@ -213,6 +213,10 @@ export interface SimplifiedBankAccountRequest {
   postal_code: string;
   label?: string;
   is_third_party?: boolean;
+  /** Recipient email — required by Iron for USD (ACH) accounts. */
+  email?: string;
+  /** Recipient phone (E.164) — required by Iron for USD (ACH) accounts. */
+  phone?: string;
 }
 
 export interface FiatAddress {
@@ -258,6 +262,10 @@ export interface SimpleBankAccountRequest {
   bank_name?: string;
   bank_address?: string;
   label?: string;
+  /** Recipient email — required by Iron for USD (ACH) accounts. */
+  email?: string;
+  /** Recipient phone (E.164) — required by Iron for USD (ACH) accounts. */
+  phone?: string;
 }
 
 /** GET /addresses/fiat/{customer_id} response */
@@ -288,7 +296,18 @@ export interface OfframpQuoteRequest {
   destination_currency: FiatCurrency;
   source_amount?: number;
   destination_amount?: number;
+  /**
+   * Recipient bank account. For SEPA (EUR) this is the IBAN, sent as
+   * `recipient_account`. For ACH (USD) Iron rejects `recipient_account` and
+   * requires the registered fiat-address id via `recipient_account_id` — pass
+   * that id in `recipient_account_id` below instead.
+   */
   bank_account_id: string;
+  /**
+   * Registered fiat-address id, sent as `recipient_account_id`. Required by
+   * Iron for USD (ACH) offramp quotes; takes precedence over `bank_account_id`.
+   */
+  recipient_account_id?: string;
   blockchain?: BlockchainType;
 }
 
@@ -435,6 +454,20 @@ export interface CreateOfframpRequest {
   blockchain?: BlockchainType;
   source_currency?: CryptoCurrency;
   destination_currency?: FiatCurrency;
+  /**
+   * ACH (USD) recipient details. When both are present the offramp recipient is
+   * built as an inline ACH account_identifier instead of SEPA/IBAN. `bank_account_id`
+   * is then unused for the recipient identifier.
+   */
+  routing_number?: string;
+  account_number?: string;
+  /**
+   * Optional partner-supplied identifier persisted on the autoramp and echoed
+   * back by Iron (e.g. in `autoramps.list`). The autoramp resource itself does
+   * not return converted amounts, so callers can stash a small encoded value
+   * here to recover demo display data without a separate store.
+   */
+  external_id?: string;
 }
 
 export interface Offramp {

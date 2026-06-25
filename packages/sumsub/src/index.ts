@@ -9,6 +9,7 @@ export {
   createSumsubClient,
   resolveSumsubBaseUrl,
   SumsubClient,
+  SumsubApiError,
   type CreateSumsubClientOptions,
 } from "./client";
 

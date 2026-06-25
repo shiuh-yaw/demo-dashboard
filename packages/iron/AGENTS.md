@@ -45,6 +45,7 @@ If you are an AI agent integrating against Iron, **consult the provider docs fir
 - **Main docs:** [docs.iron.xyz](https://docs.iron.xyz/)
 - **API reference (sandbox):** [docs.iron.xyz/reference-sandbox](https://docs.iron.xyz/reference-sandbox)
 - **Local detail:** `packages/iron/docs/iron-api.md` (full surface used by dashboard) and `packages/iron/docs/iron-api-flows.md` (onboarding + ramp flows).
+- **Sandbox testing:** `packages/iron/docs/iron-sandbox-testing.md` — the sandbox deposit address is **not real**; progress offramps/autoramps by simulating the deposit with `sandbox.createTransaction` → `setTransactionState`/`approveAutoramp` instead of sending crypto.
 
 ## Supported regions
 
@@ -169,7 +170,6 @@ const customer = await iron.customers.create({
   type: "individual",
   email: "ada@example.com",
 });
-
 const quote = await iron.onramp.quote({
   customer_id: customer.id,
   source_currency: "EUR",

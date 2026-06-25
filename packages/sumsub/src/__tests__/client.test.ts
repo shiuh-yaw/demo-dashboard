@@ -64,6 +64,35 @@ describe("SumsubClient", () => {
       expect(body.externalUserId).toBe("user_1");
       expect(body.levelName).toBeUndefined();
     });
+
+    it("is idempotent: on 409 it returns the existing applicant", async () => {
+      const existing: Applicant = { id: "app_existing", externalUserId: "user_1" };
+      // First call (create) → 409 already-exists.
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () => Promise.reject(new Error("no json")),
+        text: () =>
+          Promise.resolve(
+            '{"code":409,"description":"Applicant with external user id \'user_1\' already exists: app_existing"}',
+          ),
+      } as Response);
+      // Fallback lookup by externalUserId → existing applicant.
+      fetchSpy.mockResolvedValueOnce(mockJsonResponse(existing));
+
+      const result = await client.createApplicant({
+        externalUserId: "user_1",
+        levelName: "id-only",
+      });
+
+      expect(result).toEqual(existing);
+      // Second fetch is the GET-by-external-id fallback.
+      const [url, opts] = fetchSpy.mock.calls[1]!;
+      expect(url).toContain(
+        "/resources/applicants/-;externalUserId=user_1/one",
+      );
+      expect(opts.method).toBe("GET");
+    });
   });
 
   describe("getApplicant", () => {
@@ -111,7 +140,7 @@ describe("SumsubClient", () => {
   // -----------------------------------------------------------------------
 
   describe("generateAccessToken", () => {
-    it("POSTs to /resources/accessTokens/sdk with query params", async () => {
+    it("POSTs to /resources/accessTokens/sdk with a JSON body", async () => {
       const mockToken: AccessToken = { token: "sdk_token_abc", userId: "user_1" };
       fetchSpy.mockResolvedValueOnce(mockJsonResponse(mockToken));
 
@@ -122,13 +151,16 @@ describe("SumsubClient", () => {
 
       expect(result).toEqual(mockToken);
       const [url, opts] = fetchSpy.mock.calls[0]!;
-      expect(url).toContain("/resources/accessTokens/sdk?");
-      expect(url).toContain("userId=user_1");
-      expect(url).toContain("levelName=basic-kyc");
+      // Params go in the body, not the query string — the /sdk endpoint
+      // returns 400 "Body must be provided" otherwise.
+      expect(url).toBe("https://api.sumsub.com/resources/accessTokens/sdk");
       expect(opts.method).toBe("POST");
+      const body = JSON.parse(opts.body);
+      expect(body.userId).toBe("user_1");
+      expect(body.levelName).toBe("basic-kyc");
     });
 
-    it("includes ttlInSecs when provided", async () => {
+    it("includes ttlInSecs in the body when provided", async () => {
       fetchSpy.mockResolvedValueOnce(mockJsonResponse({ token: "t" }));
 
       await client.generateAccessToken({
@@ -137,8 +169,9 @@ describe("SumsubClient", () => {
         ttlInSecs: 1200,
       });
 
-      const [url] = fetchSpy.mock.calls[0]!;
-      expect(url).toContain("ttlInSecs=1200");
+      const [, opts] = fetchSpy.mock.calls[0]!;
+      const body = JSON.parse(opts.body);
+      expect(body.ttlInSecs).toBe(1200);
     });
   });
 

@@ -29,6 +29,7 @@ Experimental V1. Implemented today:
 - ✅ Checkout scenario (Pitch + provisional Code view) — full Flow SDK lifecycle: server create → `attachFlowSource` → `getFlowQuote` → `submitFlowTransaction` → poll
 - ✅ Deposit scenario (same machinery, user-input amount framing)
 - ✅ Withdraw scenario — SOL embedded wallet (USDC@Solana anchor), settlement picker (chain → token), destination form, deferred Flow creation at review time
+- ✅ KYC Deposit scenario — uses the SAME `<ExchangeCheckoutWidget>` as checkout/deposit with `postConnectScreen` prop to inject SumSub KYC (rendered in a modal) between wallet connect and asset selection. KYC-verified users deposit USDC on Base Sepolia as a **self-send** to their own connected wallet (so repeat demos don't drain test USDC); the merchant Iron off-ramp to the merchant's bank is simulated on the backend (invisible to the end user). KYC completion is persisted to Dynamic user metadata (`is_kyc_completed`) so returning users skip re-verification. SumSub is dashboard-mediated (D-003) via `/api/kyc-deposit/*`. Not listed on landing page (direct-access `/kyc-deposit` route only).
 - ✅ Fireblocks + Dynamic brand chrome, light + dark mode, no-FOUC init script
 
 Coming in follow-up PRs:
@@ -89,6 +90,12 @@ Always consult the upstream docs before changing Flow wiring:
 | `/checkout?id=<cfg>` | Merchant checkout scenario (Pitch ↔ Code) | Public (auth-on-action) |
 | `/deposit?id=<cfg>` | Platform deposit scenario | Public (auth-on-action) |
 | `/withdraw?id=<cfg>` | Withdraw — SOL embedded wallet → any chain/token | Public (auth-on-action) |
+| `/kyc-deposit` | KYC-gated deposit — connectAndSign → SumSub KYC → deposit USDC → settlement visualization | Public (auth-on-action) |
+| `/api/kyc-deposit/init` | Create SumSub applicant + SDK access token (proxies dashboard) | Server-only |
+| `/api/kyc-deposit/status` | Check KYC verification status (proxies dashboard) | Server-only |
+| `/api/kyc-deposit/deposit-address` | Return the deposit destination — the caller's own connected wallet (self-send) | Server-only |
+| `/api/kyc-deposit/kyc-status` | Whether the authed user already completed KYC (reads Dynamic `is_kyc_completed` metadata) — lets returning users skip SumSub | Auth-required |
+| `/api/kyc-deposit/complete` | Persist KYC completion to Dynamic user metadata (`is_kyc_completed`) after a GREEN SumSub review | Auth-required |
 | `/api/withdraws/[id]` | Withdraw intent state (Phase 10) | Auth-required |
 
 ## Env reference
@@ -98,7 +105,9 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 | Variable | Required for | Server-only? |
 |---|---|---|
 | `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` | Dynamic SDK boot (all scenarios) | No (NEXT_PUBLIC) |
-| `DYNAMIC_API_TOKEN` | Server-side Flow creation via `POST /api/checkouts` (required for all scenarios + testnet mode) | Yes |
+| `DYNAMIC_API_KEY` | One Dynamic env API token used server-side. Needs **flow.write** (Flow creation via `POST /api/checkouts`) **and** user read+write (`/kyc-deposit` persists `is_kyc_completed` via `@dynamic-demos/dynamic`). Read under two names: checkouts reads `DYNAMIC_API_TOKEN` falling back to `DYNAMIC_API_KEY`; the metadata helpers read `DYNAMIC_API_KEY`. Setting `DYNAMIC_API_KEY` alone covers both. | Yes |
+| `DYNAMIC_API_TOKEN` | Optional legacy alias for `DYNAMIC_API_KEY` (only `POST /api/checkouts` reads it). | Yes |
+| `DASHBOARD_API_URL` | `/kyc-deposit` scenario — proxies SumSub calls to dashboard (D-003) | Yes |
 
 ## Architecture invariants
 

@@ -108,6 +108,31 @@ export const env = createEnv({
      */
     IRON_API_KEY: z.string().optional(),
     /**
+     * Fixed merchant Iron customer that receives ALL /kyc-deposit settlements
+     * (one merchant, like paying a business). Must be a KYC-approved customer
+     * in the connected Iron environment. Required to drive the demo offramp.
+     */
+    IRON_MERCHANT_CUSTOMER_ID: z.string().optional(),
+    /**
+     * Merchant's USD (ACH) settlement account. In sandbox these default to
+     * public ACH test fixtures so the demo works out of the box; override for a
+     * specific account. The merchant-offramp route auto-registers + approves
+     * this account for the merchant customer.
+     */
+    IRON_MERCHANT_BANK_ROUTING_NUMBER: z
+      .string()
+      .optional()
+      .default("021000021"),
+    IRON_MERCHANT_BANK_ACCOUNT_NUMBER: z
+      .string()
+      .optional()
+      .default("000123456789"),
+    /**
+     * Fiat currency the merchant offramp settles to. USDC → USD (≈1:1) by
+     * default via ACH. Sandbox demo only.
+     */
+    IRON_MERCHANT_OFFRAMP_CURRENCY: z.string().optional().default("USD"),
+    /**
      * Postgres pooled connection URL (Supabase pooler, port 6543).
      * Used at runtime by `@dynamic-demos/db`'s Prisma singleton (D-013).
      * Optional during Phase 2 scaffold — required once the first model
@@ -214,6 +239,33 @@ export const env = createEnv({
      * `x-internal-api-secret` header.
      */
     INTERNAL_API_SECRET: z.string().optional(),
+    /**
+     * SumSub App Token for KYC verification.
+     * Sandbox tokens start with `sbx:`. Sandbox-by-default (D-005).
+     * Get from https://cockpit.sumsub.com/checkus#/devSpace/appTokens
+     */
+    SUMSUB_APP_TOKEN: z.string().optional(),
+    /**
+     * SumSub Secret Key paired with the app token.
+     * Required alongside SUMSUB_APP_TOKEN.
+     */
+    SUMSUB_SECRET_KEY: z.string().optional(),
+    /**
+     * SumSub environment selector. Sandbox-by-default per D-005.
+     */
+    SUMSUB_ENVIRONMENT: z
+      .enum(["sandbox", "production"])
+      .optional()
+      .default("sandbox"),
+    /**
+     * SumSub verification level name. MUST match a level that exists in the
+     * connected SumSub account (Cockpit → Levels). Account-specific: if your
+     * account doesn't have a level with this name, set this to your real level
+     * name, otherwise applicant creation fails with `Level '…' not found`
+     * (404). Default matches the demo SumSub account's `id-only` level
+     * (ID document only).
+     */
+    SUMSUB_LEVEL_NAME: z.string().min(1).optional().default("id-only"),
   },
   /*
    * Environment variables available on the client (and server).
@@ -309,6 +361,12 @@ export const env = createEnv({
     BLINDPAY_WEBHOOK_SECRET: process.env.BLINDPAY_WEBHOOK_SECRET,
     IRON_ENVIRONMENT: process.env.IRON_ENVIRONMENT,
     IRON_API_KEY: process.env.IRON_API_KEY,
+    IRON_MERCHANT_CUSTOMER_ID: process.env.IRON_MERCHANT_CUSTOMER_ID,
+    IRON_MERCHANT_BANK_ROUTING_NUMBER:
+      process.env.IRON_MERCHANT_BANK_ROUTING_NUMBER,
+    IRON_MERCHANT_BANK_ACCOUNT_NUMBER:
+      process.env.IRON_MERCHANT_BANK_ACCOUNT_NUMBER,
+    IRON_MERCHANT_OFFRAMP_CURRENCY: process.env.IRON_MERCHANT_OFFRAMP_CURRENCY,
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
     USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
@@ -319,6 +377,10 @@ export const env = createEnv({
     MAGIC_SEND_VAULT_RPC_URL: process.env.MAGIC_SEND_VAULT_RPC_URL,
     DYNAMIC_WEBHOOK_SECRET: process.env.DYNAMIC_WEBHOOK_SECRET,
     INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,
+    SUMSUB_APP_TOKEN: process.env.SUMSUB_APP_TOKEN,
+    SUMSUB_SECRET_KEY: process.env.SUMSUB_SECRET_KEY,
+    SUMSUB_ENVIRONMENT: process.env.SUMSUB_ENVIRONMENT,
+    SUMSUB_LEVEL_NAME: process.env.SUMSUB_LEVEL_NAME,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

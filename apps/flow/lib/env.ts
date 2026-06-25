@@ -13,6 +13,7 @@
  */
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import { normalizeBaseUrl } from "@/lib/normalize-base-url";
 
 export const env = createEnv({
   server: {
@@ -27,6 +28,10 @@ export const env = createEnv({
      */
     DYNAMIC_API_TOKEN: z.string().min(1).optional(),
     DYNAMIC_API_KEY: z.string().min(1).optional(),
+    DASHBOARD_API_URL: z.preprocess(
+      normalizeBaseUrl,
+      z.string().url().optional(),
+    ),
   },
   client: {
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string().min(1, {
@@ -39,9 +44,16 @@ export const env = createEnv({
     DYNAMIC_API_TOKEN:
       process.env.DYNAMIC_API_TOKEN ?? process.env.DYNAMIC_API_KEY,
     DYNAMIC_API_KEY: process.env.DYNAMIC_API_KEY,
+    DASHBOARD_API_URL: process.env.DASHBOARD_API_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID,
   },
+  /**
+   * Treat empty-string env vars (a common deployment footgun — adding a var
+   * in the host UI with no value) as `undefined` so `.optional()` applies
+   * instead of failing validation and crashing route modules at import.
+   */
+  emptyStringAsUndefined: true,
 });

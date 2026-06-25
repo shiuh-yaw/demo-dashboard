@@ -347,6 +347,8 @@ export class IronFinanceClient implements IIronFinanceClient {
                 country: "US",
                 postal_code: "00000",
                 label: request.label,
+                email: request.email,
+                phone: request.phone,
               };
 
         const nameParts = req.account_holder_name.trim().split(/\s+/);
@@ -389,6 +391,9 @@ export class IronFinanceClient implements IIronFinanceClient {
               postal_code: req.postal_code,
             },
             is_third_party: req.is_third_party ?? false,
+            // Required by Iron for USD (ACH) accounts; harmless for SEPA.
+            ...(req.email ? { email_address: { email: req.email } } : {}),
+            ...(req.phone ? { phone_number: req.phone } : {}),
           },
           label: req.label,
         };
@@ -550,11 +555,18 @@ export class IronFinanceClient implements IIronFinanceClient {
           source_currency_code: request.source_currency,
           source_currency_chain: request.blockchain || "Base",
           destination_currency_code: request.destination_currency,
-          recipient_account: request.bank_account_id,
           rate_expiry_policy: "Return",
           expiry_in_hours: "24",
           is_third_party: "false",
         });
+        // ACH/USD: Iron rejects `recipient_account` and requires the registered
+        // fiat-address id via `recipient_account_id`. SEPA/EUR uses the IBAN as
+        // `recipient_account`.
+        if (request.recipient_account_id) {
+          params.set("recipient_account_id", request.recipient_account_id);
+        } else {
+          params.set("recipient_account", request.bank_account_id);
+        }
 
         if (request.source_amount) {
           params.set("amount_in", (request.source_amount / 1000000).toString());
@@ -578,20 +590,33 @@ export class IronFinanceClient implements IIronFinanceClient {
         const sourceCurrency = request.source_currency || "USDC";
         const destinationCurrency = request.destination_currency || "EUR";
 
-        const autorampRequest = {
+        // ACH (USD) builds an inline ACH identifier from routing/account;
+        // otherwise SEPA from the IBAN in bank_account_id.
+        const accountIdentifier =
+          request.routing_number && request.account_number
+            ? {
+                type: "ACH",
+                routing_number: request.routing_number,
+                account_number: request.account_number,
+              }
+            : { type: "SEPA", iban: request.bank_account_id };
+
+        const autorampRequest: Record<string, unknown> = {
           customer_id: request.customer_id,
           destination_currency: { type: "Fiat", code: destinationCurrency },
           recipient_account: {
             type: "Fiat",
-            account_identifier: {
-              type: "SEPA",
-              iban: request.bank_account_id,
-            },
+            account_identifier: accountIdentifier,
           },
           source_currencies: [
             { type: "Crypto", blockchain, token: sourceCurrency },
           ],
         };
+        // Iron persists + echoes external_id (e.g. in autoramps.list) — used by
+        // callers to recover display data the autoramp itself omits (amounts).
+        if (request.external_id) {
+          autorampRequest.external_id = request.external_id;
+        }
 
         const response = await this.fetchImpl(`${this.apiUrl}/api/autoramps`, {
           method: "POST",

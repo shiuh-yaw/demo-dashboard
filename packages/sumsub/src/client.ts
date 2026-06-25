@@ -23,6 +23,19 @@ import type {
 
 const DEFAULT_BASE_URL = "https://api.sumsub.com";
 
+/** Error thrown for non-2xx SumSub responses, carrying the HTTP status. */
+export class SumsubApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly method: string,
+    public readonly path: string,
+    public readonly responseBody: string,
+  ) {
+    super(`SumSub ${method} ${path} failed (${status}): ${responseBody}`);
+    this.name = "SumsubApiError";
+  }
+}
+
 export function resolveSumsubBaseUrl(_env: SumsubEnvironment): string {
   return DEFAULT_BASE_URL;
 }
@@ -53,7 +66,17 @@ export class SumsubClient implements ISumsubClient {
   async createApplicant(request: CreateApplicantRequest): Promise<Applicant> {
     const { levelName, ...body } = request;
     const path = `/resources/applicants?levelName=${encodeURIComponent(levelName)}`;
-    return this.post<Applicant>(path, body);
+    try {
+      return await this.post<Applicant>(path, body);
+    } catch (error) {
+      // Idempotency: an applicant already exists for this externalUserId
+      // (409). Reuse it instead of failing — re-running KYC for the same
+      // wallet should resume the existing applicant.
+      if (error instanceof SumsubApiError && error.status === 409) {
+        return this.getApplicantByExternalId(request.externalUserId);
+      }
+      throw error;
+    }
   }
 
   async getApplicant(applicantId: string): Promise<Applicant> {
@@ -79,16 +102,18 @@ export class SumsubClient implements ISumsubClient {
   async generateAccessToken(
     request: GenerateAccessTokenRequest,
   ): Promise<AccessToken> {
-    const params = new URLSearchParams({
+    // The `/resources/accessTokens/sdk` endpoint reads its parameters from a
+    // JSON body (unlike the legacy query-param `/resources/accessTokens`
+    // endpoint). Sending query params only fails with 400 "Body must be
+    // provided".
+    const body: Record<string, unknown> = {
       userId: request.userId,
       levelName: request.levelName,
-    });
+    };
     if (request.ttlInSecs !== undefined) {
-      params.set("ttlInSecs", String(request.ttlInSecs));
+      body.ttlInSecs = request.ttlInSecs;
     }
-    return this.post<AccessToken>(
-      `/resources/accessTokens/sdk?${params.toString()}`,
-    );
+    return this.post<AccessToken>("/resources/accessTokens/sdk", body);
   }
 
   async generateShareToken(
@@ -155,7 +180,7 @@ export class SumsubClient implements ISumsubClient {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`SumSub GET ${path} failed (${res.status}): ${text}`);
+      throw new SumsubApiError(res.status, "GET", path, text);
     }
     return res.json() as Promise<T>;
   }
@@ -176,7 +201,7 @@ export class SumsubClient implements ISumsubClient {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`SumSub POST ${path} failed (${res.status}): ${text}`);
+      throw new SumsubApiError(res.status, "POST", path, text);
     }
     const contentType = res.headers.get("content-type");
     if (contentType?.includes("application/json")) {
