@@ -244,7 +244,7 @@ const res = await fetch(
   {
     method: "POST",
     headers: {
-      Authorization: \`Bearer \${process.env.DYNAMIC_API_TOKEN}\`,
+      Authorization: \`Bearer \${process.env.DYNAMIC_API_KEY}\`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -351,9 +351,9 @@ export function renderApiSteps(ctx: FlowSnippetContext): StepTuple {
   const step1 = `ENV_ID="your-environment-id"
 SERVER_BASE="https://app.dynamic.xyz/api/v0/server/$ENV_ID"
 
-# Server-side — requires DYNAMIC_API_TOKEN with flow.write scope.
+# Server-side — requires DYNAMIC_API_KEY with flow.write scope.
 FLOW=$(curl -sX POST "$SERVER_BASE/flow/${flowMode}" \\
-  -H "Authorization: Bearer $DYNAMIC_API_TOKEN" \\
+  -H "Authorization: Bearer $DYNAMIC_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "amount": "5.00",

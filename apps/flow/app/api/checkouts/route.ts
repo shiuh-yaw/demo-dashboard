@@ -44,11 +44,11 @@ interface CreateFlowBody {
 }
 
 export async function POST(request: NextRequest) {
-  const token = env.DYNAMIC_API_TOKEN;
+  const token = env.DYNAMIC_API_KEY;
   const envId = env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID;
   if (!token) {
     return NextResponse.json(
-      { error: "DYNAMIC_API_TOKEN is not configured" },
+      { error: "DYNAMIC_API_KEY is not configured" },
       { status: 503 },
     );
   }
@@ -153,9 +153,9 @@ export async function POST(request: NextRequest) {
     ) {
       detail =
         `Dynamic API token rejected for environment ${envId}. ` +
-        "Set DYNAMIC_API_TOKEN (or DYNAMIC_API_KEY) to an API key created " +
-        "in that same Dynamic environment with flow.write scope — not the " +
-        "dashboard operator env token.";
+        "Set DYNAMIC_API_KEY to an API key created in that same Dynamic " +
+        "environment with flow.write scope — not the dashboard operator " +
+        "env token.";
     }
     return NextResponse.json(
       { error: detail, upstream: text.slice(0, 1000) },

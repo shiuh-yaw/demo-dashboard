@@ -458,7 +458,7 @@ export const CHECKOUT_EXTRAS: ScenarioExtras = {
 Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK at v1.12.0+.
 
 Integration sequence:
-1. Server: create a flow via POST /server/{envId}/flow/payment using DYNAMIC_API_TOKEN (flow.write scope). Include amount, currency, settlementConfig, and destinationConfig. Store the returned flow.id.
+1. Server: create a flow via POST /server/{envId}/flow/payment using DYNAMIC_API_KEY (flow.write scope). Include amount, currency, settlementConfig, and destinationConfig. Store the returned flow.id.
 2. Client: pass flowId to the frontend after the buyer initiates checkout.
 3. Wallet connect: render a picker driven by getAvailableWalletProvidersData(). On selection, connectWithWalletProvider({ walletProviderKey }).
 4. Source-attach: attachFlowSource({ flowId, fromAddress, fromChainId, fromChainName, sourceType: "wallet" }). fromChainId MUST come from the picked source token, NOT getActiveNetworkData(). SDK stores the session token automatically.

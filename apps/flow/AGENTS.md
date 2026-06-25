@@ -105,8 +105,7 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 | Variable | Required for | Server-only? |
 |---|---|---|
 | `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` | Dynamic SDK boot (all scenarios) | No (NEXT_PUBLIC) |
-| `DYNAMIC_API_KEY` | One Dynamic env API token used server-side. Needs **flow.write** (Flow creation via `POST /api/checkouts`) **and** user read+write (`/kyc-deposit` persists `is_kyc_completed` via `@dynamic-demos/dynamic`). Read under two names: checkouts reads `DYNAMIC_API_TOKEN` falling back to `DYNAMIC_API_KEY`; the metadata helpers read `DYNAMIC_API_KEY`. Setting `DYNAMIC_API_KEY` alone covers both. | Yes |
-| `DYNAMIC_API_TOKEN` | Optional legacy alias for `DYNAMIC_API_KEY` (only `POST /api/checkouts` reads it). | Yes |
+| `DYNAMIC_API_KEY` | One Dynamic env API token used server-side (same var name as every other demo app). Needs **flow.write** (Flow creation via `POST /api/checkouts`) **and** user read+write (`/kyc-deposit` persists `is_kyc_completed` via `@dynamic-demos/dynamic`). | Yes |
 | `DASHBOARD_API_URL` | `/kyc-deposit` scenario — proxies SumSub calls to dashboard (D-003) | Yes |
 
 ## Architecture invariants

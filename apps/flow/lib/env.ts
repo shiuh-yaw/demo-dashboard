@@ -21,12 +21,12 @@ export const env = createEnv({
       .enum(["development", "production", "test"])
       .default("development"),
     /**
-     * Environment-scoped admin API token used by POST /api/checkouts to
-     * create Flows server-side. Must belong to the same Dynamic environment
-     * as NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID and include flow.write scope.
-     * DYNAMIC_API_KEY is accepted as a fallback (matches other demo apps).
+     * Environment-scoped admin API token (matches every other demo app's
+     * naming). Used server-side by POST /api/checkouts (needs flow.write) and
+     * by the /kyc-deposit metadata routes via `@dynamic-demos/dynamic` (needs
+     * user read+write). Must belong to the same Dynamic environment as
+     * NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID.
      */
-    DYNAMIC_API_TOKEN: z.string().min(1).optional(),
     DYNAMIC_API_KEY: z.string().min(1).optional(),
     DASHBOARD_API_URL: z.preprocess(
       normalizeBaseUrl,
@@ -41,8 +41,6 @@ export const env = createEnv({
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    DYNAMIC_API_TOKEN:
-      process.env.DYNAMIC_API_TOKEN ?? process.env.DYNAMIC_API_KEY,
     DYNAMIC_API_KEY: process.env.DYNAMIC_API_KEY,
     DASHBOARD_API_URL: process.env.DASHBOARD_API_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
