@@ -227,7 +227,21 @@ export default function WalletPickerScreen({
         if (fallback) onConnected(fallback);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connection failed.");
+      // The account may already be connected + verified in the shared SDK
+      // singleton (the buyer re-picked the same provider, or returned to the
+      // picker without logging out). connectAndVerify then throws
+      // "Wallet account <addr> is already verified" even though the account
+      // is perfectly usable — adopt the existing primary account and advance
+      // instead of surfacing a dead-end error.
+      const msg = err instanceof Error ? err.message : "";
+      if (/already verified/i.test(msg)) {
+        const existing = getPrimaryWalletAccount();
+        if (existing) {
+          onConnected(existing);
+          return;
+        }
+      }
+      setError(msg || "Connection failed.");
     } finally {
       setConnecting(null);
     }

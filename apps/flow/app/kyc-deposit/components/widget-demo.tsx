@@ -58,6 +58,11 @@ export function KycDepositWidgetDemo() {
         method: "POST",
         headers: getAuthHeaders(),
       });
+      // Then drop the Dynamic session so the verified wallet leaves the SDK
+      // singleton — otherwise re-selecting the same provider re-runs
+      // connectAndVerify on an already-verified account ("this wallet is
+      // already verified").
+      await logout();
     } finally {
       setResetNonce((n) => n + 1);
       setStarted(false);
@@ -65,10 +70,18 @@ export function KycDepositWidgetDemo() {
     }
   }, []);
 
+  // Back = leave the flow AND unlink the wallet. Without the logout, the
+  // verified wallet stays in the shared SDK singleton, so re-entering and
+  // re-clicking the same provider throws "this wallet is already verified".
+  const handleBack = useCallback(async () => {
+    await logout();
+    setStarted(false);
+  }, []);
+
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
       {started ? (
-        <WidgetStage onBack={() => setStarted(false)} resetNonce={resetNonce} />
+        <WidgetStage onBack={handleBack} resetNonce={resetNonce} />
       ) : (
         <ScenarioCard
           eyebrow="Verified deposit"
