@@ -22,7 +22,7 @@ const navGroups = [
   {
     items: [
       {
-        href: "/",
+        href: "/brands",
         label: "Brands",
         icon: Building2,
       },
@@ -114,7 +114,7 @@ export function Sidebar({ user }: SidebarProps) {
     <aside className="group bg-white border-r border-slate-100 flex flex-col fixed h-full w-16 hover:w-56 transition-all duration-200 z-40">
       {/* Logo */}
       <div className="h-16 flex items-center justify-center">
-        <Link href="/">
+        <Link href="/brands">
           <DynamicIcon width={28} height={28} className="group-hover:hidden" />
           <DynamicLogo
             width={110}

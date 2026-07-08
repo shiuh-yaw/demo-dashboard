@@ -12,6 +12,7 @@ The operator orchestrator for the Dynamic Demos monorepo (D-001). Demo creators 
 
 ## Capabilities
 
+- Public landing page at `/` (no auth) showcasing six demos (wallet, trade, earn, flow, remittance, proceeds), with detail pages at `/demos/[slug]`. Config-driven via `src/lib/landing/demos.ts` — launch URLs are wired (dynamic.dev domains where they exist; earn + proceeds still on vercel.app until their dynamic.dev domains are added). Detail pages include an "Under the hood" section driven by the catalog's `stack` (tech chips; ≥3 required per demo) and `resources` (docs + public `dynamic-labs-oss/examples` links; optional, may be empty) fields, validated in `__tests__/demos.test.ts` (https-only resource URLs when present). Cards/buttons compose `@dynamic-labs-sdk/droplet` primitives via the client shim `(public)/_components/droplet-client.ts` (droplet's dist lacks `"use client"`); typeset in Figtree, scoped to the `(public)` tree. Operator sign-in is the heart icon in the footer tagline (links to `/brands`). `(public)/_components/force-light-theme.tsx` strips the `dark` class next-themes leaves on `<html>` after operator visits — the public surface is light-only.
 - Operator UI for demo creators (per-demo-type forms under `/brands`, `/remittance`, `/checkouts`, `/earns`, `/trade`, `/visa-direct`, `/wallets`, `/widgets`).
 - Orchestration API (`/api/orchestrate/*`) — quotes, onramp, offramp, swap, transactions, wallet verify (Phase 5B; partial today).
 - Per-provider HTTP endpoints used by demo apps: `blindpay`, `iron`, `coinbase`, `sumsub`, `checkouts`, `earns`, `remittance`, `trade`, `visa-direct`, `wallets`, `widgets`.
@@ -24,7 +25,8 @@ The operator orchestrator for the Dynamic Demos monorepo (D-001). Demo creators 
 
 App routes (operator UI):
 
-- `/` — landing.
+- `/` — public landing page (no auth); `/demos/[slug]` — public demo detail pages. Rendered by the `(public)` route group, which must stay free of session calls and Providers.
+- All operator routes live in the `(operator)` route group, whose layout owns the auth gate (login form when unauthenticated) + sidebar + Providers. Route-group split means operator URLs are unchanged.
 - `/brands` — brand records (D-007 / Phase 2-brands).
 - `/remittance`, `/checkouts`, `/earns`, `/trade`, `/visa-direct`, `/wallets`, `/widgets` — per-demo-type config + history.
 - `/documentation` — runbooks and policy.
@@ -90,7 +92,7 @@ Dashboard uses its own internal styling — it is the operator UI, not a custome
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/transactions`, `@dynamic-demos/db` (only consumer), `@dynamic-demos/blindpay`, `@dynamic-demos/coinbase-onramp`, `@dynamic-demos/iron`, `@dynamic-demos/lifi`, `@dynamic-demos/fireblocks`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/transactions`, `@dynamic-demos/db` (only consumer), `@dynamic-demos/blindpay`, `@dynamic-demos/coinbase-onramp`, `@dynamic-demos/iron`, `@dynamic-demos/lifi`, `@dynamic-demos/fireblocks`, `@dynamic-labs-sdk/droplet` (public landing only — operator UI keeps its local kit; droplet's global CSS loads app-wide but the dashboard's token blocks come after it in `src/globals.css` and must stay there).
 **Imported by:** none.
 
 ## Examples
@@ -114,6 +116,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 - Don't: collapse the dashboard's Dynamic env with a demo app's (D-004). Verify each demo's JWT against its own JWKS.
 - Don't: import `@dynamic-demos/db` from any app other than this one (D-015).
 - Don't: bypass `@dynamic-demos/transactions` helpers when updating state — direct assignment breaks invariants.
+- Don't: add auth/session calls or Dynamic SDK imports to the `(public)` route group — the landing pages are anonymous and static.
 
 ## Webhook framework
 

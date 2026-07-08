@@ -1,6 +1,6 @@
 # Dashboard App
 
-The admin UI and API for managing checkout configurations, tracking transactions, and payment infrastructure integrations. Part of the [Dynamic Demos](../../README.md) monorepo.
+The public Dynamic Demos landing page, plus the admin UI and API for managing checkout configurations, tracking transactions, and payment infrastructure integrations. Part of the [Dynamic Demos](../../README.md) monorepo.
 
 **Runs on port 4000** when started via `pnpm dev:dashboard` or `pnpm dev` from the repo root.
 
@@ -8,7 +8,8 @@ The admin UI and API for managing checkout configurations, tracking transactions
 
 This app provides:
 
-- **Protected dashboard UI** - Create and manage checkouts, brands, earns, and wallets
+- **Public demos landing page** - `/` (no auth) showcases the demo apps with launch links and `/demos/[slug]` detail pages; config in `src/lib/landing/demos.ts`
+- **Protected dashboard UI** - Create and manage checkouts, brands, earns, and wallets (under `/brands`, `/checkouts`, etc.; sign in via the heart icon in the landing footer)
 - **Checkout & Transaction API** - REST API consumed by the `apps/checkouts` widget
 - **Iron Finance** - Customer management, KYC, onramps, offramps
 - **Coinbase Onramp** - Fiat-to-crypto orders

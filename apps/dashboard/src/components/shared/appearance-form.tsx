@@ -17,8 +17,8 @@ import {
   Section,
   Subsection,
   ColorField,
-} from "@/app/checkouts/components/editor/form-components";
-import { AiStyleImport } from "@/app/checkouts/components/editor/ai-style-import";
+} from "@/app/(operator)/checkouts/components/editor/form-components";
+import { AiStyleImport } from "@/app/(operator)/checkouts/components/editor/ai-style-import";
 import type { BorderRadiusSize } from "@/lib/types/dashboard";
 
 /**

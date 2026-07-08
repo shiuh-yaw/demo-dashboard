@@ -1,9 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@dynamic-labs-sdk/droplet/styles/globals.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/ui/src/**/*.ts";
+/*
+ * Tailwind v4 doesn't scan node_modules by default. Droplet's compiled dist
+ * uses Tailwind utility classes inside its component source, so without this
+ * @source its components (Card, Badge, Button) render unstyled.
+ * (Same pattern as apps/x402-console/app/globals.css.)
+ */
+@source "../node_modules/@dynamic-labs-sdk/droplet/dist/**/*.{js,mjs}";
 
 @custom-variant dark (&:is(.dark *));
 

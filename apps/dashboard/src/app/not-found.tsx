@@ -19,7 +19,7 @@ export default function DashboardNotFound() {
           className="inline-flex items-center gap-2 bg-[#335cff] hover:bg-[#2850e8] text-white font-medium text-sm py-2 px-4 rounded-md transition-colors"
         >
           <Home className="w-4 h-4" />
-          Back to Dashboard
+          Back to home
         </Link>
       </div>
     </div>

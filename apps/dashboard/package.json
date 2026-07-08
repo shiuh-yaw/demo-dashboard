@@ -27,6 +27,7 @@
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
     "@dynamic-labs-sdk/client": "catalog:",
+    "@dynamic-labs-sdk/droplet": "1.17.1",
     "@paralleldrive/cuid2": "2.2.2",
     "@t3-oss/env-nextjs": "0.13.8",
     "@upstash/qstash": "2.8.4",

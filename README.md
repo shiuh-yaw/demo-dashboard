@@ -1,12 +1,12 @@
 # Dynamic Demos
 
-A Turborepo monorepo for managing checkout configurations, tracking transactions, and building payment experiences. The **dashboard** app provides a protected admin UI and API for creating/managing payment checkouts; **checkouts** is the embeddable widget; **earn** and **wallet** are additional demo apps.
+A Turborepo monorepo for managing checkout configurations, tracking transactions, and building payment experiences. The **dashboard** app serves the public Dynamic Demos landing page at `/` and a protected admin UI + API for creating/managing payment checkouts; **checkouts** is the embeddable widget; **earn** and **wallet** are additional demo apps.
 
 ## Monorepo Structure
 
 ```
 apps/
-├── dashboard/     # Admin UI + API (port 4000) - checkout config, transactions, Iron, Coinbase, LI.FI
+├── dashboard/     # Public demos landing + admin UI + API (port 4000) - checkout config, transactions, Iron, Coinbase, LI.FI
 ├── checkouts/     # Embeddable checkout widget (port 4001)
 ├── earn/          # Earn demo app (port 4002)
 └── wallet/        # Wallet demo with embedded wallets (port 4003)
