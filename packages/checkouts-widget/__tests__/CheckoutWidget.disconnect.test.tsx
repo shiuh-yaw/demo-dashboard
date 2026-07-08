@@ -112,19 +112,22 @@ describe("CheckoutWidget — skipAutoConnect + disconnect", () => {
     expect(screen.getByText(/connect a wallet/i)).toBeDefined();
   });
 
-  it("fires onWalletConnected with the address when not using skipAutoConnect", () => {
-    // When skipAutoConnect is off and a wallet is auto-picked, the
-    // onWalletConnected callback is NOT fired (auto-pick is passive).
-    // onWalletConnected only fires on explicit user selection.
+  it("fires onWalletConnected with the wallet address and chain on auto-connect (skipAutoConnect=false)", () => {
+    // When skipAutoConnect is off and the SDK already has a primary wallet,
+    // the auto-connect path should fire onWalletConnected so hosts that
+    // derive destinationAddress from this callback receive the correct
+    // address before the payment flow runs.
     const onWalletConnected = vi.fn();
     render(
       <CheckoutWidget
         {...requiredProps}
+        skipAutoConnect={false}
         onWalletConnected={onWalletConnected}
       />,
     );
-    // Auto-pick should NOT fire onWalletConnected — it only fires on
-    // explicit picker interaction.
-    expect(onWalletConnected).not.toHaveBeenCalled();
+    // Auto-connect must fire onWalletConnected exactly once with the
+    // address and chain.
+    expect(onWalletConnected).toHaveBeenCalledTimes(1);
+    expect(onWalletConnected).toHaveBeenCalledWith(MOCK_WALLET_ADDRESS, "EVM");
   });
 });

@@ -212,6 +212,10 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
   const lockedFiredRef = useRef(false);
   const createdFiredRef = useRef(false);
 
+  // Double-submit guard: prevents a second tap on "Confirm" from firing a
+  // concurrent handleReviewConfirm while the first is awaiting refreshQuote.
+  const confirmingRef = useRef(false);
+
   // Build a ReviewQuote view of the current quote for the host callback.
   const reviewQuote = useMemo(
     () => buildReviewQuote(flow.quote, fromToken, destinationToken),
@@ -278,8 +282,12 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
             // `fromToken.chainId` is authoritative — the user (or
             // the host app) just explicitly picked this token, so
             // its chainId is unambiguously the source chain.
+            // Derive chainName from the token's chainId, NOT from
+            // walletAccount.chain: the wallet's self-reported chain
+            // family can diverge from the picked token's chain when
+            // the user has both EVM and SOL wallets connected.
             fromChainId: String(fromToken.chainId),
-            fromChainName: walletAccount.chain as never,
+            fromChainName: (isSolanaChainId(fromToken.chainId) ? "SOL" : "EVM") as never,
           },
           fromTokenAddress: fromToken.address,
         });
@@ -340,6 +348,9 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
   }, [flow, onCancelled]);
 
   const handleReviewConfirm = useCallback(async () => {
+    if (confirmingRef.current) return;
+    confirmingRef.current = true;
+    try {
     if (!flow.quote) return;
 
     // Solana-only: re-fetch the quote right before submit. The
@@ -416,6 +427,9 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
         return;
       }
       onSettlementCompleted?.(finalTx);
+    }
+    } finally {
+      confirmingRef.current = false;
     }
   }, [
     flow,

@@ -1,13 +1,22 @@
 /**
- * Canonical "native token" address marker. Per Dynamic's SDK
- * (`getSwapQuote.d.ts` line 26: "Use zero address for EVM and SOL
- * native tokens.") the zero EVM address doubles as the native-token
- * sentinel on both EVM and Solana chains in Checkout / Swap APIs.
+ * Canonical "native token" address marker for EVM chains. Per Dynamic's
+ * SDK (`getSwapQuote.d.ts` line 26) the zero address is the native-token
+ * sentinel for EVM chains in Checkout / Swap APIs.
  *
- * Use this rather than the literal string so it's grep-able and
- * intent is obvious at call sites.
+ * Do NOT use for Solana native SOL — use SOLANA_NATIVE_MINT instead.
  */
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+/**
+ * The wrapped-native SOL SPL mint address. This is what Dynamic's routing
+ * layer expects as the native-token identifier for Solana — the system
+ * program has no SPL address, so the wrapped mint is the canonical marker.
+ *
+ * Distinct from ZERO_ADDRESS: the quote endpoint treats them differently
+ * and will return 404 / "no quotes available" if given the EVM zero address
+ * for a Solana source token.
+ */
+export const SOLANA_NATIVE_MINT = "So11111111111111111111111111111111111111112";
 
 /** Dynamic's network id for Solana — bare chain id, not CAIP-2. */
 export const DYNAMIC_SOLANA_NETWORK_ID = 101;

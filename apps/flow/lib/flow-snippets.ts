@@ -9,6 +9,10 @@
  * so the page bodies stay short.
  */
 
+import {
+  SOLANA_NATIVE_MINT,
+  ZERO_ADDRESS,
+} from "@dynamic-demos/checkouts-widget";
 import type { ParsedFlowConfig } from "./flow-config/schema";
 import { findTokenByAssetChain } from "./tokens";
 
@@ -58,11 +62,10 @@ export const STEP_API_DOCS_URLS: readonly string[] = [
  * Intent-named scenario discriminator. Drives all per-scenario
  * branching across snippets, step prose, and code-panel wiring.
  *
- * "withdraw" maps to the API's `"deposit"` mode at the wire level
- * (`upstreamCheckoutMode()` below) because Dynamic models a withdraw
- * as a deposit into the user's destination wallet — but everywhere
- * upstream we keep the intent-named "withdraw" so demo code reads
- * symmetrically with the three scenario routes.
+ * Maps 1:1 to the Flow API's `/flow/{mode}` path segment
+ * (`flowModePath()` below) — the Flow API has a dedicated `"withdraw"`
+ * mode, unlike the legacy Checkout API which modeled withdrawals as a
+ * deposit into the user's destination wallet.
  */
 export type ScenarioMode = "payment" | "deposit" | "withdraw";
 
@@ -289,7 +292,7 @@ await attachFlowSource({
   flowId,
   fromAddress: wallet.address,
   fromChainId: String(fromChainId), // from the picked token — not getActiveNetworkData()
-  fromChainName: wallet.chain,
+  fromChainName: isSolanaChainId(fromToken.chainId) ? "SOL" : "EVM",
   sourceType: "wallet",
 });
 // 403 → source blocked by risk/sanctions screening.`;
@@ -345,7 +348,8 @@ export function renderApiSteps(ctx: FlowSnippetContext): StepTuple {
     tokenAddress = `<token-address-for-${asset}-on-${chain}>`;
   }
   const tokenDecimals = tokenDecimalsFor(asset);
-  const nativeTokenAddress = "0x0000000000000000000000000000000000000000";
+  const nativeTokenAddress =
+    chain === "solana" ? SOLANA_NATIVE_MINT : ZERO_ADDRESS;
   const flowMode = flowModePath(mode);
 
   const step1 = `ENV_ID="your-environment-id"

@@ -43,7 +43,7 @@
  * ```
  */
 
-import { ZERO_ADDRESS } from "./chain";
+import { ZERO_ADDRESS, SOLANA_NATIVE_MINT, isSolanaChainId } from "./chain";
 
 // =============================================================================
 // TYPES
@@ -114,8 +114,8 @@ export interface TokenAsset {
   iconUrlFallback?: string;
   /** Chain ID for the token (e.g., 1 for Ethereum, 137 for Polygon) */
   chainId: number;
-  /** Token contract address (undefined for native tokens) */
-  tokenAddress?: string;
+  /** Token contract address — always defined: ZERO_ADDRESS for EVM native, SOLANA_NATIVE_MINT for Solana native, contract address for all other tokens */
+  tokenAddress: string;
 }
 
 /**
@@ -261,6 +261,10 @@ export function normalizeBalanceResponse(
  * Transform multichain balance response into TokenAsset array.
  * Applies filtering, formatting, and sorting for UI display.
  *
+ * `tokenAddress` is always a non-undefined string in the returned assets:
+ * ZERO_ADDRESS for EVM native tokens, SOLANA_NATIVE_MINT for Solana native
+ * tokens, and the contract address for all other tokens.
+ *
  * @param response - Response from getMultichainBalances
  * @param options - Filter options (min USD value, exclude zero balances)
  * @returns Array of TokenAsset objects sorted by USD value (highest first)
@@ -300,10 +304,26 @@ export function transformToTokenAssets(
           Math.floor(balance * Math.pow(10, decimals)),
         ).toString();
 
+        // Resolve native-token sentinel address so tokenAddress is always
+        // defined — downstream code (id formatting, quote requests) must
+        // not have to special-case undefined.  Detection mirrors the flat
+        // transform: empty/undefined/zero/SOLANA_NATIVE_MINT address all
+        // indicate a native token.
+        const chainId = network.networkId;
+        const isNative =
+          token.address === undefined ||
+          token.address === null ||
+          token.address === "" ||
+          token.address === ZERO_ADDRESS ||
+          token.address === SOLANA_NATIVE_MINT;
+        const tokenAddress = (isNative
+          ? isSolanaChainId(chainId)
+            ? SOLANA_NATIVE_MINT
+            : ZERO_ADDRESS
+          : token.address) as string;
+
         assets.push({
-          id: `${token.symbol}-${network.networkId}-${
-            token.address || "native"
-          }`,
+          id: `${token.symbol}-${chainId}-${tokenAddress}`,
           name: token.name || token.symbol || "Unknown Token",
           symbol: token.symbol || "???",
           balance: formatTokenBalance(balance),
@@ -317,8 +337,8 @@ export function transformToTokenAssets(
           ),
           pricePerToken,
           iconUrl: token.logoURI,
-          chainId: network.networkId,
-          tokenAddress: token.address,
+          chainId,
+          tokenAddress,
         });
       }
     }
@@ -407,20 +427,29 @@ export function transformFlatBalancesToTokenAssets(
         ? BigInt(Math.floor(b.rawBalance)).toString()
         : BigInt(Math.floor(balance * Math.pow(10, decimals))).toString();
     const chainId = b.networkId ?? fallbackNetworkId ?? 0;
-    // Native tokens can be identified three ways in the 1.3.0
+    // Native tokens can be identified four ways in the 1.3.0
     // `getBalances` response, depending on chain/version:
     //   1. Explicit `isNative: true` flag (preferred).
     //   2. Empty/undefined `address` (some chains).
-    //   3. EVM zero address `0x00…00` (matches the SDK's native
-    //      marker convention documented in `getSwapQuote.d.ts`).
-    // Treat any of these as native and surface `tokenAddress` as
-    // undefined so downstream code (id formatting, quote requests,
-    // chain badge rendering) handles native tokens consistently.
+    //   3. EVM zero address `0x00…00` — EVM-only; matches the SDK's
+    //      native marker convention documented in `getSwapQuote.d.ts`.
+    //   4. Solana native mint `So111…2` — Solana uses SOLANA_NATIVE_MINT
+    //      as its native-SOL sentinel; base58 is case-sensitive so no
+    //      `.toLowerCase()` here.
+    // Each detected native token is given a chain-specific sentinel
+    // address (SOLANA_NATIVE_MINT for Solana, ZERO_ADDRESS for EVM) so
+    // `tokenAddress` is always populated — downstream code (id
+    // formatting, quote requests, chain badge rendering) no longer needs
+    // to re-derive the sentinel from a bare `undefined`.
     const isNative =
       b.isNative === true ||
       !b.address ||
-      b.address.toLowerCase() === ZERO_ADDRESS;
-    const tokenAddress = isNative ? undefined : b.address;
+      b.address.toLowerCase() === ZERO_ADDRESS ||
+      b.address === SOLANA_NATIVE_MINT;
+    const nativeSentinel = isSolanaChainId(chainId)
+      ? SOLANA_NATIVE_MINT
+      : ZERO_ADDRESS;
+    const tokenAddress = isNative ? nativeSentinel : b.address;
 
     assets.push({
       id: `${b.symbol}-${chainId}-${tokenAddress ?? "native"}`,
@@ -558,7 +587,7 @@ export function transformKrakenToTokenAssets(
         iconUrl,
         iconUrlFallback,
         chainId: 0, // Exchange-sourced, not on-chain
-        tokenAddress: undefined,
+        tokenAddress: "", // No onchain address for exchange tokens
       });
     }
   }

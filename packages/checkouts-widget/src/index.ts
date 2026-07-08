@@ -39,7 +39,12 @@ export {
   isUserRejection,
 } from "./lib/format";
 
-export { isSolanaChainId, DYNAMIC_SOLANA_NETWORK_ID } from "./lib/chain";
+export {
+  isSolanaChainId,
+  DYNAMIC_SOLANA_NETWORK_ID,
+  ZERO_ADDRESS,
+  SOLANA_NATIVE_MINT,
+} from "./lib/chain";
 export { ChainBadge, getChainIcon } from "./lib/chain-icons";
 
 export {

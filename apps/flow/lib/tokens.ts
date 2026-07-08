@@ -15,6 +15,10 @@
  */
 
 import type { Token } from "@dynamic-demos/checkouts-widget";
+import {
+  ZERO_ADDRESS,
+  SOLANA_NATIVE_MINT,
+} from "@dynamic-demos/checkouts-widget";
 
 // =============================================================================
 // USDC — Circle stablecoin across 4 chains
@@ -106,7 +110,7 @@ export const USDT_ETHEREUM: Token = {
 
 export const ETH_BASE: Token = {
   // Zero address is the conventional native-token marker on EVM.
-  address: "0x0000000000000000000000000000000000000000",
+  address: ZERO_ADDRESS,
   chainId: 8453,
   symbol: "ETH",
   decimals: 18,
@@ -115,7 +119,7 @@ export const ETH_BASE: Token = {
 };
 
 export const ETH_ETHEREUM: Token = {
-  address: "0x0000000000000000000000000000000000000000",
+  address: ZERO_ADDRESS,
   chainId: 1,
   symbol: "ETH",
   decimals: 18,
@@ -126,7 +130,7 @@ export const ETH_ETHEREUM: Token = {
 export const SOL_SOLANA: Token = {
   // Wrapped-native SOL mint — what Solana's routing layer expects as the
   // native-token marker (the system program doesn't have an SPL address).
-  address: "So11111111111111111111111111111111111111112",
+  address: SOLANA_NATIVE_MINT,
   chainId: 101,
   symbol: "SOL",
   decimals: 9,

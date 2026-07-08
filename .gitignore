@@ -53,3 +53,7 @@ Thumbs.db
 
 # Personal/session-scoped working notes (kept out of repo)
 docs/superpowers
+# dwa agent-wallet CLI state (dev-only)
+.grants.json
+.agent-session.json
+.agent-wallet.json

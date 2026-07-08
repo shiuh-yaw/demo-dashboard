@@ -50,7 +50,7 @@ import DepositAmountScreen from "./components/deposit-amount-screen";
 import WalletPickerScreen from "./components/wallet-picker-screen";
 import { PaymentWidget } from "./PaymentWidget";
 import type { TokenAsset } from "./lib/balance-utils";
-import { ZERO_ADDRESS } from "./lib/chain";
+import { isSolanaChainId, SOLANA_NATIVE_MINT, ZERO_ADDRESS } from "./lib/chain";
 import { truncateAddress } from "./lib/format";
 import type { WalletGroup } from "./lib/wallet-providers";
 import type {
@@ -344,6 +344,17 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
   // events are ignored until this flag is set — preventing the
   // embedded wallet from a previous flow from auto-hijacking.
   const userPickedRef = useRef(!skipAutoConnect);
+  // Stable ref so the walletAccountsChanged effect closure never goes
+  // stale even if the host swaps the callback between renders.
+  const onWalletConnectedRef = useRef(onWalletConnected);
+  onWalletConnectedRef.current = onWalletConnected;
+  // De-dup tracker: stores the last address we fired onWalletConnected
+  // for on the auto-connect path.  The SDK's walletAccountsChanged event
+  // fires repeatedly during init for the same wallet; without this guard
+  // we'd call onWalletConnected on every tick.  Also synced by
+  // handleWalletPicked so an explicit pick doesn't trigger a redundant
+  // auto-connect notification when walletAccountsChanged fires afterward.
+  const walletConnectedNotifiedRef = useRef<string | null>(null);
   const wallet = walletAccountProp ?? pickedWallet;
   const [fromToken, setFromToken] = useState<Token | null>(null);
   // Amount captured BEFORE wallet selection when `amountFirst` is on.
@@ -388,10 +399,29 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
   useEffect(() => {
     const apply = (next: WalletAccount | null) => {
       if (!userPickedRef.current) return;
+      // Capture whether the address actually changed inside the updater so
+      // that onWalletConnected is only fired when state truly transitions —
+      // not whenever the walletAccountsChanged firehose ticks for the same
+      // address while walletConnectedNotifiedRef has drifted from React state.
+      // Note: in StrictMode React may invoke the updater more than once; the
+      // dedup ref guard (`next.address !== walletConnectedNotifiedRef.current`)
+      // below ensures onWalletConnected still fires at most once per distinct
+      // address regardless of how many times the updater runs.
+      let addressChanged = false;
       setPickedWallet((prev) => {
-        if (prev?.address === next?.address) return prev;
-        return next;
+        addressChanged = prev?.address !== next?.address;
+        return addressChanged ? next : prev;
       });
+      // Fire onWalletConnected when the auto-connect path resolves to a
+      // new wallet address.  Guard against:
+      //   • apply(undefined/null) — no wallet found
+      //   • repeated walletAccountsChanged ticks for the same address
+      //   • the address already notified by handleWalletPicked (explicit
+      //     pick followed by a walletAccountsChanged echo)
+      if (addressChanged && next?.address && next.address !== walletConnectedNotifiedRef.current) {
+        walletConnectedNotifiedRef.current = next.address;
+        onWalletConnectedRef.current?.(next.address, next.chain);
+      }
     };
     if (!skipAutoConnect) {
       apply(getPrimaryWalletAccount());
@@ -443,13 +473,13 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
 
   function handleTokenSelected(asset: TokenAsset) {
     setFromToken({
-      // Native tokens have no contract address — Dynamic's SDK
-      // expects the zero address as the native-token sentinel on
-      // both EVM and SOL (`getSwapQuote.d.ts`: "Use zero address
-      // for EVM and SOL native tokens."). Send it explicitly rather
-      // than passing an empty string and relying on undocumented
-      // upstream normalization.
-      address: asset.tokenAddress ?? ZERO_ADDRESS,
+      // Native tokens have no contract address in the balance response.
+      // EVM native tokens use the zero address as sentinel; Solana native
+      // SOL uses the wrapped-native SPL mint (So111…112) — the quote
+      // endpoint returns 404 if given the EVM zero address for a SOL source.
+      address:
+        asset.tokenAddress ??
+        (isSolanaChainId(asset.chainId) ? SOLANA_NATIVE_MINT : ZERO_ADDRESS),
       chainId: asset.chainId,
       symbol: asset.symbol,
       decimals: asset.decimals,
@@ -460,6 +490,10 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
 
   const handleWalletPicked = useCallback((wallet: WalletAccount | null) => {
     userPickedRef.current = true;
+    // Sync the dedup ref BEFORE setting state so that if walletAccountsChanged
+    // fires synchronously (or very shortly after) with the same address, the
+    // apply() callback in the effect sees it already notified and skips.
+    walletConnectedNotifiedRef.current = wallet?.address ?? null;
     setPickedWallet(wallet);
     if (wallet?.address) {
       onWalletConnected?.(wallet.address, wallet.chain);
@@ -468,6 +502,9 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
 
   const handleDisconnect = useCallback(() => {
     userPickedRef.current = false;
+    // Reset the dedup ref so a subsequent auto-connect (or next explicit
+    // pick) fires onWalletConnected again even for the same address.
+    walletConnectedNotifiedRef.current = null;
     setPickedWallet(null);
     setFromToken(null);
     setEnteredAmount(amount ?? null);
@@ -811,7 +848,7 @@ function SwapGlyph() {
       className="block"
     >
       <path
-        d="M3 4h8m0 0L9 2m2 2L9 6M11 10H3m0 0l2-2m-2 2l2 2"
+        d="M4 4l6 6M10 4l-6 6"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"

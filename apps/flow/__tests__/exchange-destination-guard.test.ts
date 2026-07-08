@@ -76,11 +76,12 @@ describe("exchange destination address guard", () => {
       );
       expect(evm).toBe("0x5C260969b90152a46D52BC476C94524C8E796b3d");
 
+      // Well-known Solana Token Program address — used to avoid secret-scanner false positives.
       const sol = resolveExchangeDestination(
-        "7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q",
+        "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         "",
       );
-      expect(sol).toBe("7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q");
+      expect(sol).toBe("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
     });
   });
 
