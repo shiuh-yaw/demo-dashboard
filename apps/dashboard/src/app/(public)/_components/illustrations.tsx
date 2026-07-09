@@ -14,7 +14,6 @@ const SURFACE = "#ffffff";
 const BORDER = "#e2e8f0";
 const MUTED_FILL = "#f1f5f9";
 const FG = "#0f172a";
-const MUTED = "#94a3b8";
 
 const MONO = "ui-monospace, SFMono-Regular, monospace";
 
@@ -202,31 +201,49 @@ export function RemittanceIllustration() {
   );
 }
 
-/** Proceeds — descending accent arrow settling into a "bank" bar. */
-export function ProceedsIllustration() {
+/** Stablecoin Card — a virtual debit card: accent chip, contactless arcs, masked number, "$" funding badge. */
+export function StablecoinCardIllustration() {
   return (
     <Svg>
-      <Frame />
-      {/* Onchain balance — "$" mark + skeleton numerals */}
-      <text x="18" y="32" fontFamily={MONO} fontSize="11" fontWeight="600" fill={FG}>
-        $
-      </text>
-      <rect x="28" y="24" width="32" height="8" rx="2" fill={MUTED_FILL} />
-      {/* Descending arrow — proceeds heading to the bank */}
-      <path d="M80 24 V38" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" />
+      <defs>
+        <linearGradient id="ill-card-chip" x1="42" y1="0" x2="56" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.6" />
+        </linearGradient>
+        <linearGradient id="ill-card-number" x1="96" y1="0" x2="110" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.55" />
+        </linearGradient>
+      </defs>
+      {/* Card body */}
+      <rect x="34" y="18" width="92" height="46" rx="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
+      {/* Chip */}
+      <rect x="42" y="26" width="14" height="10" rx="2.5" fill="url(#ill-card-chip)" />
+      {/* Contactless arcs */}
       <path
-        d="M75 34 L80 39 L85 34"
+        d="M112 26 a8.5 8.5 0 0 1 0 12"
         stroke={ACCENT}
         strokeWidth="1.5"
         strokeLinecap="round"
-        strokeLinejoin="round"
         fill="none"
       />
-      {/* Bank — three columns over a base bar */}
-      <path d="M44 44.5 V49" stroke={MUTED} strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M80 44.5 V49" stroke={MUTED} strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M116 44.5 V49" stroke={MUTED} strokeWidth="1.5" strokeLinecap="round" />
-      <rect x="30" y="51" width="100" height="5" rx="2.5" fill={BORDER} />
+      <path
+        d="M107 29.5 a4 4 0 0 1 0 5"
+        stroke={ACCENT}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Masked card number — last group highlighted */}
+      <rect x="42" y="48" width="14" height="6" rx="3" fill={MUTED_FILL} />
+      <rect x="60" y="48" width="14" height="6" rx="3" fill={MUTED_FILL} />
+      <rect x="78" y="48" width="14" height="6" rx="3" fill={MUTED_FILL} />
+      <rect x="96" y="48" width="14" height="6" rx="3" fill="url(#ill-card-number)" />
+      {/* Stablecoin funding badge overlapping the card edge */}
+      <circle cx="126" cy="52" r="9" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
+      <text x="123" y="55.5" fontFamily={MONO} fontSize="10" fontWeight="600" fill={ACCENT}>
+        $
+      </text>
     </Svg>
   );
 }
@@ -241,7 +258,7 @@ export const DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
   earn: EarnIllustration,
   flow: FlowIllustration,
   remittance: RemittanceIllustration,
-  proceeds: ProceedsIllustration,
+  "stablecoin-card": StablecoinCardIllustration,
 };
 
 export function getDemoIllustration(slug: string): () => ReactElement {

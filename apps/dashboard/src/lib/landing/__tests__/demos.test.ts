@@ -12,8 +12,8 @@ describe("LANDING_DEMOS config", () => {
     expect(slugs).toEqual([
       "earn",
       "flow",
-      "proceeds",
       "remittance",
+      "stablecoin-card",
       "trade",
       "wallet",
     ]);

@@ -86,7 +86,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
     description:
       "A yield experience where users sign in, deposit USDC into curated vaults, and track their positions over time. Deposits and withdrawals are user-signed onchain transactions, so funds stay fully in the user's control. A single deployment can power many branded vault experiences.",
     category: "wallet",
-    url: "https://demo-earn-dynamic-xyz.vercel.app",
+    url: "https://earn.dynamic.dev",
     highlights: [
       "Curated USDC yield vaults",
       "User-signed onchain deposits and withdrawals",
@@ -160,28 +160,33 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "proceeds",
-    name: "Proceeds",
-    tagline: "Convert onchain proceeds to your bank account.",
+    slug: "stablecoin-card",
+    name: "Stablecoin Card",
+    tagline: "A virtual Visa debit card funded by stablecoins in your wallet.",
     description:
-      "A merchant experience for moving onchain revenue into fiat. Merchants connect their Dynamic wallet, review balances and full transaction history, and offramp USDC to their bank. Supports US ACH and wire, EU SEPA, and UK Faster Payments.",
+      "A stablecoin-backed debit card experience where users sign in with email or a social login and get an embedded smart wallet — no seed phrases, no gas fees. They apply for a card and receive an instant virtual Visa debit card, then fund it with USDC straight from their wallet. Card balance and full transaction activity live in one view, so spending onchain dollars feels like using any banking app.",
     category: "offramp",
-    url: "https://demo-proceeds-dynamic-xyz.vercel.app",
+    url: "https://card.dynamic.dev",
     highlights: [
-      "USDC to fiat payouts",
-      "ACH, wire, SEPA, Faster Payments",
-      "Balances and transaction history",
-      "Quote, sign, submit, and track",
+      "Instant virtual Visa debit card",
+      "Fund the card with USDC from your wallet",
+      "Gasless transactions via embedded smart wallets",
+      "Card balance and transaction history in one view",
     ],
     stack: [
-      "Dynamic wallet connect",
-      "USDC to fiat offramp",
-      "ACH, wire, SEPA + Faster Payments",
+      "Embedded smart wallets",
+      "Gasless transactions",
+      "Virtual Visa card",
+      "USDC funding",
     ],
     resources: [
       {
         label: "Embedded wallets docs",
         url: "https://www.dynamic.xyz/docs/overview/wallets/overview",
+      },
+      {
+        label: "Open-source example: this demo's full source",
+        url: "https://github.com/dynamic-labs-oss/examples/tree/main/examples/nextjs-stablecoin-card-rain",
       },
     ],
   },
