@@ -9,6 +9,15 @@ vi.mock("@/lib/env", () => ({
   },
 }));
 
+// The real @cvent/sdk is a generated barrel (~4k ESM modules, zod schemas
+// evaluated at import time). Its first import happens inside the timed test
+// body via `await import("./client.js")` and can exceed the 5s per-test
+// timeout on a loaded CI runner. This test only asserts singleton semantics,
+// so stub the constructor — no SDK behavior is under test here.
+vi.mock("@cvent/sdk", () => ({
+  CventSDK: class CventSDK {},
+}));
+
 describe("cventSdk", () => {
   it("returns the same instance on repeat calls", async () => {
     const { cventSdk } = await import("./client.js");
