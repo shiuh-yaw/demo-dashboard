@@ -53,9 +53,24 @@ export async function generateMetadata({
   const { slug } = await params;
   const demo = getDemoBySlug(slug);
   if (!demo) return {};
+  const title = `${demo.name} — Dynamic Demos`;
   return {
-    title: `${demo.name} — Dynamic Demos`,
+    title,
     description: demo.tagline,
+    openGraph: {
+      type: "website",
+      siteName: "Dynamic Demos",
+      title,
+      description: demo.tagline,
+      url: `/demos/${demo.slug}`,
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: demo.tagline,
+      images: ["/og.png"],
+    },
   };
 }
 

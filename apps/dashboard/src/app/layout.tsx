@@ -19,10 +19,30 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+/** Canonical public domain of the demos landing — used as `metadataBase`. */
+const SITE_URL = "https://dynamic.dev";
+
+const SITE_TITLE = "Dynamic Demos";
+const SITE_DESCRIPTION =
+  "Live demo apps showcasing wallets, checkouts, and payments built on Dynamic.";
+
 export const metadata: Metadata = {
-  title: "Dynamic Demos",
-  description:
-    "Live demo apps showcasing wallets, checkouts, and payments built on Dynamic.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: SITE_TITLE,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: SITE_TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 interface RootLayoutProps {
