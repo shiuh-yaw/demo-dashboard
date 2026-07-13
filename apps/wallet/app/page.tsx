@@ -1,22 +1,144 @@
 /**
- * Main Application Entry Point (Server Component)
+ * Wallet scenario page (Server Component) — demos-surface phase 2 v2.
  *
- * Per-config theming (`?theme=<configId>`) is fully handled at the layout
- * level: middleware forwards the id as `x-wallet-config-id`, layout.tsx
- * fetches the config server-side and emits theme overrides via
- * `<ThemeStyleTag>` plus a `<WalletConfigProvider>` for branding access.
+ * Flow's scenario-page shape inside the Dynamic site chrome: shared
+ * <SiteHeader>/<SiteFooter> (same as the dynamic.dev catalog), hero,
+ * then the LIVE wallet widget on the left (login card immediately
+ * usable; WalletApp handles auth → dashboard internally) and the SDK
+ * integration panel on the right. Snippets are Shiki-highlighted here,
+ * server-side; the shared CodePanel receives finished HTML. SDK-only —
+ * this demo has no public API story of its own.
  *
- * This page renders the layout shell + delegates wallet logic to the
- * `WalletApp` client component (Dynamic SDK requires client-side JS).
+ * Per-config theming (`?theme=`) stays at the layout level
+ * (<ThemeStyleTag> + WalletConfigProvider); branded configs surface
+ * their logo via the <ScenarioBrandLogo> client island (null under
+ * default chrome — the header brands the page).
  */
 
-import { ThemedWidgetLayout } from "@/components/ui/themed-widget-layout";
+import { headers } from "next/headers";
+import {
+  CodePanel,
+  PanelNotice,
+  ScenarioHero,
+  ScenarioLayout,
+  SdkStack,
+  SiteFooter,
+  SiteHeader,
+} from "@dynamic-demos/ui";
 import { WalletApp } from "@/components/wallet-app";
+import { ResetThemeButton } from "@/components/reset-theme-button";
+import { ScenarioBrandLogo } from "@/components/scenario-brand-logo";
+import { WalletPanel } from "@/components/wallet-panel";
+import { PanelSectionProvider } from "@/contexts/panel-section-context";
+import {
+  buildCodeSteps,
+  WALLET_ACCOUNT_STEPS,
+  WALLET_JWT_SETUP_STEPS,
+  WALLET_SDK_STEPS,
+  WALLET_SEND_STEPS_BY_CHAIN,
+  WALLET_TX_STEPS,
+} from "@/lib/code-steps";
+import { SEND_CHAINS } from "@/lib/send-chains";
 
-export default function Home() {
+export default async function Home() {
+  // Brand scope decides logo placement: above the hero title under
+  // page scope (full immersion), centered above the widget under
+  // widget scope. Same header the layout uses for the style scoping.
+  const themeScope =
+    (await headers()).get("x-wallet-theme-scope") === "widget"
+      ? "widget"
+      : "page";
+
+  // All panel variants are highlighted server-side; the client-side
+  // WalletPanel switcher just picks one (Q-017).
+  const [sdkSteps, jwtSetupSteps, accountSteps, txSteps, ...sendStepsList] =
+    await Promise.all([
+      buildCodeSteps(WALLET_SDK_STEPS),
+      buildCodeSteps(WALLET_JWT_SETUP_STEPS),
+      buildCodeSteps(WALLET_ACCOUNT_STEPS),
+      buildCodeSteps(WALLET_TX_STEPS),
+      ...SEND_CHAINS.map((chain) =>
+        buildCodeSteps(WALLET_SEND_STEPS_BY_CHAIN[chain]),
+      ),
+    ]);
+
+  // Shared "Built with" callout — shown on the default and wallets panels
+  // (the extensions link is how you add more chains to either story).
+  const builtWithNotice = (
+    <SdkStack
+      packages={["@dynamic-labs-sdk/client", "@dynamic-labs-sdk/react-hooks"]}
+      link={{
+        label: "Add chains via extensions",
+        href: "https://www.dynamic.xyz/docs/javascript/reference/adding-extensions",
+      }}
+    />
+  );
+
   return (
-    <ThemedWidgetLayout>
-      <WalletApp />
-    </ThemedWidgetLayout>
+    <PanelSectionProvider>
+      <ScenarioLayout
+      header={<SiteHeader homeHref="https://dynamic.dev" chip="Wallet" />}
+      hero={
+        <ScenarioHero
+          logo={
+            themeScope === "page" ? <ScenarioBrandLogo align="start" /> : undefined
+          }
+          title="A wallet your users control."
+          titleAccent="No seed phrase required."
+          pitch="Sign in with email, social, passkeys, or your own auth and every user gets a non-custodial MPC wallet in seconds — no seed phrase, no extension. Create wallets on any chain, read balances and history, sponsor your users' network fees, and verify sessions on your own backend — built entirely on Dynamic."
+        />
+      }
+      demo={
+        // brand-scope: under ?scope=widget a branded config restyles
+        // ONLY this subtree (widget + logo); under page scope the
+        // overrides sit on :root and this class is inert.
+        <div className="brand-scope mx-auto w-full max-w-[400px]">
+          {themeScope === "widget" && <ScenarioBrandLogo align="center" />}
+          <WalletApp />
+          <ResetThemeButton />
+        </div>
+      }
+      panel={
+        <WalletPanel
+          panels={{
+            default: <CodePanel sdkSteps={sdkSteps} notice={builtWithNotice} />,
+            wallets: (
+              <CodePanel sdkSteps={accountSteps} notice={builtWithNotice} />
+            ),
+            transactions: (
+              <CodePanel sdkSteps={txSteps} notice={builtWithNotice} />
+            ),
+            ...Object.fromEntries(
+              SEND_CHAINS.map((chain, i) => [
+                `send-${chain}`,
+                <CodePanel
+                  key={chain}
+                  sdkSteps={sendStepsList[i]!}
+                  notice={builtWithNotice}
+                />,
+              ]),
+            ),
+            "jwt-setup": (
+              <CodePanel
+                sdkSteps={jwtSetupSteps}
+                notice={
+                  <PanelNotice
+                    eyebrow="Bring Your Own Auth"
+                    eyebrowSuffix="dev-only helper"
+                  >
+                    The generator on the left stands in for your auth provider
+                    — it mints a test JWT that Dynamic verifies against a
+                    registered JWKS. The steps below show how you&apos;d wire
+                    your real provider in.
+                  </PanelNotice>
+                }
+              />
+            ),
+          }}
+        />
+      }
+      footer={<SiteFooter />}
+    />
+    </PanelSectionProvider>
   );
 }

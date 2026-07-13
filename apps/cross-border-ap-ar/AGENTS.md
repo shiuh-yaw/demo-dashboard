@@ -41,7 +41,7 @@ Sandbox-by-default (D-005). Production opt-in requires `[prod-creds]` PR title.
 
 ## Theming
 
-Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source. App-local overrides in `app/globals.css` reset `--brand-page-bg` (`#f9fafb`) and `--brand-fg` (`#222222`) to preserve the existing Etsy operator surface byte-for-byte; `--etsy-orange` / `--etsy-dark` remain as app-local identity tokens (top-bar chrome + accent), outside the `--brand-*` contract by design. The app has no Dynamic middleware and no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if cross-border-ap-ar gains per-tenant theming via dashboard config.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source. App-local overrides in `app/globals.css` reset `--brand-page-bg` (`#f9fafb`) and `--brand-fg` (`#222222`) to preserve the existing Etsy operator surface byte-for-byte; `--etsy-orange` / `--etsy-dark` remain as app-local identity tokens (top-bar chrome + accent), outside the `--brand-*` contract by design. The app has no Dynamic middleware and no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if cross-border-ap-ar gains per-tenant theming via dashboard config. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 
 ## Credentials
 

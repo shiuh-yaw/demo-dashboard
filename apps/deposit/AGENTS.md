@@ -39,7 +39,7 @@ Phase 1D consolidated client-singleton helpers; Phase 4 added `middleware.ts` (m
 
 ## Theming
 
-Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?theme=<configId>` as the `x-deposit-config-id` header; `app/layout.tsx` reads it server-side, fetches the wallet config from the dashboard `/api/wallets/[id]` endpoint (deposit shares the wallet flow_role), projects `WidgetTheme` → `Partial<BrandTheme>` via `lib/deposit-brand.ts`, and emits the per-brand `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`. Static deposit defaults live in `app/globals.css` (with `--widget-*` compat aliases for shared `packages/ui` components). Header-only forwarding — no `Set-Cookie` (deep-links honor URL state).
+Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?theme=<configId>` as the `x-deposit-config-id` header; `app/layout.tsx` reads it server-side, fetches the wallet config from the dashboard `/api/wallets/[id]` endpoint (deposit shares the wallet flow_role), projects `WidgetTheme` → `Partial<BrandTheme>` via `lib/deposit-brand.ts`, and emits the per-brand `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`. Static deposit defaults live in `app/globals.css` (with `--widget-*` compat aliases for shared `packages/ui` components). Header-only forwarding — no `Set-Cookie` (deep-links honor URL state). `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 
 ## Credentials
 

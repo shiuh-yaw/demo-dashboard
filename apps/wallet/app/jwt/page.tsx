@@ -8,7 +8,7 @@
  *
  * Dev-only utility — not part of the Dynamic SDK integration.
  *
- * @see https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-usage
+ * @see https://www.dynamic.xyz/docs/javascript/authentication-methods/external-jwt
  */
 
 import { useState, useEffect } from "react";

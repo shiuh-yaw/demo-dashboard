@@ -6,6 +6,42 @@
 @source "../../../packages/ui/src/**/*.ts";
 
 /*
+ * Pinned pre-D-030 default palette. The canonical defaults in
+ * @dynamic-demos/theme moved to the Dynamic-blue flow tone (D-030);
+ * this app deliberately keeps the previous Apple-ish look. Removing
+ * these pins is a future, intentional restyle.
+ */
+:root {
+  --brand-page-bg: #f5f5f7;
+  --brand-surface: #ffffff;
+  --brand-fg: #1d1d1f;
+  --brand-primary: #0071e3;
+  --brand-primary-hover: #0077ed;
+  --brand-accent: #30d158;
+  --brand-card-gradient-start: #1d1d1f;
+  --brand-card-gradient-end: #2c2c2e;
+  --brand-row-bg: #f5f5f7;
+  --brand-row-hover: #eeeeef;
+  --brand-row-divider: #f0f0f5;
+  --brand-strip-bg: #fafafc;
+  --brand-muted: #86868b;
+  --brand-border: #e8e8ed;
+  --brand-input-border: #d2d2d7;
+  --brand-success: #1b7f3b;
+  --brand-error: #ff3b30;
+  --brand-status-completed-bg: #e8f8ee;
+  --brand-status-completed-fg: #1b7f3b;
+  --brand-status-pending-bg: #fff3cc;
+  --brand-status-pending-fg: #92600a;
+  --brand-status-failed-bg: #fdecee;
+  --brand-status-failed-fg: #c62828;
+  --brand-status-failed-border: #ffcdd2;
+  --brand-radius-sm: 8px;
+  --brand-radius: 12px;
+  --brand-radius-lg: 24px;
+}
+
+/*
  * Remittance is light-mode only (no theme toggle is actually wired up — the
  * AuthLayout toggle is inert without a next-themes ThemeProvider). Override
  * Tailwind v4's default `dark:` variant — which triggers on

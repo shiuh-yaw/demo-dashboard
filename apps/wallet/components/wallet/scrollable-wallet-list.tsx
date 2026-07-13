@@ -77,7 +77,7 @@ export function ScrollableWalletList({
     <div className="space-y-3">
       {/* Chain filter tabs - only shown when wallets exist on multiple chains */}
       {showTabs && (
-        <div className="flex gap-1 p-1 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
+        <div className="flex gap-0.5 p-1 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
           <FilterTab
             active={filter === "all"}
             onClick={() => setFilter("all")}
@@ -138,7 +138,7 @@ function FilterTab({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 px-3 py-1.5 text-xs font-medium rounded-[calc(var(--brand-radius)-4px)] transition-colors cursor-pointer",
+        "flex-1 min-w-0 px-1 py-1.5 text-xs font-medium rounded-[calc(var(--brand-radius)-4px)] transition-colors cursor-pointer whitespace-nowrap",
         active
           ? "bg-(--brand-surface) text-(--brand-fg) shadow-sm border border-(--brand-border)"
           : "text-(--brand-muted) hover:text-(--brand-fg) border border-transparent",
@@ -147,7 +147,7 @@ function FilterTab({
       {children}
       <span
         className={cn(
-          "ml-1.5 text-[10px]",
+          "ml-1 text-[10px]",
           active ? "text-(--brand-muted)" : "text-(--brand-muted)/60",
         )}
       >

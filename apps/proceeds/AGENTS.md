@@ -65,7 +65,7 @@ Cookie / header contract (D-008):
 
 ## Theming
 
-Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; proceeds-specific tokens (`--proceeds-navy`, `--proceeds-blue`, `--proceeds-grey*`, `--proceeds-gold`, `--proceeds-teal`, `--max-width-content`) remain in `app/globals.css` since they're consumed by app-only chrome (`dashboard-header`, `app-shell`). The app uses `createDemoMiddleware` with `configIdSource: 'none'` — there's no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if proceeds ever gains per-tenant theming.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; proceeds-specific tokens (`--proceeds-navy`, `--proceeds-blue`, `--proceeds-grey*`, `--proceeds-gold`, `--proceeds-teal`, `--max-width-content`) remain in `app/globals.css` since they're consumed by app-only chrome (`dashboard-header`, `app-shell`). The app uses `createDemoMiddleware` with `configIdSource: 'none'` — there's no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if proceeds ever gains per-tenant theming. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 
 ## Credentials
 

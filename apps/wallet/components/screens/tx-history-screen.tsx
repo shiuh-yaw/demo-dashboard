@@ -10,7 +10,6 @@ import {
   RefreshCw,
   ChevronDown,
   Send,
-  Wallet,
   ScanLine,
 } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
@@ -27,6 +26,7 @@ import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useNetworks } from "@/hooks/use-networks";
 import { getTransactionHistory, type Chain } from "@/lib/dynamic";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
 interface TxHistoryScreenProps {
@@ -39,7 +39,8 @@ interface TxHistoryScreenProps {
 const PAGE_SIZE = 10;
 
 /**
- * Transaction history screen for SVM wallets
+ * Transaction history screen — works for every registered chain
+ * (getTransactionHistory is chain-agnostic).
  *
  * Fetches and displays transaction history using the Dynamic SDK's
  * getTransactionHistory function. Supports pagination via "Load More".
@@ -51,6 +52,9 @@ export function TxHistoryScreen({
   networkId: initialNetworkId,
   navigation,
 }: TxHistoryScreenProps) {
+  // Q-017: transaction-flow screens share the transactions panel.
+  usePanelSectionEffect("transactions");
+
   const [offset, setOffset] = useState<string | undefined>(undefined);
   const queryClient = useQueryClient();
 
@@ -112,23 +116,9 @@ export function TxHistoryScreen({
 
   return (
     <WidgetCard
-      icon={
-        networkData?.iconUrl ? (
-          <img
-            src={networkData.iconUrl}
-            alt={networkData.displayName}
-            className="w-[18px] h-[18px] rounded object-contain"
-          />
-        ) : (
-          <Wallet
-            className="w-[18px] h-[18px] text-(--brand-fg)"
-            strokeWidth={1.5}
-          />
-        )
-      }
       title="Transactions"
       subtitle={truncateAddress(walletAddress)}
-      onClose={navigation.goToDashboard}
+      onBack={navigation.goToDashboard}
       className="overflow-visible"
     >
       <div className="space-y-2">
@@ -165,18 +155,22 @@ export function TxHistoryScreen({
               className="rounded-full"
             />
 
-            <Tooltip content="Scan to send">
-              <button
-                type="button"
-                onClick={() =>
-                  navigation.goToScanQr(walletAddress, chain, activeNetworkId)
-                }
-                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
-                aria-label="Scan QR to send"
-              >
-                <ScanLine className="w-3.5 h-3.5" />
-              </button>
-            </Tooltip>
+            {/* Scan-to-send only where address validation supports the
+                chain (EVM + Solana; see lib/validate-address.ts). */}
+            {(chain === "EVM" || chain === "SOL") && (
+              <Tooltip content="Scan to send">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigation.goToScanQr(walletAddress, chain, activeNetworkId)
+                  }
+                  className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
+                  aria-label="Scan QR to send"
+                >
+                  <ScanLine className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+            )}
 
             <Tooltip content="Send transaction">
               <button
@@ -302,11 +296,10 @@ function TransactionRow({ tx, chain }: TransactionRowProps) {
 
   const primaryTransfer = tx.assetTransfers?.[0];
   const symbol = primaryTransfer?.metadata?.symbol ?? chain;
-  const decimals = primaryTransfer?.metadata?.decimals ?? 0;
-  const rawAmount = primaryTransfer?.amount;
-  // Convert raw amount using token decimals (e.g. 900000 with 9 decimals = 0.0009)
-  const amount =
-    rawAmount != null ? rawAmount / Math.pow(10, decimals) : undefined;
+  // The API returns `amount` already decimal-adjusted (verified against
+  // Base Sepolia: 10 USDC arrives as `amount: 10`, `decimals: 6`) — do
+  // NOT divide by 10^decimals. The docs say smallest-unit; reported.
+  const amount = primaryTransfer?.amount;
 
   return (
     <a

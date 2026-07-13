@@ -190,3 +190,11 @@ Decisions that haven't been locked. Most are deferrable; flag them here so they 
 **The question:** Should we publish authoritative agent-readable docs (`llms.txt`) for the Dynamic SDK? D-027 makes this possible since we have SDK source access.
 
 **Recommended:** Author a v1 `llms.txt` after Phase 7 ships. Even an MVP version covering core auth + wallet primitives is a step-change for AI-assisted Dynamic integration broadly.
+
+## Q-017 — Context-aware code panel on scenario pages
+
+**Status:** Raised July 10, 2026 (etesenair), during the wallet scenario-page pilot (PR #140). Deliberately deferred — discuss after the pilot ships.
+
+**The question:** Should the scenario page's code panel follow the visitor through the demo — e.g. show the send-transaction snippet while they're on the Send screen, the OTP snippet during login — instead of a static step list?
+
+**Notes:** Would need a lightweight state bridge from the widget (wallet's `useNavigation` screen state) to the panel — e.g. the widget island publishing its current screen and the panel highlighting/scrolling to the matching `CodeStep`. Keep the shared `CodePanel` presentational; the mapping (screen → step) is per-app content like `code-steps.ts`.

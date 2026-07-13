@@ -15,7 +15,7 @@ describe("<ThemeStyleTag>", () => {
       .dangerouslySetInnerHTML.__html;
     expect(css).toContain(":root {");
     expect(css).toContain("--brand-primary: #ff00aa;");
-    expect(css).toContain("--brand-fg: #1d1d1f;"); // unspecified token defaults
+    expect(css).toContain("--brand-fg: #0e121b;"); // unspecified token defaults
     expect(css).toContain("}");
   });
 
@@ -37,7 +37,7 @@ describe("<ThemeStyleTag>", () => {
     const node = ThemeStyleTag({});
     const css = (node.props as { dangerouslySetInnerHTML: { __html: string } })
       .dangerouslySetInnerHTML.__html;
-    expect(css).toContain("--brand-primary: #0071e3;");
+    expect(css).toContain("--brand-primary: #4779ff;");
   });
 
   it("emits an empty :root when overridesOnly=true and no theme set", () => {

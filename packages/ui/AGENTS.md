@@ -15,6 +15,9 @@ Shared React component library used by every demo app. Components consume the `-
 - Core primitives: `Button`, `Card`, `Input`, `Select`, `Skeleton`, `Spinner`, `Dialog`.
 - Widget primitives: `WidgetCard`, `ListRow`, `ScrollableWithFade`, `ErrorCard`, `LoadingCard`.
 - Auth + KYC scaffolding: `LoginForm`, `OAuthCompletingCard`, `KycGate`, `WalletSelectionScreen`, `AuthLayout`.
+- Scenario-page primitives: `ScenarioHero`, `ScenarioEyebrow`, `RouteChip`/`ChipArrow`, `ScenarioLayout` — flow's scenario-page chrome, generalized (demos-surface phase 2 v2).
+- Integration code panel: `CodePanel` (pill tabs, hash deep-links), `Stepper`, `CodeFrame`, `DocsLink`, `renderProse` — content arrives as pre-highlighted HTML (`CodeStep`); the package has no Shiki dependency.
+- Site chrome: `SiteHeader` (logo + per-app chip, dynamic.xyz nav) and `SiteFooter` ("Made with ♥" + docs/legal links) — the Dynamic marketing header/footer shared by the dashboard landing and demo scenario pages. Deliberately unthemed (hardcoded Dynamic palette; a sanctioned hex exception like the code-frame chrome) and framework-neutral (plain `<a>`, no next/link).
 - Branding marks: `DynamicLogo`, `KrakenLogo`, `FireblocksLogomark`, credit-card icons, `PoweredByFooter`.
 - Utilities: `Tooltip`, `CopyButton`, `ErrorBanner`, `StableCoinCard`, `ThemeProvider`.
 
@@ -24,7 +27,10 @@ All entries below are stable. Importable from the package root or per-component 
 
 - Primitives — `Button`, `Card`, `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`, `Input`, `Select`, `Skeleton`, `Spinner`, `Dialog` (+ `DialogContent`, `DialogHeader`, etc.).
 - Widget — `WidgetCard` (+ `widgetHeaderTrailingIconButtonClassName`), `ListRow`, `ScrollableWithFade`, `ErrorCard`, `LoadingCard`.
-- Auth — `LoginForm`, `OAuthCompletingCard`, `KycGate`, `WalletSelectionScreen`, `AuthLayout`.
+- Auth — `LoginForm` (with `onJwtHelperClick` the JWT section is a single "Sign in with JWT" hand-off button — no paste form; with `jwtHelperHref` it's the accordion paste form with a helper link), `OAuthCompletingCard`, `KycGate`, `WalletSelectionScreen`, `AuthLayout`.
+- Scenario — `ScenarioHero`, `ScenarioEyebrow`, `RouteChip`, `ChipArrow`, `ScenarioLayout`.
+- Code panel — `CodePanel`, `Stepper`, `CodeFrame`, `DocsLink`, `renderProse`, `CodeStep`, `CodePanelProps`, `PanelNotice` (+ `PanelNoticeProps`) — flow's gradient callout shell, and `SdkStack` (+ `SdkStackProps`) — "Built with" package list on that shell with an optional docs link, typically passed via `CodePanel`'s `notice` slot.
+- Site chrome — `SiteHeader`, `SiteFooter` (+ `SiteHeaderProps`, `SiteFooterProps`).
 - Branding — `DynamicLogo`, `KrakenLogo`, `FireblocksLogomark`, `VisaIcon` / `VisaIconWhite` / `MastercardIcon` / `MastercardIconWhite`, `PoweredByFooter`, `StableCoinCard`.
 - Utilities — `Tooltip`, `CopyButton`, `ErrorBanner`, `ThemeProvider`.
 
@@ -75,9 +81,12 @@ export function BalancesCard() {
 - Do: theme via `--brand-*` CSS variables (D-007). The component reads `var(--brand-primary)` etc.
 - Do: prefer the Tailwind v4 `bg-(--brand-success)` shorthand for single-variable utilities; reserve `bg-[var(--brand-success,#fallback)]` for comma-fallbacks.
 - Do: pass icons as React nodes; never embed bitmap art inside the package.
+- Do: pass pre-highlighted Shiki HTML into `CodeStep.html` (highlight server-side in the app) and include the `.shiki-block` CSS in the app's globals — see apps/wallet or apps/flow.
+- Don't: feed user-controlled markup into `CodeStep.html` — CodeFrame injects it unsanitized via `dangerouslySetInnerHTML`; it is for trusted build-time Shiki output only.
 - Don't: import any SDK or provider package here. UI is presentation-only.
 - Don't: read or write cookies / headers from a UI component.
 - Don't: hardcode hex colors in component classnames; consume the `--brand-*` contract.
+- Note: two sanctioned hex exceptions — the code-frame dark chrome (`#0d1117`, white-alpha strip; code blocks are deliberately theme-independent) and the `SiteHeader`/`SiteFooter` Dynamic marketing palette (site chrome is deliberately unthemed so the catalog and demos read as one Dynamic site).
 
 ## Open questions / known gaps
 

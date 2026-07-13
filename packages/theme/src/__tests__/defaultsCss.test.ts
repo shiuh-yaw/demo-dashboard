@@ -30,15 +30,18 @@ describe("defaults.css", () => {
     expect(tokensInRootBlock(css).sort()).toMatchInlineSnapshot(`
       [
         "--brand-accent",
+        "--brand-accent-fg",
         "--brand-border",
         "--brand-card-gradient-end",
         "--brand-card-gradient-start",
         "--brand-error",
         "--brand-fg",
+        "--brand-fg-secondary",
         "--brand-input-border",
         "--brand-muted",
         "--brand-page-bg",
         "--brand-primary",
+        "--brand-primary-fg",
         "--brand-primary-hover",
         "--brand-radius",
         "--brand-radius-lg",
@@ -56,6 +59,7 @@ describe("defaults.css", () => {
         "--brand-strip-bg",
         "--brand-success",
         "--brand-surface",
+        "--brand-warning",
       ]
     `);
   });

@@ -96,26 +96,36 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
             <div
               className={cn(
                 "flex w-full items-start",
-                !icon && "min-h-9 items-center",
+                !icon && !onBack && "min-h-9 items-center",
               )}
             >
               <div className="flex shrink-0 items-center gap-2">
                 {onBack ? (
-                  <button
-                    type="button"
-                    onClick={onBack}
-                    className={headerIconBtnClass}
-                    aria-label="Go back"
+                  // Back button rides the icon slot (Add Wallet layout):
+                  // boxed arrow, title/subtitle left-aligned beside it.
+                  <div
+                    className={cn(
+                      "flex min-w-0 items-center gap-3",
+                      rightActions && "pr-10",
+                    )}
                   >
-                    <ArrowLeft
-                      className={mutedIconClass}
-                      strokeWidth={2}
-                      aria-hidden
-                    />
-                  </button>
-                ) : null}
-
-                {icon ? (
+                    <button
+                      type="button"
+                      onClick={onBack}
+                      aria-label="Go back"
+                      className="group flex h-[38px] w-[38px] min-w-[38px] cursor-pointer items-center justify-center rounded-[9px] border border-[var(--widget-border,#e7e8ed)] bg-[var(--widget-row-bg,#f6f8f8)] shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)] transition-colors hover:bg-[var(--widget-row-hover,#eef1f1)]"
+                    >
+                      <ArrowLeft
+                        className="h-[18px] w-[18px] text-[var(--widget-fg,#000000)] transition-transform duration-200 group-hover:-translate-x-0.5"
+                        strokeWidth={1.5}
+                        aria-hidden
+                      />
+                    </button>
+                    <div className="flex min-w-0 flex-col">
+                      <HeaderTitle title={title} subtitle={subtitle} />
+                    </div>
+                  </div>
+                ) : icon ? (
                   <div
                     className={cn(
                       "flex min-w-0 items-center gap-3",
@@ -129,12 +139,12 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
                       <HeaderTitle title={title} subtitle={subtitle} />
                     </div>
                   </div>
-                ) : !onBack ? (
+                ) : (
                   <div className="w-6 shrink-0" aria-hidden />
-                ) : null}
+                )}
               </div>
 
-              {!icon && (title || subtitle) ? (
+              {!icon && !onBack && (title || subtitle) ? (
                 <div
                   className={cn(
                     "flex min-w-0 flex-1 flex-col items-center justify-center px-2",
@@ -145,7 +155,7 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
                 </div>
               ) : null}
 
-              {!icon && endHeaderSpacerVisible(trailing, onClose) ? (
+              {!icon && !onBack && endHeaderSpacerVisible(trailing, onClose) ? (
                 <div className="w-6 shrink-0" aria-hidden />
               ) : null}
             </div>

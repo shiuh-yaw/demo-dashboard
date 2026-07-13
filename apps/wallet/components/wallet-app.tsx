@@ -23,6 +23,7 @@ import { useNavigation } from "@/hooks/use-navigation";
 import { useClientInitialized } from "@/hooks/use-client-initialized";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { AuthScreen } from "@/components/screens/auth-screen";
+import { JwtGeneratorScreen } from "@/components/screens/jwt-generator-screen";
 import { OtpVerifyScreen } from "@/components/screens/otp-verify-screen";
 import { DashboardScreen } from "@/components/screens/dashboard-screen";
 import { Authorize7702Screen } from "@/components/screens/authorize-7702-screen";
@@ -56,6 +57,10 @@ export function WalletApp() {
       }`}
     >
       {screen.type === "auth" && <AuthScreen navigation={navigation} />}
+
+      {screen.type === "jwt-generator" && (
+        <JwtGeneratorScreen navigation={navigation} />
+      )}
 
       {screen.type === "otp-verify" && (
         <OtpVerifyScreen

@@ -9,7 +9,7 @@
  * POST /api/dev/jwt
  * Body: { sub?: string, email?: string }
  *
- * @see https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-usage
+ * @see https://www.dynamic.xyz/docs/javascript/authentication-methods/external-jwt
  */
 
 import { importJWK, SignJWT } from "jose";

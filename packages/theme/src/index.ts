@@ -22,7 +22,7 @@ export {
 // Color math — promoted from apps/visa-direct/lib/visa-direct-config.ts so
 // every consumer can derive hover states / accent variants without copying
 // HSL conversion code.
-export { darkenHex, lightenHex, mixHex } from "./colorMath";
+export { darkenHex, lightenHex, mixHex, readableTextOn } from "./colorMath";
 
 // Base theme (shared properties)
 export {

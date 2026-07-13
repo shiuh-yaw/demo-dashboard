@@ -7,6 +7,7 @@ import { CreateWalletButtons } from "@/components/wallet/create-wallet-buttons";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useLogout } from "@/hooks/use-mutations";
 import { getUniqueWalletAddresses } from "@/lib/wallet-utils";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
 interface DashboardScreenProps {
@@ -19,6 +20,9 @@ interface DashboardScreenProps {
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { walletAccounts, isLoading } = useWalletAccounts();
   const logoutMutation = useLogout();
+  // Q-017: while the wallets screen is up, the scenario page's code
+  // panel shows the wallet-management steps.
+  usePanelSectionEffect("wallets");
 
   const uniqueWallets = getUniqueWalletAddresses(walletAccounts);
 

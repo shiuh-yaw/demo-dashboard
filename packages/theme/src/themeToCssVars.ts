@@ -19,10 +19,13 @@ export function themeToCssVars(
     "--brand-page-bg": merged.pageBackground,
     "--brand-surface": merged.surface,
     "--brand-fg": merged.foreground,
+    "--brand-fg-secondary": merged.fgSecondary,
 
     "--brand-primary": merged.primary,
     "--brand-primary-hover": merged.primaryHover,
+    "--brand-primary-fg": merged.primaryFg,
     "--brand-accent": merged.accent,
+    "--brand-accent-fg": merged.accentFg,
 
     "--brand-card-gradient-start": merged.cardGradientStart,
     "--brand-card-gradient-end": merged.cardGradientEnd,
@@ -37,6 +40,7 @@ export function themeToCssVars(
     "--brand-input-border": merged.inputBorder,
 
     "--brand-success": merged.success,
+    "--brand-warning": merged.warning,
     "--brand-error": merged.error,
 
     "--brand-status-completed-bg": merged.statusCompletedBg,
@@ -57,7 +61,10 @@ export function themeToCssVars(
  * Render a CSS variable record as a `:root { ... }` block. Useful for
  * non-React consumers (raw `<style>` tags, Storybook decorators, tests).
  */
-export function cssVarsToRootBlock(vars: Record<string, string>): string {
+export function cssVarsToRootBlock(
+  vars: Record<string, string>,
+  selector = ":root",
+): string {
   const lines = Object.entries(vars).map(([k, v]) => `  ${k}: ${v};`);
-  return `:root {\n${lines.join("\n")}\n}`;
+  return `${selector} {\n${lines.join("\n")}\n}`;
 }

@@ -53,6 +53,43 @@ describe("createConfigForwardingMiddleware", () => {
     expect(setCookie).toMatch(/wallet_config_id=;/);
   });
 
+  it("empty ?theme= resolves to default on the SAME request (no cookie fallback)", () => {
+    const res = middleware(
+      makeRequest("https://app/?theme=", { wallet_config_id: "brandY" }),
+    );
+    const forwarded = res.headers.get("x-middleware-request-x-wallet-config-id");
+    expect(forwarded).toBeNull();
+  });
+
+  it("?scope= forwards as the theme-scope header and sticky-cookies", () => {
+    const res = middleware(makeRequest("https://app/?scope=widget"));
+    expect(
+      res.headers.get("x-middleware-request-x-wallet-theme-scope"),
+    ).toBe("widget");
+    expect(res.cookies.get("wallet_theme_scope")?.value).toBe("widget");
+  });
+
+  it("scope cookie persists across navigations without ?scope=", () => {
+    const res = middleware(
+      makeRequest("https://app/", { wallet_theme_scope: "widget" }),
+    );
+    expect(
+      res.headers.get("x-middleware-request-x-wallet-theme-scope"),
+    ).toBe("widget");
+  });
+
+  it("empty ?scope= clears on the same request", () => {
+    const res = middleware(
+      makeRequest("https://app/?scope=", { wallet_theme_scope: "widget" }),
+    );
+    expect(
+      res.headers.get("x-middleware-request-x-wallet-theme-scope"),
+    ).toBeNull();
+    expect(res.headers.get("set-cookie") ?? "").toMatch(
+      /wallet_theme_scope=;/,
+    );
+  });
+
   it("no ?theme= and no cookie → no header set", () => {
     const res = middleware(makeRequest("https://app/"));
     const forwarded = res.headers.get("x-middleware-request-x-wallet-config-id");

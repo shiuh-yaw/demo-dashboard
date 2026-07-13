@@ -99,6 +99,32 @@ export {
 // Layout components
 export { AuthLayout, type AuthLayoutProps } from "./auth-layout";
 
+// Scenario-page primitives (demos-surface phase 2 v2)
+export {
+  ScenarioEyebrow,
+  RouteChip,
+  ChipArrow,
+  ScenarioHero,
+  type ScenarioHeroProps,
+} from "./scenario-chrome";
+export { ScenarioLayout } from "./scenario-layout";
+
+// Site chrome — Dynamic marketing header/footer shared by the dashboard
+// landing and demo scenario pages (unthemed by design)
+export { SiteHeader, type SiteHeaderProps } from "./site-header";
+export { SiteFooter, type SiteFooterProps } from "./site-footer";
+
+// Code panel — integration stepper with tabs and code frames
+export {
+  CodePanel,
+  type CodeStep,
+  type CodePanelProps,
+} from "./code-panel";
+export { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
+export { Stepper } from "./code-panel-stepper";
+export { SdkStack, type SdkStackProps } from "./sdk-stack";
+export { PanelNotice, type PanelNoticeProps } from "./panel-notice";
+
 // Branding components
 export { DynamicLogo, type DynamicLogoProps } from "./dynamic-logo";
 export { KrakenLogo, type KrakenLogoProps } from "./kraken-logo";

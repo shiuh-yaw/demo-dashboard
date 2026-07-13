@@ -22,13 +22,19 @@ export interface BrandTheme {
   surface?: string;
   /** Default text/foreground. Maps to `--brand-fg`. */
   foreground?: string;
+  /** Secondary body text. Maps to `--brand-fg-secondary`. */
+  fgSecondary?: string;
 
   /** Primary brand color. Maps to `--brand-primary`. */
   primary?: string;
   /** Primary hover state. Maps to `--brand-primary-hover`. */
   primaryHover?: string;
+  /** Text on primary. Maps to `--brand-primary-fg`. */
+  primaryFg?: string;
   /** Accent color (loading, success-hint, secondary actions). */
   accent?: string;
+  /** Text on accent. Maps to `--brand-accent-fg`. */
+  accentFg?: string;
 
   /** Card-gradient start. Maps to `--brand-card-gradient-start`. */
   cardGradientStart?: string;
@@ -53,6 +59,8 @@ export interface BrandTheme {
 
   /** Success hue. Maps to `--brand-success`. */
   success?: string;
+  /** Warning hue. Maps to `--brand-warning`. */
+  warning?: string;
   /** Error hue. Maps to `--brand-error`. */
   error?: string;
 
@@ -84,38 +92,44 @@ export interface BrandTheme {
  * for the `--brand-*` token contract — keep them in lockstep with the CSS file.
  */
 export const BRAND_DEFAULTS: Required<BrandTheme> = {
-  pageBackground: "#f5f5f7",
+  pageBackground: "#f4f5f7",
   surface: "#ffffff",
-  foreground: "#1d1d1f",
+  foreground: "#0e121b",
+  fgSecondary: "#525866",
 
-  primary: "#0071e3",
-  primaryHover: "#0077ed",
-  accent: "#30d158",
+  primary: "#4779ff",
+  primaryHover: "#2f61e8",
+  primaryFg: "#ffffff",
+  accent: "#4779ff",
+  accentFg: "#ffffff",
 
-  cardGradientStart: "#1d1d1f",
-  cardGradientEnd: "#2c2c2e",
+  cardGradientStart:
+    "color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface))",
+  cardGradientEnd:
+    "color-mix(in srgb, var(--brand-primary) 2%, var(--brand-surface))",
 
-  rowBackground: "#f5f5f7",
-  rowHover: "#eeeeef",
-  rowDivider: "#f0f0f5",
-  stripBackground: "#fafafc",
+  rowBackground: "#f9fafb",
+  rowHover: "#f4f5f7",
+  rowDivider: "#f2f3f5",
+  stripBackground: "#fafbfc",
 
-  muted: "#86868b",
-  border: "#e8e8ed",
-  inputBorder: "#d2d2d7",
+  muted: "#99a0ae",
+  border: "#e1e4ea",
+  inputBorder: "#d2d6de",
 
-  success: "#1b7f3b",
-  error: "#ff3b30",
+  success: "#16a34a",
+  warning: "#f59e0b",
+  error: "#dc2626",
 
-  statusCompletedBg: "#e8f8ee",
-  statusCompletedFg: "#1b7f3b",
-  statusPendingBg: "#fff3cc",
-  statusPendingFg: "#92600a",
-  statusFailedBg: "#fdecee",
-  statusFailedFg: "#c62828",
-  statusFailedBorder: "#ffcdd2",
+  statusCompletedBg: "#e7f6ec",
+  statusCompletedFg: "#15803d",
+  statusPendingBg: "#fef3c7",
+  statusPendingFg: "#92400e",
+  statusFailedBg: "#fee2e2",
+  statusFailedFg: "#b91c1c",
+  statusFailedBorder: "#fecaca",
 
-  radiusSm: "8px",
-  radius: "12px",
-  radiusLg: "24px",
+  radiusSm: "6px",
+  radius: "10px",
+  radiusLg: "22px",
 };

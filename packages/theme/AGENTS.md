@@ -8,16 +8,17 @@ status: stable
 
 # @dynamic-demos/theme
 
-Unified theming primitives for demo apps. Owns the `--brand-*` CSS variable contract (D-007), the canonical `defaults.css` stylesheet sourced from proceeds (D-020), the SSR theme overlay (`<ThemeStyleTag>` + `fetchDemoConfig`, D-008), the typed theme objects, and the GTM presets.
+Unified theming primitives for demo apps. Owns the `--brand-*` CSS variable contract (D-007), the canonical `defaults.css` stylesheet (Dynamic-blue flow tone per D-030; originally sourced from proceeds, D-020), the SSR theme overlay (`<ThemeStyleTag>` + `fetchDemoConfig`, D-008), the typed theme objects, and the GTM presets.
 
 ## Capabilities
 
-- Canonical stylesheet: `defaults.css` defines every `--brand-*` token plus `@layer base` font/cursor rules and `@layer components` classes (`.heading-page`, `.card`, `.data-table`, `.scrollbar-thin`).
+- Canonical stylesheet: `defaults.css` defines every `--brand-*` token plus `@layer base` font/cursor rules and `@layer components` classes (`.heading-page`, `.card`, `.data-table`, `.scrollbar-thin`). Defaults are the canonical Dynamic-blue flow tone per D-030 (`--brand-primary #4779ff`, page bg `#f4f5f7`, radii 6/10/22px); the contract gained `--brand-fg-secondary`, `--brand-primary-fg`, `--brand-accent-fg`, `--brand-warning` with D-030. Seven apps (proceeds, cross-border-ap-ar, remittance, visa-direct, earn, trade, deposit) pin the previous (pre-D-030) palette locally in their `globals.css`.
+- Derived brand tokens: `widgetThemeToBrandTheme` derives `primaryFg`/`accentFg` (readable text on those colors via `readableTextOn`, WCAG-luminance) and `fgSecondary` (`foregroundColor` mixed 35% toward the page/card background) since stored configs carry no explicit fields for them. `--brand-warning` is deliberately never projected — semantic hue, not a brand slot.
 - Brand contract: `BrandTheme` interface + `BRAND_DEFAULTS` mirror the CSS file in TypeScript.
 - CSS-var projector: `themeToCssVars` returns a `Record<string, string>` of `--brand-*` overrides; `cssVarsToRootBlock` serialises to a `:root { ... }` block.
-- SSR overlay: `<ThemeStyleTag>` server component renders an inline `<style>` (no `useEffect`, no client mounting); supports `overridesOnly` for surgical token bumps.
+- SSR overlay: `<ThemeStyleTag>` server component renders an inline `<style>` (no `useEffect`, no client mounting); supports `overridesOnly` for surgical token bumps and `selector` to confine the brand to a subtree (default `:root`; wallet passes `.brand-scope` to theme only the live widget).
 - Server-side config fetch: `fetchDemoConfig` reads the dashboard API for a stored config and shallow-merges over a fallback. Lenient on failure — returns the fallback so demos keep rendering.
-- Color math: `darkenHex`, `lightenHex`, `mixHex` (HSL-based, hex-safe).
+- Color math: `darkenHex`, `lightenHex`, `mixHex`, `readableTextOn` (HSL/luminance-based, hex-safe).
 - Legacy theme shapes: `BaseTheme`, `WidgetTheme`, `DashboardTheme` (extends `BaseTheme`); branding counterparts.
 - Per-app serialisers: `widgetThemeToCssVars`, `dashboardThemeToCssVars`.
 - Config builders: `createWidgetConfig`, `createDashboardConfig`.

@@ -1,7 +1,7 @@
 /*
  * @dynamic-demos/theme — Canonical default theme.
  *
- * Sourced from apps/proceeds/app/globals.css (D-020). Defines the
+ * Canonical Dynamic-default palette — the flow/dynamic.xyz tone (D-030); previously sourced from apps/proceeds (D-020), whose palette is now pinned app-locally. Defines the
  * --brand-* CSS variable contract (D-007) consumed by every demo app
  * via `import "@dynamic-demos/theme/defaults.css"`. SSR theme overrides
  * land via <ThemeStyleTag> (D-008) in the root layout.
@@ -12,46 +12,58 @@
 
 :root {
   /* Surfaces */
-  --brand-page-bg: #f5f5f7;
+  --brand-page-bg: #f4f5f7;
   --brand-surface: #ffffff;
-  --brand-fg: #1d1d1f;
+  --brand-fg: #0e121b;
+  --brand-fg-secondary: #525866;
 
   /* Primary + accent */
-  --brand-primary: #0071e3;
-  --brand-primary-hover: #0077ed;
-  --brand-accent: #30d158;
+  --brand-primary: #4779ff;
+  --brand-primary-hover: #2f61e8;
+  --brand-primary-fg: #ffffff;
+  --brand-accent: #4779ff;
+  --brand-accent-fg: #ffffff;
 
   /* Card gradient (used by token cards, headers, etc.) */
-  --brand-card-gradient-start: #1d1d1f;
-  --brand-card-gradient-end: #2c2c2e;
+  --brand-card-gradient-start: color-mix(
+    in srgb,
+    var(--brand-primary) 10%,
+    var(--brand-surface)
+  );
+  --brand-card-gradient-end: color-mix(
+    in srgb,
+    var(--brand-primary) 2%,
+    var(--brand-surface)
+  );
 
   /* Rows + dividers */
-  --brand-row-bg: #f5f5f7;
-  --brand-row-hover: #eeeeef;
-  --brand-row-divider: #f0f0f5;
-  --brand-strip-bg: #fafafc;
+  --brand-row-bg: #f9fafb;
+  --brand-row-hover: #f4f5f7;
+  --brand-row-divider: #f2f3f5;
+  --brand-strip-bg: #fafbfc;
 
   /* Muted + borders */
-  --brand-muted: #86868b;
-  --brand-border: #e8e8ed;
-  --brand-input-border: #d2d2d7;
+  --brand-muted: #99a0ae;
+  --brand-border: #e1e4ea;
+  --brand-input-border: #d2d6de;
 
   /* Semantic */
-  --brand-success: #1b7f3b;
-  --brand-error: #ff3b30;
+  --brand-success: #16a34a;
+  --brand-warning: #f59e0b;
+  --brand-error: #dc2626;
 
-  --brand-status-completed-bg: #e8f8ee;
-  --brand-status-completed-fg: #1b7f3b;
-  --brand-status-pending-bg: #fff3cc;
-  --brand-status-pending-fg: #92600a;
-  --brand-status-failed-bg: #fdecee;
-  --brand-status-failed-fg: #c62828;
-  --brand-status-failed-border: #ffcdd2;
+  --brand-status-completed-bg: #e7f6ec;
+  --brand-status-completed-fg: #15803d;
+  --brand-status-pending-bg: #fef3c7;
+  --brand-status-pending-fg: #92400e;
+  --brand-status-failed-bg: #fee2e2;
+  --brand-status-failed-fg: #b91c1c;
+  --brand-status-failed-border: #fecaca;
 
   /* Radii */
-  --brand-radius-sm: 8px;
-  --brand-radius: 12px;
-  --brand-radius-lg: 24px;
+  --brand-radius-sm: 6px;
+  --brand-radius: 10px;
+  --brand-radius-lg: 22px;
 }
 
 @layer base {

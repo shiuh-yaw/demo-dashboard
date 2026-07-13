@@ -10,6 +10,7 @@ import type { OTPVerification, NetworkData } from "@/lib/dynamic";
 export type Screen =
   | { type: "auth" }
   | { type: "otp-verify"; email: string; otpVerification: OTPVerification }
+  | { type: "jwt-generator" }
   | { type: "dashboard" }
   | {
       type: "authorize-7702";
@@ -54,6 +55,7 @@ export interface NavigationReturn {
   isReady: boolean;
   isTransitioning: boolean;
   goToAuth: () => void;
+  goToJwtGenerator: () => void;
   goToOtpVerify: (email: string, otpVerification: OTPVerification) => void;
   goToDashboard: () => void;
   goToAuthorize7702: (
@@ -114,10 +116,12 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     const authChanged = prevIsLoggedIn.current !== isLoggedIn;
     prevIsLoggedIn.current = isLoggedIn;
 
-    // When logged in and on auth/otp-verify screen, go to dashboard
+    // When logged in and on an auth-family screen, go to dashboard
     if (
       isLoggedIn &&
-      (screen.type === "auth" || screen.type === "otp-verify")
+      (screen.type === "auth" ||
+        screen.type === "otp-verify" ||
+        screen.type === "jwt-generator")
     ) {
       // Always redirect if logged in on auth screens (handles both initial and changes)
       if (authChanged || screen.type === "otp-verify") {
@@ -125,7 +129,12 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
       }
     }
     // When logged out and on protected screen, go to auth
-    if (!isLoggedIn && screen.type !== "auth" && screen.type !== "otp-verify") {
+    if (
+      !isLoggedIn &&
+      screen.type !== "auth" &&
+      screen.type !== "otp-verify" &&
+      screen.type !== "jwt-generator"
+    ) {
       transitionTo({ type: "auth" });
     }
   }, [isLoggedIn, screen.type, transitionTo]);
@@ -133,6 +142,10 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
   // Memoized navigation functions
   const goToAuth = useCallback(() => {
     transitionTo({ type: "auth" });
+  }, [transitionTo]);
+
+  const goToJwtGenerator = useCallback(() => {
+    transitionTo({ type: "jwt-generator" });
   }, [transitionTo]);
 
   const goToOtpVerify = useCallback(
@@ -211,7 +224,10 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
   // Screen is ready when it matches expected state for auth
   // - Logged in: should NOT be on auth/otp-verify screens
   // - Logged out: should be on auth or otp-verify screens
-  const isAuthScreen = screen.type === "auth" || screen.type === "otp-verify";
+  const isAuthScreen =
+    screen.type === "auth" ||
+    screen.type === "otp-verify" ||
+    screen.type === "jwt-generator";
   const isReady = isLoggedIn ? !isAuthScreen : isAuthScreen;
 
   return {
@@ -219,6 +235,7 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     isReady,
     isTransitioning,
     goToAuth,
+    goToJwtGenerator,
     goToOtpVerify,
     goToDashboard,
     goToAuthorize7702,

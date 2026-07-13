@@ -45,16 +45,24 @@ export interface ThemeStyleTagProps {
    * re-stating the rest of the contract.
    */
   overridesOnly?: boolean;
+  /**
+   * CSS selector the variables attach to. Defaults to `:root` (whole
+   * page). Pass a class (e.g. `".brand-scope"`) to confine the brand to
+   * one subtree — the wallet uses this to theme only the live widget
+   * while the surrounding scenario page keeps the canonical chrome.
+   */
+  selector?: string;
 }
 
 export function ThemeStyleTag({
   theme,
   overridesOnly = false,
+  selector = ":root",
 }: ThemeStyleTagProps): React.JSX.Element {
   const vars = overridesOnly
     ? themeOverridesToVars(theme ?? {})
     : themeToCssVars(theme ?? {});
-  const css = cssVarsToRootBlock(vars);
+  const css = cssVarsToRootBlock(vars, selector);
   return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }
 

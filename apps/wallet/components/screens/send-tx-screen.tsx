@@ -28,6 +28,8 @@ import {
   getTokenBalances,
   isSvmGasSponsorshipEnabled,
 } from "@/lib/dynamic";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
+import { sendSectionForChain } from "@/lib/send-chains";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 import { useMfaStatus, isMfaRequiredError } from "@/hooks/use-mfa-status";
 import { SetupMfaScreen } from "@/components/screens/setup-mfa-screen";
@@ -186,6 +188,9 @@ export function SendTxScreen({
   initialRecipient,
   onBack,
 }: SendTxScreenProps) {
+  // Q-017: send-flow screens show the chain-specific send snippets.
+  usePanelSectionEffect(sendSectionForChain(chain));
+
   const handleClose = onBack ?? navigation.goToDashboard;
 
   // Form state
@@ -506,15 +511,9 @@ export function SendTxScreen({
     case "form":
       return (
         <WidgetCard
-          icon={
-            <Send
-              className="w-[18px] h-[18px] text-(--brand-fg)"
-              strokeWidth={1.5}
-            />
-          }
           title="Send Transaction"
           subtitle={<AddressSubtitle address={walletAddress} />}
-          onClose={handleClose}
+          onBack={handleClose}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Network Selector */}

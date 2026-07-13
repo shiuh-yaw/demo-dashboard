@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import { Mail } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { Button } from "@dynamic-demos/ui";
 import { cn } from "@dynamic-demos/utils";
 import { ErrorMessage } from "@/components/error-message";
@@ -73,11 +73,12 @@ export function EmailOtpSection({ navigation }: EmailOtpSectionProps) {
       </div>
       <Button
         type="submit"
-        className="w-full h-10"
+        className="group w-full h-10"
         loading={sendOTP.isPending}
         disabled={!email.trim()}
       >
-        Continue →
+        Continue
+        <ArrowRight className="w-4 h-4 transition-transform duration-200 group-enabled:group-hover:translate-x-0.5" />
       </Button>
       <ErrorMessage error={sendOTP.error} />
     </form>

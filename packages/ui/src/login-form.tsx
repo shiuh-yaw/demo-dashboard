@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { SocialIcon } from "@dynamic-labs/iconic";
-import { ChevronDown, ExternalLink, Key, Mail } from "lucide-react";
+import { ArrowRight, ChevronDown, ExternalLink, Key, Mail } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { Button } from "./button";
 import { Spinner } from "./spinner";
@@ -58,6 +58,12 @@ export interface LoginFormProps {
   /** Optional href to a helper page that mints a test JWT.
    *  When set, a "Generate a test token" link renders in the JWT panel header. */
   jwtHelperHref?: string;
+  /** In-place alternative to `jwtHelperHref`: when set, the JWT section
+   *  renders as a single "Sign in with JWT" button that calls this —
+   *  no expanding paste-token form. The app owns the rest of the flow
+   *  (e.g. an in-card generator screen). Takes precedence over
+   *  `jwtHelperHref`. */
+  onJwtHelperClick?: () => void;
 
   // ── General ──────────────────────────────────────────────────
   /** Additional CSS classes for the root element */
@@ -135,11 +141,12 @@ function EmailOtpSection({
       </div>
       <Button
         type="submit"
-        className="w-full h-10"
+        className="group w-full h-10"
         loading={isSendingOTP}
         disabled={!email.trim()}
       >
-        Continue →
+        Continue
+        <ArrowRight className="w-4 h-4 transition-transform duration-200 group-enabled:group-hover:translate-x-0.5" />
       </Button>
       <InlineError error={sendOTPError} />
     </form>
@@ -212,11 +219,13 @@ function JwtAuthSection({
   isJwtPending,
   jwtError,
   jwtHelperHref,
+  onJwtHelperClick,
 }: {
   onJwtAuth: (jwt: string) => Promise<void>;
   isJwtPending?: boolean;
   jwtError?: unknown;
   jwtHelperHref?: string;
+  onJwtHelperClick?: () => void;
 }) {
   const [jwt, setJwt] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -226,6 +235,24 @@ function JwtAuthSection({
     if (!jwt.trim()) return;
     await onJwtAuth(jwt.trim());
   };
+
+  // Hand-off mode: the app owns the JWT flow (e.g. an in-card generator
+  // screen), so the section is just a button — no paste-token form.
+  if (onJwtHelperClick) {
+    return (
+      <button
+        type="button"
+        onClick={onJwtHelperClick}
+        className="group w-full h-10 flex items-center justify-between px-4 rounded-lg border border-[var(--widget-border,#e1e4ea)] bg-[var(--widget-bg,#ffffff)] hover:bg-[var(--widget-row-hover,#eef1f1)] text-sm font-medium text-[var(--widget-fg,#252731)] transition-colors cursor-pointer"
+      >
+        <span className="flex items-center gap-2">
+          <Key className="w-4 h-4 text-[var(--widget-muted,#9a9a9a)]" />
+          Sign in with JWT
+        </span>
+        <ArrowRight className="w-4 h-4 text-[var(--widget-muted,#9a9a9a)] transition-transform duration-200 group-hover:translate-x-0.5" />
+      </button>
+    );
+  }
 
   return (
     <div className="rounded-lg border border-[var(--widget-border,#e1e4ea)] bg-[var(--widget-bg,#ffffff)] overflow-hidden">
@@ -263,7 +290,15 @@ function JwtAuthSection({
                 >
                   JWT Token
                 </label>
-                {jwtHelperHref && (
+                {onJwtHelperClick ? (
+                  <button
+                    type="button"
+                    onClick={onJwtHelperClick}
+                    className="flex items-center gap-1 text-[11px] text-[var(--widget-primary,#335cff)] hover:underline"
+                  >
+                    Generate a test token
+                  </button>
+                ) : jwtHelperHref ? (
                   <a
                     href={jwtHelperHref}
                     className="flex items-center gap-1 text-[11px] text-[var(--widget-primary,#335cff)] hover:underline"
@@ -271,7 +306,7 @@ function JwtAuthSection({
                     Generate a test token
                     <ExternalLink className="w-3 h-3" />
                   </a>
-                )}
+                ) : null}
               </div>
               <textarea
                 id="login-jwt-token"
@@ -358,6 +393,7 @@ export function LoginForm({
   isJwtPending,
   jwtError,
   jwtHelperHref,
+  onJwtHelperClick,
   className,
 }: LoginFormProps) {
   const [isCompletingOAuth, setIsCompletingOAuth] = useState(() => {
@@ -437,6 +473,7 @@ export function LoginForm({
           isJwtPending={isJwtPending}
           jwtError={jwtError}
           jwtHelperHref={jwtHelperHref}
+          onJwtHelperClick={onJwtHelperClick}
         />
       )}
     </div>

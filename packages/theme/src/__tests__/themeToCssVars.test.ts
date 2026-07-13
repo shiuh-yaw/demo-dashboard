@@ -14,33 +14,37 @@ describe("themeToCssVars", () => {
   it("returns the full --brand-* contract when given an empty theme", () => {
     expect(themeToCssVars({})).toMatchInlineSnapshot(`
       {
-        "--brand-accent": "#30d158",
-        "--brand-border": "#e8e8ed",
-        "--brand-card-gradient-end": "#2c2c2e",
-        "--brand-card-gradient-start": "#1d1d1f",
-        "--brand-error": "#ff3b30",
-        "--brand-fg": "#1d1d1f",
-        "--brand-input-border": "#d2d2d7",
-        "--brand-muted": "#86868b",
-        "--brand-page-bg": "#f5f5f7",
-        "--brand-primary": "#0071e3",
-        "--brand-primary-hover": "#0077ed",
-        "--brand-radius": "12px",
-        "--brand-radius-lg": "24px",
-        "--brand-radius-sm": "8px",
-        "--brand-row-bg": "#f5f5f7",
-        "--brand-row-divider": "#f0f0f5",
-        "--brand-row-hover": "#eeeeef",
-        "--brand-status-completed-bg": "#e8f8ee",
-        "--brand-status-completed-fg": "#1b7f3b",
-        "--brand-status-failed-bg": "#fdecee",
-        "--brand-status-failed-border": "#ffcdd2",
-        "--brand-status-failed-fg": "#c62828",
-        "--brand-status-pending-bg": "#fff3cc",
-        "--brand-status-pending-fg": "#92600a",
-        "--brand-strip-bg": "#fafafc",
-        "--brand-success": "#1b7f3b",
+        "--brand-accent": "#4779ff",
+        "--brand-accent-fg": "#ffffff",
+        "--brand-border": "#e1e4ea",
+        "--brand-card-gradient-end": "color-mix(in srgb, var(--brand-primary) 2%, var(--brand-surface))",
+        "--brand-card-gradient-start": "color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface))",
+        "--brand-error": "#dc2626",
+        "--brand-fg": "#0e121b",
+        "--brand-fg-secondary": "#525866",
+        "--brand-input-border": "#d2d6de",
+        "--brand-muted": "#99a0ae",
+        "--brand-page-bg": "#f4f5f7",
+        "--brand-primary": "#4779ff",
+        "--brand-primary-fg": "#ffffff",
+        "--brand-primary-hover": "#2f61e8",
+        "--brand-radius": "10px",
+        "--brand-radius-lg": "22px",
+        "--brand-radius-sm": "6px",
+        "--brand-row-bg": "#f9fafb",
+        "--brand-row-divider": "#f2f3f5",
+        "--brand-row-hover": "#f4f5f7",
+        "--brand-status-completed-bg": "#e7f6ec",
+        "--brand-status-completed-fg": "#15803d",
+        "--brand-status-failed-bg": "#fee2e2",
+        "--brand-status-failed-border": "#fecaca",
+        "--brand-status-failed-fg": "#b91c1c",
+        "--brand-status-pending-bg": "#fef3c7",
+        "--brand-status-pending-fg": "#92400e",
+        "--brand-strip-bg": "#fafbfc",
+        "--brand-success": "#16a34a",
         "--brand-surface": "#ffffff",
+        "--brand-warning": "#f59e0b",
       }
     `);
   });
@@ -75,8 +79,8 @@ describe("themeToCssVars", () => {
 
   it("BRAND_DEFAULTS is exhaustive — every key feeds a CSS var", () => {
     const vars = themeToCssVars({});
-    // 27 tokens — keep this in sync if the contract grows.
-    expect(Object.keys(vars).length).toBe(27);
+    // 31 tokens — keep this in sync if the contract grows.
+    expect(Object.keys(vars).length).toBe(31);
     for (const value of Object.values(vars)) {
       expect(value).toBeTruthy();
     }

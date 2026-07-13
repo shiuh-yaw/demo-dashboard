@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ScanLine, CameraOff } from "lucide-react";
+import { CameraOff } from "lucide-react";
 import { WidgetCard, Button, Input } from "@dynamic-demos/ui";
 import { useQrScanner } from "@/hooks/use-qr-scanner";
 import { isValidAddress } from "@/lib/validate-address";
-import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
-import { useActiveNetwork } from "@/hooks/use-active-network";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
+import { sendSectionForChain } from "@/lib/send-chains";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
 interface ScanQrScreenProps {
@@ -32,6 +32,9 @@ export function ScanQrScreen({
   networkId,
   navigation,
 }: ScanQrScreenProps) {
+  // Q-017: send-flow screens show the chain-specific send snippets.
+  usePanelSectionEffect(sendSectionForChain(chain));
+
   const [invalid, setInvalid] = useState(false);
   // Inline manual-entry mode (typed/pasted address instead of camera scan).
   const [manualEntry, setManualEntry] = useState(false);
@@ -40,14 +43,6 @@ export function ScanQrScreen({
   // The native decode loop runs at frame rate and can deliver the same QR many
   // times. Guard so a valid scan navigates exactly once.
   const handledRef = useRef(false);
-
-  // Network icon for the card header (mirrors the Transactions screen).
-  const { walletAccounts } = useWalletAccounts();
-  const walletAccount =
-    walletAccounts.find(
-      (w) => w.address.toLowerCase() === walletAddress.toLowerCase(),
-    ) || null;
-  const { networkData } = useActiveNetwork(walletAccount);
 
   const handleClose = () =>
     navigation.goToTxHistory(walletAddress, chain, networkId);
@@ -110,27 +105,13 @@ export function ScanQrScreen({
 
   return (
     <WidgetCard
-      icon={
-        networkData?.iconUrl ? (
-          <img
-            src={networkData.iconUrl}
-            alt={networkData.displayName}
-            className="w-[18px] h-[18px] rounded object-contain"
-          />
-        ) : (
-          <ScanLine
-            className="w-[18px] h-[18px] text-(--brand-fg)"
-            strokeWidth={1.5}
-          />
-        )
-      }
       title="Scan recipient QR"
       subtitle={
         manualEntry
           ? `Enter the recipient ${chainLabel(chain)} address`
           : cameraMessage
       }
-      onClose={handleClose}
+      onBack={handleClose}
     >
       {manualEntry ? (
         <div className="space-y-3">

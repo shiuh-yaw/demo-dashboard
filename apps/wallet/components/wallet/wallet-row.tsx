@@ -9,11 +9,7 @@ import { use7702Authorization } from "@/hooks/use-7702-authorization";
 import { useGasSponsorship } from "@/hooks/use-gas-sponsorship";
 import { useMfaStatus } from "@/hooks/use-mfa-status";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
-import {
-  isEvmWalletAccount,
-  isSolanaWalletAccount,
-  type WalletAccount,
-} from "@/lib/dynamic";
+import { isEvmWalletAccount, type WalletAccount } from "@/lib/dynamic";
 
 interface WalletRowProps {
   walletAccount: WalletAccount;
@@ -49,7 +45,6 @@ export function WalletRow({
   const { walletAccounts } = useWalletAccounts();
 
   const isEvm = isEvmWalletAccount(walletAccount);
-  const isSvm = isSolanaWalletAccount(walletAccount);
 
   // Check gas sponsorship availability on current network
   const {
@@ -82,7 +77,9 @@ export function WalletRow({
     !showMfaSetup && !isLoading && canAuthorize && onAuthorize;
   const showSend = !showMfaSetup && !showAuthorize;
 
-  const isRowClickable = (isEvm || isSvm) && !!onRowClick && !!networkData;
+  // getTransactionHistory supports every registered chain, so every row
+  // opens the history screen.
+  const isRowClickable = !!onRowClick && !!networkData;
 
   const handleRowClick = () => {
     if (isRowClickable && networkData) {

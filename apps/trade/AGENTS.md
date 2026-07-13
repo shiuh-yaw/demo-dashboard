@@ -48,7 +48,7 @@ Unified D-008 pattern. `middleware.ts` (`createDemoMiddleware`) reads `?theme=<c
 
 Token contract:
 - `@dynamic-demos/theme/defaults.css` — canonical `--brand-*` defaults.
-- `apps/trade/app/globals.css` — trade's static `--brand-*` value overrides + `--widget-*` compat aliases for legacy `packages/ui` consumers (`AuthLayout`, etc.). Retire the aliases when `packages/ui` migrates.
+- `apps/trade/app/globals.css` — trade's static `--brand-*` value overrides + `--widget-*` compat aliases for legacy `packages/ui` consumers (`AuthLayout`, etc.). Retire the aliases when `packages/ui` migrates. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 - `--trade-*` namespace — trade's app-specific design language (chrome, surfaces, gradients). Distinct from the brand contract; not affected by per-config theme injection.
 
 `themeToBrandTheme(theme)` in `lib/trade-brand.ts` projects the dashboard's stored `WidgetTheme` shape onto `Partial<BrandTheme>`. `TradeConfig.theme` is optional; an empty config emits an empty `:root {}` block, so default routes render trade's static palette.

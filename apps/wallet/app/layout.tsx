@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import {
-  DEFAULT_WIDGET_CONFIG,
   widgetThemeToBrandTheme,
+  type WidgetConfig,
 } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
@@ -24,23 +24,38 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const configId = headersList.get("x-wallet-config-id");
-  const config = await fetchDemoConfig({
+  // Empty fallback (remittance's pattern): the default render emits NO
+  // theme overrides, so wallet's default chrome IS the canonical D-030
+  // palette from @dynamic-demos/theme/defaults.css. DEFAULT_WIDGET_CONFIG
+  // is deliberately not used here — its baked charcoal theme predates
+  // D-030 and would re-inject the old look.
+  const config = await fetchDemoConfig<WidgetConfig>({
     demoType: "wallet",
     id: configId,
-    fallback: DEFAULT_WIDGET_CONFIG,
+    fallback: {},
   });
 
   // SSR theme injection (D-008): emit only the `--brand-*` overrides for the
-  // tokens wallet personalizes per brand. Everything else falls through to
-  // wallet's static `--brand-*` overrides in globals.css and the canonical
-  // defaults in @dynamic-demos/theme/defaults.css. Zero FOUC, zero hydration
-  // mismatch — the inline <style> beats client paint.
-  const brandTheme = widgetThemeToBrandTheme(config.theme);
+  // tokens a branded config personalizes. Everything else falls through to
+  // the canonical defaults in @dynamic-demos/theme/defaults.css. Zero FOUC,
+  // zero hydration mismatch — the inline <style> beats client paint.
+  //
+  // `?scope=` (sticky, like `?theme=`) picks how much of the page the
+  // brand owns: "page" (default — full immersion, overrides on :root)
+  // or "widget" (overrides confined to .brand-scope, the live widget;
+  // hero/panel/site chrome keep the canonical Dynamic look).
+  const brandTheme = widgetThemeToBrandTheme(config.theme ?? {});
+  const themeScope =
+    headersList.get("x-wallet-theme-scope") === "widget" ? "widget" : "page";
 
   return (
     <html lang="en">
       <head>
-        <ThemeStyleTag theme={brandTheme} overridesOnly />
+        <ThemeStyleTag
+          theme={brandTheme}
+          overridesOnly
+          selector={themeScope === "widget" ? ".brand-scope" : ":root"}
+        />
       </head>
       <body>
         <Providers>

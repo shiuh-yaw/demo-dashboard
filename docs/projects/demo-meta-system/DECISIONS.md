@@ -275,3 +275,23 @@ a Prisma enum. Adding a new demo type is a TypeScript + Zod edit
 
 **Spark26 zero-touch** (D-006) holds; spark26 has no dashboard config
 and is explicitly excluded.
+
+---
+
+## D-030 — Canonical Dynamic-default theme tokens are the flow palette
+
+`packages/theme/defaults.css` `:root` values are the Dynamic-blue flow tone
+(`--brand-primary #4779ff`, page bg `#f4f5f7`, radii 6/10/22px) — the same
+language as apps/flow's landing and the dashboard public pages. The contract
+gained `--brand-fg-secondary`, `--brand-primary-fg`, `--brand-accent-fg`, and
+`--brand-warning` (additive). `apps/proceeds`, `apps/cross-border-ap-ar`,
+`apps/remittance`, `apps/visa-direct`, `apps/earn`, `apps/trade`, and
+`apps/deposit` pin the previous Apple-ish palette locally; removing a pin is
+a deliberate restyle. Shared components map tokens by role: decorative and
+integration-affordance accents (title accent phrase, code-panel step numbers,
+docs links) ride `--brand-accent`; primary actions ride
+`--brand-primary`/`--brand-primary-fg` (the scenario-page primitives in
+packages/ui — ScenarioHero + CodePanel — are the reference implementation).
+Dynamic site chrome (`SiteHeader`/`SiteFooter` in packages/ui) is deliberately
+unthemed — hardcoded Dynamic marketing palette — so the catalog and demos read
+as one site regardless of `--brand-*` overrides.

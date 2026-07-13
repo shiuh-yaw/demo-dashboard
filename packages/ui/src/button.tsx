@@ -40,10 +40,13 @@ const BUTTON_BASE =
  * Primary: --widget-primary (widget apps) or --color-earn-text-primary (earn app)
  */
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
+  // Text-on-primary rides --brand-primary-fg (D-030, derived per brand by
+  // widgetThemeToBrandTheme) with a white fallback for apps that don't
+  // import defaults.css — white matches the pre-D-030 behavior.
   primary:
-    "bg-[var(--widget-primary,#335cff)] text-white shadow-sm hover:opacity-90",
+    "bg-[var(--widget-primary,#335cff)] text-[var(--brand-primary-fg,#ffffff)] shadow-sm hover:opacity-90",
   default:
-    "bg-[var(--widget-primary,#335cff)] text-white shadow-sm hover:opacity-90",
+    "bg-[var(--widget-primary,#335cff)] text-[var(--brand-primary-fg,#ffffff)] shadow-sm hover:opacity-90",
   secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
   outline:
     "border border-[var(--widget-border,#e1e4ea)] bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#252731)] hover:bg-[var(--widget-row-hover,#eef1f1)] hover:text-[var(--widget-fg,#252731)]",

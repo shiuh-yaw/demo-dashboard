@@ -77,7 +77,7 @@ export function AuthScreen({ navigation }: AuthScreenProps) {
           onJwtAuth={handleJwtAuth}
           isJwtPending={jwtAuth.isPending}
           jwtError={jwtAuth.error}
-          jwtHelperHref="/jwt"
+          onJwtHelperClick={navigation.goToJwtGenerator}
         />
       </div>
     </WidgetCard>

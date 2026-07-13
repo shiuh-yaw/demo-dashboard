@@ -12,7 +12,7 @@ import {
   BORDER_RADIUS_SCALE,
 } from "./base";
 import type { BrandTheme } from "./brandTheme";
-import { darkenHex } from "./colorMath";
+import { darkenHex, mixHex, readableTextOn } from "./colorMath";
 
 /**
  * Widget-specific theme extensions
@@ -172,6 +172,22 @@ export function widgetThemeToBrandTheme(
     overlay.accent = theme.accentColor ?? theme.primaryColor;
   } else if (theme.accentColor) {
     overlay.accent = theme.accentColor;
+  }
+
+  // D-030 derived tokens. Stored configs carry no explicit fields for
+  // text-on-primary/-accent or secondary body text, so derive them from
+  // the colors a brand does set — otherwise a branded page keeps the
+  // canonical values (e.g. #525866 secondary text on a dark brand page).
+  // `--brand-warning` is deliberately never projected: it's a semantic
+  // hue, not a brand slot.
+  if (overlay.primary) overlay.primaryFg = readableTextOn(overlay.primary);
+  if (overlay.accent) overlay.accentFg = readableTextOn(overlay.accent);
+  if (theme.foregroundColor) {
+    overlay.fgSecondary = mixHex(
+      theme.foregroundColor,
+      theme.pageBackground ?? theme.background ?? "#ffffff",
+      0.35,
+    );
   }
 
   if (theme.pageBackground) overlay.pageBackground = theme.pageBackground;

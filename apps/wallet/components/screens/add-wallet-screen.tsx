@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
 import { useCreateWallet } from "@/hooks/use-mutations";
 import { useChainOptions } from "@/hooks/use-chain-options";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import type { Chain } from "@/lib/dynamic";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
@@ -23,6 +24,9 @@ interface AddWalletScreenProps {
 export function AddWalletScreen({ navigation }: AddWalletScreenProps) {
   const chainOptions = useChainOptions();
   const { mutate: createWallet, isPending, error, variables } = useCreateWallet();
+  // Q-017: Add Wallet is part of the wallet-management story — keep the
+  // wallets panel up (its step 02 is exactly what this screen runs).
+  usePanelSectionEffect("wallets");
 
   const handleCreateWallet = (chainId: Chain) => {
     createWallet(chainId, {
@@ -34,18 +38,9 @@ export function AddWalletScreen({ navigation }: AddWalletScreenProps) {
 
   return (
     <WidgetCard
-      icon={
-        <button
-          type="button"
-          onClick={navigation.goToDashboard}
-          className="flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
-          aria-label="Back to wallets"
-        >
-          <ArrowLeft className="w-[18px] h-[18px] text-(--brand-fg)" strokeWidth={1.5} />
-        </button>
-      }
       title="Add Wallet"
       subtitle="Select a chain to create a new wallet"
+      onBack={navigation.goToDashboard}
     >
       <div className="space-y-1">
         {chainOptions.length === 0 ? (

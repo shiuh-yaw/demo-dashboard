@@ -12,9 +12,8 @@ Dynamic's external auth feature lets you exchange a JWT from any issuer for a Dy
 
 ## Dynamic Docs
 
-- [Overview — Using your own authentication provider](https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-overview)
-- [Dashboard Setup — Configuring your authentication provider](https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-setup)
-- [Usage — Integrating your authentication provider with Dynamic](https://www.dynamic.xyz/docs/javascript/external-auth/third-party-auth-usage)
+- [Bring Your Own Auth — Concepts, configuration, and JWT requirements](https://www.dynamic.xyz/docs/overview/authentication/bring-your-own-auth)
+- [Authenticate with an external JWT — `signInWithExternalJwt` usage](https://www.dynamic.xyz/docs/javascript/authentication-methods/external-jwt)
 
 ## Setup
 

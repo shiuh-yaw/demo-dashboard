@@ -45,7 +45,7 @@ Unified theme injection per D-008:
 
 - `middleware.ts` uses `createDemoMiddleware({ demoType: "earn", publicRoutes: ["/login"], defaultReturnPath: "/earn", authenticatedRootRedirect: "/earn" })`. Defaults: `configIdSource: "query"`, `stickyConfigCookie: true`. Forwards `x-earn-config-id` from `?theme=` query or sticky cookie.
 - Root `app/layout.tsx` reads the header server-side, fetches the config via `getEarnConfig`, projects `EarnTheme` onto `Partial<BrandTheme>` (`lib/earn-brand.ts`), and emits the override block via `<ThemeStyleTag overridesOnly>` in `<head>`. Zero FOUC, zero hydration mismatch.
-- `app/globals.css` declares earn's static `--brand-*` values; `--widget-*` and `--color-earn-*` namespaces are compat aliases pointing at `--brand-*` so per-config overrides cascade through `packages/ui` consumers and earn's existing utility classes (`bg-earn-light`, `text-earn-text-primary`, etc.) without per-component sweeps.
+- `app/globals.css` declares earn's static `--brand-*` values; `--widget-*` and `--color-earn-*` namespaces are compat aliases pointing at `--brand-*` so per-config overrides cascade through `packages/ui` consumers and earn's existing utility classes (`bg-earn-light`, `text-earn-text-primary`, etc.) without per-component sweeps. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 - `EarnConfigProvider` (in the root layout) hydrates `useEarnConfig()` for branding/layout/title.
 
 ## Credentials
