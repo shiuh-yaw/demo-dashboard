@@ -15,7 +15,7 @@ export default function LandingPage() {
           </h1>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-slate-600">
             Live apps spanning embedded wallets, trading, yield, crypto
-            payments, and global payouts — all built on the Dynamic SDK.
+            payments, and global payouts - all built on the Dynamic SDK.
           </p>
         </div>
       </section>

@@ -19,7 +19,7 @@ export interface LandingDemo {
   url?: string;
   /** Feature bullets for the detail page. */
   highlights: string[];
-  /** Dynamic features + providers powering the demo — "Under the hood" chips. */
+  /** Dynamic features + providers powering the demo - "Under the hood" chips. */
   stack: string[];
   /** Docs and open-source example links for building it yourself. */
   resources: { label: string; url: string }[];
@@ -31,7 +31,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
     name: "Wallet",
     tagline: "A non-custodial embedded wallet your users control.",
     description:
-      "Give users a self-custodial wallet they access with just an email or social login — no seed phrases required. They can view balances across multiple chains, sign transactions, and send funds by scanning a recipient's QR code. Built entirely on Dynamic, it's the cleanest way to make the wallet itself the product.",
+      "Give users a self-custodial wallet they access with just an email or social login - no seed phrases required. They can view balances across multiple chains, sign transactions, and send funds by scanning a recipient's QR code. Built entirely on Dynamic, it's the cleanest way to make the wallet itself the product.",
     category: "wallet",
     url: "https://wallet.dynamic.dev",
     highlights: [
@@ -111,7 +111,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
     name: "Flow",
     tagline: "Accept any crypto from any source, settle in stablecoins anywhere.",
     description:
-      "An interactive showcase for Dynamic's Flow product. Accept any crypto from any source — external wallet, exchange, embedded wallet, or vault — and settle in any stablecoin at any destination. Checkout, deposit, and withdraw scenarios run on the same SDK lifecycle: swap the source or destination and the same call keeps working.",
+      "An interactive showcase for Dynamic's Flow product. Accept any crypto from any source - external wallet, exchange, embedded wallet, or vault - and settle in any stablecoin at any destination. Checkout, deposit, and withdraw scenarios run on the same SDK lifecycle: swap the source or destination and the same call keeps working.",
     category: "checkout",
     url: "https://flow.dynamic.dev",
     highlights: [
@@ -138,7 +138,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
     name: "Remittance",
     tagline: "Send stablecoins onchain, deliver fiat to bank accounts abroad.",
     description:
-      "A cross-border remittance experience where a sender funds USDC onchain and pays out fiat to recipients across Latin America. Payouts settle to local bank rails — PIX in Brazil, SPEI in Mexico, PSE in Colombia, and more. Users track each transfer from send to delivery with live status updates.",
+      "A cross-border remittance experience where a sender funds USDC onchain and pays out fiat to recipients across Latin America. Payouts settle to local bank rails - PIX in Brazil, SPEI in Mexico, PSE in Colombia, and more. Users track each transfer from send to delivery with live status updates.",
     category: "offramp",
     url: "https://remittance.dynamic.dev",
     highlights: [
@@ -164,7 +164,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
     name: "Stablecoin Card",
     tagline: "A virtual Visa debit card funded by stablecoins in your wallet.",
     description:
-      "A stablecoin-backed debit card experience where users sign in with email or a social login and get an embedded smart wallet — no seed phrases, no gas fees. They apply for a card and receive an instant virtual Visa debit card, then fund it with USDC straight from their wallet. Card balance and full transaction activity live in one view, so spending onchain dollars feels like using any banking app.",
+      "A stablecoin-backed debit card experience where users sign in with email or a social login and get an embedded smart wallet - no seed phrases, no gas fees. They apply for a card and receive an instant virtual Visa debit card, then fund it with USDC straight from their wallet. Card balance and full transaction activity live in one view, so spending onchain dollars feels like using any banking app.",
     category: "offramp",
     url: "https://card.dynamic.dev",
     highlights: [

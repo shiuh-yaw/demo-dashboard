@@ -13,13 +13,13 @@ function getHighlighter(): Promise<Highlighter> {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: ["github-dark"],
-      langs: ["typescript", "bash"],
+      langs: ["typescript", "tsx", "bash"],
     });
   }
   return highlighterPromise;
 }
 
-export type HighlightLang = "typescript" | "bash";
+export type HighlightLang = "typescript" | "tsx" | "bash";
 
 export async function highlight(
   code: string,

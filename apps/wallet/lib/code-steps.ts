@@ -37,9 +37,32 @@ addEvmExtension(client);`,
   },
   {
     num: "02",
+    title: "Wrap your app for hooks",
+    prose:
+      "The react-hooks package reads the client from context and uses TanStack Query under the hood, so mount QueryClientProvider outside DynamicProvider once - every hook below works anywhere inside.",
+    filename: "app/providers.tsx",
+    lang: "tsx",
+    code: `import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DynamicProvider } from "@dynamic-labs-sdk/react-hooks";
+import { client } from "@/lib/dynamic/client";
+
+const queryClient = new QueryClient();
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DynamicProvider client={client}>{children}</DynamicProvider>
+    </QueryClientProvider>
+  );
+}`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/reference/react-hooks#setup",
+  },
+  {
+    num: "03",
     title: "Sign in with an email code",
     prose:
-      "Send a one-time passcode and verify it. No password, no seed phrase — the session lives in the client.",
+      "Send a one-time passcode and verify it. No password, no seed phrase - the session lives in the client.",
     filename: "components/email-login.tsx",
     lang: "typescript",
     code: `import { useSendEmailOTP, useVerifyOTP } from "@dynamic-labs-sdk/react-hooks";
@@ -54,10 +77,10 @@ verifyOtp({ otp: code, otpVerification });`,
       "https://www.dynamic.xyz/docs/javascript/authentication-methods/email",
   },
   {
-    num: "03",
+    num: "04",
     title: "Sign in with a social account",
     prose:
-      "Kick off the provider's OAuth flow, then complete it when the user lands back — same session, same embedded wallet.",
+      "Kick off the provider's OAuth flow, then complete it when the user lands back - same session, same embedded wallet.",
     filename: "components/social-login.tsx",
     lang: "typescript",
     code: `import {
@@ -78,7 +101,7 @@ completeRedirect({ url: new URL(window.location.href) });`,
 ];
 
 /**
- * Bring Your Own Auth steps — shown in the panel while the
+ * Bring Your Own Auth steps - shown in the panel while the
  * `jwt-generator` screen is active (Q-017 slice 1). Unlike the SDK
  * steps, these are deliberately generic: they teach how a reader wires
  * their own auth provider into Dynamic, not how this demo's dev
@@ -89,7 +112,7 @@ export const WALLET_JWT_SETUP_STEPS: StepSource[] = [
     num: "01",
     title: "Prerequisite: register your provider with Dynamic",
     prose:
-      "One-time setup. In the Dynamic dashboard under Developer → External Authentication, point Dynamic at your issuer and JWKS URL, then enable the toggle. The dashboard can test a JWT against your settings. Bring Your Own Auth is an enterprise feature — contact Dynamic to enable it.",
+      "One-time setup. In the Dynamic dashboard under Developer → External Authentication, point Dynamic at your issuer and JWKS URL, then enable the toggle. The dashboard can test a JWT against your settings. Bring Your Own Auth is an enterprise feature - contact Dynamic to enable it.",
     filename: "app.dynamic.xyz → External Authentication",
     lang: "bash",
     code: `iss:     https://auth.your-app.com   # must match your JWT's iss claim
@@ -102,7 +125,7 @@ aud:     (optional)`,
     num: "02",
     title: "Issue a JWT from your auth provider",
     prose:
-      "Already have auth (Auth0, Firebase, Supabase, or your own backend)? Keep it. Issue a Dynamic-specific JWT — separate from your app's access token — with `iss`, `sub`, and `exp` claims. Include a verified `email` and Dynamic attaches an email credential too.",
+      "Already have auth (Auth0, Firebase, Supabase, or your own backend)? Keep it. Issue a Dynamic-specific JWT - separate from your app's access token - with `iss`, `sub`, and `exp` claims. Include a verified `email` and Dynamic attaches an email credential too.",
     filename: "your-auth-server/dynamic-jwt.ts",
     lang: "typescript",
     code: `import { SignJWT } from "jose";
@@ -137,7 +160,7 @@ return Response.json({
     num: "04",
     title: "Exchange the JWT for a Dynamic session",
     prose:
-      "After your normal login, hand the token to the SDK. Dynamic verifies the signature against your JWKS, validates the claims, and creates the session + embedded wallet — the user behaves like any other Dynamic user from here.",
+      "After your normal login, hand the token to the SDK. Dynamic verifies the signature against your JWKS, validates the claims, and creates the session + embedded wallet - the user behaves like any other Dynamic user from here.",
     filename: "your-app/sign-in.tsx",
     lang: "typescript",
     code: `import { useSignInWithExternalJwt } from "@dynamic-labs-sdk/react-hooks";
@@ -155,7 +178,7 @@ signInWithExternalJwt({
     num: "05",
     title: "Step up for sensitive actions",
     prose:
-      "For sensitive operations like exporting a key, your backend signs a short-lived assertion JWT with the same key — claims `sub`, `scope`, `jti`, `exp` — and the SDK exchanges it for an elevated access token. No re-auth or MFA prompt for the user.",
+      "For sensitive operations like exporting a key, your backend signs a short-lived assertion JWT with the same key - claims `sub`, `scope`, `jti`, `exp` - and the SDK exchanges it for an elevated access token. No re-auth or MFA prompt for the user.",
     filename: "your-app/step-up.tsx",
     lang: "typescript",
     code: `import { useRequestExternalAuthElevatedToken } from "@dynamic-labs-sdk/react-hooks";
@@ -170,7 +193,7 @@ requestElevatedToken({ externalJwt: jwt });`,
 ];
 
 /**
- * Wallet-management steps — shown while the signed-in "Your Wallets"
+ * Wallet-management steps - shown while the signed-in "Your Wallets"
  * dashboard screen is active. Mirrors `lib/dynamic/wallets.ts` and
  * `lib/dynamic/balance.ts`.
  */
@@ -179,7 +202,7 @@ export const WALLET_ACCOUNT_STEPS: StepSource[] = [
     num: "01",
     title: "List the user's wallets",
     prose:
-      "One hook returns every embedded wallet account across all registered chains — the list on the left renders straight from it, and re-renders as wallets are added.",
+      "One hook returns every embedded wallet account across all registered chains - the list on the left renders straight from it, and re-renders as wallets are added.",
     filename: "components/wallets.tsx",
     lang: "typescript",
     code: `import { useGetWalletAccounts } from "@dynamic-labs-sdk/react-hooks";
@@ -192,7 +215,7 @@ const { data: walletAccounts } = useGetWalletAccounts();`,
     num: "02",
     title: "Create a wallet on any chain",
     prose:
-      "“Add Wallet” runs this: mint embedded (WaaS) accounts on any chain your extensions register. No seed phrase — keys never leave Dynamic's MPC.",
+      "“Add Wallet” runs this: mint embedded (WaaS) accounts on any chain your extensions register. No seed phrase - keys never leave Dynamic's MPC.",
     filename: "lib/dynamic/wallets.ts",
     lang: "typescript",
     code: `import { createWaasWalletAccounts } from "@dynamic-labs-sdk/client/waas";
@@ -223,7 +246,7 @@ if (isEvmWalletAccount(walletAccount)) {
 const SWITCH_NETWORKS_STEP: Omit<StepSource, "num"> = {
   title: "Switch networks",
   prose:
-    "The network dropdown lists every network your chain extensions register — no hardcoded chain list in the app.",
+    "The network dropdown lists every network your chain extensions register - no hardcoded chain list in the app.",
   filename: "lib/dynamic/networks.ts",
   lang: "typescript",
   code: `import { getNetworksData } from "@dynamic-labs-sdk/client";
@@ -237,7 +260,7 @@ const networks = getNetworksData();`,
 const GET_BALANCES_STEP: Omit<StepSource, "num"> = {
   title: "Read balances",
   prose:
-    "The asset picker and balance line come from one hook — native + token balances for the wallet's active network, refetched when the wallet changes.",
+    "The asset picker and balance line come from one hook - native + token balances for the wallet's active network, refetched when the wallet changes.",
   filename: "components/send-form.tsx",
   lang: "typescript",
   code: `import { useGetTokenBalances } from "@dynamic-labs-sdk/react-hooks";
@@ -251,7 +274,7 @@ const { data: balances } = useGetTokenBalances({
 };
 
 /**
- * Transaction-history steps — shown on the `tx-history` screen. Mirrors
+ * Transaction-history steps - shown on the `tx-history` screen. Mirrors
  * `lib/dynamic/transaction-history.ts` and `lib/dynamic/networks.ts`.
  */
 export const WALLET_TX_STEPS: StepSource[] = [
@@ -259,14 +282,14 @@ export const WALLET_TX_STEPS: StepSource[] = [
     num: "01",
     title: "Fetch transaction history",
     prose:
-      "Paginated history for any address and network — the list on the left renders straight from this call. Pass `nextOffset` back in to page.",
+      "Paginated history for any address and network - the list on the left renders straight from this call. Pass `nextOffset` back in to page.",
     filename: "components/transactions.tsx",
     lang: "typescript",
     code: `import { useGetTransactionHistory } from "@dynamic-labs-sdk/react-hooks";
 
 const { data } = useGetTransactionHistory({
   address,
-  chain, // "EVM", "SOL", "SUI", "BTC", "TON" — same call for every chain
+  chain, // "EVM", "SOL", "SUI", "BTC", "TON" - same call for every chain
   networkId,
   limit: 10,
 });
@@ -278,12 +301,12 @@ const { data } = useGetTransactionHistory({
 ];
 
 /**
- * Send-flow steps, per chain — the `send-tx` and `scan-qr` screens show
+ * Send-flow steps, per chain - the `send-tx` and `scan-qr` screens show
  * the section for the chain being sent from (docs are chain-specific,
  * so the panel must be too). Send snippets mirror
  * `lib/transactions/send-<chain>-transaction.ts`; sponsorship steps
  * exist only where Dynamic supports it (EVM, SVM) and link the chain's
- * gas-sponsorship docs page — never ZeroDev docs.
+ * gas-sponsorship docs page - never ZeroDev docs.
  */
 export const WALLET_SEND_STEPS_BY_CHAIN: Record<SendChain, StepSource[]> = {
   EVM: [
@@ -291,7 +314,7 @@ export const WALLET_SEND_STEPS_BY_CHAIN: Record<SendChain, StepSource[]> = {
       num: "01",
       title: "Send a transaction",
       prose:
-        "Wrap the wallet account in a viem-compatible client and send — the user approves in place; keys never leave Dynamic's MPC.",
+        "Wrap the wallet account in a viem-compatible client and send - the user approves in place; keys never leave Dynamic's MPC.",
       filename: "lib/transactions/send-evm-transaction.ts",
       lang: "typescript",
       code: `import { createWalletClientForWalletAccount } from "@dynamic-labs-sdk/evm/viem";
@@ -310,7 +333,7 @@ const hash = await walletClient.sendTransaction({
       num: "02",
       title: "Sponsor Network Fees",
       prose:
-        "The “Gas Sponsored” badge comes from this: flip the dashboard toggle and call one function — your app pays the fee, and the SDK handles the one-time EIP-7702 delegation automatically.",
+        "The “Gas Sponsored” badge comes from this: flip the dashboard toggle and call one function - your app pays the fee, and the SDK handles the one-time EIP-7702 delegation automatically.",
       filename: "lib/transactions/send-evm-transaction.ts",
       lang: "typescript",
       code: `import { sendSponsoredTransaction } from "@dynamic-labs-sdk/evm";
@@ -336,7 +359,7 @@ const { transactionHash } = await sendSponsoredTransaction({
       num: "01",
       title: "Send a transaction",
       prose:
-        "Build any `@solana/web3.js` transaction — here a `SystemProgram.transfer` — and the SDK signs and broadcasts it with the embedded wallet.",
+        "Build any `@solana/web3.js` transaction - here a `SystemProgram.transfer` - and the SDK signs and broadcasts it with the embedded wallet.",
       filename: "lib/transactions/send-solana-transaction.ts",
       lang: "typescript",
       code: `import { signAndSendTransaction } from "@dynamic-labs-sdk/solana";
@@ -352,7 +375,7 @@ const { signature } = await signAndSendTransaction({
       num: "02",
       title: "Sponsor Network Fees",
       prose:
-        "The “Gas Sponsored” badge on Solana: flip the dashboard toggle and require sponsorship — Dynamic replaces the fee payer, so users can transact with zero SOL.",
+        "The “Gas Sponsored” badge on Solana: flip the dashboard toggle and require sponsorship - Dynamic replaces the fee payer, so users can transact with zero SOL.",
       filename: "lib/transactions/send-solana-transaction.ts",
       lang: "typescript",
       code: `import { signAndSendSponsoredTransaction } from "@dynamic-labs-sdk/solana";
@@ -397,7 +420,7 @@ const { digest } = await signAndExecuteTransaction({
       num: "01",
       title: "Send a transaction",
       prose:
-        "One call — the SDK builds, signs, and broadcasts the Bitcoin transaction from the embedded wallet.",
+        "One call - the SDK builds, signs, and broadcasts the Bitcoin transaction from the embedded wallet.",
       filename: "lib/transactions/send-bitcoin-transaction.ts",
       lang: "typescript",
       code: `import { sendBitcoin } from "@dynamic-labs-sdk/bitcoin";
@@ -420,7 +443,7 @@ const { transactionId } = await sendBitcoin({
       num: "01",
       title: "Send a transaction",
       prose:
-        "Same shape on TON — the SDK signs and broadcasts from the embedded wallet.",
+        "Same shape on TON - the SDK signs and broadcasts from the embedded wallet.",
       filename: "lib/transactions/send-ton-transaction.ts",
       lang: "typescript",
       code: `import { sendTon } from "@dynamic-labs-sdk/ton";

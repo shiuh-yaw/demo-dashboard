@@ -113,6 +113,7 @@ export { ScenarioLayout } from "./scenario-layout";
 // landing and demo scenario pages (unthemed by design)
 export { SiteHeader, type SiteHeaderProps } from "./site-header";
 export { SiteFooter, type SiteFooterProps } from "./site-footer";
+export { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
 
 // Code panel — integration stepper with tabs and code frames
 export {

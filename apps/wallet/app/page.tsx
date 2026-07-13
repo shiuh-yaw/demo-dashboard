@@ -1,18 +1,18 @@
 /**
- * Wallet scenario page (Server Component) — demos-surface phase 2 v2.
+ * Wallet scenario page (Server Component) - demos-surface phase 2 v2.
  *
  * Flow's scenario-page shape inside the Dynamic site chrome: shared
  * <SiteHeader>/<SiteFooter> (same as the dynamic.dev catalog), hero,
  * then the LIVE wallet widget on the left (login card immediately
  * usable; WalletApp handles auth → dashboard internally) and the SDK
  * integration panel on the right. Snippets are Shiki-highlighted here,
- * server-side; the shared CodePanel receives finished HTML. SDK-only —
+ * server-side; the shared CodePanel receives finished HTML. SDK-only -
  * this demo has no public API story of its own.
  *
  * Per-config theming (`?theme=`) stays at the layout level
  * (<ThemeStyleTag> + WalletConfigProvider); branded configs surface
  * their logo via the <ScenarioBrandLogo> client island (null under
- * default chrome — the header brands the page).
+ * default chrome - the header brands the page).
  */
 
 import { headers } from "next/headers";
@@ -62,7 +62,7 @@ export default async function Home() {
       ),
     ]);
 
-  // Shared "Built with" callout — shown on the default and wallets panels
+  // Shared "Built with" callout - shown on the default and wallets panels
   // (the extensions link is how you add more chains to either story).
   const builtWithNotice = (
     <SdkStack
@@ -85,14 +85,14 @@ export default async function Home() {
           }
           title="A wallet your users control."
           titleAccent="No seed phrase required."
-          pitch="Sign in with email, social, passkeys, or your own auth and every user gets a non-custodial MPC wallet in seconds — no seed phrase, no extension. Create wallets on any chain, read balances and history, sponsor your users' network fees, and verify sessions on your own backend — built entirely on Dynamic."
+          pitch="Sign in with email, social, passkeys, or your own auth and every user gets a non-custodial MPC wallet in seconds - no seed phrase, no extension. Create wallets on any chain, read balances and history, sponsor your users' network fees, and verify sessions on your own backend - built entirely on Dynamic."
         />
       }
       demo={
         // brand-scope: under ?scope=widget a branded config restyles
         // ONLY this subtree (widget + logo); under page scope the
         // overrides sit on :root and this class is inert.
-        <div className="brand-scope mx-auto w-full max-w-[400px]">
+        <div className="brand-scope w-full max-w-[440px] mx-auto lg:mx-0">
           {themeScope === "widget" && <ScenarioBrandLogo align="center" />}
           <WalletApp />
           <ResetThemeButton />
@@ -127,7 +127,7 @@ export default async function Home() {
                     eyebrowSuffix="dev-only helper"
                   >
                     The generator on the left stands in for your auth provider
-                    — it mints a test JWT that Dynamic verifies against a
+                    - it mints a test JWT that Dynamic verifies against a
                     registered JWKS. The steps below show how you&apos;d wire
                     your real provider in.
                   </PanelNotice>

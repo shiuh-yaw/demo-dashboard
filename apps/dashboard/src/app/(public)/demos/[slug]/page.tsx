@@ -53,7 +53,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const demo = getDemoBySlug(slug);
   if (!demo) return {};
-  const title = `${demo.name} — Dynamic Demos`;
+  const title = `${demo.name} - Dynamic Demos`;
   return {
     title,
     description: demo.tagline,

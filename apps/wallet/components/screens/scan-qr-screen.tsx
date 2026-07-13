@@ -19,7 +19,7 @@ interface ScanQrScreenProps {
 const chainLabel = (chain: string) => (chain === "EVM" ? "EVM" : "Solana");
 
 /**
- * Inline "scan recipient QR" screen — rendered inside the wallet WidgetCard
+ * Inline "scan recipient QR" screen - rendered inside the wallet WidgetCard
  * (same chrome as the Transactions / Send screens), NOT a modal overlay.
  *
  * Decodes a bare recipient address (validated against the wallet's chain) and
@@ -91,11 +91,11 @@ export function ScanQrScreen({
     if (status === "denied")
       return "Camera access was blocked. Allow it in your browser settings, or enter the address manually.";
     if (status === "unsupported")
-      return "Scanning isn't supported here — enter the address manually.";
+      return "Scanning isn't supported here - enter the address manually.";
     if (status === "error")
       return "Couldn't start the camera. Enter the address manually.";
     if (invalid)
-      return `That QR isn't a valid ${chainLabel(chain)} address — keep scanning.`;
+      return `That QR isn't a valid ${chainLabel(chain)} address - keep scanning.`;
     return `Point your camera at a ${chainLabel(chain)} address QR code.`;
   })();
 

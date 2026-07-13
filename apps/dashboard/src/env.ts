@@ -1,5 +1,16 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import { getDemoBySlug } from "@/lib/landing/demos";
+
+/**
+ * Demo launch/preview links default to the public catalog entry
+ * (src/lib/landing/demos.ts - the single source of truth for demo
+ * URLs); the NEXT_PUBLIC_*_PROJECT_URL env vars remain as local-dev
+ * overrides. Fallback covers demos without a catalog entry.
+ */
+function catalogDemoUrl(slug: string, fallback: string): string {
+  return getDemoBySlug(slug)?.url ?? fallback;
+}
 
 export const env = createEnv({
   /*
@@ -282,48 +293,48 @@ export const env = createEnv({
     /**
      * Widget Project URL for live preview
      * Points to the running nextjs-payment-widget project
-     * Defaults to http://localhost:3000
+     * Defaults to http://localhost:3000 (no public catalog entry yet)
      */
     NEXT_PUBLIC_WIDGET_PROJECT_URL: z
       .string()
       .url()
       .default("http://localhost:3000"),
     /**
-     * Earn Project URL for live preview
-     * Points to the running demo-earn-dashboard project
-     * Defaults to http://localhost:3000
+     * Earn demo URL for launch/preview links.
+     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
+     * set the env var to point at a local dev server instead.
      */
     NEXT_PUBLIC_EARN_PROJECT_URL: z
       .string()
       .url()
-      .default("http://localhost:3000"),
+      .default(catalogDemoUrl("earn", "http://localhost:3000")),
     /**
-     * Wallet Project URL for live preview
-     * Points to the running wallet demo project
-     * Defaults to http://localhost:3000
+     * Wallet demo URL for launch/preview links.
+     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
+     * set the env var to point at a local dev server instead.
      */
     NEXT_PUBLIC_WALLET_PROJECT_URL: z
       .string()
       .url()
-      .default("http://localhost:3000"),
+      .default(catalogDemoUrl("wallet", "http://localhost:3000")),
     /**
-     * Remittance Project URL for live preview
-     * Points to the running remittance demo project
-     * Defaults to http://localhost:4004
+     * Remittance demo URL for launch/preview links.
+     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
+     * set the env var to point at a local dev server instead.
      */
     NEXT_PUBLIC_REMITTANCE_PROJECT_URL: z
       .string()
       .url()
-      .default("http://localhost:4004"),
+      .default(catalogDemoUrl("remittance", "http://localhost:4004")),
     /**
-     * Trade Project URL for live preview
-     * Points to the running trade demo project
-     * Defaults to http://localhost:4005
+     * Trade demo URL for launch/preview links.
+     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
+     * set the env var to point at a local dev server instead.
      */
     NEXT_PUBLIC_TRADE_PROJECT_URL: z
       .string()
       .url()
-      .default("http://localhost:4005"),
+      .default(catalogDemoUrl("trade", "http://localhost:4005")),
     /**
      * Visa Direct Project URL for live preview
      * Points to the running visa-direct demo project

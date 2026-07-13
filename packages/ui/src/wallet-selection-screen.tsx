@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * WalletSelectionScreen — Choose wallet type before main app.
+ * WalletSelectionScreen - Choose wallet type before main app.
  *
  * Three options: external, embedded, fireblocks.
  * Selection is stored via metadata API; wallet creation is app-specific.
@@ -48,7 +48,7 @@ const OPTIONS: {
       </>
     ),
     title: "Non-custodial",
-    explainer: "Embedded wallet only — user signs and submits transactions onchain directly",
+    explainer: "Embedded wallet only - user signs and submits transactions onchain directly",
   },
   {
     id: "fireblocks",
@@ -59,7 +59,7 @@ const OPTIONS: {
       </>
     ),
     title: "Custodial",
-    explainer: "Fireblocks vault + embedded wallet — user signed intents, vault-executed transactions with funds routed through the user wallet for compliance",
+    explainer: "Fireblocks vault + embedded wallet - user signed intents, vault-executed transactions with funds routed through the user wallet for compliance",
   },
 ];
 

@@ -25,7 +25,7 @@ export function ResetThemeButton() {
         onClick={() => window.location.assign("/?theme=")}
         className="text-xs text-(--brand-muted) transition-colors hover:text-(--brand-fg)"
       >
-        Clear custom theme
+        Clear theme
       </button>
     </div>
   );
