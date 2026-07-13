@@ -17,6 +17,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
+import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
 import { earnMapper } from "@/lib/services/demo-config-mappers/earn";
 import type { EarnConfig, StoredEarnConfig } from "@/lib/types/dashboard";
@@ -42,7 +43,7 @@ export async function createEarnConfig(
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
-      config: (config ?? {}) as EarnConfig,
+      config: (await normalizeBrandingLogos(config ?? {})) as EarnConfig,
     });
     const record = await services.demoConfigs.create(create);
     const brand = await services.brands.get(record.brandId);
@@ -119,7 +120,7 @@ export async function updateEarnConfig(
         ownerId: existing.ownerId || user.sub,
         name: updates.name,
         description: updates.description,
-        config: updates.config,
+        config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);

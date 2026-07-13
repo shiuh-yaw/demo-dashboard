@@ -23,6 +23,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
+import { normalizeLogoUrl } from "@/lib/normalize-logo";
 import { brandService, services } from "@/lib/services";
 import {
   brandToProfile,
@@ -509,6 +510,19 @@ export async function createBrandProfile(
   }
 
   try {
+    // 0) Normalize the custom logo at intake (trim padding, re-encode as a
+    //    data URI) so every demo config derived from this brand renders a
+    //    consistently-sized mark. Best-effort — falls back to the raw URL.
+    if (request.brand?.logoUrl) {
+      request = {
+        ...request,
+        brand: {
+          ...request.brand,
+          logoUrl: await normalizeLogoUrl(request.brand.logoUrl),
+        },
+      };
+    }
+
     // 1) Create the canonical Brand row first so the id is stable.
     const created = await brandService.create(
       createRequestToInput(user.sub, request),
@@ -591,6 +605,18 @@ export async function updateBrandProfile(
     }
     if (existing.ownerId && existing.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
+    }
+
+    // Normalize the custom logo at intake (trim padding, re-encode as a
+    // data URI). Best-effort — falls back to the raw URL on any failure.
+    if (request.brand?.logoUrl) {
+      request = {
+        ...request,
+        brand: {
+          ...request.brand,
+          logoUrl: await normalizeLogoUrl(request.brand.logoUrl),
+        },
+      };
     }
 
     // Persist the brand-row changes first so demo-config updates see

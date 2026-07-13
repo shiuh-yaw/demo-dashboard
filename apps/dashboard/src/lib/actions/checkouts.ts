@@ -15,6 +15,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
+import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { getRedis, REDIS_KEYS } from "@/lib/redis";
 import { services } from "@/lib/services";
 import { checkoutMapper } from "@/lib/services/demo-config-mappers/checkout";
@@ -41,7 +42,10 @@ export async function createCheckout(
       name: name && name.length > 0 ? name : null,
       description: null,
       mode: mode ?? "payment",
-      config: { ...DEFAULT_WIDGET_CONFIG, ...config },
+      config: await normalizeBrandingLogos({
+        ...DEFAULT_WIDGET_CONFIG,
+        ...config,
+      }),
     });
     const record = await services.demoConfigs.create(create);
     const brand = await services.brands.get(record.brandId);
@@ -105,7 +109,7 @@ export async function updateCheckout(
         name: updates.name,
         description: updates.description,
         mode: updates.mode,
-        config: updates.config,
+        config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);

@@ -12,6 +12,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
+import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
 import { visaDirectMapper } from "@/lib/services/demo-config-mappers/visa-direct";
 import type {
@@ -34,7 +35,7 @@ export async function createVisaDirectConfig(
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
-      config: (config ?? {}) as VisaDirectConfig,
+      config: (await normalizeBrandingLogos(config ?? {})) as VisaDirectConfig,
     });
     const record = await services.demoConfigs.create(create);
     const brand = await services.brands.get(record.brandId);
@@ -96,7 +97,7 @@ export async function updateVisaDirectConfig(
         ownerId: existing.ownerId || user.sub,
         name: updates.name,
         description: updates.description,
-        config: updates.config,
+        config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);

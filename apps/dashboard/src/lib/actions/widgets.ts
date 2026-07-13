@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { createId } from "@paralleldrive/cuid2";
 import { getRedis, REDIS_KEYS } from "@/lib/redis";
 import { getCurrentUser } from "@/lib/auth/session";
+import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import type { StoredWidgetConfig } from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG, type WidgetConfig } from "@/lib/widget-config";
 
@@ -42,7 +43,10 @@ export async function createWidget(
     const newConfig: StoredWidgetConfig = {
       id,
       name: name || "Untitled Widget",
-      config: { ...DEFAULT_WIDGET_CONFIG, ...config },
+      config: await normalizeBrandingLogos({
+        ...DEFAULT_WIDGET_CONFIG,
+        ...config,
+      }),
       ownerId: user.sub,
       createdAt: now,
       updatedAt: now,
@@ -132,7 +136,9 @@ export async function updateWidget(
       ...existing,
       name: updates.name ?? existing.name,
       description: updates.description ?? existing.description,
-      config: updates.config ?? existing.config,
+      config: updates.config
+        ? await normalizeBrandingLogos(updates.config)
+        : existing.config,
       ownerId: existing.ownerId || user.sub, // Claim orphaned widgets
       updatedAt: new Date().toISOString(),
     };

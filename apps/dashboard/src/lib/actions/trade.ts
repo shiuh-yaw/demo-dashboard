@@ -12,6 +12,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
+import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
 import { tradeMapper } from "@/lib/services/demo-config-mappers/trade";
 import type { StoredTradeConfig, TradeConfig } from "@/lib/types/dashboard";
@@ -31,7 +32,7 @@ export async function createTradeConfig(
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
-      config: (config ?? {}) as TradeConfig,
+      config: (await normalizeBrandingLogos(config ?? {})) as TradeConfig,
     });
     const record = await services.demoConfigs.create(create);
     const brand = await services.brands.get(record.brandId);
@@ -93,7 +94,7 @@ export async function updateTradeConfig(
         ownerId: existing.ownerId || user.sub,
         name: updates.name,
         description: updates.description,
-        config: updates.config,
+        config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);
