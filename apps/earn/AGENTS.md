@@ -24,6 +24,7 @@ App routes (flat — no path-based config segments):
 
 - `/(auth)/login` — auth.
 - `/(dashboard)/earn` — main dashboard.
+- `/api/balance?address=0x...` - auth-required; Dynamic USDC balance on Base Sepolia via Alchemy (backs the creator-balance card + Add funds context).
 - `/api/...` — server-only.
 
 Cookie / header contract (D-008): query `?theme=<configId>` → cookie `earn_config_id` (sticky) → header `x-earn-config-id` → dashboard config fetch. Subsequent navigations carry the cookie; the query param can be dropped from the URL once set.
@@ -36,8 +37,9 @@ Legacy `/e/<id>/...` deep-links 307-redirect to `/?theme=<id>` via `next.config.
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` — workspace default.
 - `NEXT_PUBLIC_DASHBOARD_URL` — dashboard origin for config fetch.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox off.
+- `ALCHEMY_API_KEY` - server-only; `/api/balance` reads the Dynamic USDC balance on Base Sepolia via Alchemy (Dynamic's balances API doesn't cover Base Sepolia). Alchemy is D-003-exempt like proceeds/remittance/trade - see `packages/alchemy/AGENTS.md`.
 
-No provider keys — vault contracts are onchain; deposits are user-signed.
+No other provider keys — vault contracts are onchain; deposits are user-signed.
 
 ## Theming
 
@@ -52,7 +54,7 @@ Unified theme injection per D-008:
 
 - **Dynamic:** per-app or workspace-default (D-003); external-JWT enabled.
 - **Fireblocks:** none.
-- **Other providers:** none.
+- **Other providers:** Alchemy (`ALCHEMY_API_KEY`, server-only, read-only balance data - D-003-exempt per `packages/alchemy/AGENTS.md`).
 
 ## Slots vs invariants
 
@@ -88,7 +90,7 @@ Unified theme injection per D-008:
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`.
 **Imported by:** none.
 
 ## Examples

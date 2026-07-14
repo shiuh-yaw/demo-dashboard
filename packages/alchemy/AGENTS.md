@@ -31,6 +31,7 @@ If you are an AI agent integrating against Alchemy, **consult the provider docs 
 - Spot prices by symbol — `getTokenPricesBySymbol`.
 - Historical token prices — `getHistoricalTokenPrices`.
 - Asset transfer history (ERC-20 / ERC-721 / external transfers) — `getAssetTransfers`.
+- ERC-20 token balances - `getTokenBalances` (+ `formatTokenBalance` hex-to-human conversion).
 - Network constant — `ALCHEMY_NETWORKS` (the supported network slugs Alchemy expects in the URL).
 
 ## Public surface
@@ -40,8 +41,10 @@ All exports are stable and live at the package root (`@dynamic-demos/alchemy`).
 - `getTokenPricesBySymbol(params)` — REST `GET /prices/v1/{apiKey}/tokens/by-symbol`. (stable)
 - `getHistoricalTokenPrices(params)` — REST `POST /prices/v1/{apiKey}/tokens/historical`. (stable)
 - `getAssetTransfers(params, options)` — JSON-RPC `alchemy_getAssetTransfers`. (stable)
+- `getTokenBalances(params, options)` - JSON-RPC `alchemy_getTokenBalances`; balances are hex strings in smallest unit. (stable)
+- `formatTokenBalance(tokenBalance, decimals)` - hex balance to human-readable number (0 for missing/errored). (stable)
 - `ALCHEMY_NETWORKS` — supported network slugs (`eth-mainnet`, `base-mainnet`, etc.). (stable)
-- Type exports: `AlchemyOptions`, `AssetTransferCategory`, `GetAssetTransfersParams`, `GetAssetTransfersResponse`, `AssetTransfer`, `RawContract`, `TransferMetadata`, `GetTokenPricesBySymbolParams`, `GetHistoricalTokenPricesParams`. (stable)
+- Type exports: `AlchemyOptions`, `AssetTransferCategory`, `GetAssetTransfersParams`, `GetAssetTransfersResponse`, `AssetTransfer`, `RawContract`, `TransferMetadata`, `GetTokenPricesBySymbolParams`, `GetHistoricalTokenPricesParams`, `GetTokenBalancesParams`, `TokenBalanceEntry`, `GetTokenBalancesResponse`. (stable)
 
 ## Dashboard API surface
 
@@ -72,7 +75,7 @@ There is no separate sandbox host; Alchemy returns sandbox-ish data only via ded
 ## Integration map
 
 **Imports:** none (uses global `fetch`).
-**Imported by:** `apps/proceeds`, `apps/remittance`, `apps/trade`.
+**Imported by:** `apps/proceeds`, `apps/remittance`, `apps/trade`, `apps/flow` (kyc-deposit balances), `apps/earn` (balance route).
 
 ## Examples
 

@@ -5,8 +5,7 @@ import {
   getEmbeddedWallet,
   getPrimaryWallet,
   waitForClientInitialized,
-  fetchMultichainBalances,
-  findTokenBalanceInChainBalances,
+  getAuthToken,
 } from "@/lib/dynamic";
 import { getDynamicUsdcAddress, DEFAULT_CHAIN_ID } from "@/lib/contracts";
 import { formatCurrency, truncateAddress } from "@dynamic-demos/utils";
@@ -15,7 +14,6 @@ import { useCreatorBalanceOptional } from "@/contexts/creator-balance-context";
 import { useEarnConfig } from "@/contexts/earn-config-context";
 import { Copy, Check, ExternalLink } from "lucide-react";
 
-const BASE_SEPOLIA_NETWORK_ID = parseInt(DEFAULT_CHAIN_ID, 10);
 const BASE_SEPOLIA_EXPLORER = "https://sepolia.basescan.org";
 
 interface TotalCreatorBalanceProps {
@@ -73,33 +71,24 @@ export function TotalCreatorBalance(props: TotalCreatorBalanceProps = {}) {
         return;
       }
 
-      const usdcAddress = getDynamicUsdcAddress(DEFAULT_CHAIN_ID);
-      if (!usdcAddress) {
+      if (!getDynamicUsdcAddress(DEFAULT_CHAIN_ID)) {
         setBalance("0.00");
         return;
       }
 
-      const chainBalances = await fetchMultichainBalances({
-        balanceRequest: {
-          filterSpamTokens: true,
-          balanceRequests: [
-            {
-              address,
-              chain: "EVM",
-              networkIds: [BASE_SEPOLIA_NETWORK_ID],
-              whitelistedContracts: [usdcAddress],
-            },
-          ],
-        },
+      // Dynamic's balances API doesn't cover Base Sepolia, so the USDC
+      // balance is read via the server-side Alchemy route instead of the
+      // SDK's getMultichainBalances.
+      const authToken = await getAuthToken();
+      const res = await fetch(`/api/balance?address=${address}`, {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       });
+      if (!res.ok) throw new Error(`Balance fetch failed: ${res.status}`);
+      const { balance: usdcBalance } = (await res.json()) as {
+        balance?: number;
+      };
 
-      const token = findTokenBalanceInChainBalances(
-        chainBalances,
-        BASE_SEPOLIA_NETWORK_ID,
-        usdcAddress,
-      );
-
-      setBalance(token?.balance ?? "0.00");
+      setBalance((usdcBalance ?? 0).toFixed(2));
     } catch {
       // On polling errors, keep existing balance rather than resetting to 0
       if (isInitialLoad) {

@@ -210,6 +210,13 @@ export interface CheckoutWidgetProps {
    * after `minUsdValue` filtering.
    */
   tokenFilter?: (token: TokenAsset) => boolean;
+  /**
+   * Replace the asset selector's default balance source (Dynamic SDK
+   * `getBalances`) with a host-supplied fetcher. Escape hatch for
+   * networks the Dynamic balances API doesn't cover (e.g. Base
+   * Sepolia). See `AssetSelectorScreenProps.fetchTokens`.
+   */
+  fetchTokens?: (wallet: WalletAccount) => Promise<TokenAsset[]>;
   /** Approximate row count before the token list scrolls. Default 5. */
   initialTokensShown?: number;
   /**
@@ -315,6 +322,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     minUsdValue = 0,
     skipMinUsdValueFilter = false,
     tokenFilter,
+    fetchTokens,
     initialTokensShown = 5,
     assetSelectorHeader,
     onWalletConnected,
@@ -582,6 +590,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
               onSelected={handleTokenSelected}
               minUsdValue={effectiveMinUsdValue}
               tokenFilter={tokenFilter}
+              fetchTokens={fetchTokens}
               initialTokensShown={initialTokensShown}
 
               header={

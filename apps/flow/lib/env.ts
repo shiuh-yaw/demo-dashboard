@@ -32,6 +32,12 @@ export const env = createEnv({
       normalizeBaseUrl,
       z.string().url().optional(),
     ),
+    /**
+     * Alchemy API key for the /kyc-deposit balance route. Dynamic's
+     * balances API doesn't cover Base Sepolia, so that demo reads the
+     * USDC balance via Alchemy instead. Server-only.
+     */
+    ALCHEMY_API_KEY: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string().min(1, {
@@ -43,6 +49,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     DYNAMIC_API_KEY: process.env.DYNAMIC_API_KEY,
     DASHBOARD_API_URL: process.env.DASHBOARD_API_URL,
+    ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID:

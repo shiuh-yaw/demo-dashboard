@@ -66,3 +66,22 @@ export interface AlchemyOptions {
   apiKey: string;
   network: string;
 }
+
+export interface GetTokenBalancesParams {
+  /** Wallet address whose balances are fetched. */
+  address: string;
+  /** ERC-20 contract addresses to query. */
+  contractAddresses: string[];
+}
+
+export interface TokenBalanceEntry {
+  contractAddress: string;
+  /** Hex-encoded balance in the token's smallest unit, or null on error. */
+  tokenBalance: string | null;
+  error?: string | null;
+}
+
+export interface GetTokenBalancesResponse {
+  address: string;
+  tokenBalances: TokenBalanceEntry[];
+}

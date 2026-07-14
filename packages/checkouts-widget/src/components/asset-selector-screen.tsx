@@ -60,6 +60,17 @@ export interface AssetSelectorScreenProps {
    */
   tokenFilter?: (token: TokenAsset) => boolean;
   /**
+   * Replace the default balance source (Dynamic SDK `getBalances`)
+   * with a host-supplied fetcher. Called once per unique connected
+   * wallet; results are merged and de-duped like the default path.
+   * Escape hatch for networks the Dynamic balances API doesn't cover
+   * (e.g. Base Sepolia) - the host fetches balances itself (typically
+   * via its own server route) and returns ready-made `TokenAsset`s.
+   * `minUsdValue` is NOT applied to override results; `tokenFilter`
+   * still is.
+   */
+  fetchTokens?: (wallet: WalletAccount) => Promise<TokenAsset[]>;
+  /**
    * Approximate number of tokens visible before the list scrolls. Used
    * to compute the scroll container's `max-height`; the remaining
    * tokens are reachable by scrolling, not by clicking "show more".
@@ -181,6 +192,7 @@ export default function AssetSelectorScreen({
   onSelected,
   minUsdValue = 0,
   tokenFilter,
+  fetchTokens,
   initialTokensShown = 5,
   header,
   footer,
@@ -204,10 +216,14 @@ export default function AssetSelectorScreen({
       setError("Unsupported wallet chain");
       return;
     }
-    const networkIds = getEnabledNetworkIds();
-    if (!networkIds.length) {
-      setError("No networks configured");
-      return;
+    // The override brings its own balance source, so the Dynamic
+    // network config guard only applies to the default path.
+    if (!fetchTokens) {
+      const networkIds = getEnabledNetworkIds();
+      if (!networkIds.length) {
+        setError("No networks configured");
+        return;
+      }
     }
 
     let cancelled = false;
@@ -227,7 +243,9 @@ export default function AssetSelectorScreen({
         });
 
         const results = await Promise.allSettled(
-          unique.map((w) => fetchWalletBalances(w, minUsdValue)),
+          unique.map((w) =>
+            fetchTokens ? fetchTokens(w) : fetchWalletBalances(w, minUsdValue),
+          ),
         );
         if (cancelled) return;
 

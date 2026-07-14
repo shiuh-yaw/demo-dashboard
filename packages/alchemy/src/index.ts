@@ -14,6 +14,9 @@ export type {
   AssetTransfer,
   GetAssetTransfersResponse,
   AlchemyOptions,
+  GetTokenBalancesParams,
+  TokenBalanceEntry,
+  GetTokenBalancesResponse,
 } from "./types";
 
 // Prices API
@@ -25,3 +28,6 @@ export type {
 
 // Asset Transfers
 export { getAssetTransfers } from "./asset-transfers";
+
+// Token Balances
+export { getTokenBalances, formatTokenBalance } from "./token-balances";

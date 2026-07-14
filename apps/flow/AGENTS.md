@@ -96,6 +96,7 @@ Always consult the upstream docs before changing Flow wiring:
 | `/api/kyc-deposit/deposit-address` | Return the deposit destination — the caller's own connected wallet (self-send) | Server-only |
 | `/api/kyc-deposit/kyc-status` | Whether the authed user already completed KYC (reads Dynamic `is_kyc_completed` metadata) — lets returning users skip SumSub | Auth-required |
 | `/api/kyc-deposit/complete` | Persist KYC completion to Dynamic user metadata (`is_kyc_completed`) after a GREEN SumSub review | Auth-required |
+| `/api/kyc-deposit/balances` | USDC-on-Base-Sepolia balance for the connected wallet via Alchemy (Dynamic's balances API doesn't cover Base Sepolia); backs the widget's `fetchTokens` override on this demo only | Auth-required |
 | `/api/withdraws/[id]` | Withdraw intent state (Phase 10) | Auth-required |
 
 ## Env reference
@@ -108,6 +109,7 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 | `NEXT_PUBLIC_DYNAMIC_CHECKOUT_ID` | Override the sandbox Checkout id on `/checkout` — optional, a default is baked in | No (NEXT_PUBLIC) |
 | `DYNAMIC_API_KEY` | One Dynamic env API token used server-side (same var name as every other demo app). Needs **flow.write** (Flow creation via `POST /api/checkouts`) **and** user read+write (`/kyc-deposit` persists `is_kyc_completed` via `@dynamic-demos/dynamic`). | Yes |
 | `DASHBOARD_API_URL` | `/kyc-deposit` scenario — proxies SumSub calls to dashboard (D-003) | Yes |
+| `ALCHEMY_API_KEY` | `/api/kyc-deposit/balances` - Base Sepolia USDC balance reads (Alchemy is D-003-exempt like proceeds/remittance/trade; see `packages/alchemy/AGENTS.md`) | Yes |
 
 ## Architecture invariants
 

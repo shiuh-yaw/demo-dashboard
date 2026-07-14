@@ -13,6 +13,12 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
+    /**
+     * Alchemy API key for /api/balance. Dynamic's balances API doesn't
+     * cover Base Sepolia, so the creator-balance card reads the USDC
+     * balance via Alchemy instead. Server-only.
+     */
+    ALCHEMY_API_KEY: z.string().min(1).optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -44,6 +50,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,

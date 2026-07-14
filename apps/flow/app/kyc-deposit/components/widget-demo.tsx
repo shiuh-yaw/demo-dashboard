@@ -165,6 +165,42 @@ function WidgetStage({
     logout();
   }, []);
 
+  // Dynamic's balances API doesn't cover Base Sepolia, so the default
+  // asset-picker fetch (`getBalances`) comes back empty for funded wallets.
+  // For this demo only, read the USDC balance via our server-side Alchemy
+  // route and hand the picker a ready-made TokenAsset.
+  const fetchTokens = useCallback(
+    async (wallet: WalletAccount): Promise<TokenAsset[]> => {
+      if ((wallet.chain as string) !== "EVM") return [];
+      const res = await fetchJson<{ balance?: number; rawBalance?: string }>(
+        `/api/kyc-deposit/balances?address=${wallet.address}`,
+        { headers: getAuthHeaders() },
+      );
+      if (!res.ok) throw new Error(res.error || "Failed to load balances");
+      const balance = res.data?.balance ?? 0;
+      if (balance <= 0) return [];
+      return [
+        {
+          id: `${SETTLEMENT_TOKEN.symbol}-${SETTLEMENT_TOKEN.chainId}-${SETTLEMENT_TOKEN.address}`,
+          name: SETTLEMENT_TOKEN.name,
+          symbol: SETTLEMENT_TOKEN.symbol,
+          balance: String(balance),
+          rawBalance: BigInt(res.data?.rawBalance ?? "0x0").toString(),
+          decimals: SETTLEMENT_TOKEN.decimals,
+          // Testnet USDC has no price feed; it's USD-pegged, so the
+          // balance is its dollar value (mirrors the package's Sepolia
+          // stablecoin display rule).
+          usdValue: `$${balance.toFixed(2)}`,
+          pricePerToken: 1,
+          iconUrl: SETTLEMENT_TOKEN.logoURI,
+          chainId: SETTLEMENT_TOKEN.chainId,
+          tokenAddress: SETTLEMENT_TOKEN.address,
+        },
+      ];
+    },
+    [],
+  );
+
   const handlePostConnect = useCallback(
     (wallet: WalletAccount, proceed: () => void) => (
       <KycGate
@@ -205,6 +241,7 @@ function WidgetStage({
         createFlow={createFlowCallback}
         destinationToken={SETTLEMENT_TOKEN}
         tokenFilter={tokenFilter}
+        fetchTokens={fetchTokens}
         skipMinUsdValueFilter
         onWalletConnected={handleWalletConnected}
         destinationAddress={depositAddress || walletAddress}

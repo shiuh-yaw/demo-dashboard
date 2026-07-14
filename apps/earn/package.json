@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dynamic-demos/alchemy": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/types": "workspace:*",
