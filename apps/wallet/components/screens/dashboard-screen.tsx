@@ -1,7 +1,12 @@
 "use client";
 
-import { LogOut, Wallet } from "lucide-react";
-import { WidgetCard, Button, Spinner } from "@dynamic-demos/ui";
+import { LogOut, Settings, Wallet } from "lucide-react";
+import {
+  WidgetCard,
+  widgetHeaderTrailingIconButtonClassName,
+  Button,
+  Spinner,
+} from "@dynamic-demos/ui";
 import { ScrollableWalletList } from "@/components/wallet/scrollable-wallet-list";
 import { CreateWalletButtons } from "@/components/wallet/create-wallet-buttons";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
@@ -63,6 +68,17 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
       }
       title="Your Wallets"
       subtitle="Manage your embedded wallets"
+      trailing={
+        <button
+          type="button"
+          onClick={() => navigation.goToSettings()}
+          className={widgetHeaderTrailingIconButtonClassName}
+          aria-label="Settings"
+          title="Settings"
+        >
+          <Settings className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+        </button>
+      }
     >
       <div className="space-y-4">
         {isLoading ? (

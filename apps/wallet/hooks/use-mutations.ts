@@ -190,7 +190,14 @@ export function useCreateWallet() {
   return useMutation({
     mutationFn: (chain: Chain) => createWaasWalletAccounts({ chains: [chain] }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["walletAccounts"] });
+      // react-hooks' useGetWalletAccounts caches under a NAMESPACED key
+      // (["@dynamic-labs-sdk/react-hooks", "state", "useGetWalletAccounts"]),
+      // so match by segment instead of exact key - without this the new
+      // wallet doesn't appear until a hard refresh.
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey.includes("useGetWalletAccounts"),
+      });
     },
   });
 }

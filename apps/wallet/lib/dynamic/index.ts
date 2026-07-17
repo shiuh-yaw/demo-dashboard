@@ -53,6 +53,21 @@ export type { TokenBalanceInfo } from "./balance";
 // Transaction History
 export { getTransactionHistory } from "./transaction-history";
 
+// Key-share backup (Google Drive) + export
+export {
+  backupWaasKeySharesToGoogleDrive,
+  getGoogleDriveBackupReadiness,
+  isInsufficientGoogleDriveScopesError,
+  isWalletBackedUpToGoogleDrive,
+  markWalletBackedUpToGoogleDrive,
+} from "./backup";
+export {
+  exportWaasClientKeyshares,
+  exportWaasPrivateKey,
+  hasDownloadedShare,
+  markShareDownloaded,
+} from "./export-key";
+
 // Wallet Provider
 export { getWalletProviderDataByKey } from "./wallet-provider";
 

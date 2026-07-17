@@ -23,6 +23,7 @@ export type PanelSection =
   | "jwt-setup"
   | "wallets"
   | "transactions"
+  | "settings"
   | `send-${SendChain}`;
 
 const PanelSectionContext = createContext<{

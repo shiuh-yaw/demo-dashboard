@@ -15,6 +15,7 @@ import {
   type WalletAccount,
 } from "@dynamic-labs-sdk/client";
 import { getClient } from "./client";
+import { BASE_SEPOLIA_NETWORK_ID } from "@/lib/base-sepolia-tokens";
 
 // =============================================================================
 // TYPES
@@ -110,6 +111,7 @@ export async function getTokenBalances({
   const client = getClient();
   if (!client) return [];
 
+  let sdkBalances: TokenBalanceInfo[] = [];
   try {
     const chainBalances = await sdkGetMultichainBalances({
       balanceRequest: {
@@ -126,11 +128,51 @@ export async function getTokenBalances({
       },
     });
 
-    return (
+    sdkBalances =
       chainBalances?.flatMap((cb) =>
         (cb.networks ?? []).flatMap((n) => n.balances ?? []),
-      ) ?? []
+      ) ?? [];
+  } catch {
+    sdkBalances = [];
+  }
+
+  // Base Sepolia isn't covered by Dynamic's balances API, so its ERC-20
+  // balances come from Alchemy via our server route (native ETH still
+  // arrives from the SDK above). Merge, preferring the SDK entry when a
+  // token appears in both.
+  if (networkId === BASE_SEPOLIA_NETWORK_ID) {
+    const alchemyBalances = await fetchBaseSepoliaTokenBalances(address);
+    const seen = new Set(
+      sdkBalances.map((b) => b.address.toLowerCase()),
     );
+    return [
+      ...sdkBalances,
+      ...alchemyBalances.filter((b) => !seen.has(b.address.toLowerCase())),
+    ];
+  }
+
+  return sdkBalances;
+}
+
+/**
+ * Read Base Sepolia ERC-20 balances from our Alchemy-backed route.
+ * Best-effort: any failure (missing key → 503, network error) yields an
+ * empty list so the picker still shows whatever the SDK returned.
+ */
+async function fetchBaseSepoliaTokenBalances(
+  address: string,
+): Promise<TokenBalanceInfo[]> {
+  const client = getClient();
+  const token = (client as unknown as { token?: string | null })?.token;
+  if (!token) return [];
+  try {
+    const res = await fetch(
+      `/api/balances?address=${address}&networkId=${BASE_SEPOLIA_NETWORK_ID}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as { balances?: TokenBalanceInfo[] };
+    return data.balances ?? [];
   } catch {
     return [];
   }

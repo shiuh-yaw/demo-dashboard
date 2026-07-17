@@ -1,20 +1,23 @@
 "use client";
 
-import { useSdkQuery } from "./use-sdk-query";
-import { getWalletAccounts, type WalletAccount } from "@/lib/dynamic";
+import { useGetWalletAccounts } from "@dynamic-labs-sdk/react-hooks";
+import type { WalletAccount } from "@/lib/dynamic";
 
 /**
- * Hook to get wallet accounts with reactive updates
+ * Wallet accounts with reactive updates - thin adapter over the
+ * official react-hooks binding (which subscribes to client state
+ * itself), keeping the return shape existing consumers expect.
+ *
+ * Replaced the home-grown event-driven query: it raced client
+ * hydration on fresh loads (query cached [] before the SDK restored
+ * the session, and no later event always fired), showing "No wallets"
+ * for signed-in users.
  */
 export function useWalletAccounts() {
-  const { data, refetch, isLoading, error } = useSdkQuery<WalletAccount[]>({
-    queryKey: ["walletAccounts"],
-    queryFn: getWalletAccounts,
-    refetchEvent: "walletAccountsChanged",
-  });
+  const { data, refetch, isLoading, error } = useGetWalletAccounts();
 
   return {
-    walletAccounts: data ?? [],
+    walletAccounts: (data ?? []) as WalletAccount[],
     refetch,
     isLoading,
     error,

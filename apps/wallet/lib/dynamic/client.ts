@@ -49,7 +49,8 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
     addSolanaExtension(client);
     addSuiExtension(client);
     addBitcoinExtension(client);
-    addTonExtension(client);
+    // SDK 1.x: addTonExtension takes (params?, client?) - params first.
+    addTonExtension(undefined, client);
     addZerodevExtension(client);
   },
 });

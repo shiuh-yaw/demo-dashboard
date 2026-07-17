@@ -301,6 +301,101 @@ const { data } = useGetTransactionHistory({
 ];
 
 /**
+ * Settings-screen steps - key-share backup to Google Drive. Shown while
+ * the settings screen is up. Prerequisites live in prose (dashboard
+ * toggle + Google Drive API in the Google Cloud project); snippets show
+ * the current docs flow (pre-flight readiness + backup + scope-error
+ * recovery), which is ahead of the pinned SDK by design.
+ */
+export const WALLET_SETTINGS_STEPS: StepSource[] = [
+  {
+    num: "01",
+    title: "Check Drive readiness",
+    prose:
+      "Prerequisite: enable Google Drive backup in the Dynamic dashboard's embedded wallet settings, and enable the Google Drive API in your Google Cloud project. Then pre-flight before backing up - if the linked Google account is missing Drive scopes, re-prompt consent instead of starting an MPC reshare that can't finish.",
+    filename: "components/settings.tsx",
+    lang: "typescript",
+    code: `import {
+  getGoogleDriveBackupReadiness,
+  signInWithSocialRedirect,
+} from "@dynamic-labs-sdk/client";
+
+const readiness = await getGoogleDriveBackupReadiness();
+
+if (readiness.status === "needs-access") {
+  // Re-prompt the Google consent screen for the Drive scopes.
+  await signInWithSocialRedirect({
+    provider: "google",
+    redirectUrl: window.location.href,
+  });
+}`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/reference/waas/get-google-drive-backup-readiness",
+  },
+  {
+    num: "02",
+    title: "Back up key shares to Google Drive",
+    prose:
+      "One call runs the MPC reshare and uploads the user share to the user's Drive (app-data folder + personal Drive). Pass a password to encrypt the share - that's the boundary that keeps the backup unreadable to everyone but the user, including you.",
+    filename: "components/settings.tsx",
+    lang: "typescript",
+    code: `import { backupWaasKeySharesToGoogleDrive } from "@dynamic-labs-sdk/client/waas";
+
+await backupWaasKeySharesToGoogleDrive({
+  walletAccount,
+  password, // optional - encrypts the key share
+});`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/google-drive-backup",
+  },
+  {
+    num: "03",
+    title: "Recover from missing scopes",
+    prose:
+      "Google shows the two Drive permissions as UNCHECKED opt-in boxes on the consent screen, so uploads can fail even after pre-flight (legacy links don't record scopes). Detect that case and send the user back through Google consent, then retry.",
+    filename: "components/settings.tsx",
+    lang: "typescript",
+    code: `import {
+  isInsufficientGoogleDriveScopesError,
+  signInWithSocialRedirect,
+} from "@dynamic-labs-sdk/client";
+
+try {
+  await backupWaasKeySharesToGoogleDrive({ walletAccount });
+} catch (error) {
+  if (isInsufficientGoogleDriveScopesError(error)) {
+    await signInWithSocialRedirect({
+      provider: "google",
+      redirectUrl: window.location.href,
+    });
+    return;
+  }
+  throw error;
+}`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/google-drive-backup#pre-flight-readiness-check",
+  },
+  {
+    num: "04",
+    title: "Reveal the private key",
+    prose:
+      "Self-custody means the user can always take their key with them. Hand the SDK a container element and it injects a secure iframe that displays the key inside it - the key never passes through your application code. Pass a password when the key share was password-encrypted.",
+    filename: "components/settings.tsx",
+    lang: "typescript",
+    code: `import { exportWaasPrivateKey } from "@dynamic-labs-sdk/client/waas";
+
+// <div id="reveal" /> - the SDK renders the key inside a secure
+// iframe injected here; it never touches your app's code.
+await exportWaasPrivateKey({
+  walletAccount,
+  displayContainer: document.getElementById("reveal")!,
+});`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/reference/waas/exporting-waas-private-key",
+  },
+];
+
+/**
  * Send-flow steps, per chain - the `send-tx` and `scan-qr` screens show
  * the section for the chain being sent from (docs are chain-specific,
  * so the panel must be too). Send snippets mirror

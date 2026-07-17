@@ -25,6 +25,7 @@ import { cn, truncateAddress } from "@dynamic-demos/utils";
 import {
   type NetworkData,
   type TokenBalanceInfo,
+  getBalance,
   getTokenBalances,
   isSvmGasSponsorshipEnabled,
 } from "@/lib/dynamic";
@@ -63,11 +64,13 @@ function TransactionResultView({
   networkData,
   explorerUrl,
   onClose,
+  onBackToWallet,
 }: {
   txHash: string;
   networkData: NetworkData;
   explorerUrl?: string;
   onClose: () => void;
+  onBackToWallet: () => void;
 }) {
   const truncatedHash = `${txHash.slice(0, 10)}...${txHash.slice(-8)}`;
 
@@ -136,9 +139,13 @@ function TransactionResultView({
             </a>
           )}
 
-          <Button variant="secondary" className="w-full" onClick={onClose}>
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={onBackToWallet}
+          >
             <ArrowLeft className="w-4 h-4" />
-            Back to Wallets
+            Back to Wallet
           </Button>
         </div>
       </div>
@@ -268,11 +275,30 @@ export function SendTxScreen({
     ],
     queryFn: async () => {
       if (!walletAccount || !networkData) return [];
-      return getTokenBalances({
+      const balances = await getTokenBalances({
         address: walletAccount.address,
         chain,
         networkId: Number(networkData.networkId),
       });
+      // The native asset must always be selectable, even where the
+      // balances backend returns nothing for it (e.g. Base Sepolia,
+      // served token-only via Alchemy). Synthesize a native row from
+      // the network's nativeCurrency + a direct native-balance read
+      // when the list has no native entry.
+      if (!balances.some((b) => b.isNative)) {
+        const { balance } = await getBalance({ walletAccount });
+        const native: TokenBalanceInfo = {
+          address: "",
+          name: networkData.nativeCurrency.name,
+          symbol: networkData.nativeCurrency.symbol,
+          decimals: networkData.nativeCurrency.decimals,
+          logoURI: networkData.nativeCurrency.iconUrl ?? "",
+          balance: balance ? Number(balance) : 0,
+          isNative: true,
+        };
+        return [native, ...balances];
+      }
+      return balances;
     },
     enabled: !!walletAccount && !!networkData,
   });
@@ -428,7 +454,7 @@ export function SendTxScreen({
       setSignedAuth(null);
       // Invalidate auth cache so dashboard shows updated status
       invalidateAuth();
-      navigation.goToTxResult(txHash, networkData);
+      navigation.goToTxResult(txHash, networkData, walletAddress, chain);
     } catch (error) {
       // If MFA required but not set up, show setup screen
       if (isMfaRequiredError(error)) {
@@ -491,6 +517,15 @@ export function SendTxScreen({
           networkData={txResult.networkData}
           explorerUrl={txResult.networkData.blockExplorerUrls?.[0]}
           onClose={handleClose}
+          // Return to the wallet just sent from (its tx-history), not
+          // the dashboard list. The X (onClose) still exits to the list.
+          onBackToWallet={() =>
+            navigation.goToTxHistory(
+              walletAddress,
+              chain,
+              Number(txResult.networkData.networkId),
+            )
+          }
         />
       );
 
@@ -541,9 +576,15 @@ export function SendTxScreen({
                 <label className="flex items-center justify-between text-xs font-medium text-(--brand-muted) tracking-[-0.12px]">
                   <span>Amount</span>
                   {selectedToken && (
-                    <span className="font-normal">
+                    <button
+                      type="button"
+                      onClick={() => setAmount(String(selectedToken.balance))}
+                      disabled={sendTx.isPending || !selectedToken.balance}
+                      className="font-normal transition-colors hover:text-(--brand-fg) disabled:cursor-default disabled:hover:text-(--brand-muted)"
+                      title="Use max balance"
+                    >
                       Balance: {selectedToken.balance}
-                    </span>
+                    </button>
                   )}
                 </label>
                 <div className="relative">

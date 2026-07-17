@@ -16,6 +16,8 @@
  */
 
 import { headers } from "next/headers";
+import type { WidgetConfig } from "@dynamic-demos/theme";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import {
   CodePanel,
   PanelNotice,
@@ -36,6 +38,7 @@ import {
   WALLET_JWT_SETUP_STEPS,
   WALLET_SDK_STEPS,
   WALLET_SEND_STEPS_BY_CHAIN,
+  WALLET_SETTINGS_STEPS,
   WALLET_TX_STEPS,
 } from "@/lib/code-steps";
 import { SEND_CHAINS } from "@/lib/send-chains";
@@ -43,24 +46,50 @@ import { SEND_CHAINS } from "@/lib/send-chains";
 export default async function Home() {
   // Brand scope decides logo placement: above the hero title under
   // page scope (full immersion), centered above the widget under
-  // widget scope. Same header the layout uses for the style scoping.
+  // widget scope. Same headers the layout uses for the style scoping;
+  // the config fetch dedupes with the layout's identical call.
+  const headersList = await headers();
   const themeScope =
-    (await headers()).get("x-wallet-theme-scope") === "widget"
-      ? "widget"
-      : "page";
+    headersList.get("x-wallet-theme-scope") === "widget" ? "widget" : "page";
+  const config = await fetchDemoConfig<WidgetConfig>({
+    demoType: "wallet",
+    id: headersList.get("x-wallet-config-id"),
+    fallback: {},
+  });
+  // Branded demos drop the Dynamic site header (full immersion) and
+  // carry a Book a call CTA in the hero's brand row instead.
+  const isBranded = Object.keys(config).length > 0;
+
+  const bookACall = (
+    <a
+      href="https://www.dynamic.xyz/book-a-call"
+      target="_blank"
+      rel="noreferrer"
+      className="shrink-0 whitespace-nowrap rounded-(--brand-radius) bg-(--brand-primary) px-4 py-2.5 text-sm font-semibold text-(--brand-primary-fg) transition-opacity hover:opacity-90"
+    >
+      Book a call
+    </a>
+  );
 
   // All panel variants are highlighted server-side; the client-side
   // WalletPanel switcher just picks one (Q-017).
-  const [sdkSteps, jwtSetupSteps, accountSteps, txSteps, ...sendStepsList] =
-    await Promise.all([
-      buildCodeSteps(WALLET_SDK_STEPS),
-      buildCodeSteps(WALLET_JWT_SETUP_STEPS),
-      buildCodeSteps(WALLET_ACCOUNT_STEPS),
-      buildCodeSteps(WALLET_TX_STEPS),
-      ...SEND_CHAINS.map((chain) =>
-        buildCodeSteps(WALLET_SEND_STEPS_BY_CHAIN[chain]),
-      ),
-    ]);
+  const [
+    sdkSteps,
+    jwtSetupSteps,
+    accountSteps,
+    txSteps,
+    settingsSteps,
+    ...sendStepsList
+  ] = await Promise.all([
+    buildCodeSteps(WALLET_SDK_STEPS),
+    buildCodeSteps(WALLET_JWT_SETUP_STEPS),
+    buildCodeSteps(WALLET_ACCOUNT_STEPS),
+    buildCodeSteps(WALLET_TX_STEPS),
+    buildCodeSteps(WALLET_SETTINGS_STEPS),
+    ...SEND_CHAINS.map((chain) =>
+      buildCodeSteps(WALLET_SEND_STEPS_BY_CHAIN[chain]),
+    ),
+  ]);
 
   // Shared "Built with" callout - shown on the default and wallets panels
   // (the extensions link is how you add more chains to either story).
@@ -77,11 +106,27 @@ export default async function Home() {
   return (
     <PanelSectionProvider>
       <ScenarioLayout
-      header={<SiteHeader homeHref="https://dynamic.dev" chip="Wallet" />}
+      header={
+        isBranded ? undefined : (
+          <SiteHeader homeHref="https://dynamic.dev" chip="Wallet" />
+        )
+      }
       hero={
         <ScenarioHero
           logo={
-            themeScope === "page" ? <ScenarioBrandLogo align="start" /> : undefined
+            isBranded ? (
+              // Brand row stands in for the hidden site header: logo
+              // left (page scope only - widget scope centers it over
+              // the widget), Book a call right.
+              <div className="flex items-start justify-between gap-4">
+                {themeScope === "page" ? (
+                  <ScenarioBrandLogo align="start" />
+                ) : (
+                  <span aria-hidden />
+                )}
+                {bookACall}
+              </div>
+            ) : undefined
           }
           title="A wallet your users control."
           titleAccent="No seed phrase required."
@@ -107,6 +152,9 @@ export default async function Home() {
             ),
             transactions: (
               <CodePanel sdkSteps={txSteps} notice={builtWithNotice} />
+            ),
+            settings: (
+              <CodePanel sdkSteps={settingsSteps} notice={builtWithNotice} />
             ),
             ...Object.fromEntries(
               SEND_CHAINS.map((chain, i) => [
@@ -137,7 +185,7 @@ export default async function Home() {
           }}
         />
       }
-      footer={<SiteFooter />}
+      footer={<SiteFooter signInHref="https://dynamic.dev/brands" />}
     />
     </PanelSectionProvider>
   );

@@ -32,6 +32,7 @@ import { SendTxScreen } from "@/components/screens/send-tx-screen";
 import { TxHistoryScreen } from "@/components/screens/tx-history-screen";
 import { ScanQrScreen } from "@/components/screens/scan-qr-screen";
 import { AddWalletScreen } from "@/components/screens/add-wallet-screen";
+import { SettingsScreen } from "@/components/screens/settings-screen";
 
 export function WalletApp() {
   const isClientReady = useClientInitialized();
@@ -112,8 +113,8 @@ export function WalletApp() {
 
       {(screen.type === "send-tx" || screen.type === "tx-result") && (
         <SendTxScreen
-          walletAddress={screen.type === "send-tx" ? screen.walletAddress : ""}
-          chain={screen.type === "send-tx" ? screen.chain : ""}
+          walletAddress={screen.walletAddress}
+          chain={screen.chain}
           navigation={navigation}
           fromMfaSetup={screen.type === "send-tx" ? screen.fromMfaSetup : false}
           initialRecipient={
@@ -158,6 +159,8 @@ export function WalletApp() {
       {screen.type === "add-wallet" && (
         <AddWalletScreen navigation={navigation} />
       )}
+
+      {screen.type === "settings" && <SettingsScreen navigation={navigation} />}
     </div>
   );
 }

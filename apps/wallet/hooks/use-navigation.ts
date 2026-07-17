@@ -30,7 +30,13 @@ export type Screen =
       returnToTxHistory?: { networkId: number };
       initialRecipient?: string;
     }
-  | { type: "tx-result"; txHash: string; networkData: NetworkData }
+  | {
+      type: "tx-result";
+      txHash: string;
+      networkData: NetworkData;
+      walletAddress: string;
+      chain: string;
+    }
   | {
       type: "tx-history";
       walletAddress: string;
@@ -43,7 +49,8 @@ export type Screen =
       chain: string;
       networkId: number;
     }
-  | { type: "add-wallet" };
+  | { type: "add-wallet" }
+  | { type: "settings" };
 
 // =============================================================================
 // NAVIGATION HOOK
@@ -70,7 +77,12 @@ export interface NavigationReturn {
     returnToTxHistory?: { networkId: number },
     initialRecipient?: string,
   ) => void;
-  goToTxResult: (txHash: string, networkData: NetworkData) => void;
+  goToTxResult: (
+    txHash: string,
+    networkData: NetworkData,
+    walletAddress: string,
+    chain: string,
+  ) => void;
   goToTxHistory: (
     walletAddress: string,
     chain: string,
@@ -82,6 +94,7 @@ export interface NavigationReturn {
     networkId: number,
   ) => void;
   goToAddWallet: () => void;
+  goToSettings: () => void;
 }
 
 const TRANSITION_DURATION = 150;
@@ -197,8 +210,19 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
   );
 
   const goToTxResult = useCallback(
-    (txHash: string, networkData: NetworkData) => {
-      transitionTo({ type: "tx-result", txHash, networkData });
+    (
+      txHash: string,
+      networkData: NetworkData,
+      walletAddress: string,
+      chain: string,
+    ) => {
+      transitionTo({
+        type: "tx-result",
+        txHash,
+        networkData,
+        walletAddress,
+        chain,
+      });
     },
     [transitionTo],
   );
@@ -219,6 +243,10 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
 
   const goToAddWallet = useCallback(() => {
     transitionTo({ type: "add-wallet" });
+  }, [transitionTo]);
+
+  const goToSettings = useCallback(() => {
+    transitionTo({ type: "settings" });
   }, [transitionTo]);
 
   // Screen is ready when it matches expected state for auth
@@ -245,5 +273,6 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     goToTxHistory,
     goToScanQr,
     goToAddWallet,
+    goToSettings,
   };
 }
