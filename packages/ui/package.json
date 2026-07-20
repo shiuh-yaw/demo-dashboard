@@ -11,7 +11,8 @@
     "./input": "./src/input.tsx",
     "./skeleton": "./src/skeleton.tsx",
     "./dialog": "./src/dialog.tsx",
-    "./spinner": "./src/spinner.tsx"
+    "./spinner": "./src/spinner.tsx",
+    "./code-panel.css": "./src/code-panel.css"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

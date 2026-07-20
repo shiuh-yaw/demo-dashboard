@@ -33,12 +33,10 @@ describe("earn middleware — public route /login", () => {
 });
 
 describe("earn middleware — auth gate on protected routes", () => {
-  test("unauthenticated GET /earn -> redirect to /login", () => {
+  test("unauthenticated GET /earn -> redirect to / (front door is the login)", () => {
     const res = middleware(makeRequest({ url: "/earn" }));
     expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location") as string).pathname).toBe(
-      "/login",
-    );
+    expect(new URL(res.headers.get("location") as string).pathname).toBe("/");
   });
 
   test("authenticated GET /earn -> passthrough", () => {
@@ -46,12 +44,24 @@ describe("earn middleware — auth gate on protected routes", () => {
     expect(isRedirect(res)).toBe(false);
   });
 
-  test("authenticated GET / -> redirect to /earn (root redirect)", () => {
+  test("authenticated GET / -> redirect to /earn (signed-in users skip the front door)", () => {
     const res = middleware(makeRequest({ url: "/", cookies: AUTH }));
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get("location") as string).pathname).toBe(
       "/earn",
     );
+  });
+
+  test("unauthenticated GET / -> passthrough (scenario page)", () => {
+    const res = middleware(makeRequest({ url: "/" }));
+    expect(isRedirect(res)).toBe(false);
+  });
+
+  test("OAuth callback on / passes through even when authed", () => {
+    const res = middleware(
+      makeRequest({ url: "/?dynamicOauthCode=abc", cookies: AUTH }),
+    );
+    expect(isRedirect(res)).toBe(false);
   });
 });
 

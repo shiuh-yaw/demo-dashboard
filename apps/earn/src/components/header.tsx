@@ -7,13 +7,21 @@ import type { DynamicJwtPayload } from "@dynamic-demos/dynamic";
 
 interface HeaderProps {
   user: DynamicJwtPayload | null;
+  /**
+   * Sticky offset - "top-20" when the shared SiteHeader (h-20, sticky
+   * top-0 z-40) renders above, so both stick stacked; "top-0" otherwise.
+   * The union keeps both classes as literals so Tailwind generates them.
+   */
+  stickyTopClass?: "top-0" | "top-20";
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, stickyTopClass = "top-0" }: HeaderProps) {
   const { branding } = useEarnConfig();
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-earn-border shadow-[0_1px_2px_0_rgba(0,0,0,0.1)] z-40 flex items-center px-4">
+    <header
+      className={`sticky ${stickyTopClass} h-16 bg-white border-b border-earn-border shadow-[0_1px_2px_0_rgba(0,0,0,0.1)] z-30 flex items-center px-4`}
+    >
       {/* App Logo */}
       <div className="flex items-center">
         <AppLogo

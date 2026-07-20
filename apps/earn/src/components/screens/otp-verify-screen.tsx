@@ -9,6 +9,7 @@
 
 import { useState } from "react";
 import { useVerifyOTP } from "@/hooks/use-mutations";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import type { OTPVerification } from "@/lib/dynamic-auth";
 
 interface OtpVerifyScreenProps {
@@ -24,6 +25,9 @@ export function OtpVerifyScreen({
   onBack,
   onLoginSuccess,
 }: OtpVerifyScreenProps) {
+  // Swap the scenario page's code panel to the OTP steps while this
+  // screen is up (Q-017). No-op on /login, where no provider exists.
+  usePanelSectionEffect("otp-verify");
   const [otp, setOtp] = useState("");
   const verifyOTP = useVerifyOTP();
 

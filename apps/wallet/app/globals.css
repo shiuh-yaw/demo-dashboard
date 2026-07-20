@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "@dynamic-demos/theme/defaults.css";
+/* Shiki code-block styles (line numbers, scrollbar) shared with every
+   scenario page - packages/ui/src/code-panel.css. */
+@import "@dynamic-demos/ui/code-panel.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../packages/ui/src/**/*.tsx";
@@ -59,58 +62,3 @@
   }
 }
 
-/*
- * Shiki code blocks inside the shared <CodeFrame> (packages/ui).
- * Copied from apps/flow/app/globals.css — line numbers via CSS
- * counters, transparent background so the frame's #0d1117 shows.
- */
-.shiki-block pre.shiki {
-  margin: 0;
-  padding: 1rem 0;
-  font-size: 12.5px;
-  line-height: 1.65;
-  overflow-x: auto;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  background-color: transparent !important;
-  /* Own the horizontal scrollbar: the native light track reads as a
-     bright bar on the dark code chrome. White-alpha to stay inside the
-     code-frame's theme-independent palette. */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
-}
-.shiki-block pre.shiki::-webkit-scrollbar {
-  height: 6px;
-}
-.shiki-block pre.shiki::-webkit-scrollbar-track {
-  background: transparent;
-}
-.shiki-block pre.shiki::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 9999px;
-}
-.shiki-block pre.shiki::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
-}
-.shiki-block pre.shiki code {
-  counter-reset: shiki-line;
-  display: grid;
-  min-width: max-content;
-}
-.shiki-block pre.shiki .line {
-  counter-increment: shiki-line;
-  padding-right: 1.5rem;
-}
-.shiki-block pre.shiki .line::before {
-  content: counter(shiki-line);
-  display: inline-block;
-  width: 2.25em;
-  padding-right: 1.5em;
-  margin-left: 0.5em;
-  text-align: right;
-  color: rgba(255, 255, 255, 0.22);
-  user-select: none;
-  -webkit-user-select: none;
-}
-.shiki-block pre.shiki .line:empty::after {
-  content: "\200B";
-}

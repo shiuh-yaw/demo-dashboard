@@ -212,4 +212,50 @@ describe("createDemoMiddleware", () => {
     const res = middleware(makeRequest("/t/abc/login"));
     expect(res.status).toBe(200);
   });
+
+  describe("public root (scenario front doors)", () => {
+    // Earn's shape: "/" IS the login surface (scenario page with a live
+    // login card), listed first so it becomes the derived loginPath.
+    const rootOpts = {
+      demoType: "earn" as const,
+      publicRoutes: ["/", "/login"],
+      defaultReturnPath: "/earn",
+    };
+
+    it("unauthenticated GET / passes through", () => {
+      const middleware = createDemoMiddleware(rootOpts);
+      const res = middleware(makeRequest("/"));
+      expect(res.status).toBe(200);
+    });
+
+    it("authenticated GET / bounces to defaultReturnPath", () => {
+      const middleware = createDemoMiddleware(rootOpts);
+      const res = middleware(
+        makeRequest("/", { cookies: { dynamic_jwt: "tok" } }),
+      );
+      expect(res.status).toBe(307);
+      expect(new URL(res.headers.get("location") as string).pathname).toBe(
+        "/earn",
+      );
+    });
+
+    it("unauthenticated protected route redirects to / (derived loginPath)", () => {
+      const middleware = createDemoMiddleware(rootOpts);
+      const res = middleware(makeRequest("/earn"));
+      expect(res.status).toBe(307);
+      expect(new URL(res.headers.get("location") as string).pathname).toBe(
+        "/",
+      );
+    });
+
+    it("OAuth callback params on / pass through even when authed", () => {
+      const middleware = createDemoMiddleware(rootOpts);
+      const res = middleware(
+        makeRequest("/?dynamicOauthCode=abc", {
+          cookies: { dynamic_jwt: "tok" },
+        }),
+      );
+      expect(res.status).toBe(200);
+    });
+  });
 });

@@ -9,14 +9,21 @@ export interface DynamicLogoProps {
   wordmark?: boolean;
   /** Use currentColor for fills (e.g. grey in footer). When false, uses brand colors. */
   muted?: boolean;
+  /**
+   * Include the "a Fireblocks company" tagline under the wordmark.
+   * Set false for small renders (below ~32px tall the tagline collapses
+   * into sub-pixel fuzz). Only meaningful with `wordmark`.
+   */
+  tagline?: boolean;
 }
 
 /**
  * Deterministic ID for SVG defs. useId() causes hydration mismatch in Next.js
- * when server/client trees differ. Props-based ID is stable across SSR.
+ * when server/client trees differ. Props-based ID is stable across SSR (and
+ * must differ per variant - responsive headers render two variants at once).
  */
-function getLogoId(wordmark: boolean, muted: boolean): string {
-  return `dynamic-logo-${wordmark ? "w" : "i"}-${muted ? "m" : "b"}`;
+function getLogoId(wordmark: boolean, muted: boolean, tagline: boolean): string {
+  return `dynamic-logo-${wordmark ? "w" : "i"}-${muted ? "m" : "b"}${tagline ? "" : "-nt"}`;
 }
 
 /** Wordmark fill classes: dark grey for light mode, light grey for dark mode. Uses Tailwind dark: variant so theme is correct on refresh (next-themes sets .dark on html before React runs). */
@@ -31,10 +38,11 @@ function DynamicLogo({
   className,
   wordmark = true,
   muted = false,
+  tagline = true,
 }: DynamicLogoProps) {
   const fillColor = muted ? "currentColor" : undefined;
   const wordmarkFillClass = !muted && wordmark ? WORDMARK_FILL_CLASS : undefined;
-  const id = getLogoId(wordmark, muted);
+  const id = getLogoId(wordmark, muted, tagline);
   const clipId = `dynamic-logo-clip-${id}`;
   const mask0Id = `dynamic-logo-mask0-${id}`;
   const mask1Id = `dynamic-logo-mask1-${id}`;
@@ -65,7 +73,7 @@ function DynamicLogo({
   return (
     <svg
       fill="none"
-      viewBox="0 0 500 112"
+      viewBox={tagline ? "0 0 500 112" : "0 0 500 100"}
       xmlns="http://www.w3.org/2000/svg"
       className={cn("h-4 w-auto", className)}
       aria-label="Dynamic"
@@ -127,6 +135,9 @@ function DynamicLogo({
           fill={muted ? "currentColor" : undefined}
           className={wordmarkFillClass}
         />
+        {/* "a Fireblocks company" tagline - skipped at small sizes. */}
+        {tagline ? (
+          <>
         <mask
           id={mask1Id}
           maskUnits="userSpaceOnUse"
@@ -238,6 +249,8 @@ function DynamicLogo({
           fill={muted ? "currentColor" : undefined}
           className={wordmarkFillClass}
         />
+          </>
+        ) : null}
       </g>
       <defs>
         <clipPath id={clipId}>

@@ -9,8 +9,11 @@
  * funds (same logic).
  */
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { SiteFooter, SiteHeader } from "@dynamic-demos/ui";
 import { Header } from "@/components/header";
+import { UserMenu } from "@/components/user-menu";
 import { PayoutDemoProvider } from "@/contexts/payout-demo-context";
 import { CreatorBalanceProvider } from "@/contexts/creator-balance-context";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -30,22 +33,49 @@ export default async function DashboardLayout({
   //
   // The middleware factory has a built-in escape hatch: visiting any
   // public route with `?sessionExpired=1` clears the auth cookie and
-  // passes through. We redirect to `/login?sessionExpired=1` so that
-  // path executes inside middleware (a Route Handler-equivalent
-  // context) instead of trying to mutate cookies here — Next.js
-  // disallows cookie writes inside Server Components.
+  // passes through. We redirect to `/?sessionExpired=1` (the scenario
+  // front door is the login surface) so that path executes inside
+  // middleware (a Route Handler-equivalent context) instead of trying
+  // to mutate cookies here — Next.js disallows cookie writes inside
+  // Server Components.
   if (!user) {
-    redirect("/login?sessionExpired=1");
+    redirect("/?sessionExpired=1");
   }
+
+  // Unbranded: ONE merged bar - the shared SiteHeader in its full-width
+  // variant with earn's user panel in the trailing slot (no second app
+  // header, no doubled Dynamic logo); the marketing CTAs the trailing
+  // slot displaces move to the shared SiteFooter (`showCtas`). Branded
+  // (?theme=): the Dynamic chrome disappears entirely - earn's own
+  // Header carries the brand.
+  const headersList = await headers();
+  const hasSiteChrome = !headersList.get("x-earn-config-id");
 
   return (
     <PayoutDemoProvider>
       <CreatorBalanceProvider>
         <div className="min-h-screen bg-earn-light flex flex-col">
-          <Header user={user} />
-          <div className="flex flex-1 pt-14">
+          {hasSiteChrome ? (
+            <SiteHeader
+              homeHref="https://dynamic.dev"
+              chip="Earn"
+              fullWidth
+              trailing={<UserMenu user={user} />}
+            />
+          ) : (
+            <Header user={user} />
+          )}
+          <div className="flex flex-1">
             <main className="flex-1">{children}</main>
           </div>
+          {/* Footer renders on branded views too - unlike the header,
+              the Dynamic footer stays under every theme (same as the
+              scenario page, which always passes SiteFooter). */}
+          <SiteFooter
+            signInHref="https://dynamic.dev/brands"
+            fullWidth
+            showCtas
+          />
         </div>
       </CreatorBalanceProvider>
     </PayoutDemoProvider>

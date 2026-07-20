@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { LogOut, ChevronDown, RotateCcw } from "lucide-react";
+import { LogOut, ChevronDown, Paintbrush, RotateCcw } from "lucide-react";
 import { logout } from "@/lib/dynamic";
 import { clearDashboardAuth } from "@/lib/auth/session";
+import { useEarnConfig } from "@/contexts/earn-config-context";
 import { usePayoutDemoOptional } from "@/contexts/payout-demo-context";
 import { useBlindPayKYC } from "@/hooks/use-blindpay-kyc";
 import { useUserProfile } from "@/hooks/use-user-profile";
@@ -17,6 +18,7 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { configId } = useEarnConfig();
   const payoutDemo = usePayoutDemoOptional();
   const { reset: resetKYC, isComplete: isKYCComplete } = useBlindPayKYC();
   const { profile, isLoading: isProfileLoading } = useUserProfile();
@@ -38,13 +40,11 @@ export function UserMenu({ user }: UserMenuProps) {
   }, [isOpen]);
 
   const handleLogout = async () => {
-    // Determine the correct login redirect based on current route
-    // If on /e/[id]/* route, redirect to /e/[id]/login, otherwise /login
-    const pathname = window.location.pathname;
-    const configMatch = pathname.match(/^\/e\/([^/]+)/);
-    const loginUrl = configMatch
-      ? `/e/${configMatch[1]}/login?loggedOut=true`
-      : "/login?loggedOut=true";
+    // The scenario front door at "/" is the login surface; loggedOut
+    // prevents the auth-check blip and is stripped from the URL by
+    // <LoginCleanup> after load. (Legacy /e/[id] paths 307 to /?theme=
+    // via next.config, so no path-aware branching needed.)
+    const loginUrl = "/?loggedOut=true";
 
     try {
       // Logout from Dynamic SDK first (client-side)
@@ -86,6 +86,7 @@ export function UserMenu({ user }: UserMenuProps) {
           avatarUrl={avatarUrl}
           isLoading={isProfileLoading}
           size="sm"
+          hideTextOnMobile
         />
         <ChevronDown className="w-4 h-4 text-earn-text-secondary shrink-0" />
       </button>
@@ -130,6 +131,22 @@ export function UserMenu({ user }: UserMenuProps) {
               {isKYCComplete ? "Reset bank setup" : "Reset bank data"}
             </span>
           </button>
+          {configId && (
+            <button
+              onClick={() => {
+                // Full document navigation on purpose: the middleware
+                // must run to delete the sticky earn_config_id cookie
+                // (empty ?theme= clears it, then bounces authed users
+                // back to /earn unbranded).
+                window.location.assign("/?theme=");
+              }}
+              className="w-full px-4 py-2 text-left text-xs text-earn-text-secondary hover:bg-gray-50 flex items-center gap-3 transition-colors cursor-pointer"
+              title="Remove the custom brand theme and return to the default look"
+            >
+              <Paintbrush className="w-3.5 h-3.5" />
+              <span>Clear theme</span>
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="w-full px-4 py-2.5 text-left text-sm text-earn-text-primary hover:bg-gray-50 flex items-center gap-3 transition-colors cursor-pointer border-t border-earn-border/60"

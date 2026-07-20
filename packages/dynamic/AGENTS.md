@@ -27,7 +27,7 @@ If you are an AI agent implementing against the Dynamic SDK, **consult the SDK s
 
 ## Capabilities
 
-- `createDemoMiddleware` — Next.js middleware factory implementing the visa-direct cookie + JWT auth pattern (D-008). Supports config-prefix routes, regex public routes, functional login/return paths, and optional path rewrites.
+- `createDemoMiddleware` — Next.js middleware factory implementing the visa-direct cookie + JWT auth pattern (D-008). Supports config-prefix routes, regex public routes, functional login/return paths, and optional path rewrites. A scenario front door at `/` needs no special option: list `/` first in `publicRoutes` (earn's shape) — it becomes the derived loginPath, unauthenticated users on protected routes land there, and authenticated visitors bounce to `defaultReturnPath`.
 - `createConfigForwardingMiddleware` — lighter middleware for client-side-auth apps (wallet, checkouts, shop, deposit): forwards `?theme=<configId>` as `x-<demoType>-config-id` and `?scope=<page|widget>` as `x-<demoType>-theme-scope`, both sticky-cookied across navigations; an explicit empty param clears on the same request. No auth gating, no redirects.
 - JWT cookie sync — `setDynamicJwtCookie`, `clearDynamicJwtCookie`, `createSyncCookieRoute()` factory for `/api/auth/sync-cookie`.
 - `<DynamicInit />` — generic client-side init component with adapters; apps inject SDK-specific `isSignedIn` / `getAuthToken` / event subscription.

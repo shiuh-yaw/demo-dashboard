@@ -34,12 +34,13 @@ export default async function RootLayout({
     fallback: DEFAULT_EARN_CONFIG,
   });
 
-  // SSR theme injection (D-008): emit only the `--brand-*` overrides for the
-  // tokens earn personalizes per brand. Everything else falls through to
-  // earn's static `--brand-*` overrides in globals.css and the canonical
-  // defaults in @dynamic-demos/theme/defaults.css. Zero FOUC, zero hydration
-  // mismatch — the inline <style> beats client paint.
-  const brandTheme = themeToBrandTheme(config.theme);
+  // SSR theme injection (D-008): emit `--brand-*` overrides ONLY for
+  // branded configs (?theme= resolved an id). Unbranded, earn rides the
+  // canonical D-030 defaults from @dynamic-demos/theme/defaults.css -
+  // DEFAULT_EARN_CONFIG's baked-in theme must NOT reach ThemeStyleTag or
+  // it repaints the whole app (and the scenario chrome) off-canon. Zero
+  // FOUC, zero hydration mismatch — the inline <style> beats client paint.
+  const brandTheme = configId ? themeToBrandTheme(config.theme) : {};
 
   return (
     <html lang="en" suppressHydrationWarning>

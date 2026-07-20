@@ -17,12 +17,14 @@ Vault-deposit / yield demo. End users sign in via Dynamic, deposit USDC into cur
 - Vault listing per config id, deposit + withdraw flows.
 - Mock mode (wallet dropdown toggle) — vault deposits stored under `metadata.earn.deposits` in Dynamic user metadata. "My Vaults" surface above the vault list shows mocked positions.
 - "Positions" tab on a portfolio dashboard surfaces mocked positions when mock mode is on.
+- Scenario front door — `/` is a flow-style scenario page inside the shared Dynamic site chrome (`SiteHeader` with an "Earn" chip, `SiteFooter`, `ScenarioHero`/`ScenarioLayout`/`CodePanel` from packages/ui): the live login card (same `LoginContent` as `/login`) sits beside an SDK integration panel; snippets are Shiki-highlighted server-side (`lib/code-highlight.ts`) from earn-owned content (`lib/code-steps.ts`). `/` IS the login surface: it sits first in `publicRoutes` (becoming the derived loginPath), so unauthenticated users on protected routes land here and authenticated visitors bounce to `/earn`; the legacy `/login` route 307s here with its query preserved (OAuth callbacks complete on `/` — social `redirectUrl` is the initiating page). The OTP screen drives the panel via `contexts/panel-section-context.tsx` (Q-017 pattern, sections `default | otp-verify`). Post-auth, the `(dashboard)` layout renders ONE merged bar: the shared `SiteHeader` in its `fullWidth` variant with earn's `UserMenu` in the `trailing` slot (which displaces the marketing CTAs - those move to the shared `SiteFooter` with `showCtas` at the bottom of the layout); earn's own `Header` renders only for branded configs. Branded configs (`?theme=`) hide the Dynamic HEADER on both surfaces (brand logo + Book a call CTA in the scenario hero instead) - but the shared `SiteFooter` stays under every theme, branded or not.
 
 ## Public surface
 
 App routes (flat — no path-based config segments):
 
-- `/(auth)/login` — auth.
+- `/` — scenario page: Dynamic site chrome + live login card + SDK code panel. This IS the login surface (the derived loginPath): unauthenticated users on protected routes land here; authenticated visitors bounce straight to `/earn`; OAuth callbacks complete here.
+- `/(auth)/login` — legacy; 307s to `/` preserving the query string (OAuth callbacks, `sessionExpired`, `loggedOut`).
 - `/(dashboard)/earn` — main dashboard.
 - `/api/balance?address=0x...` - auth-required; Dynamic USDC balance on Base Sepolia via Alchemy (backs the creator-balance card + Add funds context).
 - `/api/...` — server-only.
@@ -41,13 +43,15 @@ Legacy `/e/<id>/...` deep-links 307-redirect to `/?theme=<id>` via `next.config.
 
 No other provider keys — vault contracts are onchain; deposits are user-signed.
 
+- `shiki` (pinned 1.24.0, same as flow/wallet) — server-side code highlighting for the scenario page.
+
 ## Theming
 
 Unified theme injection per D-008:
 
-- `middleware.ts` uses `createDemoMiddleware({ demoType: "earn", publicRoutes: ["/login"], defaultReturnPath: "/earn", authenticatedRootRedirect: "/earn" })`. Defaults: `configIdSource: "query"`, `stickyConfigCookie: true`. Forwards `x-earn-config-id` from `?theme=` query or sticky cookie.
+- `middleware.ts` uses `createDemoMiddleware({ demoType: "earn", publicRoutes: ["/", "/login"], defaultReturnPath: "/earn" })`. Defaults: `configIdSource: "query"`, `stickyConfigCookie: true`. Forwards `x-earn-config-id` from `?theme=` query or sticky cookie. `/` first in publicRoutes makes it the derived loginPath (scenario front door is the login surface).
 - Root `app/layout.tsx` reads the header server-side, fetches the config via `getEarnConfig`, projects `EarnTheme` onto `Partial<BrandTheme>` (`lib/earn-brand.ts`), and emits the override block via `<ThemeStyleTag overridesOnly>` in `<head>`. Zero FOUC, zero hydration mismatch.
-- `app/globals.css` declares earn's static `--brand-*` values; `--widget-*` and `--color-earn-*` namespaces are compat aliases pointing at `--brand-*` so per-config overrides cascade through `packages/ui` consumers and earn's existing utility classes (`bg-earn-light`, `text-earn-text-primary`, etc.) without per-component sweeps. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+- `app/globals.css` carries no local `--brand-*` value pins — earn rides the canonical D-030 defaults from `@dynamic-demos/theme/defaults.css` (restyled 2026-07; the pre-D-030 Apple-ish pin and the earn-grey overrides were removed together). Only the alias wiring remains: `--widget-*` and `--color-earn-*` namespaces point at `--brand-*` so per-config overrides cascade through `packages/ui` consumers and earn's existing utility classes (`bg-earn-light`, `text-earn-text-primary`, etc.) without per-component sweeps.
 - `EarnConfigProvider` (in the root layout) hydrates `useEarnConfig()` for branding/layout/title.
 
 ## Credentials
@@ -99,9 +103,10 @@ Unified theme injection per D-008:
 // middleware.ts — simplified D-008 pattern, cookie + query only
 export const middleware = createDemoMiddleware({
   demoType: "earn",
-  publicRoutes: ["/login"],
+  // "/" first: the scenario front door IS the login surface (derived
+  // loginPath). Authed visitors on "/" bounce to defaultReturnPath.
+  publicRoutes: ["/", "/login"],
   defaultReturnPath: "/earn",
-  authenticatedRootRedirect: "/earn",
 });
 ```
 
@@ -116,3 +121,4 @@ export const middleware = createDemoMiddleware({
 
 - WAAS / wallet-creation logic here is bespoke; Phase 4 considers extending `@dynamic-demos/dynamic` to model that pattern.
 - Mock-mode pattern in this app is the reference for trade + future demos.
+- Panel snippets in `lib/code-steps.ts` teach the current docs APIs (`@dynamic-labs-sdk` 1.x + react-hooks) while the app internals remain on the catalog 0.25.0 SDK — migrating earn to 1.x (wallet's direct-pin precedent) is a tracked follow-up. Every TypeScript snippet must open with its import line (test-enforced in `src/__tests__/code-steps.test.ts`).

@@ -63,7 +63,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-earn-light flex flex-col">
       <Header user={null} />
-      <div className="flex flex-1 pt-14">
+      <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 ml-16">{children}</main>
       </div>

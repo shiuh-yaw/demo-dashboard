@@ -1,36 +1,26 @@
 import { redirect } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth/session";
-import { LoginContent } from "@/components/login-content";
-import { LoginCleanup } from "@/components/login-cleanup";
 
+/**
+ * Legacy login route - the scenario front door at "/" IS the login
+ * surface now (same LoginContent, beside the code panel). 307 there,
+ * preserving the query string so OAuth callbacks (`dynamicOauthCode`,
+ * `code`/`state`), `sessionExpired` recovery, and `loggedOut` cleanup
+ * that still target /login complete on "/" instead.
+ */
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const loggedOut = params.loggedOut === "true";
-
-  // Check if this is an OAuth callback (has code/state or dynamicOauthCode params)
-  // If so, skip server-side auth check - let client handle OAuth completion
-  const isOAuthCallback = !!(
-    params.dynamicOauthCode ||
-    (params.code && params.state)
-  );
-
-  // Redirect if already authenticated (middleware should handle this, but double-check)
-  // Skip this check if:
-  // - User just logged out (to prevent redirect blip)
-  // - This is an OAuth callback (client needs to complete OAuth first)
-  if (!loggedOut && !isOAuthCallback) {
-    const authenticated = await isAuthenticated();
-    if (authenticated) redirect("/earn");
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const v of value) qs.append(key, v);
+    } else if (value !== undefined) {
+      qs.set(key, value);
+    }
   }
-
-  return (
-    <>
-      <LoginCleanup />
-      <LoginContent isOAuthCallback={isOAuthCallback} />
-    </>
-  );
+  const query = qs.toString();
+  redirect(query ? `/?${query}` : "/");
 }

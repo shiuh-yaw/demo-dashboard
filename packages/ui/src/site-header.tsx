@@ -10,6 +10,7 @@
  * opens on pure CSS hover/focus, so this stays a server component.
  */
 
+import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { DynamicLogo } from "./dynamic-logo";
 import { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
@@ -28,12 +29,35 @@ export interface SiteHeaderProps {
   chip?: string;
   /** Entries in the "Demos" hover grid; defaults to the shared directory. */
   demos?: DemoDirectoryEntry[];
+  /**
+   * Full-bleed variant for in-app (post-auth) surfaces: the inner
+   * container drops its max-w-6xl so the bar's content aligns with a
+   * full-width app below. Default false (centered marketing width).
+   */
+  fullWidth?: boolean;
+  /**
+   * Optional app content rendered in the middle of the bar (e.g. the
+   * demo's own nav tabs). Hidden below sm - in-app nav on phones stays
+   * the app's concern.
+   */
+  center?: ReactNode;
+  /**
+   * Optional app content for the right side (e.g. the demo's user
+   * panel). When set it REPLACES the marketing nav (dynamic.xyz / Book
+   * a call / Get a free account) - a signed-in demo bar carries the
+   * app's controls, not the marketing CTAs. May be a client island;
+   * the header itself stays a server component.
+   */
+  trailing?: ReactNode;
 }
 
 export function SiteHeader({
   homeHref = "/",
   chip = "Demos",
   demos = DEMO_DIRECTORY,
+  fullWidth = false,
+  center,
+  trailing,
 }: SiteHeaderProps) {
   // On the catalog the "Demos" pill IS the current location; on demo
   // pages it becomes the ancestor crumb with the demo name as the pill.
@@ -80,10 +104,17 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#E7E9EE] bg-[#F4F5F7]/90 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div
+        className={`mx-auto flex h-20 items-center justify-between gap-4 px-4 sm:px-6 ${
+          fullWidth ? "" : "max-w-6xl"
+        }`}
+      >
         <div className="flex items-center gap-2.5">
           <a href={homeHref} className="flex items-center">
-            <DynamicLogo wordmark className="h-7 w-auto sm:h-[34px]" />
+            {/* Below sm the tagline collapses into sub-pixel fuzz -
+                render the tagline-less lockup there instead. */}
+            <DynamicLogo wordmark tagline={false} className="h-7 w-auto sm:hidden" />
+            <DynamicLogo wordmark className="hidden h-[34px] w-auto sm:block" />
           </a>
           <div className="flex items-center gap-1.5 max-[380px]:hidden">
             {demosCrumb}
@@ -97,6 +128,14 @@ export function SiteHeader({
             )}
           </div>
         </div>
+        {center ? (
+          <div className="hidden min-w-0 flex-1 items-center justify-center sm:flex">
+            {center}
+          </div>
+        ) : null}
+        {trailing ? (
+          <div className="flex items-center gap-2 sm:gap-3">{trailing}</div>
+        ) : (
         <nav className="flex items-center gap-2 text-sm sm:gap-3">
           <a
             href="https://www.dynamic.xyz"
@@ -110,7 +149,7 @@ export function SiteHeader({
             href="https://www.dynamic.xyz/book-a-call"
             target="_blank"
             rel="noreferrer"
-            className="hidden whitespace-nowrap rounded-md bg-white px-3 py-2.5 font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] sm:inline"
+            className="hidden h-10 items-center whitespace-nowrap rounded-md bg-white px-3 font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] sm:inline-flex"
           >
             Book a call
           </a>
@@ -118,12 +157,13 @@ export function SiteHeader({
             href="https://app.dynamic.xyz/"
             target="_blank"
             rel="noreferrer"
-            className="whitespace-nowrap rounded-md bg-[#678BFF] px-3 py-2.5 font-semibold text-white shadow-[0_4px_4px_-4px_rgba(24,39,75,0.32)] transition-colors hover:bg-[#5578F0]"
+            className="inline-flex h-10 items-center whitespace-nowrap rounded-md bg-[#678BFF] px-3 font-semibold text-white shadow-[0_4px_4px_-4px_rgba(24,39,75,0.32)] transition-colors hover:bg-[#5578F0]"
           >
             <span className="sm:hidden">Free account</span>
             <span className="hidden sm:inline">Get a free account</span>
           </a>
         </nav>
+        )}
       </div>
     </header>
   );

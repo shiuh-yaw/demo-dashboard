@@ -130,16 +130,20 @@ export function lightenHex(hex: string, amount: number): string {
 /**
  * Pick a readable text color for content rendered ON `hex`.
  *
- * Uses WCAG relative luminance with the crossover threshold (~0.179)
- * where white and near-black text have equal contrast against the
- * background — above it, dark text wins; below it, white wins. The dark
- * value is the canonical `--brand-fg` (#0e121b) rather than pure black
- * so derived text stays in the D-030 palette.
+ * Uses WCAG relative luminance. The strict equal-contrast crossover is
+ * ~0.179, but brand-identity convention keeps white text on mid-tone
+ * brand colors (Barclays cyan #00aeef, sky blues, brand greens) even
+ * though dark text measures slightly higher contrast there - dark text
+ * on those tones reads as a rendering bug to brand owners. The flip to
+ * dark text therefore happens only on genuinely light backgrounds
+ * (luminance > 0.4: pale yellows, light greys). The dark value is the
+ * canonical `--brand-fg` (#0e121b) rather than pure black so derived
+ * text stays in the D-030 palette.
  *
  * @param hex - Background hex color.
- * @returns `"#0e121b"` on light backgrounds, `"#ffffff"` on dark ones
- *          (also the fallback when parsing fails — safest on brand
- *          colors, which skew saturated/dark).
+ * @returns `"#0e121b"` on genuinely light backgrounds, `"#ffffff"`
+ *          otherwise (also the fallback when parsing fails — safest on
+ *          brand colors, which skew saturated/dark).
  */
 export function readableTextOn(hex: string): string {
   const rgb = parseHex(hex);
@@ -150,7 +154,7 @@ export function readableTextOn(hex: string): string {
   };
   const luminance =
     0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
-  return luminance > 0.179 ? "#0e121b" : "#ffffff";
+  return luminance > 0.4 ? "#0e121b" : "#ffffff";
 }
 
 /**

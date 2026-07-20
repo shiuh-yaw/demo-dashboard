@@ -8,6 +8,8 @@ interface UserAvatarProps {
   avatarUrl: string | null;
   isLoading?: boolean;
   size?: "sm" | "md";
+  /** Collapse to avatar-only below sm (header trigger on phones). */
+  hideTextOnMobile?: boolean;
 }
 
 export function UserAvatar({
@@ -16,10 +18,12 @@ export function UserAvatar({
   avatarUrl,
   isLoading = false,
   size = "sm",
+  hideTextOnMobile = false,
 }: UserAvatarProps) {
   const avatarSize = size === "sm" ? 32 : 40;
   const avatarClass = size === "sm" ? "w-8 h-8" : "w-10 h-10";
   const gapClass = size === "sm" ? "gap-2" : "gap-3";
+  const textClass = hideTextOnMobile ? "hidden text-left sm:block" : "text-left";
 
   if (isLoading) {
     return (
@@ -27,7 +31,7 @@ export function UserAvatar({
         <div
           className={`${avatarClass} rounded-full bg-gray-200 animate-pulse`}
         />
-        <div className="text-left">
+        <div className={textClass}>
           <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
           <div className="h-3 w-32 bg-gray-200 rounded animate-pulse mt-1" />
         </div>
@@ -52,7 +56,7 @@ export function UserAvatar({
           {displayName.charAt(0).toUpperCase()}
         </div>
       )}
-      <div className="text-left">
+      <div className={textClass}>
         <div className="text-sm font-medium text-earn-text-primary">
           {displayName}
         </div>
