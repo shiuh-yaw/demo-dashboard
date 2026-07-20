@@ -34,20 +34,19 @@ datasource db {
 //   PR 2-demo-configs:        DemoConfig (unified per-demo-type carrier).
 //   PR 2-remittance-fold:     RemittanceConfig folded into DemoConfig with
 //                             kind = "remittance"; legacy table dropped.
-//   Phase GTM-01:             Brand -> Prospect via EXPAND-CONTRACT. This
-//                             (EXPAND) PR adds `Prospect` + `prospectId`
-//                             columns alongside the retained legacy `Brand`
-//                             table + `brandId` columns so the pre-promotion
-//                             deployment keeps working during the deploy
-//                             window. A prospect is a company we sell to;
-//                             its visual theme is one facet of that
+//   Phase GTM-01:             Brand -> Prospect via EXPAND-CONTRACT. EXPAND
+//                             (20260717000000_prospect_rename) added
+//                             `Prospect` + `prospectId` alongside the legacy
+//                             `Brand` + `brandId`. A prospect is a company we
+//                             sell to; its visual theme is one facet of that
 //                             identity, not the whole record. See
 //                             docs/projects/gtm-platform/DECISIONS.md.
+//   Phase GTM-01b:            CONTRACT (20260717010000_prospect_contract):
+//                             dropped the legacy `Brand` table, `brandId`
+//                             columns, the FK/indexes, and the forward-sync
+//                             triggers after the GTM-01 deploy promoted.
 //
 // Pending:
-//   - Phase GTM-01b (CONTRACT): drop the deprecated `Brand` model, the
-//     `brandId` scalars, the forward-sync triggers, and the legacy FK/
-//     indexes once the GTM-01 deploy has promoted and been verified.
 //   - Action-layer cutover so legacy `lib/actions/<demoType>.ts` paths
 //     write to DemoConfig instead of their per-type Redis stores.
 
@@ -107,47 +106,6 @@ model Prospect {
   @@index([ownerId])
 }
 
-/// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration; no
-/// application code references this model. Kept declared ONLY so the schema
-/// matches the live production table during the expand-contract window (the
-/// GTM-01 EXPAND migration leaves "Brand" in place so the pre-promotion
-/// deployment keeps working). Its shape is frozen at the pre-rename state
-/// (see migrations 20260506161430_init_brand + 20260506200000_brand_full_schema).
-/// The `demoConfigs` back-relation exists only to represent the retained
-/// `DemoConfig_brandId_fkey` constraint - do not build on it.
-model Brand {
-  id                 String       @id @default(cuid())
-  ownerId            String
-  name               String
-  description        String?
-  companyUrl         String?
-  logo               String       @default("dynamic")
-  logoUrl            String?
-  borderRadius       String?
-  primaryColor       String
-  primaryHoverColor  String?
-  secondaryColor     String?
-  accentColor        String?
-  pageBackground     String?
-  background         String?
-  foreground         String?
-  mutedTextColor     String?
-  borderColor        String?
-  rowBackground      String?
-  rowHoverBackground String?
-  gradientFrom       String?
-  gradientTo         String?
-  demoEarnId         String?
-  demoCheckoutsId    String?
-  demoWalletId       String?
-  demoRemittanceId   String?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  demoConfigs        DemoConfig[]
-
-  @@index([ownerId])
-}
-
 /// Canonical "money in flight" transaction record (D-010). Every state
 /// mutation goes through `assertValidTransition` from `@dynamic-demos/transactions`
 /// at the service-layer boundary; the database stores the state string
@@ -174,9 +132,6 @@ model Transaction {
   /// String, not a relation, because prospectId is also nullable for
   /// pre-Phase-2-brands transactions and we want decoupled lifetimes.
   prospectId          String?
-  /// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration.
-  /// Retained during the expand-contract window; no code references it.
-  brandId             String?
   /// Self-relation for multi-leg flows (e.g. "sandwich" cross-border).
   /// `parent` is unset for top-level transactions; `children` lists legs.
   parentTransactionId String?
@@ -193,8 +148,6 @@ model Transaction {
 
   @@index([demoInstanceId])
   @@index([prospectId])
-  /// @deprecated legacy index - dropped in the Phase GTM-01b CONTRACT migration.
-  @@index([brandId])
   @@index([state])
   @@index([parentTransactionId])
 }
@@ -231,9 +184,6 @@ model WebhookEvent {
   /// Mirror fields for fast filtering when no Transaction row exists yet.
   demoInstanceId    String?
   prospectId        String?
-  /// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration.
-  /// Retained during the expand-contract window; no code references it.
-  brandId           String?
   /// "pending" | "processed" | "failed" | "ignored". Service layer enforces.
   processingStatus  String       @default("pending")
   processingError   String?
@@ -278,13 +228,6 @@ model DemoConfig {
   description    String?
   prospectId     String
   prospect       Prospect @relation(fields: [prospectId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  /// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration.
-  /// Was NOT NULL pre-rename; relaxed to nullable in the EXPAND migration so
-  /// the new deployment can insert with only `prospectId`. The `brand`
-  /// relation exists ONLY to represent the retained `DemoConfig_brandId_fkey`
-  /// constraint during the window; no code references it.
-  brandId        String?
-  brand          Brand?   @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   themeOverrides Json?
   config         Json
   createdAt      DateTime @default(now())
@@ -292,8 +235,6 @@ model DemoConfig {
 
   @@index([ownerId])
   @@index([prospectId])
-  /// @deprecated legacy index - dropped in the Phase GTM-01b CONTRACT migration.
-  @@index([brandId])
   @@index([kind])
   @@index([ownerId, kind])
 }
