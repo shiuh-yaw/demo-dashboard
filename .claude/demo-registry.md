@@ -69,6 +69,7 @@
 | Package | Provider | custody | status |
 |---|---|---|---|
 | `alchemy` | Alchemy | n/a | stable |
+| `analytics` | — | n/a | experimental |
 | `coingecko` | CoinGecko | n/a | stable |
 | `db` | — | n/a | stable |
 | `fireblocks` | Fireblocks | custodial | stable |

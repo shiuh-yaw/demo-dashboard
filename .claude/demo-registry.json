@@ -277,6 +277,13 @@
       }
     },
     {
+      "name": "@dynamic-demos/analytics",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "experimental"
+    },
+    {
       "name": "@dynamic-demos/blindpay",
       "kind": "package",
       "flow_role": "offramp",
