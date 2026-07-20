@@ -13,6 +13,7 @@ Multi-surface trading + prediction-market demo. End users sign in via Dynamic, b
 ## Capabilities
 
 - Email-OTP + social login (Dynamic).
+- Scenario front door — `/` is a flow-style scenario page inside the shared Dynamic site chrome (`SiteHeader` with a "Trade" chip, `SiteFooter`, `ScenarioHero`/`ScenarioLayout`/`CodePanel` from packages/ui): the live login card (same `AuthScreen`/`OtpVerifyScreen` the retired `/login` rendered, via `components/login-page.tsx`) sits beside an SDK integration panel; snippets are Shiki-highlighted server-side (`lib/code-highlight.ts`) from trade-owned content (`lib/code-steps.ts`). `/` IS the login surface: it sits first in `publicRoutes` (becoming the derived loginPath), so unauthenticated users on protected routes land here with `?returnTo=` (flows into the login card) and authenticated visitors bounce to `/portfolio`; the legacy `/login` route 307s here with its query preserved (OAuth completes on `/` — social `redirectUrl` is the initiating page). The OTP screen drives the panel via `contexts/panel-section-context.tsx` (Q-017, sections `default | otp-verify`). Dark mode is FORCED LIGHT on `/` (`app/providers.tsx` passes next-themes `forcedTheme` for that route) because the site chrome is light-only; the user's theme resumes in-app. Branded configs (`?theme=`) hide the Dynamic header (brand logo + Book a call CTA in the hero row instead; "Clear theme" below the widget) — the `SiteFooter` stays under every theme. **Post-auth (AppShell)** follows earn's merged-header rule: unbranded, the shared `SiteHeader` (fullWidth, "Trade" chip) IS the app bar with trade's controls (theme toggle / network switcher / connect button) in the `trailing` slot; branded keeps trade's own brand bar. No `SiteFooter` post-auth (unlike earn): the floating bottom NavBar owns the bottom edge and a marketing footer collides with it - the scenario front door carries the Dynamic footer instead. The site chrome carries `dark:` variants (class-gated), so trade's dark toggle works with the merged header.
 - Token market list + per-token detail page (`/trade/...`).
 - Prediction markets — Polymarket events + per-event detail (`/predictions/...`).
 - Token swaps + spot trades (planned: dashboard `/api/orchestrate/swap` integration).
@@ -23,7 +24,8 @@ Multi-surface trading + prediction-market demo. End users sign in via Dynamic, b
 
 App routes:
 
-- `/(auth)/login`.
+- `/` — scenario page: Dynamic site chrome + live login card + SDK code panel (the login surface; authed visitors bounce to `/portfolio`).
+- `/(auth)/login` — legacy; 307s to `/` preserving the query string.
 - `/(app)/trade/...` — token list + detail.
 - `/(app)/predictions/...` — Polymarket event list + detail.
 - `/(app)/portfolio` — unified positions across earn/trade/predict (mock + real).
@@ -48,7 +50,7 @@ Unified D-008 pattern. `middleware.ts` (`createDemoMiddleware`) reads `?theme=<c
 
 Token contract:
 - `@dynamic-demos/theme/defaults.css` — canonical `--brand-*` defaults.
-- `apps/trade/app/globals.css` — trade's static `--brand-*` value overrides + `--widget-*` compat aliases for legacy `packages/ui` consumers (`AuthLayout`, etc.). Retire the aliases when `packages/ui` migrates. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+- `apps/trade/app/globals.css` — light mode carries NO local `--brand-*` value pins (restyled 2026-07 alongside wallet/earn: the pre-D-030 Apple pin and trade's near-canonical light overrides were removed together; canonical D-030 defaults apply). The `.dark` `--brand-*` block STAYS — the canonical contract has no dark story and trade's in-app surfaces support dark mode. `--widget-*` compat aliases remain for legacy `packages/ui` consumers; retire when `packages/ui` migrates.
 - `--trade-*` namespace — trade's app-specific design language (chrome, surfaces, gradients). Distinct from the brand contract; not affected by per-config theme injection.
 
 `themeToBrandTheme(theme)` in `lib/trade-brand.ts` projects the dashboard's stored `WidgetTheme` shape onto `Partial<BrandTheme>`. `TradeConfig.theme` is optional; an empty config emits an empty `:root {}` block, so default routes render trade's static palette.
@@ -131,6 +133,7 @@ if (isMockMode) {
 
 ## Open questions / known gaps
 
+- Panel snippets in `lib/code-steps.ts` teach the current docs APIs (`@dynamic-labs-sdk` 1.x + react-hooks) while the app internals remain on the catalog SDK — migrating trade to 1.x (wallet's direct-pin precedent) is a tracked follow-up. Every TypeScript snippet must open with its import line (test-enforced in `__tests__/code-steps.test.ts`). `shiki` pinned 1.24.0 (same as flow/wallet/earn).
 - Real swap execution still needs Phase 5B's dashboard `/api/orchestrate/swap` to land. Until then, swap actions are mock-mode only.
 - `MockTradeMetadata` and `MockPredictMetadata` shapes are still maturing as new actions land; expect minor additive changes per PR.
 - `--widget-*` compat aliases in `globals.css` are temporary; retire when `packages/ui` (`AuthLayout`, `WalletSelectionScreen`, etc.) migrates to `--brand-*`.

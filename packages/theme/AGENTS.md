@@ -18,6 +18,7 @@ Unified theming primitives for demo apps. Owns the `--brand-*` CSS variable cont
 - CSS-var projector: `themeToCssVars` returns a `Record<string, string>` of `--brand-*` overrides; `cssVarsToRootBlock` serialises to a `:root { ... }` block.
 - SSR overlay: `<ThemeStyleTag>` server component renders an inline `<style>` (no `useEffect`, no client mounting); supports `overridesOnly` for surgical token bumps and `selector` to confine the brand to a subtree (default `:root`; wallet passes `.brand-scope` to theme only the live widget).
 - Server-side config fetch: `fetchDemoConfig` reads the dashboard API for a stored config and shallow-merges over a fallback. Lenient on failure — returns the fallback so demos keep rendering.
+- Demo metadata: `buildDemoMetadata({ demoName, description, appName? })` builds the shared tab title/description shape — branded configs title the tab as the prospect's app (`"SpaceX - Trade"`), unbranded falls back to `"<Demo> - Dynamic Demos"`. Framework-neutral plain object, assignable to Next's `Metadata`. Apps with a brand-name field pair it with a `React.cache`-wrapped config getter shared between `generateMetadata` and the root layout (trade/wallet reference; `fetchDemoConfig` itself is no-store and would double-fetch otherwise).
 - Color math: `darkenHex`, `lightenHex`, `mixHex`, `readableTextOn` (HSL/luminance-based, hex-safe).
 - Legacy theme shapes: `BaseTheme`, `WidgetTheme`, `DashboardTheme` (extends `BaseTheme`); branding counterparts.
 - Per-app serialisers: `widgetThemeToCssVars`, `dashboardThemeToCssVars`.

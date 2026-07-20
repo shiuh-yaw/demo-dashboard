@@ -9,10 +9,12 @@ import { Heart } from "lucide-react";
 
 export interface SiteFooterProps {
   /**
-   * Optional href behind the heart mark (the dashboard uses its /brands
-   * sign-in). Omitted → the heart renders as a plain icon.
+   * Href behind the heart mark. Defaults to the dashboard's prospects
+   * sign-in - demo apps render <SiteFooter /> bare so the link can't
+   * drift per app; the dashboard itself overrides with its relative
+   * route. Pass `null` to render a plain icon.
    */
-  signInHref?: string;
+  signInHref?: string | null;
   /**
    * Full-bleed variant for in-app (post-auth) surfaces - drops the
    * max-w-6xl so the footer aligns with a full-width app above.
@@ -33,7 +35,7 @@ const LINKS = [
 ];
 
 export function SiteFooter({
-  signInHref,
+  signInHref = "https://dynamic.dev/prospects",
   fullWidth = false,
   showCtas = false,
 }: SiteFooterProps) {
@@ -46,7 +48,7 @@ export function SiteFooter({
           fullWidth ? "" : "max-w-6xl"
         }`}
       >
-        <p className="flex items-center gap-1.5 text-sm font-bold text-slate-500">
+        <p className="flex items-center gap-1.5 text-sm font-bold text-slate-500 dark:text-slate-400">
           Made with
           {signInHref ? (
             <a
@@ -76,7 +78,7 @@ export function SiteFooter({
               href={link.href}
               target="_blank"
               rel="noreferrer"
-              className="text-slate-500 transition-colors hover:text-slate-900"
+              className="text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             >
               {link.label}
             </a>
@@ -88,7 +90,7 @@ export function SiteFooter({
               href="https://www.dynamic.xyz/book-a-call"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-8 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-xs font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)]"
+              className="inline-flex h-8 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-xs font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30]"
             >
               Book a call
             </a>

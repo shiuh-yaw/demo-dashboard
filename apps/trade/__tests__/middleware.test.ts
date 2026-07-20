@@ -77,19 +77,17 @@ describe("trade middleware — public route /login", () => {
 });
 
 describe("trade middleware — auth gate on protected routes", () => {
-  test("unauthenticated GET /portfolio -> redirect to /login with returnTo", () => {
+  test("unauthenticated GET /portfolio -> redirect to / (front door is the login) with returnTo", () => {
     const res = middleware(makeRequest({ url: "/portfolio" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
-    expect(loc.pathname).toBe("/login");
+    expect(loc.pathname).toBe("/");
     expect(loc.searchParams.get("returnTo")).toBe("/portfolio");
   });
 
-  test("unauthenticated GET / -> redirect to /login with returnTo=/portfolio (fallback)", () => {
+  test("unauthenticated GET / -> passthrough (scenario page)", () => {
     const res = middleware(makeRequest({ url: "/" }));
-    expect(res.status).toBe(307);
-    const loc = new URL(res.headers.get("location") as string);
-    expect(loc.searchParams.get("returnTo")).toBe("/portfolio");
+    expect(isRedirect(res)).toBe(false);
   });
 });
 
@@ -99,12 +97,19 @@ describe("trade middleware — authenticated request pass-through", () => {
     expect(isRedirect(res)).toBe(false);
   });
 
-  test("authenticated GET / -> redirect to /portfolio (authenticatedRootRedirect)", () => {
+  test("authenticated GET / -> redirect to /portfolio (signed-in users skip the front door)", () => {
     const res = middleware(makeRequest({ url: "/", cookies: AUTH }));
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get("location") as string).pathname).toBe(
       "/portfolio",
     );
+  });
+
+  test("OAuth callback on / passes through even when authed", () => {
+    const res = middleware(
+      makeRequest({ url: "/?dynamicOauthCode=abc", cookies: AUTH }),
+    );
+    expect(isRedirect(res)).toBe(false);
   });
 
   test("authenticated request forwards x-pathname header", () => {

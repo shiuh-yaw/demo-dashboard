@@ -10,12 +10,18 @@ import { appConfig } from "./app.config";
  * underlying flat routes (`/portfolio`, `/login`, …) are now canonical;
  * `next.config.ts` provides a back-compat redirect from `/t/[id]/<rest>`
  * to `/<rest>?theme=[id]`.
+ *
+ * "/" IS the login surface - the scenario front door (live login card +
+ * code panel). Listed first in publicRoutes so it becomes the derived
+ * loginPath: unauthenticated users on protected routes land on "/",
+ * authenticated visitors on "/" bounce to defaultReturnPath. The legacy
+ * /login route 307s to "/" (page-level, query preserved) but stays
+ * public so that redirect can run.
  */
 export const middleware = createDemoMiddleware({
   demoType: "trade",
-  publicRoutes: ["/login"],
+  publicRoutes: ["/", "/login"],
   defaultReturnPath: appConfig.defaultReturnPath,
-  authenticatedRootRedirect: appConfig.defaultReturnPath,
 });
 
 export const config = {

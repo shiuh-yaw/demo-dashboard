@@ -1,7 +1,11 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { headers } from "next/headers";
-import { widgetThemeToBrandTheme } from "@dynamic-demos/theme";
+import {
+  buildDemoMetadata,
+  widgetThemeToBrandTheme,
+} from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { Providers } from "./providers";
@@ -22,17 +26,9 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Trade -- Dynamic Demos",
-  description:
-    "Crypto trading demo with Dynamic SDK auth, config-driven branding, and modern wallet UI",
-};
-
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// React.cache dedupes the dashboard fetch across generateMetadata and
+// RootLayout within one request (fetchDemoConfig itself is no-store).
+const getTradeConfig = cache(async () => {
   const headersList = await headers();
   const configId = headersList.get("x-trade-config-id");
   const config = await fetchDemoConfig<TradeConfig>({
@@ -40,6 +36,25 @@ export default async function RootLayout({
     id: configId,
     fallback: {},
   });
+  return { configId, config };
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { config } = await getTradeConfig();
+  return buildDemoMetadata({
+    demoName: "Trade",
+    appName: config.branding?.appName,
+    description:
+      "One app, every market - token markets, real-world events, and onchain swaps behind an invisible embedded wallet. Built on Dynamic.",
+  });
+}
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { configId, config } = await getTradeConfig();
 
   // SSR theme injection (D-008): emit only the `--brand-*` overrides for the
   // tokens trade personalizes per brand. Everything else falls through to
@@ -59,7 +74,7 @@ export default async function RootLayout({
       </head>
       <body className="bg-trade-bg text-trade-text-primary font-sans antialiased">
         <Providers>
-          <TradeConfigProvider config={config}>
+          <TradeConfigProvider config={config} configId={configId ?? undefined}>
             {children}
           </TradeConfigProvider>
         </Providers>

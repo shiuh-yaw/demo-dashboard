@@ -1,16 +1,21 @@
 /**
- * Earn scenario page (Server Component) - the demo's front door, second
- * consumer of the shared scenario chrome after wallet. Live login card
- * on the left (same LoginContent as /login; sign-in exits to the
- * full-screen /earn app), SDK integration panel on the right. Snippets
- * are Shiki-highlighted here, server-side.
+ * Trade scenario page (Server Component) - the demo's front door, third
+ * consumer of the shared scenario chrome after wallet and earn. Live
+ * login card on the left (same screens as the retired /login; sign-in
+ * exits to the full-screen app), SDK integration panel on the right.
+ * Snippets are Shiki-highlighted here, server-side.
+ *
+ * "/" IS the login surface: authenticated visitors are bounced to
+ * /portfolio by the middleware before this page renders; unauth users
+ * on protected routes land here with ?returnTo=, which flows into the
+ * login card. OAuth redirects land back here (redirectUrl is the
+ * initiating page) and AuthScreen completes them. Dark mode is forced
+ * light on this route (app/providers.tsx) - the site chrome is
+ * light-only.
  *
  * Branded configs (?theme=) hide the Dynamic site header, surface the
- * brand logo in the hero row, and add a Book a call CTA (wallet
- * parity). "/" IS the login surface: authenticated visitors are bounced
- * to /earn by the middleware before this page renders; OAuth redirects
- * land back here and LoginContent completes them (the middleware's
- * oauthCallbackParams exemption lets them through).
+ * brand logo in the hero row, and add a Book a call CTA (wallet/earn
+ * parity); the SiteFooter stays under every theme.
  */
 
 import { headers } from "next/headers";
@@ -23,16 +28,15 @@ import {
   SiteFooter,
   SiteHeader,
 } from "@dynamic-demos/ui";
-import { EarnPanel } from "@/components/earn-panel";
+import { LoginPage } from "@/components/login-page";
 import { ResetThemeButton } from "@/components/reset-theme-button";
 import { ScenarioBrandLogo } from "@/components/scenario-brand-logo";
-import { ScenarioWidget } from "@/components/scenario-widget";
-import { LoginCleanup } from "@/components/login-cleanup";
+import { TradePanel } from "@/components/trade-panel";
 import { PanelSectionProvider } from "@/contexts/panel-section-context";
 import {
   buildCodeSteps,
-  EARN_OTP_STEPS,
-  EARN_SDK_STEPS,
+  TRADE_OTP_STEPS,
+  TRADE_SDK_STEPS,
 } from "@/lib/code-steps";
 
 export default async function HomePage({
@@ -41,25 +45,20 @@ export default async function HomePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  // OAuth callback (redirectUrl is the initiating page, so the provider
-  // sends the user back here) - LoginContent shows the completing
-  // spinner immediately instead of a flash of the login form.
-  const isOAuthCallback = !!(
-    params.dynamicOauthCode ||
-    (params.code && params.state)
-  );
+  const returnTo =
+    typeof params.returnTo === "string" ? params.returnTo : undefined;
 
   const headersList = await headers();
-  const configId = headersList.get("x-earn-config-id");
+  const configId = headersList.get("x-trade-config-id");
   // Branded demos drop the Dynamic site header (full immersion) and
   // carry the brand logo + a Book a call CTA in the hero row instead.
-  // Branding itself comes from EarnConfigProvider (root layout fetch);
+  // Branding comes from TradeConfigProvider (root layout fetch);
   // <ScenarioBrandLogo> reads it client-side.
   const isBranded = !!configId;
 
   const [sdkSteps, otpSteps] = await Promise.all([
-    buildCodeSteps(EARN_SDK_STEPS),
-    buildCodeSteps(EARN_OTP_STEPS),
+    buildCodeSteps(TRADE_SDK_STEPS),
+    buildCodeSteps(TRADE_OTP_STEPS),
   ]);
 
   const builtWithNotice = (
@@ -74,10 +73,13 @@ export default async function HomePage({
 
   return (
     <PanelSectionProvider>
+      {/* data-scenario-page lifts the app shell's html/body overflow
+          lock (globals.css) so this page scrolls like a document. */}
+      <div data-scenario-page>
       <ScenarioLayout
         header={
           isBranded ? undefined : (
-            <SiteHeader homeHref="https://dynamic.dev" chip="Earn" />
+            <SiteHeader homeHref="https://dynamic.dev" chip="Trade" />
           )
         }
         hero={
@@ -87,20 +89,19 @@ export default async function HomePage({
                 <ScenarioBrandRow logo={<ScenarioBrandLogo />} />
               ) : undefined
             }
-            title="Stablecoin yield, embedded in your product."
-            titleAccent="No wallet setup required."
-            pitch="Sign in with email or a social account, create a non-custodial MPC wallet in one call - no seed phrase, no extension - then deposit USDC into curated vaults, track positions, and withdraw anytime. Built entirely on Dynamic."
+            title="Trade everything."
+            titleAccent="One app, every market."
+            pitch="Users scatter across apps because no single one offers every market. Give them an invisible embedded MPC wallet at login - no seed phrase, no extension - and put token markets, real-world events, and onchain swaps behind one familiar interface and one unified portfolio. Become the place where your users trade everything - built entirely on Dynamic."
           />
         }
         demo={
           <div className="w-full max-w-[440px] mx-auto lg:mx-0">
-            <LoginCleanup />
-            <ScenarioWidget isOAuthCallback={isOAuthCallback} />
+            <LoginPage returnToOverride={returnTo} />
             <ResetThemeButton />
           </div>
         }
         panel={
-          <EarnPanel
+          <TradePanel
             panels={{
               default: (
                 <CodePanel sdkSteps={sdkSteps} notice={builtWithNotice} />
@@ -113,6 +114,7 @@ export default async function HomePage({
         }
         footer={<SiteFooter />}
       />
+      </div>
     </PanelSectionProvider>
   );
 }

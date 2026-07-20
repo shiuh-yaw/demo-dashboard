@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
-import { ThemeStyleTag } from "@dynamic-demos/theme";
+import { ThemeStyleTag, buildDemoMetadata } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { DynamicInit } from "@/components/dynamic-init";
 import { EarnConfigProvider } from "@/contexts/earn-config-context";
@@ -16,10 +16,13 @@ const roboto = Roboto({
   variable: "--font-roboto",
 });
 
-export const metadata: Metadata = {
-  title: "Earn Dashboard",
-  description: "Earn Dashboard",
-};
+// Static (no branded variant): EarnBranding has no app-name field to
+// title the tab with - add one there before switching to generateMetadata.
+export const metadata: Metadata = buildDemoMetadata({
+  demoName: "Earn",
+  description:
+    "Stablecoin yield embedded in your product - users deposit USDC into curated vaults from a non-custodial MPC wallet, no wallet setup. Built on Dynamic.",
+});
 
 export default async function RootLayout({
   children,

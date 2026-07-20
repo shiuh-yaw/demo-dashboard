@@ -21,6 +21,7 @@ import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import {
   CodePanel,
   PanelNotice,
+  ScenarioBrandRow,
   ScenarioHero,
   ScenarioLayout,
   SdkStack,
@@ -59,17 +60,6 @@ export default async function Home() {
   // Branded demos drop the Dynamic site header (full immersion) and
   // carry a Book a call CTA in the hero's brand row instead.
   const isBranded = Object.keys(config).length > 0;
-
-  const bookACall = (
-    <a
-      href="https://www.dynamic.xyz/book-a-call"
-      target="_blank"
-      rel="noreferrer"
-      className="shrink-0 whitespace-nowrap rounded-(--brand-radius) bg-(--brand-primary) px-4 py-2.5 text-sm font-semibold text-(--brand-primary-fg) transition-opacity hover:opacity-90"
-    >
-      Book a call
-    </a>
-  );
 
   // All panel variants are highlighted server-side; the client-side
   // WalletPanel switcher just picks one (Q-017).
@@ -115,17 +105,16 @@ export default async function Home() {
         <ScenarioHero
           logo={
             isBranded ? (
-              // Brand row stands in for the hidden site header: logo
-              // left (page scope only - widget scope centers it over
-              // the widget), Book a call right.
-              <div className="flex items-start justify-between gap-4">
-                {themeScope === "page" ? (
-                  <ScenarioBrandLogo align="start" />
-                ) : (
-                  <span aria-hidden />
-                )}
-                {bookACall}
-              </div>
+              // Logo renders here under page scope only - widget scope
+              // centers it over the widget instead; the shared row keeps
+              // the Book a call CTA right-aligned either way.
+              <ScenarioBrandRow
+                logo={
+                  themeScope === "page" ? (
+                    <ScenarioBrandLogo align="start" />
+                  ) : undefined
+                }
+              />
             ) : undefined
           }
           title="A wallet your users control."
@@ -185,7 +174,7 @@ export default async function Home() {
           }}
         />
       }
-      footer={<SiteFooter signInHref="https://dynamic.dev/brands" />}
+      footer={<SiteFooter />}
     />
     </PanelSectionProvider>
   );

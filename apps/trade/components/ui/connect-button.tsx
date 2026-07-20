@@ -11,13 +11,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  Check,
   ChevronDown,
+  PhoneCall,
   Copy,
   ExternalLink,
   LogOut,
   Settings,
   Wallet,
-  FlaskConical,
 } from "lucide-react";
 import { DynamicLogo, FireblocksLogomark } from "@dynamic-demos/ui";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +27,7 @@ import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
 import { useLogout } from "@/hooks/use-mutations";
 import { useMockMode } from "@/contexts/mock-mode-context";
+import { NetworkSwitcher } from "@/components/ui/network-switcher";
 import { METADATA_KEYS } from "@dynamic-demos/dynamic";
 import { cn } from "@dynamic-demos/utils";
 
@@ -138,16 +140,19 @@ export function ConnectButton() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium",
-          "bg-trade-surface-blue text-trade-text-primary",
-          "hover:bg-trade-surface-blue/90 cursor-pointer transition-colors",
+          "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium",
+          "bg-trade-surface border border-trade-border text-trade-text-primary",
+          "hover:bg-trade-surface-blue/50 cursor-pointer transition-colors",
         )}
       >
         <WalletTypeIcon />
-        <span>{displayText}</span>
+        {/* Phones show icon + chevron only - the merged SiteHeader's
+            wordmark + breadcrumb leave no room for an address pill.
+            Trigger styling mirrors earn's user-menu pill. */}
+        <span className="hidden sm:inline">{displayText}</span>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 text-trade-text-secondary transition-transform",
+            "w-4 h-4 text-trade-text-secondary shrink-0 transition-transform",
             isOpen && "rotate-180",
           )}
         />
@@ -160,41 +165,66 @@ export function ConnectButton() {
             "bg-trade-surface border border-trade-border rounded-xl shadow-lg overflow-hidden",
           )}
         >
+          {/* Address header: identity + its actions on one line -
+              copy and explorer are icon buttons, not menu rows. */}
           <div className="flex items-center gap-2 px-3 py-2 text-xs text-trade-text-muted border-b border-trade-border/50">
             <WalletTypeIcon />
-            {displayAddress ? truncateAddress(displayAddress) : "Connected"}
+            <span className="min-w-24">
+              {displayAddress ? truncateAddress(displayAddress) : "Connected"}
+            </span>
+            {displayAddress && (
+              <button
+                type="button"
+                onClick={handleCopyAddress}
+                title={copied ? "Copied!" : "Copy address"}
+                aria-label="Copy address"
+                className="ml-auto p-1 rounded-md cursor-pointer text-trade-text-secondary hover:text-trade-text-primary hover:bg-trade-surface-blue transition-colors"
+              >
+                {copied ? (
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5 shrink-0" />
+                )}
+              </button>
+            )}
+            {explorerAddressUrl && (
+              <a
+                href={explorerAddressUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsOpen(false)}
+                title="View on explorer"
+                aria-label="View on explorer"
+                className="p-1 rounded-md cursor-pointer text-trade-text-secondary hover:text-trade-text-primary hover:bg-trade-surface-blue transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+              </a>
+            )}
           </div>
 
-          {displayAddress && (
-            <button
-              type="button"
-              onClick={handleCopyAddress}
-              className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 text-sm text-left cursor-pointer",
-                "hover:bg-trade-surface-blue transition-colors text-trade-text-primary",
-              )}
-            >
-              <Copy className="w-4 h-4 shrink-0" />
-              {copied ? "Copied!" : "Copy address"}
-            </button>
-          )}
+          {/* Below md the header bar hides the network switcher
+              (AppShell) - it gets a full-width row here, expanding its
+              options in place (no nested floating popover). */}
+          <div className="px-3 py-1.5 border-b border-trade-border/50 md:hidden">
+            <NetworkSwitcher inline />
+          </div>
 
-          {explorerAddressUrl && (
-            <a
-              href={explorerAddressUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setIsOpen(false)}
-              className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 text-sm text-left cursor-pointer",
-                "hover:bg-trade-surface-blue transition-colors text-trade-text-primary",
-              )}
-            >
-              <ExternalLink className="w-4 h-4 shrink-0" />
-              View on explorer
-            </a>
-          )}
-
+          {/* The one sales CTA post-auth - the header bar stays
+              controls-only, so Book a call rides the menu. Accent color
+              (Dynamic blue) sets it apart from the utility rows. */}
+          <a
+            href="https://www.dynamic.xyz/book-a-call"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setIsOpen(false)}
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-left cursor-pointer",
+              "text-trade-accent hover:bg-trade-accent-muted transition-colors",
+            )}
+          >
+            <PhoneCall className="w-4 h-4 shrink-0" />
+            Book a call
+          </a>
           <Link
             href="/settings"
             onClick={() => setIsOpen(false)}
@@ -206,21 +236,6 @@ export function ConnectButton() {
             <Settings className="w-4 h-4 shrink-0" />
             Settings
           </Link>
-          <div
-            className="border-t border-trade-border/50 px-3 py-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-trade-text-secondary hover:text-trade-text-primary transition-colors">
-              <input
-                type="checkbox"
-                checked={isMockMode}
-                onChange={toggleMockMode}
-                className="rounded border-trade-border text-trade-accent focus:ring-trade-accent"
-              />
-              <FlaskConical className="w-4 h-4 shrink-0" />
-              <span>Mock mode</span>
-            </label>
-          </div>
           <button
             type="button"
             onClick={handleSignOut}

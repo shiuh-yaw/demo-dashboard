@@ -1,8 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { RotateCcw, Trash2, Wallet } from "lucide-react";
+import {
+  ChevronLeft,
+  FlaskConical,
+  RotateCcw,
+  Trash2,
+  Wallet,
+} from "lucide-react";
+import { useMockMode } from "@/contexts/mock-mode-context";
 import { useTheme } from "next-themes";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
 import { useMockBalances } from "@/hooks/use-mock-balances";
@@ -38,6 +46,8 @@ function formatValue(value: unknown, key?: string): string {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const { isMockMode, toggleMockMode } = useMockMode();
   const queryClient = useQueryClient();
   const { setTheme } = useTheme();
   const { metadata, wallets, userId, isLoading, error } = useUserMetadata();
@@ -160,12 +170,50 @@ export default function SettingsPage() {
   return (
     <div className="py-6 space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-trade-text-primary">
+        <h1 className="flex items-center gap-2 text-xl font-semibold text-trade-text-primary">
+          {/* Settings has no tab in the floating NavBar and the merged
+              header's logo leaves the app - this is the way back. */}
+          <button
+            type="button"
+            onClick={() =>
+              window.history.length > 1
+                ? router.back()
+                : router.push("/portfolio")
+            }
+            aria-label="Back"
+            className="-ml-1 p-1 rounded-md cursor-pointer text-trade-text-secondary hover:text-trade-text-primary hover:bg-trade-accent-muted transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 shrink-0" />
+          </button>
           Settings
         </h1>
         <p className="mt-1 text-sm text-trade-text-secondary">
           Dynamic user metadata for the current account
         </p>
+      </div>
+
+      <div className="rounded-xl border border-trade-border bg-trade-surface overflow-hidden">
+        <div className="px-4 py-2 bg-trade-surface-blue/30 dark:bg-trade-surface/60">
+          <p className="text-xs font-medium text-trade-text-muted uppercase tracking-wider">
+            Demo
+          </p>
+        </div>
+        <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p className="text-sm text-trade-text-secondary">
+            Mock mode skips real transactions and stores positions in your
+            Dynamic user metadata.
+          </p>
+          <label className="shrink-0 flex items-center gap-2 cursor-pointer text-sm text-trade-text-secondary hover:text-trade-text-primary transition-colors">
+            <input
+              type="checkbox"
+              checked={isMockMode}
+              onChange={toggleMockMode}
+              className="rounded border-trade-border text-trade-accent focus:ring-trade-accent"
+            />
+            <FlaskConical className="w-4 h-4 shrink-0" />
+            <span>Mock mode</span>
+          </label>
+        </div>
       </div>
 
       <div className="rounded-xl border border-trade-border bg-trade-surface overflow-hidden">

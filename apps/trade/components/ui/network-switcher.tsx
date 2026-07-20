@@ -53,7 +53,16 @@ function normalizeForSwitcher(
 
 const SHOW_TESTNETS_KEY = "trade-network-show-testnets";
 
-export function NetworkSwitcher() {
+export function NetworkSwitcher({
+  inline = false,
+}: {
+  /**
+   * Embedded-in-a-menu variant (ConnectButton's mobile dropdown): the
+   * trigger fills its row and the options expand IN FLOW beneath it
+   * (accordion) instead of spawning a nested floating popover.
+   */
+  inline?: boolean;
+} = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -284,9 +293,9 @@ export function NetworkSwitcher() {
     "Network";
 
   return (
-    <div className="flex flex-col gap-1 items-end">
-      <div className="relative">
-        {isOpen && (
+    <div className={cn("flex flex-col gap-1", inline ? "w-full" : "items-end")}>
+      <div className={cn(!inline && "relative")}>
+        {isOpen && !inline && (
           <div
             className="fixed inset-0 z-0"
             onClick={() => setIsOpen(false)}
@@ -301,6 +310,7 @@ export function NetworkSwitcher() {
           className={cn(
             "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium",
             "bg-trade-surface-blue rounded-xl border border-trade-border/50",
+            inline && "w-full justify-between",
             "text-trade-text-primary",
             hasMultiple && "hover:bg-trade-surface-blue/90 cursor-pointer",
             !hasMultiple && "cursor-default",
@@ -336,8 +346,9 @@ export function NetworkSwitcher() {
         {isOpen && hasMultiple && (
           <div
             className={cn(
-              "absolute top-full right-0 mt-1 z-10 min-w-full w-max",
-              "bg-trade-surface border border-trade-border rounded-xl shadow-lg overflow-hidden",
+              inline
+                ? "mt-1 w-full rounded-lg border border-trade-border/50 overflow-hidden"
+                : "absolute top-full right-0 mt-1 z-10 min-w-full w-max bg-trade-surface border border-trade-border rounded-xl shadow-lg overflow-hidden",
             )}
           >
             {filteredNetworks.map((network) => (

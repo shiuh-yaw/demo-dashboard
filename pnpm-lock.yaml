@@ -1268,6 +1268,9 @@ importers:
       react-dom:
         specifier: 19.1.6
         version: 19.1.6(react@19.1.6)
+      shiki:
+        specifier: 1.24.0
+        version: 1.24.0
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0

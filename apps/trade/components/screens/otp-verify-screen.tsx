@@ -5,6 +5,7 @@ import { WidgetCard } from "@dynamic-demos/ui";
 import { Button } from "@dynamic-demos/ui";
 import { Input } from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
+import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import { useVerifyOTP } from "@/hooks/use-mutations";
 import type { OTPVerification } from "@/lib/dynamic";
 
@@ -28,6 +29,9 @@ export function OtpVerifyScreen({
   navigation,
   onLoginSuccess,
 }: OtpVerifyScreenProps) {
+  // Swap the scenario page's code panel to the OTP steps while this
+  // screen is up (Q-017). No-op where no provider exists.
+  usePanelSectionEffect("otp-verify");
   const [otp, setOtp] = useState("");
   const verifyOTP = useVerifyOTP();
 

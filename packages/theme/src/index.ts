@@ -18,6 +18,7 @@ export {
   fetchDemoConfig,
   type FetchDemoConfigOpts,
 } from "./fetchDemoConfig";
+export { buildDemoMetadata, type DemoMetadataOpts } from "./demoMetadata";
 
 // Color math — promoted from apps/visa-direct/lib/visa-direct-config.ts so
 // every consumer can derive hover states / accent variants without copying

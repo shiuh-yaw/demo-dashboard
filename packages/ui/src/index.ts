@@ -108,6 +108,12 @@ export {
   type ScenarioHeroProps,
 } from "./scenario-chrome";
 export { ScenarioLayout } from "./scenario-layout";
+export {
+  BookACallButton,
+  ScenarioBrandRow,
+  ScenarioBrandImage,
+  type ScenarioBrandImageProps,
+} from "./scenario-brand";
 
 // Site chrome — Dynamic marketing header/footer shared by the dashboard
 // landing and demo scenario pages (unthemed by design)

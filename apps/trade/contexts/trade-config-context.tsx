@@ -16,6 +16,8 @@ import {
 interface TradeConfigContextValue {
   config: TradeConfig;
   branding: TradeBranding;
+  /** Resolved config id (from `x-trade-config-id`); undefined unbranded. */
+  configId?: string;
 }
 
 const TradeConfigContext = createContext<TradeConfigContextValue | null>(null);
@@ -23,17 +25,20 @@ const TradeConfigContext = createContext<TradeConfigContextValue | null>(null);
 interface TradeConfigProviderProps {
   children: ReactNode;
   config?: TradeConfig;
+  configId?: string;
 }
 
 export function TradeConfigProvider({
   children,
   config,
+  configId,
 }: TradeConfigProviderProps) {
   const branding: TradeBranding = config?.branding ?? {};
 
   const value: TradeConfigContextValue = {
     config: { branding },
     branding,
+    configId,
   };
 
   return (

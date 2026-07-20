@@ -24,8 +24,16 @@ export interface KycGateProps {
 type KycStep = "info" | "address" | "confirm" | "verifying";
 
 const DEFAULT_FULL_NAME = "John Doe";
-const DEFAULT_DOB = "1990-01-15";
+const DEFAULT_DOB = "01/15/1990";
 const DEFAULT_COUNTRY = "United States";
+
+/** Digits-only mask: 01151990 -> 01/15/1990 as the user types. */
+function formatDobInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
 
 export function KycGate({ onComplete, onKycApprove }: KycGateProps) {
   const [step, setStep] = useState<KycStep>("info");
@@ -89,13 +97,22 @@ export function KycGate({ onComplete, onKycApprove }: KycGateProps) {
             onChange={(e) => setFullName(e.target.value)}
             placeholder="John Doe"
           />
+          {/* Masked text beats type="date" here: the native calendar
+              popup is unstylable and paging back to a birth year is
+              miserable - typing 8 digits isn't. */}
           <Input
             label="Date of Birth"
-            type="date"
+            type="text"
+            inputMode="numeric"
             value={dob}
-            onChange={(e) => setDob(e.target.value)}
+            onChange={(e) => setDob(formatDobInput(e.target.value))}
+            placeholder="MM/DD/YYYY"
           />
-          <Button type="submit" className="w-full" disabled={!fullName || !dob}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!fullName || dob.length !== 10}
+          >
             Continue
           </Button>
         </form>

@@ -71,11 +71,7 @@ export default async function DashboardLayout({
           {/* Footer renders on branded views too - unlike the header,
               the Dynamic footer stays under every theme (same as the
               scenario page, which always passes SiteFooter). */}
-          <SiteFooter
-            signInHref="https://dynamic.dev/brands"
-            fullWidth
-            showCtas
-          />
+          <SiteFooter fullWidth showCtas />
         </div>
       </CreatorBalanceProvider>
     </PayoutDemoProvider>

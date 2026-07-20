@@ -1,45 +1,12 @@
 @import "tailwindcss";
 @import "@dynamic-demos/theme/defaults.css";
+/* Shiki code-block styles (line numbers, scrollbar) shared with every
+   scenario page - packages/ui/src/code-panel.css. */
+@import "@dynamic-demos/ui/code-panel.css";
 
 /* Include shared packages for Tailwind class scanning */
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/ui/src/**/*.ts";
-
-/*
- * Pinned pre-D-030 default palette. The canonical defaults in
- * @dynamic-demos/theme moved to the Dynamic-blue flow tone (D-030);
- * this app deliberately keeps the previous Apple-ish look. Removing
- * these pins is a future, intentional restyle.
- */
-:root {
-  --brand-page-bg: #f5f5f7;
-  --brand-surface: #ffffff;
-  --brand-fg: #1d1d1f;
-  --brand-primary: #0071e3;
-  --brand-primary-hover: #0077ed;
-  --brand-accent: #30d158;
-  --brand-card-gradient-start: #1d1d1f;
-  --brand-card-gradient-end: #2c2c2e;
-  --brand-row-bg: #f5f5f7;
-  --brand-row-hover: #eeeeef;
-  --brand-row-divider: #f0f0f5;
-  --brand-strip-bg: #fafafc;
-  --brand-muted: #86868b;
-  --brand-border: #e8e8ed;
-  --brand-input-border: #d2d2d7;
-  --brand-success: #1b7f3b;
-  --brand-error: #ff3b30;
-  --brand-status-completed-bg: #e8f8ee;
-  --brand-status-completed-fg: #1b7f3b;
-  --brand-status-pending-bg: #fff3cc;
-  --brand-status-pending-fg: #92600a;
-  --brand-status-failed-bg: #fdecee;
-  --brand-status-failed-fg: #c62828;
-  --brand-status-failed-border: #ffcdd2;
-  --brand-radius-sm: 8px;
-  --brand-radius: 12px;
-  --brand-radius-lg: 24px;
-}
 
 /* Enable class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -65,23 +32,14 @@
 /* ===== LIGHT THEME (default) ===== */
 :root {
   /*
-   * Trade-brand override of the canonical --brand-* contract (D-007).
-   * Mirrors the values the legacy --widget-* block carried so default
-   * (un-themed) routes render byte-identically to pre-Phase-4. Per-config
-   * overrides land via <ThemeStyleTag overridesOnly> in app/layout.tsx
-   * and cascade through the compat aliases below.
+   * Light mode carries NO local --brand-* value pins - trade rides the
+   * canonical D-030 defaults from @dynamic-demos/theme/defaults.css
+   * (restyled 2026-07 alongside wallet/earn; the pre-D-030 Apple pin
+   * and trade's near-canonical light overrides were removed together).
+   * Per-config <ThemeStyleTag> overrides layer on top. The `.dark`
+   * --brand-* block below STAYS: the canonical contract has no dark
+   * story, and trade's in-app surfaces support dark mode.
    */
-  --brand-page-bg: #f6f8fa;
-  --brand-surface: #ffffff;
-  --brand-fg: #151618;
-  --brand-muted: #9CA3AF;
-  --brand-border: #E5E7EB;
-  --brand-primary: #4779FF;
-  --brand-accent: #4779FF;
-  --brand-row-bg: #f6f8f8;
-  --brand-row-hover: #eef1f1;
-  --brand-radius: 12px;
-  --brand-radius-lg: 22px;
 
   /*
    * `--widget-*` compat aliases for shared `packages/ui` components
@@ -184,9 +142,19 @@
   * {
     border-color: var(--trade-border);
   }
+  /* The app shell owns its scrolling (internal overflow-auto areas),
+     so the document is locked... */
   html,
   body {
     @apply overflow-hidden h-full;
+  }
+  /* ...EXCEPT on the scenario front door, which is a normal scrolling
+     document (hero + code panel + footer). The page marks itself with
+     data-scenario-page on its root element. */
+  html:has([data-scenario-page]),
+  body:has([data-scenario-page]) {
+    overflow: auto;
+    height: auto;
   }
   body {
     background-color: var(--trade-bg);

@@ -1,29 +1,17 @@
 "use client";
 
 /**
- * Custom-brand logo — a client island so the page stays a server
- * component. Under default Dynamic chrome it renders nothing: the shared
+ * Custom-brand logo — a thin config-reading island so the page stays a
+ * server component. Rendering (aspect normalization, spacing) lives in
+ * the shared <ScenarioBrandImage> (packages/ui) so every scenario page
+ * matches. Under default Dynamic chrome it renders nothing: the shared
  * <SiteHeader> already brands the page. Placement follows the theme
  * scope: `start` above the hero title (page scope — full immersion),
  * `center` above the live widget (widget scope).
  */
 
-import { useState } from "react";
-import { cn } from "@dynamic-demos/utils";
+import { ScenarioBrandImage } from "@dynamic-demos/ui";
 import { useWalletConfig } from "@/contexts/wallet-config-context";
-
-/**
- * Normalize perceived logo size across wildly different assets: a
- * square padded icon rendered at the same height as a wide wordmark
- * looks tiny. Read the intrinsic aspect ratio on load and size the
- * box accordingly — square-ish icons taller, wide wordmarks shorter.
- */
-function sizeClassFor(aspect: number | null): string {
-  if (aspect === null) return "h-10"; // pre-load fallback
-  if (aspect < 1.6) return "h-14"; // square-ish icon / stacked lockup
-  if (aspect > 4) return "h-8"; // wide wordmark
-  return "h-10";
-}
 
 export function ScenarioBrandLogo({
   align = "center",
@@ -32,7 +20,6 @@ export function ScenarioBrandLogo({
 }) {
   const config = useWalletConfig();
   const branding = config?.branding;
-  const [aspect, setAspect] = useState<number | null>(null);
 
   // Real dashboard configs put the image directly in `logo` — a hosted
   // URL, or a `data:image/png;base64,...` URI once the dashboard has
@@ -46,24 +33,13 @@ export function ScenarioBrandLogo({
         ? branding?.logoUrl
         : undefined;
 
-  if (logoUrl) {
-    return (
-      <img
-        src={logoUrl}
-        alt={branding?.name ? `${branding.name} logo` : "Brand logo"}
-        onLoad={(e) => {
-          const img = e.currentTarget;
-          if (img.naturalHeight > 0) {
-            setAspect(img.naturalWidth / img.naturalHeight);
-          }
-        }}
-        className={cn(
-          "block max-w-[220px] object-contain",
-          sizeClassFor(aspect),
-          align === "center" ? "mx-auto mb-4" : "mb-8",
-        )}
-      />
-    );
-  }
-  return null;
+  if (!logoUrl) return null;
+
+  return (
+    <ScenarioBrandImage
+      src={logoUrl}
+      alt={branding?.name ? `${branding.name} logo` : "Brand logo"}
+      align={align}
+    />
+  );
 }
