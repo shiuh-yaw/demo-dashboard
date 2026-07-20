@@ -81,7 +81,7 @@ export type UpdateWidgetConfigRequest = UpdateCheckoutConfigRequest;
 // =============================================================================
 
 /**
- * Supported logo/brand types
+ * Supported logo/prospect types
  * "custom" allows passing a hosted SVG URL via logoUrl
  */
 export type EarnBrand = "dynamic" | "youtube" | "meta" | "remitly" | "custom";
@@ -94,7 +94,7 @@ export type BorderRadiusSize = "xs" | "sm" | "md" | "lg";
 /**
  * Theme configuration for Earn demo — the canonical `WidgetTheme`
  * shape (D-008). Aliased so callsites can keep the demo-scoped name.
- * Earn-era brand data was stored with `backgroundLightColor` as the
+ * Earn-era prospect data was stored with `backgroundLightColor` as the
  * surface variant; that legacy key is retained as an optional alias
  * for `WidgetTheme.background` so existing stored configs continue to
  * theme correctly.
@@ -143,7 +143,7 @@ export interface EarnConfig {
 /**
  * Default theme for Earn Dashboard. Earn's design language (Google-ish
  * blue accent on a near-white surface) baked in as a fallback when no
- * per-brand theme is set.
+ * per-prospect theme is set.
  */
 export const DEFAULT_EARN_THEME: EarnTheme = {
   primaryColor: "#4779FF",
@@ -367,7 +367,7 @@ export interface UpdateWalletConfigRequest {
 /**
  * Remittance theme — the canonical `WidgetTheme` shape (D-008).
  * Aliased so callsites can keep the demo-scoped name; downstream the
- * remittance app projects this onto `Partial<BrandTheme>` for SSR
+ * remittance app projects this onto `Partial<ProspectTheme>` for SSR
  * injection via `<ThemeStyleTag>`, the same pipeline every other
  * themed demo uses.
  *
@@ -376,7 +376,7 @@ export interface UpdateWalletConfigRequest {
  * when no explicit `gradientFrom`/`gradientTo` is set.
  */
 export type RemittanceTheme = Partial<WidgetTheme> & {
-  /** Optional secondary brand color — drives card gradient when set. */
+  /** Optional secondary prospect color — drives card gradient when set. */
   secondaryColor?: string;
 };
 
@@ -396,7 +396,7 @@ export interface RemittanceConfig {
 }
 
 /**
- * Default theme for Remittance. Only the brand-defining colors are
+ * Default theme for Remittance. Only the prospect-defining colors are
  * pinned; everything else is left undefined so it falls through to
  * `@dynamic-demos/theme/defaults.css` at runtime.
  */
@@ -485,7 +485,7 @@ export interface VisaDirectBranding {
  * Visa Direct theme — the canonical `WidgetTheme` shape (D-008).
  * Aliased so callsites keep the demo-scoped name. By design Visa Direct
  * only consumes `primaryColor` (its surfaces/text stay neutral across
- * brands), but the type matches every other themed demo so brand-side
+ * prospects), but the type matches every other themed demo so prospect-side
  * data flows through unchanged.
  */
 export type VisaDirectTheme = Partial<WidgetTheme>;
@@ -525,15 +525,15 @@ export interface StoredVisaDirectConfig {
 }
 
 // =============================================================================
-// Brand Profiles
+// Prospect Profiles
 // =============================================================================
 
 /**
- * Extended theme settings for brand profiles
+ * Extended theme settings for prospect profiles
  * Captures full color palette from AI import, applied to demo configs
  */
-export interface BrandTheme {
-  /** Primary brand color */
+export interface ProspectTheme {
+  /** Primary prospect color */
   primaryColor: string;
   /** Primary color hover state */
   primaryHoverColor?: string;
@@ -562,27 +562,27 @@ export interface BrandTheme {
 }
 
 /**
- * Shared brand settings applied across all demo types
+ * Shared prospect settings applied across all demo types
  */
-export interface BrandSettings {
+export interface ProspectSettings {
   /** Logo type - "custom" for uploaded/external, "dynamic" for default */
   logo: "custom" | "dynamic";
   /** URL to custom logo (when logo is "custom") */
   logoUrl?: string;
-  /** Primary brand color (convenience accessor, also in theme) */
+  /** Primary prospect color (convenience accessor, also in theme) */
   primaryColor: string;
   /** Accent color for highlights (convenience accessor, also in theme) */
   accentColor?: string;
   /** Border radius size (convenience accessor, also in theme) */
   borderRadius?: BorderRadiusSize;
   /** Full theme settings (captured from AI import) */
-  theme?: BrandTheme;
+  theme?: ProspectTheme;
 }
 
 /**
  * Demo config references - IDs of auto-generated configs
  */
-export interface BrandDemos {
+export interface ProspectDemos {
   /** Earn demo config ID */
   earn?: string;
   /** Checkouts demo config ID */
@@ -594,22 +594,22 @@ export interface BrandDemos {
 }
 
 /**
- * Brand Profile - unified branding across all demo types
+ * Prospect Profile - unified branding across all demo types
  *
- * A brand profile owns shared branding settings that are applied
+ * A prospect profile owns shared branding settings that are applied
  * to auto-generated demo configs (Earn, Checkouts, Wallet).
  */
-export interface BrandProfile {
+export interface ProspectProfile {
   /** Unique identifier */
   id: string;
   /** Display name (e.g., "Acme Corp Demo") */
   name: string;
-  /** Company website URL (for auto-extracting brand colors) */
+  /** Company website URL (for auto-extracting prospect colors) */
   companyUrl?: string;
-  /** Shared brand settings */
-  brand: BrandSettings;
+  /** Shared prospect settings */
+  prospect: ProspectSettings;
   /** Auto-generated demo config IDs */
-  demos: BrandDemos;
+  demos: ProspectDemos;
   /** Owner ID who created this profile */
   ownerId?: string;
   /** Creation timestamp */
@@ -619,9 +619,9 @@ export interface BrandProfile {
 }
 
 /**
- * Default brand theme (full color palette)
+ * Default prospect theme (full color palette)
  */
-export const DEFAULT_BRAND_THEME: BrandTheme = {
+export const DEFAULT_PROSPECT_THEME: ProspectTheme = {
   primaryColor: "#4779FF",
   primaryHoverColor: "#3968e8",
   accentColor: "#1967D2",
@@ -638,23 +638,23 @@ export const DEFAULT_BRAND_THEME: BrandTheme = {
 };
 
 /**
- * Default brand settings
+ * Default prospect settings
  */
-export const DEFAULT_BRAND_SETTINGS: BrandSettings = {
+export const DEFAULT_PROSPECT_SETTINGS: ProspectSettings = {
   logo: "dynamic",
   primaryColor: "#4779FF",
   accentColor: "#1967D2",
   borderRadius: "md",
-  theme: DEFAULT_BRAND_THEME,
+  theme: DEFAULT_PROSPECT_THEME,
 };
 
 /**
- * Request to create a new brand profile
+ * Request to create a new prospect profile
  */
-export interface CreateBrandProfileRequest {
+export interface CreateProspectProfileRequest {
   name: string;
   companyUrl?: string;
-  brand?: Partial<BrandSettings>;
+  prospect?: Partial<ProspectSettings>;
   /** Which demos to generate (defaults to all) */
   generateDemos?: {
     earn?: boolean;
@@ -665,12 +665,12 @@ export interface CreateBrandProfileRequest {
 }
 
 /**
- * Request to update a brand profile
+ * Request to update a prospect profile
  */
-export interface UpdateBrandProfileRequest {
+export interface UpdateProspectProfileRequest {
   name?: string;
   companyUrl?: string;
-  brand?: Partial<BrandSettings>;
+  prospect?: Partial<ProspectSettings>;
 }
 
 // =============================================================================
@@ -1015,7 +1015,7 @@ export interface FlowConfig {
 
 /**
  * Default theme for Flow. Dynamic blue is the canonical primary;
- * everything else falls through to brand chrome defaults at runtime.
+ * everything else falls through to prospect chrome defaults at runtime.
  */
 export const DEFAULT_FLOW_THEME: FlowTheme = {
   primaryColor: "#4779FF",

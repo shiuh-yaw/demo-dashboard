@@ -20,7 +20,7 @@ interface DemoConfigRow {
   ownerId: string;
   name: string | null;
   description: string | null;
-  brandId: string;
+  prospectId: string;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: Date;
@@ -44,7 +44,7 @@ export function createFakeDemoConfigPrisma(): DemoConfigPrismaClient {
           ownerId: data.ownerId,
           name: data.name ?? null,
           description: data.description ?? null,
-          brandId: data.brandId,
+          prospectId: data.prospectId,
           themeOverrides: data.themeOverrides ?? null,
           config: data.config,
           createdAt: ts,
@@ -67,9 +67,9 @@ export function createFakeDemoConfigPrisma(): DemoConfigPrismaClient {
           const kind = args.where.kind;
           rows = rows.filter((r) => r.kind === kind);
         }
-        if (args?.where?.brandId) {
-          const brandId = args.where.brandId;
-          rows = rows.filter((r) => r.brandId === brandId);
+        if (args?.where?.prospectId) {
+          const prospectId = args.where.prospectId;
+          rows = rows.filter((r) => r.prospectId === prospectId);
         }
         rows.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
         if (args?.orderBy?.createdAt === "desc") rows.reverse();
@@ -108,7 +108,7 @@ export function createFakeDemoConfigPrisma(): DemoConfigPrismaClient {
             ownerId: create.ownerId,
             name: create.name ?? null,
             description: create.description ?? null,
-            brandId: create.brandId,
+            prospectId: create.prospectId,
             themeOverrides: create.themeOverrides ?? null,
             config: create.config,
             createdAt: ts,

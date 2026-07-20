@@ -28,7 +28,7 @@ interface TransactionRow {
   kind: string;
   state: string;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   parentTransactionId: string | null;
   payload: unknown;
   refs: unknown;
@@ -48,7 +48,7 @@ interface WebhookEventRow {
   normalizedPayload: unknown;
   transactionId: string | null;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   processingStatus: string;
   processingError: string | null;
   processedAt: Date | null;
@@ -90,7 +90,7 @@ export function createFakeTransactionPrisma(): FakeTransactionPrismaClient {
           kind: data.kind,
           state: data.state,
           demoInstanceId: data.demoInstanceId ?? null,
-          brandId: data.brandId ?? null,
+          prospectId: data.prospectId ?? null,
           parentTransactionId: data.parentTransactionId ?? null,
           payload: data.payload,
           refs: data.refs,
@@ -110,8 +110,8 @@ export function createFakeTransactionPrisma(): FakeTransactionPrismaClient {
         if (where?.demoInstanceId !== undefined) {
           rows = rows.filter((r) => r.demoInstanceId === where.demoInstanceId);
         }
-        if (where?.brandId !== undefined) {
-          rows = rows.filter((r) => r.brandId === where.brandId);
+        if (where?.prospectId !== undefined) {
+          rows = rows.filter((r) => r.prospectId === where.prospectId);
         }
         if (where?.kind !== undefined) {
           rows = rows.filter((r) => r.kind === where.kind);
@@ -184,7 +184,7 @@ export function createFakeTransactionPrisma(): FakeTransactionPrismaClient {
           normalizedPayload: data.normalizedPayload,
           transactionId: data.transactionId ?? null,
           demoInstanceId: data.demoInstanceId ?? null,
-          brandId: data.brandId ?? null,
+          prospectId: data.prospectId ?? null,
           processingStatus: data.processingStatus ?? "pending",
           processingError: null,
           processedAt: null,

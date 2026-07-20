@@ -1,5 +1,5 @@
 /**
- * Unit tests for the brand-logo normalization util.
+ * Unit tests for the prospect-logo normalization util.
  *
  * No network access: `fetch` is stubbed and `node:dns/promises` is mocked
  * (public address by default); test images are synthesized with sharp.
@@ -28,7 +28,7 @@ import {
 
 const LOGO_URL = "https://cdn.example.com/images/logo.png";
 const PUBLIC_ADDR = [{ address: "203.0.113.7", family: 4 }];
-const BLOB_URL = "https://teststore.public.blob.vercel-storage.com/brand-logos/abc.png";
+const BLOB_URL = "https://teststore.public.blob.vercel-storage.com/prospect-logos/abc.png";
 
 const lookupMock = vi.mocked(lookup);
 const putMock = vi.mocked(put);
@@ -247,7 +247,7 @@ describe("Vercel Blob storage", () => {
     expect(await normalizeLogoUrl(LOGO_URL)).toBe(BLOB_URL);
     expect(putMock).toHaveBeenCalledTimes(1);
     expect(putMock.mock.calls[0]![0]).toMatch(
-      /^brand-logos\/[0-9a-f]{32}\.png$/,
+      /^prospect-logos\/[0-9a-f]{32}\.png$/,
     );
     expect(putMock.mock.calls[0]![2]).toMatchObject({
       access: "public",

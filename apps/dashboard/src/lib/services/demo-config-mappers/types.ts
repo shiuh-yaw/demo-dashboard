@@ -3,17 +3,17 @@
  *
  * Every mapper translates between the kind's legacy `StoredXConfig` shape
  * (still consumed by the dashboard UI + by each demo app's HTTP API) and
- * the unified `DemoConfig` storage shape (`DemoConfigRecord`). Brand
- * resolution flows through the shared `brand-resolver.ts` so action-
- * created and backfill-created rows converge on the same Brand id.
+ * the unified `DemoConfig` storage shape (`DemoConfigRecord`). Prospect
+ * resolution flows through the shared `prospect-resolver.ts` so action-
+ * created and backfill-created rows converge on the same Prospect id.
  *
  * The mapper interface is generic over the kind's `Config` and stored
  * shape so each kind keeps its existing TS types unchanged.
  */
 
 import type {
-  Brand,
-  BrandService,
+  Prospect,
+  ProspectService,
   CreateDemoConfigInput,
   DemoConfigKind,
   DemoConfigRecord,
@@ -55,29 +55,29 @@ export interface DemoConfigMapper<Config, Stored> {
 
   /**
    * Build a `CreateDemoConfigInput` from a kind-specific config. Resolves
-   * a Brand row first (deterministic id; upsert on miss) so the row's
-   * `brandId` FK is populated at create time.
+   * a Prospect row first (deterministic id; upsert on miss) so the row's
+   * `prospectId` FK is populated at create time.
    */
   toCreateInput(
-    brands: BrandService,
+    prospects: ProspectService,
     input: MapperCreateInput<Config>,
   ): Promise<CreateDemoConfigInput>;
 
   /**
    * Build an `UpdateDemoConfigInput` from a kind-specific partial
    * update. When the theme's primaryColor changes the mapper re-
-   * resolves the Brand so the row's `brandId` follows the new theme.
+   * resolves the Prospect so the row's `prospectId` follows the new theme.
    */
   toUpdateInput(
-    brands: BrandService,
+    prospects: ProspectService,
     existing: DemoConfigRecord,
     input: MapperUpdateInput<Config>,
   ): Promise<UpdateDemoConfigInput>;
 
   /**
    * Project a `DemoConfigRecord` back into the legacy stored shape.
-   * `brand` is `null` for the legacy-Redis read fallback (the row was
-   * synthesised from a pre-cutover key and predates Brand records).
+   * `prospect` is `null` for the legacy-Redis read fallback (the row was
+   * synthesised from a pre-cutover key and predates Prospect records).
    */
-  toStored(record: DemoConfigRecord, brand: Brand | null): Stored;
+  toStored(record: DemoConfigRecord, prospect: Prospect | null): Stored;
 }

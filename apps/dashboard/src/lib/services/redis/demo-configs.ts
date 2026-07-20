@@ -42,21 +42,51 @@ interface StoredDemoConfigRow {
   ownerId: string;
   name: string | null;
   description: string | null;
-  brandId: string;
+  prospectId: string;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: string;
   updatedAt: string;
 }
 
-function toRecord(stored: StoredDemoConfigRow): DemoConfigRecord {
+/**
+ * Read-side widening of `StoredDemoConfigRow`. Phase GTM-01 renamed the
+ * persisted field `brandId` -> `prospectId`, but production Redis rows
+ * written before that deploy still carry `brandId` -- `prospectId` is
+ * simply absent on them. Typed honestly (both optional) so every READ
+ * path is forced to consider the legacy field instead of silently
+ * reading `undefined`.
+ */
+interface PersistedDemoConfigRow
+  extends Omit<StoredDemoConfigRow, "prospectId"> {
+  prospectId?: string;
+  /** @deprecated Legacy field name, pre-Phase-GTM-01. Read-compat only. */
+  brandId?: string;
+}
+
+/**
+ * Resolves the prospect link off a raw stored row, falling back to the
+ * legacy `brandId` field.
+ *
+ * Mirrors the Redis-key-literal rationale in `redis.ts`: stored field
+ * values in production predate the Brand -> Prospect rename (Phase
+ * GTM-01) -- rows written before that deploy have `brandId`, not
+ * `prospectId`. Never remove this fallback without a data migration
+ * that rewrites every persisted row from `brandId` to `prospectId`
+ * first, or every pre-rename row silently loses its prospect link.
+ */
+function resolveProspectId(stored: PersistedDemoConfigRow): string {
+  return stored.prospectId ?? stored.brandId ?? "";
+}
+
+function toRecord(stored: PersistedDemoConfigRow): DemoConfigRecord {
   return {
     id: stored.id,
     kind: stored.kind,
     ownerId: stored.ownerId,
     name: stored.name,
     description: stored.description,
-    brandId: stored.brandId,
+    prospectId: resolveProspectId(stored),
     themeOverrides: stored.themeOverrides ?? null,
     config: stored.config,
     createdAt: new Date(stored.createdAt),
@@ -94,7 +124,7 @@ export class RedisDemoConfigService implements DemoConfigService {
       ownerId: input.ownerId,
       name: input.name ?? null,
       description: input.description ?? null,
-      brandId: input.brandId,
+      prospectId: input.prospectId,
       themeOverrides: input.themeOverrides ?? null,
       config: input.config,
       createdAt: now,
@@ -110,7 +140,7 @@ export class RedisDemoConfigService implements DemoConfigService {
     // The kind-scoped `demoConfig(kind, id)` key is the fast path; this
     // path only matters for the rare `get(id)` without a kind hint.
     for (const kind of ALL_KINDS) {
-      const stored = await this.redis.get<StoredDemoConfigRow>(
+      const stored = await this.redis.get<PersistedDemoConfigRow>(
         REDIS_KEYS.demoConfig(kind, id),
       );
       if (stored) return toRecord(stored);
@@ -120,7 +150,7 @@ export class RedisDemoConfigService implements DemoConfigService {
     // per-kind keyspaces (`dashboard:earn:<id>`, etc.). Probe each one
     // before declaring a miss. No lazy upsert into v2 — the
     // `backfill:demo-configs` script is the authoritative migration path
-    // (a read-time write would race the backfill and complicate brand
+    // (a read-time write would race the backfill and complicate prospect
     // resolution).
     //
     // The backfill itself disables this fallback via the constructor
@@ -135,8 +165,8 @@ export class RedisDemoConfigService implements DemoConfigService {
   /**
    * Read a row from the legacy per-kind Redis keyspaces. Returns a
    * synthesised `DemoConfigRecord` so callers see one shape; the
-   * `brandId` is empty for legacy rows (they predate Brand records) and
-   * the mapper layer is responsible for hydrating Brand at the action
+   * `prospectId` is empty for legacy rows (they predate Prospect records) and
+   * the mapper layer is responsible for hydrating Prospect at the action
    * boundary.
    */
   private async tryReadLegacy(
@@ -178,15 +208,18 @@ export class RedisDemoConfigService implements DemoConfigService {
     const fetched = await Promise.all(
       ids.map(async (composite) => {
         const [kind, id] = splitComposite(composite);
-        return this.redis.get<StoredDemoConfigRow>(
+        return this.redis.get<PersistedDemoConfigRow>(
           REDIS_KEYS.demoConfig(kind, id),
         );
       }),
     );
-    let rows = fetched.filter((r): r is StoredDemoConfigRow => r !== null);
-    if (options.brandId) {
-      const brandId = options.brandId;
-      rows = rows.filter((r) => r.brandId === brandId);
+    let rows = fetched.filter((r): r is PersistedDemoConfigRow => r !== null);
+    if (options.prospectId) {
+      const prospectId = options.prospectId;
+      // Resolve legacy `brandId` here too -- this filter runs before
+      // `toRecord`, so it must apply the same fallback or pre-rename rows
+      // silently drop out of every `list({ prospectId })` query.
+      rows = rows.filter((r) => resolveProspectId(r) === prospectId);
     }
     rows.sort(
       (a, b) =>
@@ -249,7 +282,7 @@ export class RedisDemoConfigService implements DemoConfigService {
           ownerId: input.ownerId,
           name: input.name ?? null,
           description: input.description ?? null,
-          brandId: input.brandId,
+          prospectId: input.prospectId,
           themeOverrides: input.themeOverrides ?? null,
           config: input.config,
           createdAt: existing.createdAt,
@@ -261,7 +294,7 @@ export class RedisDemoConfigService implements DemoConfigService {
           ownerId: input.ownerId,
           name: input.name ?? null,
           description: input.description ?? null,
-          brandId: input.brandId,
+          prospectId: input.prospectId,
           themeOverrides: input.themeOverrides ?? null,
           config: input.config,
           createdAt: now,
@@ -337,11 +370,11 @@ function splitComposite(composite: string): [DemoConfigKind, string] {
 // payload. That's enough to synthesise a `DemoConfigRecord` without writing
 // new code per kind. The mapper layer (action boundary) is responsible for
 // re-projecting the synthesised record back onto the kind-specific
-// `StoredXConfig` shape and for hydrating the linked Brand.
+// `StoredXConfig` shape and for hydrating the linked Prospect.
 //
-// Synthesised rows carry `brandId = ""` (legacy rows predate Brand records).
-// The action mapper either resolves a Brand on the fly (read path) or
-// triggers a brand-resolve + write-through on the next update — neither
+// Synthesised rows carry `prospectId = ""` (legacy rows predate Prospect records).
+// The action mapper either resolves a Prospect on the fly (read path) or
+// triggers a prospect-resolve + write-through on the next update — neither
 // happens here so the fallback stays read-only.
 
 interface LegacyConfigShape {
@@ -385,7 +418,7 @@ function legacyToRecord(
     ownerId: raw.ownerId ?? "",
     name: raw.name ?? null,
     description: raw.description ?? null,
-    brandId: "",
+    prospectId: "",
     themeOverrides: null,
     config: raw.config,
     createdAt,

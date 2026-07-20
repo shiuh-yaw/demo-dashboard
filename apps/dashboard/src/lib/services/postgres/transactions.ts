@@ -40,7 +40,7 @@ interface TransactionRow {
   kind: string;
   state: string;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   parentTransactionId: string | null;
   payload: unknown;
   refs: unknown;
@@ -61,7 +61,7 @@ export interface TransactionPrismaClient {
         kind: string;
         state: string;
         demoInstanceId?: string | null;
-        brandId?: string | null;
+        prospectId?: string | null;
         parentTransactionId?: string | null;
         payload: unknown;
         refs: unknown;
@@ -73,7 +73,7 @@ export interface TransactionPrismaClient {
     findMany(args?: {
       where?: {
         demoInstanceId?: string;
-        brandId?: string;
+        prospectId?: string;
         state?: string | { in: string[] };
         kind?: string;
         parentTransactionId?: string;
@@ -87,7 +87,7 @@ export interface TransactionPrismaClient {
         payload: unknown;
         refs: unknown;
         demoInstanceId: string | null;
-        brandId: string | null;
+        prospectId: string | null;
       }>;
     }): Promise<TransactionRow>;
     delete(args: { where: { id: string } }): Promise<TransactionRow>;
@@ -100,7 +100,7 @@ function toTransactionRecord(row: TransactionRow): TransactionRecord {
     kind: row.kind,
     state: row.state as TransactionState,
     demoInstanceId: row.demoInstanceId,
-    brandId: row.brandId,
+    prospectId: row.prospectId,
     parentTransactionId: row.parentTransactionId,
     payload: row.payload,
     refs: row.refs,
@@ -127,7 +127,7 @@ export class PostgresTransactionRecordService
         kind: input.kind,
         state: input.state ?? TransactionState.initialized,
         demoInstanceId: input.demoInstanceId ?? null,
-        brandId: input.brandId ?? null,
+        prospectId: input.prospectId ?? null,
         parentTransactionId: input.parentTransactionId ?? null,
         payload: input.payload ?? {},
         refs: input.refs ?? {},
@@ -148,7 +148,7 @@ export class PostgresTransactionRecordService
       Parameters<TransactionPrismaClient["transaction"]["findMany"]>[0]
     >["where"] = {};
     if (options.demoInstanceId) where.demoInstanceId = options.demoInstanceId;
-    if (options.brandId) where.brandId = options.brandId;
+    if (options.prospectId) where.prospectId = options.prospectId;
     if (options.kind) where.kind = options.kind;
     if (options.parentTransactionId)
       where.parentTransactionId = options.parentTransactionId;
@@ -199,7 +199,7 @@ export class PostgresTransactionRecordService
     if (input.refs !== undefined) data.refs = input.refs;
     if (input.demoInstanceId !== undefined)
       data.demoInstanceId = input.demoInstanceId;
-    if (input.brandId !== undefined) data.brandId = input.brandId;
+    if (input.prospectId !== undefined) data.prospectId = input.prospectId;
     const row = await this.client.transaction.update({
       where: { id },
       data,

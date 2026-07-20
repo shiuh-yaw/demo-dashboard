@@ -7,10 +7,10 @@
  * Authenticates via Dynamic JWT cookie.
  *
  * TD-002: routes through `services.demoConfigs.*` (unified `DemoConfig`
- * row, discriminated by `kind`) via the `earnMapper`. Brand resolution
+ * row, discriminated by `kind`) via the `earnMapper`. Prospect resolution
  * is deterministic — `(ownerId, primaryColor, logoUrl)` hashes onto a
- * stable `brandId` so action-created and backfill-created rows share
- * the same Brand. The Redis backend stays canonical until ops flips
+ * stable `prospectId` so action-created and backfill-created rows share
+ * the same Prospect. The Redis backend stays canonical until ops flips
  * `USE_POSTGRES_DEMO_CONFIGS=true`; the legacy per-kind Redis keyspace
  * is still readable via the service's read-fallback path.
  */
@@ -39,15 +39,15 @@ export async function createEarnConfig(
   }
 
   try {
-    const create = await earnMapper.toCreateInput(services.brands, {
+    const create = await earnMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
       config: (await normalizeBrandingLogos(config ?? {})) as EarnConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const brand = await services.brands.get(record.brandId);
-    const stored = earnMapper.toStored(record, brand);
+    const prospect = await services.prospects.get(record.prospectId);
+    const stored = earnMapper.toStored(record, prospect);
 
     revalidatePath("/");
     revalidatePath("/earns");
@@ -78,10 +78,10 @@ export async function getEarnConfig(
     if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return { success: true, data: earnMapper.toStored(record, brand) };
+    return { success: true, data: earnMapper.toStored(record, prospect) };
   } catch (err) {
     console.error("Failed to get Earn config:", err);
     return { success: false, error: "Failed to get Earn config" };
@@ -114,7 +114,7 @@ export async function updateEarnConfig(
     }
 
     const update = await earnMapper.toUpdateInput(
-      services.brands,
+      services.prospects,
       existing,
       {
         ownerId: existing.ownerId || user.sub,
@@ -124,8 +124,8 @@ export async function updateEarnConfig(
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const brand = await services.brands.get(updated.brandId);
-    const stored = earnMapper.toStored(updated, brand);
+    const prospect = await services.prospects.get(updated.prospectId);
+    const stored = earnMapper.toStored(updated, prospect);
 
     revalidatePath("/");
     revalidatePath("/earns");
@@ -182,14 +182,14 @@ export async function getAllEarnConfigs(): Promise<{
   if (!user) return { configs: [], orphaned: [] };
 
   const all = await services.demoConfigs.list({ kind: "earn" });
-  // Hydrate each row's Brand. List sizes are small (per-owner index makes
-  // owner-scoped lists O(N owned)) so a per-row brand lookup is fine.
+  // Hydrate each row's Prospect. List sizes are small (per-owner index makes
+  // owner-scoped lists O(N owned)) so a per-row prospect lookup is fine.
   const stored = await Promise.all(
     all.map(async (record) => {
-      const brand = record.brandId
-        ? await services.brands.get(record.brandId)
+      const prospect = record.prospectId
+        ? await services.prospects.get(record.prospectId)
         : null;
-      return earnMapper.toStored(record, brand);
+      return earnMapper.toStored(record, prospect);
     }),
   );
 
@@ -213,10 +213,10 @@ export async function getEarnConfigPublic(
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "earn") return null;
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return earnMapper.toStored(record, brand);
+    return earnMapper.toStored(record, prospect);
   } catch (err) {
     console.error("Failed to get Earn config:", err);
     return null;

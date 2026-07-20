@@ -10,9 +10,10 @@ status: stable
 
 Prisma + Supabase Postgres access layer. Provides a serverless-safe
 `PrismaClient` singleton and the schema definition. Models landed
-incrementally: `Brand` (2-brands), `Transaction` + `WebhookEvent`
-(2-transactions), `DemoConfig` (2-demo-configs — unified per-demo-type
-carrier; remittance folded in via `fold_remittance_into_demo_config`).
+incrementally: `Brand` (2-brands; renamed to `Prospect` in Phase GTM-01),
+`Transaction` + `WebhookEvent` (2-transactions), `DemoConfig`
+(2-demo-configs — unified per-demo-type carrier; remittance folded in via
+`fold_remittance_into_demo_config`).
 
 ## Hard rule: single consumer
 
@@ -36,34 +37,38 @@ fetch from that endpoint instead.
 ## Public surface
 
 - `prisma` — singleton `PrismaClient` with delegates for every declared
-  model: `prisma.brand`, `prisma.transaction`, `prisma.webhookEvent`,
+  model: `prisma.prospect`, `prisma.transaction`, `prisma.webhookEvent`,
   `prisma.demoConfig`. (stable)
 - `Prisma` — namespace re-exported from `@prisma/client` for input/output
-  typing (e.g., `Prisma.BrandCreateInput`). (stable)
+  typing (e.g., `Prisma.ProspectCreateInput`). (stable)
 - `PrismaClient` — class re-export for callers that need their own instance
   (rare; prefer the singleton). (stable)
 
 ### Models at a glance
 
-- `Brand` — first-class brand record (2-brands). Full visual theme + logo
-  discriminator + linked demo-config ids. Service:
-  `apps/dashboard/src/lib/services/postgres/brands.ts`, flag
-  `USE_POSTGRES_BRANDS`.
+- `Prospect` — first-class prospect record (2-brands; renamed from `Brand`
+  in Phase GTM-01 - a prospect is a company we sell to, identity + theme in
+  one record). Full visual theme + logo discriminator + linked demo-config
+  ids, plus nullable `domain` and `notes` identity columns added in Phase
+  GTM-01. Service: `apps/dashboard/src/lib/services/postgres/prospects.ts`,
+  flag `USE_POSTGRES_PROSPECTS`.
 - `DemoConfig` — unified per-instance config carrier for every demo type
   (earn, wallet, trade, visa-direct, checkout, remittance). `kind` is a
   TEXT discriminator validated app-side via a Zod discriminated union, **not**
   a Prisma enum — adding a new demo type is a Zod/Type edit, not a migration
-  (D-013, meta-system goal). FK `brandId` → `Brand` (D-028); optional
-  `themeOverrides Json?` merges on top of the brand theme at the service
-  boundary. Indexed on `ownerId`, `brandId`, `kind`, `(ownerId, kind)`.
-  Service: `apps/dashboard/src/lib/services/postgres/demo-configs.ts`,
+  (D-013, meta-system goal). FK `prospectId` (renamed from `brandId` in
+  Phase GTM-01) → `Prospect` (D-028); optional `themeOverrides Json?`
+  merges on top of the prospect theme at the service boundary. Indexed on
+  `ownerId`, `prospectId`, `kind`, `(ownerId, kind)`. Service:
+  `apps/dashboard/src/lib/services/postgres/demo-configs.ts`,
   flag `USE_POSTGRES_DEMO_CONFIGS`. Replaces what would otherwise be one
   table per demo type; legacy `RemittanceConfig` rows were migrated here
   with `kind="remittance"` and the legacy table dropped (D-029).
 - `Transaction` — canonical "money in flight" record (D-010). State
   validated by `assertValidTransition` at the service boundary; DB stores
-  verbatim. Indexed on `demoInstanceId`, `brandId`, `state`,
-  `parentTransactionId`. Self-FK for multi-leg flows. Service:
+  verbatim. Indexed on `demoInstanceId`, `prospectId` (renamed from
+  `brandId` in Phase GTM-01), `state`, `parentTransactionId`. Self-FK for
+  multi-leg flows. Service:
   `apps/dashboard/src/lib/services/postgres/transactions.ts`, flag
   `USE_POSTGRES_TRANSACTIONS`.
 - `WebhookEvent` — audit row for every received webhook (D-011). Unique on
@@ -137,9 +142,11 @@ export async function listDemoConfigs(ownerId: string, kind: string) {
 - `RemittanceConfig` ↔ `DemoConfig` fold: **done** — legacy table dropped
   by `fold_remittance_into_demo_config`; rows live in `DemoConfig` with
   `kind="remittance"` and the unified backfill handles them.
-- Backfills: brand (`backfill:brands`) and unified demo-configs
-  (`backfill:demo-configs` — covers every kind including remittance).
-  Both idempotent — deterministic Brand id from
-  `(ownerId, primaryColor, logoUrl)` and preserved legacy ids (Q-014).
+- Backfills: prospect (`backfill:prospects`; `backfill:brands` kept as an
+  alias for one release) and unified demo-configs (`backfill:demo-configs`
+  — covers every kind including remittance). Both idempotent —
+  deterministic Prospect id from `(ownerId, primaryColor, logoUrl)`
+  (hash inputs unchanged by the Phase GTM-01 rename) and preserved legacy
+  ids (Q-014).
 - RLS is enabled on every Phase-2 table. Prisma connects as superuser and
   bypasses it; service-layer ownership checks remain the trust boundary.

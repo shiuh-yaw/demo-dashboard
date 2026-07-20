@@ -11,7 +11,7 @@
  * No lazy upsert into the v2 keyspace — simpler fallback per spec. The
  * backfill (`scripts/backfill-demo-configs`) is the authoritative path
  * for migrating rows; a read-time write would race the backfill and
- * complicate ownership/brand resolution.
+ * complicate ownership/prospect resolution.
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
@@ -101,7 +101,7 @@ describe("RedisDemoConfigService legacy fallback", () => {
       kind: "earn",
       ownerId: "owner-x",
       name: "V2 Wins",
-      brandId: "brand-1",
+      prospectId: "prospect-1",
       config: {},
     });
     // Force-overwrite v2 row's id to match the legacy key for the test.
@@ -112,7 +112,7 @@ describe("RedisDemoConfigService legacy fallback", () => {
       kind: "earn",
       ownerId: "owner-x",
       name: "V2 Wins",
-      brandId: "brand-1",
+      prospectId: "prospect-1",
       config: {},
     });
 
@@ -122,17 +122,50 @@ describe("RedisDemoConfigService legacy fallback", () => {
     void v2;
   });
 
-  it("derives a stable brandId placeholder for legacy rows missing brandId", async () => {
-    // Legacy rows don't carry brandId; the fallback should surface a
-    // deterministic synthetic brandId so callers can hydrate Brand
+  it("derives a stable prospectId placeholder for legacy rows missing prospectId", async () => {
+    // Legacy rows don't carry prospectId; the fallback should surface a
+    // deterministic synthetic prospectId so callers can hydrate Prospect
     // separately. Empty string is the simplest contract — the mapper
-    // layer is responsible for filling in the real brand at read time.
-    const legacy = makeLegacyEarn({ id: "no-brand" });
+    // layer is responsible for filling in the real prospect at read time.
+    const legacy = makeLegacyEarn({ id: "no-prospect" });
     await redis.set(REDIS_KEYS.earnConfig(legacy.id), legacy);
 
-    const result = await svc.get("no-brand");
+    const result = await svc.get("no-prospect");
     expect(result).not.toBeNull();
-    // Legacy rows have no embedded brandId — fallback synthesises empty.
-    expect(typeof result!.brandId).toBe("string");
+    // Legacy rows have no embedded prospectId — fallback synthesises empty.
+    expect(typeof result!.prospectId).toBe("string");
+  });
+
+  it("reads the legacy brandId field from a v2-keyspace row predating the Phase GTM-01 rename", async () => {
+    // Production Redis rows written before the Brand -> Prospect rename
+    // persisted the prospect link under `brandId`, not `prospectId`. Seed
+    // a raw v2-keyspace row exactly as production has it: `brandId` set,
+    // no `prospectId` key at all.
+    const legacyProspectId = "bf_legacy123";
+    const id = "v2-legacy-brand-id";
+    await redis.set(REDIS_KEYS.demoConfig("earn", id), {
+      id,
+      kind: "earn",
+      ownerId: "owner-legacy",
+      name: "Legacy Brand Row",
+      description: null,
+      brandId: legacyProspectId,
+      themeOverrides: null,
+      config: { vault: "aave-usdc" },
+      createdAt: "2025-01-01T00:00:00.000Z",
+      updatedAt: "2025-01-01T00:00:00.000Z",
+    });
+    await redis.sadd(REDIS_KEYS.demoConfigKindList("earn"), id);
+    await redis.sadd(
+      REDIS_KEYS.demoConfigOwnerKindIndex("owner-legacy", "earn"),
+      id,
+    );
+
+    const result = await svc.get(id);
+    expect(result).not.toBeNull();
+    expect(result!.prospectId).toBe(legacyProspectId);
+
+    const filtered = await svc.list({ prospectId: legacyProspectId });
+    expect(filtered.map((r) => r.id)).toEqual([id]);
   });
 });

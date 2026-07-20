@@ -37,7 +37,7 @@ export async function createCheckout(
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
-    const create = await checkoutMapper.toCreateInput(services.brands, {
+    const create = await checkoutMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
@@ -48,8 +48,8 @@ export async function createCheckout(
       }),
     });
     const record = await services.demoConfigs.create(create);
-    const brand = await services.brands.get(record.brandId);
-    const stored = checkoutMapper.toStored(record, brand);
+    const prospect = await services.prospects.get(record.prospectId);
+    const stored = checkoutMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/checkouts");
     return { success: true, data: stored };
@@ -72,10 +72,10 @@ export async function getCheckout(
     if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return { success: true, data: checkoutMapper.toStored(record, brand) };
+    return { success: true, data: checkoutMapper.toStored(record, prospect) };
   } catch (err) {
     console.error("Failed to get checkout:", err);
     return { success: false, error: "Failed to get checkout" };
@@ -102,7 +102,7 @@ export async function updateCheckout(
       return { success: false, error: "Access denied" };
     }
     const update = await checkoutMapper.toUpdateInput(
-      services.brands,
+      services.prospects,
       existing,
       {
         ownerId: existing.ownerId || user.sub,
@@ -113,8 +113,8 @@ export async function updateCheckout(
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const brand = await services.brands.get(updated.brandId);
-    const stored = checkoutMapper.toStored(updated, brand);
+    const prospect = await services.prospects.get(updated.prospectId);
+    const stored = checkoutMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/checkouts");
     revalidatePath(`/checkouts/${id}`);
@@ -157,10 +157,10 @@ export async function getAllCheckoutConfigs(): Promise<{
   const all = await services.demoConfigs.list({ kind: "checkout" });
   const stored = await Promise.all(
     all.map(async (record) => {
-      const brand = record.brandId
-        ? await services.brands.get(record.brandId)
+      const prospect = record.prospectId
+        ? await services.prospects.get(record.prospectId)
         : null;
-      return checkoutMapper.toStored(record, brand);
+      return checkoutMapper.toStored(record, prospect);
     }),
   );
   const userCheckouts = stored.filter((c) => c.ownerId === user.sub);
@@ -185,10 +185,10 @@ export async function getCheckoutConfig(
   const record = await services.demoConfigs.get(id);
   if (!record || record.kind !== "checkout") return null;
   if (record.ownerId && record.ownerId !== user.sub) return null;
-  const brand = record.brandId
-    ? await services.brands.get(record.brandId)
+  const prospect = record.prospectId
+    ? await services.prospects.get(record.prospectId)
     : null;
-  return checkoutMapper.toStored(record, brand);
+  return checkoutMapper.toStored(record, prospect);
 }
 
 /**

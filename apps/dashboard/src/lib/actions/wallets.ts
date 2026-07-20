@@ -29,15 +29,15 @@ export async function createWalletConfig(
   if (!user) return { success: false, error: "Authentication required" };
 
   try {
-    const create = await walletMapper.toCreateInput(services.brands, {
+    const create = await walletMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
       config: (await normalizeBrandingLogos(config ?? {})) as WalletConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const brand = await services.brands.get(record.brandId);
-    const stored = walletMapper.toStored(record, brand);
+    const prospect = await services.prospects.get(record.prospectId);
+    const stored = walletMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/wallets");
     return { success: true, data: stored };
@@ -60,10 +60,10 @@ export async function getWalletConfig(
     if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return { success: true, data: walletMapper.toStored(record, brand) };
+    return { success: true, data: walletMapper.toStored(record, prospect) };
   } catch (err) {
     console.error("Failed to get Wallet config:", err);
     return { success: false, error: "Failed to get Wallet config" };
@@ -89,7 +89,7 @@ export async function updateWalletConfig(
       return { success: false, error: "Access denied" };
     }
     const update = await walletMapper.toUpdateInput(
-      services.brands,
+      services.prospects,
       existing,
       {
         ownerId: existing.ownerId || user.sub,
@@ -99,8 +99,8 @@ export async function updateWalletConfig(
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const brand = await services.brands.get(updated.brandId);
-    const stored = walletMapper.toStored(updated, brand);
+    const prospect = await services.prospects.get(updated.prospectId);
+    const stored = walletMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/wallets");
     revalidatePath(`/wallets/${id}`);
@@ -144,10 +144,10 @@ export async function getAllWalletConfigs(): Promise<{
   const all = await services.demoConfigs.list({ kind: "wallet" });
   const stored = await Promise.all(
     all.map(async (record) => {
-      const brand = record.brandId
-        ? await services.brands.get(record.brandId)
+      const prospect = record.prospectId
+        ? await services.prospects.get(record.prospectId)
         : null;
-      return walletMapper.toStored(record, brand);
+      return walletMapper.toStored(record, prospect);
     }),
   );
   const userConfigs = stored.filter((c) => c.ownerId === user.sub);
@@ -166,10 +166,10 @@ export async function getWalletConfigPublic(
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "wallet") return null;
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return walletMapper.toStored(record, brand);
+    return walletMapper.toStored(record, prospect);
   } catch (err) {
     console.error("Failed to get Wallet config:", err);
     return null;

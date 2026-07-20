@@ -51,7 +51,7 @@ function makeInput(
     ownerId: "owner-1",
     name: "Earn USDC",
     description: "Earn demo with USDC vaults",
-    brandId: "brand-1",
+    prospectId: "prospect-1",
     themeOverrides: null,
     config: { vault: "aave-usdc", apy: "4.5" },
     ...overrides,
@@ -73,7 +73,7 @@ describe.each(backends)("DemoConfigService parity ($name)", ({ build }) => {
     expect(created.ownerId).toBe("owner-1");
     expect(created.name).toBe("Earn USDC");
     expect(created.description).toBe("Earn demo with USDC vaults");
-    expect(created.brandId).toBe("brand-1");
+    expect(created.prospectId).toBe("prospect-1");
     expect(created.themeOverrides).toBeNull();
     expect(created.config).toEqual({ vault: "aave-usdc", apy: "4.5" });
     expect(created.createdAt).toBeInstanceOf(Date);
@@ -194,10 +194,10 @@ describe.each(backends)("DemoConfigService parity ($name)", ({ build }) => {
     expect(earns.map((r) => r.name).sort()).toEqual(["earn-1", "earn-2"]);
   });
 
-  it("list filters by brandId", async () => {
-    await svc.create(makeInput({ brandId: "brand-1", name: "A" }));
-    await svc.create(makeInput({ brandId: "brand-2", name: "B" }));
-    const branded = await svc.list({ brandId: "brand-1" });
+  it("list filters by prospectId", async () => {
+    await svc.create(makeInput({ prospectId: "prospect-1", name: "A" }));
+    await svc.create(makeInput({ prospectId: "prospect-2", name: "B" }));
+    const branded = await svc.list({ prospectId: "prospect-1" });
     expect(branded).toHaveLength(1);
     expect(branded[0]!.name).toBe("A");
   });
@@ -225,7 +225,7 @@ describe.each(backends)("DemoConfigService parity ($name)", ({ build }) => {
     });
     expect(updated.name).toBe("Earn USDT");
     expect(updated.description).toBeNull();
-    expect(updated.brandId).toBe("brand-1");
+    expect(updated.prospectId).toBe("prospect-1");
     expect(updated.config).toEqual(created.config);
     expect(updated.kind).toBe("earn"); // kind is immutable
     expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(
@@ -233,10 +233,10 @@ describe.each(backends)("DemoConfigService parity ($name)", ({ build }) => {
     );
   });
 
-  it("update can change brandId (re-link to a different Brand)", async () => {
+  it("update can change prospectId (re-link to a different Prospect)", async () => {
     const created = await svc.create(makeInput());
-    const updated = await svc.update(created.id, { brandId: "brand-99" });
-    expect(updated.brandId).toBe("brand-99");
+    const updated = await svc.update(created.id, { prospectId: "prospect-99" });
+    expect(updated.prospectId).toBe("prospect-99");
   });
 
   it("update can replace the config payload", async () => {
@@ -298,11 +298,11 @@ describe.each(backends)("DemoConfigService parity ($name)", ({ build }) => {
     await new Promise((r) => setTimeout(r, 5));
     const second = await svc.upsertWithId(
       "legacy_id_2",
-      makeInput({ name: "B", brandId: "brand-2" }),
+      makeInput({ name: "B", prospectId: "prospect-2" }),
     );
     expect(second.id).toBe("legacy_id_2");
     expect(second.name).toBe("B");
-    expect(second.brandId).toBe("brand-2");
+    expect(second.prospectId).toBe("prospect-2");
     expect(second.createdAt.getTime()).toBe(first.createdAt.getTime());
     expect(second.updatedAt.getTime()).toBeGreaterThanOrEqual(
       first.updatedAt.getTime(),

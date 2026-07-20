@@ -2,10 +2,10 @@
  * Phase 2 unified-DemoConfig backfill orchestrator.
  *
  * Walks each legacy per-type Redis keyspace and upserts both the
- * Brand row (via `hashBrandKey` — same derivation as the brand
+ * Prospect row (via `hashProspectKey` — same derivation as the prospect
  * backfill so theme rules stay in lockstep) and the matching
  * `DemoConfig` row with the **legacy id preserved** (Q-014). Re-running
- * is idempotent: deterministic Brand id + caller-supplied DemoConfig
+ * is idempotent: deterministic Prospect id + caller-supplied DemoConfig
  * id collapse re-runs onto the existing rows.
  *
  * Records that fail surface in the report with `outcome: "failed"` so
@@ -29,9 +29,9 @@ import type {
   StoredWalletConfig,
 } from "@/lib/types/dashboard";
 import type {
-  CreateBrandInput,
+  CreateProspectInput,
   CreateDemoConfigInput,
-  UpdateBrandInput,
+  UpdateProspectInput,
 } from "@/lib/services/types";
 
 import {
@@ -39,8 +39,8 @@ import {
   extractFromEarn,
   extractFromRemittance,
   extractFromWallet,
-} from "../backfill-brands/extractors";
-import { hashBrandKey } from "../backfill-brands/hash";
+} from "../backfill-prospects/extractors";
+import { hashProspectKey } from "../backfill-prospects/hash";
 import type {
   BackfillDemoKind,
   DemoConfigsBackfillDeps,
@@ -51,13 +51,13 @@ import { BACKFILL_KINDS } from "./types";
 
 /**
  * Maps the unified DemoConfig `kind` to the corresponding denormalized
- * back-reference column on `Brand`. The brand-edit page surfaces four
+ * back-reference column on `Prospect`. The prospect-edit page surfaces four
  * demo kinds today (earn/checkout/wallet/remittance); trade and
  * visa-direct have no column and intentionally fall outside this map
  * (the link step is a no-op for them).
  */
-const DEMO_KIND_TO_BRAND_FIELD: Partial<
-  Record<BackfillDemoKind, keyof Pick<UpdateBrandInput, "demoEarnId" | "demoCheckoutsId" | "demoWalletId" | "demoRemittanceId">>
+const DEMO_KIND_TO_PROSPECT_FIELD: Partial<
+  Record<BackfillDemoKind, keyof Pick<UpdateProspectInput, "demoEarnId" | "demoCheckoutsId" | "demoWalletId" | "demoRemittanceId">>
 > = {
   earn: "demoEarnId",
   checkout: "demoCheckoutsId",
@@ -70,9 +70,9 @@ const DEMO_KIND_TO_BRAND_FIELD: Partial<
  * key pair and a slightly different stored shape; this table is the
  * single place that knows how each one is wired.
  *
- * Trade and Visa Direct have no brand-extractor helper today (the
- * brand backfill never crawled them — they were rarely themed). We
- * derive a brand seed inline from the embedded theme; same hex rules
+ * Trade and Visa Direct have no prospect-extractor helper today (the
+ * prospect backfill never crawled them — they were rarely themed). We
+ * derive a prospect seed inline from the embedded theme; same hex rules
  * as `extractors.ts` but narrower in scope (primaryColor only).
  */
 interface SkipResult {
@@ -90,8 +90,8 @@ interface ResolvedLegacy {
   ownerId: string;
   name: string;
   description: string | null;
-  brandInput: CreateBrandInput;
-  brandId: string;
+  prospectInput: CreateProspectInput;
+  prospectId: string;
   /** Demo-specific payload — everything except the embedded theme. */
   configPayload: unknown;
 }
@@ -101,14 +101,14 @@ function isObject(v: unknown): v is Record<string, unknown> {
 }
 
 /**
- * Inline brand-seed derivation for stores the brand backfill never
+ * Inline prospect-seed derivation for stores the prospect backfill never
  * walked. Mirrors `extractors.ts` for the primaryColor-only path.
  */
 type FallbackResult =
-  | { ok: true; seed: CreateBrandInput }
+  | { ok: true; seed: CreateProspectInput }
   | { ok: false; skipReason: string };
 
-function fallbackBrand(
+function fallbackProspect(
   ownerId: string | undefined,
   name: string,
   description: string | null,
@@ -146,12 +146,12 @@ const STORES: readonly LegacyStore[] = [
       if (!stored.ownerId)
         return { skipReason: "missing ownerId — orphan legacy config" };
       const { seed, skipReason } = extractFromEarn(stored);
-      if (!seed) return { skipReason: skipReason ?? "could not derive brand" };
+      if (!seed) return { skipReason: skipReason ?? "could not derive prospect" };
       return {
         ownerId: stored.ownerId,
         name: stored.name,
         description: stored.description ?? null,
-        brandInput: {
+        prospectInput: {
           ownerId: seed.ownerId,
           name: seed.name,
           description: seed.description ?? null,
@@ -159,7 +159,7 @@ const STORES: readonly LegacyStore[] = [
           accentColor: seed.accentColor ?? null,
           logoUrl: seed.logoUrl ?? null,
         },
-        brandId: hashBrandKey(seed),
+        prospectId: hashProspectKey(seed),
         configPayload: stored.config,
       };
     },
@@ -174,12 +174,12 @@ const STORES: readonly LegacyStore[] = [
       if (!stored.ownerId)
         return { skipReason: "missing ownerId — orphan legacy config" };
       const { seed, skipReason } = extractFromWallet(stored);
-      if (!seed) return { skipReason: skipReason ?? "could not derive brand" };
+      if (!seed) return { skipReason: skipReason ?? "could not derive prospect" };
       return {
         ownerId: stored.ownerId,
         name: stored.name,
         description: stored.description ?? null,
-        brandInput: {
+        prospectInput: {
           ownerId: seed.ownerId,
           name: seed.name,
           description: seed.description ?? null,
@@ -187,7 +187,7 @@ const STORES: readonly LegacyStore[] = [
           accentColor: seed.accentColor ?? null,
           logoUrl: seed.logoUrl ?? null,
         },
-        brandId: hashBrandKey(seed),
+        prospectId: hashProspectKey(seed),
         configPayload: stored.config,
       };
     },
@@ -202,20 +202,20 @@ const STORES: readonly LegacyStore[] = [
       if (!stored.ownerId)
         return { skipReason: "missing ownerId — orphan legacy config" };
       // Trade stored theme lives inside `config` as an opaque
-      // record; we don't have a brand extractor for it. Fall back
+      // record; we don't have a prospect extractor for it. Fall back
       // to a minimal seed using `branding.logoUrl` + a hardcoded
       // neutral primary, since Trade rarely carried full themes.
       const theme = (stored.config as { theme?: unknown })?.theme;
       const branding = (stored.config as { branding?: { logoUrl?: string } })
         ?.branding;
-      const fb = fallbackBrand(
+      const fb = fallbackProspect(
         stored.ownerId,
         stored.name,
         stored.description ?? null,
         theme,
       );
       if (!fb.ok) return { skipReason: fb.skipReason };
-      const seed: CreateBrandInput = {
+      const seed: CreateProspectInput = {
         ...fb.seed,
         logoUrl: branding?.logoUrl ?? null,
       };
@@ -223,8 +223,8 @@ const STORES: readonly LegacyStore[] = [
         ownerId: stored.ownerId,
         name: stored.name,
         description: stored.description ?? null,
-        brandInput: seed,
-        brandId: hashBrandKey({
+        prospectInput: seed,
+        prospectId: hashProspectKey({
           ownerId: seed.ownerId,
           primaryColor: seed.primaryColor,
           logoUrl: seed.logoUrl ?? null,
@@ -242,14 +242,14 @@ const STORES: readonly LegacyStore[] = [
       const stored = raw as unknown as StoredVisaDirectConfig;
       if (!stored.ownerId)
         return { skipReason: "missing ownerId — orphan legacy config" };
-      const fb = fallbackBrand(
+      const fb = fallbackProspect(
         stored.ownerId,
         stored.name,
         stored.description ?? null,
         stored.config.theme,
       );
       if (!fb.ok) return { skipReason: fb.skipReason };
-      const seed: CreateBrandInput = {
+      const seed: CreateProspectInput = {
         ...fb.seed,
         logoUrl: stored.config.branding?.logoUrl ?? null,
       };
@@ -257,8 +257,8 @@ const STORES: readonly LegacyStore[] = [
         ownerId: stored.ownerId,
         name: stored.name,
         description: stored.description ?? null,
-        brandInput: seed,
-        brandId: hashBrandKey({
+        prospectInput: seed,
+        prospectId: hashProspectKey({
           ownerId: seed.ownerId,
           primaryColor: seed.primaryColor,
           logoUrl: seed.logoUrl ?? null,
@@ -277,12 +277,12 @@ const STORES: readonly LegacyStore[] = [
       if (!stored.ownerId)
         return { skipReason: "missing ownerId — orphan legacy config" };
       const { seed, skipReason } = extractFromCheckout(stored);
-      if (!seed) return { skipReason: skipReason ?? "could not derive brand" };
+      if (!seed) return { skipReason: skipReason ?? "could not derive prospect" };
       return {
         ownerId: stored.ownerId,
         name: stored.name,
         description: stored.description ?? null,
-        brandInput: {
+        prospectInput: {
           ownerId: seed.ownerId,
           name: seed.name,
           description: seed.description ?? null,
@@ -290,7 +290,7 @@ const STORES: readonly LegacyStore[] = [
           accentColor: seed.accentColor ?? null,
           logoUrl: seed.logoUrl ?? null,
         },
-        brandId: hashBrandKey(seed),
+        prospectId: hashProspectKey(seed),
         configPayload: stored.config,
       };
     },
@@ -305,12 +305,12 @@ const STORES: readonly LegacyStore[] = [
       if (!stored.ownerId)
         return { skipReason: "missing ownerId — orphan legacy config" };
       const { seed, skipReason } = extractFromRemittance(stored);
-      if (!seed) return { skipReason: skipReason ?? "could not derive brand" };
+      if (!seed) return { skipReason: skipReason ?? "could not derive prospect" };
       return {
         ownerId: stored.ownerId,
         name: stored.name,
         description: stored.description ?? null,
-        brandInput: {
+        prospectInput: {
           ownerId: seed.ownerId,
           name: seed.name,
           description: seed.description ?? null,
@@ -319,7 +319,7 @@ const STORES: readonly LegacyStore[] = [
           accentColor: seed.accentColor ?? null,
           logoUrl: seed.logoUrl ?? null,
         },
-        brandId: hashBrandKey(seed),
+        prospectId: hashProspectKey(seed),
         configPayload: stored.config,
       };
     },
@@ -359,7 +359,7 @@ export async function runDemoConfigsBackfill(
       const tag = `${store.kind}:${id}`;
       if (result.outcome === "failed") log(`FAILED ${tag} — ${result.reason}`);
       else if (result.outcome === "skipped") log(`skip ${tag} — ${result.reason}`);
-      else log(`${result.outcome} ${tag} (brand ${result.brandId})`);
+      else log(`${result.outcome} ${tag} (prospect ${result.prospectId})`);
     }
   }
   return report;
@@ -380,17 +380,17 @@ async function processOne(
     return { source, outcome: "skipped", reason: resolved.skipReason };
   }
   try {
-    // Brand: create only if missing. The canonical brands are seeded by
-    // backfill:brands (which populates demoEarnId/demoCheckoutsId/etc.
-    // from the BrandProfile aggregate). Re-upserting here with a seed
+    // Prospect: create only if missing. The canonical prospects are seeded by
+    // backfill:prospects (which populates demoEarnId/demoCheckoutsId/etc.
+    // from the ProspectProfile aggregate). Re-upserting here with a seed
     // derived from a single demo's embedded theme overwrites those
-    // back-references with null and replaces the clean BrandProfile name
+    // back-references with null and replaces the clean ProspectProfile name
     // with the demo's display name.
-    let existingBrand = await deps.brands.get(resolved.brandId);
-    if (!existingBrand) {
-      existingBrand = await deps.brands.upsertWithId(
-        resolved.brandId,
-        resolved.brandInput,
+    let existingProspect = await deps.prospects.get(resolved.prospectId);
+    if (!existingProspect) {
+      existingProspect = await deps.prospects.upsertWithId(
+        resolved.prospectId,
+        resolved.prospectInput,
       );
     }
     const existing = await deps.demoConfigs.get(id);
@@ -399,28 +399,28 @@ async function processOne(
       ownerId: resolved.ownerId,
       name: resolved.name,
       description: resolved.description,
-      brandId: resolved.brandId,
+      prospectId: resolved.prospectId,
       themeOverrides: null,
       config: resolved.configPayload,
     };
     const row = await deps.demoConfigs.upsertWithId(id, input);
-    // Backfill the brand's denormalized demoXxxId for this kind so the
+    // Backfill the prospect's denormalized demoXxxId for this kind so the
     // dashboard UI's "Demos" count and demo-link slots populate. Only
     // touch the field if it's currently null — preserves any
-    // BrandProfile-derived value that backfill:brands already set.
-    // Trade and visa-direct have no Brand back-reference column
-    // (the brand-edit page only surfaces 4 demo kinds today), so they
+    // ProspectProfile-derived value that backfill:prospects already set.
+    // Trade and visa-direct have no Prospect back-reference column
+    // (the prospect-edit page only surfaces 4 demo kinds today), so they
     // skip silently.
-    const linkField = DEMO_KIND_TO_BRAND_FIELD[store.kind];
-    if (linkField && existingBrand && existingBrand[linkField] === null) {
-      const patch: UpdateBrandInput = { [linkField]: row.id };
-      await deps.brands.update(resolved.brandId, patch);
+    const linkField = DEMO_KIND_TO_PROSPECT_FIELD[store.kind];
+    if (linkField && existingProspect && existingProspect[linkField] === null) {
+      const patch: UpdateProspectInput = { [linkField]: row.id };
+      await deps.prospects.update(resolved.prospectId, patch);
     }
     return {
       source,
       outcome: existing ? "deduped" : "created",
       configId: row.id,
-      brandId: resolved.brandId,
+      prospectId: resolved.prospectId,
     };
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);

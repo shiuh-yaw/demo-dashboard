@@ -40,7 +40,7 @@ interface StoredTransactionRecord {
   kind: string;
   state: TransactionState;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   parentTransactionId: string | null;
   payload: unknown;
   refs: unknown;
@@ -54,7 +54,7 @@ function toRecord(stored: StoredTransactionRecord): TransactionRecord {
     kind: stored.kind,
     state: stored.state,
     demoInstanceId: stored.demoInstanceId,
-    brandId: stored.brandId,
+    prospectId: stored.prospectId,
     parentTransactionId: stored.parentTransactionId,
     payload: stored.payload,
     refs: stored.refs,
@@ -82,7 +82,7 @@ export class RedisTransactionRecordService
       kind: input.kind,
       state: input.state ?? TransactionState.initialized,
       demoInstanceId: input.demoInstanceId ?? null,
-      brandId: input.brandId ?? null,
+      prospectId: input.prospectId ?? null,
       parentTransactionId: input.parentTransactionId ?? null,
       payload: input.payload ?? {},
       refs: input.refs ?? {},
@@ -120,9 +120,9 @@ export class RedisTransactionRecordService
       const demoInstanceId = options.demoInstanceId;
       rows = rows.filter((r) => r.demoInstanceId === demoInstanceId);
     }
-    if (options.brandId) {
-      const brandId = options.brandId;
-      rows = rows.filter((r) => r.brandId === brandId);
+    if (options.prospectId) {
+      const prospectId = options.prospectId;
+      rows = rows.filter((r) => r.prospectId === prospectId);
     }
     if (options.kind) {
       const kind = options.kind;
@@ -185,8 +185,8 @@ export class RedisTransactionRecordService
         input.demoInstanceId !== undefined
           ? input.demoInstanceId
           : existing.demoInstanceId,
-      brandId:
-        input.brandId !== undefined ? input.brandId : existing.brandId,
+      prospectId:
+        input.prospectId !== undefined ? input.prospectId : existing.prospectId,
       updatedAt: new Date().toISOString(),
     };
     await this.redis.set(REDIS_KEYS.transactionRecord(id), updated);

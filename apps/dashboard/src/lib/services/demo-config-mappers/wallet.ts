@@ -2,7 +2,7 @@
  * Wallet ↔ DemoConfig mapper. See `earn.ts` for the pattern.
  *
  * Wallet's branding stores the logo URL directly in `branding.logo`
- * (string), not via a `custom | dynamic` discriminator. Brand hash key
+ * (string), not via a `custom | dynamic` discriminator. Prospect hash key
  * uses that URL as the `logoUrl` input.
  */
 
@@ -12,8 +12,8 @@ import {
   type WalletConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveBrand } from "./brand-resolver";
-import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
+import { resolveProspect } from "./prospect-resolver";
+import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_WALLET_CONFIG.theme!.primaryColor!;
@@ -48,9 +48,9 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
   kind: "wallet",
   untitledLabel: "Untitled Wallet Config",
 
-  async toCreateInput(brands, input) {
+  async toCreateInput(prospects, input) {
     const merged = mergeConfig(DEFAULT_WALLET_CONFIG, input.config);
-    const brand = await resolveBrand(brands, {
+    const prospect = await resolveProspect(prospects, {
       ownerId: input.ownerId,
       name: input.name || walletMapper.untitledLabel,
       primaryColor: pickPrimary(merged),
@@ -64,13 +64,13 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
       ownerId: input.ownerId,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      brandId: brand.id,
+      prospectId: prospect.id,
       themeOverrides: null,
       config: merged as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(brands, existing, input) {
+  async toUpdateInput(prospects, existing, input) {
     const existingConfig = existing.config as WalletConfig;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -92,7 +92,7 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
         newPrimary !== pickPrimary(existingConfig) ||
         newLogoUrl !== pickLogoUrl(existingConfig)
       ) {
-        const brand = await resolveBrand(brands, {
+        const prospect = await resolveProspect(prospects, {
           ownerId: input.ownerId,
           name: input.name || walletMapper.untitledLabel,
           primaryColor: newPrimary,
@@ -101,21 +101,21 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
             accentColor: mergedConfig.theme?.accentColor ?? null,
           },
         });
-        update.brandId = brand.id;
+        update.prospectId = prospect.id;
       }
     }
     return update;
   },
 
-  toStored(record, brand) {
+  toStored(record, prospect) {
     const config = record.config as WalletConfig | null | undefined;
-    const hydratedTheme = hydrateBrandTheme(
-      brand,
+    const hydratedTheme = hydrateProspectTheme(
+      prospect,
       config?.theme as Record<string, unknown> | undefined,
       record.themeOverrides,
       { foregroundKey: "foreground" },
     );
-    const logoUrl = brandLogoUrl(brand);
+    const logoUrl = prospectLogoUrl(prospect);
     return {
       id: record.id,
       name: record.name ?? walletMapper.untitledLabel,

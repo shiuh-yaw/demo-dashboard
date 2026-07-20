@@ -57,7 +57,7 @@ export class FakeTransactionRecordService implements TransactionRecordService {
       kind: input.kind,
       state: (input.state ?? "initialized") as TransactionState,
       demoInstanceId: input.demoInstanceId ?? null,
-      brandId: input.brandId ?? null,
+      prospectId: input.prospectId ?? null,
       parentTransactionId: input.parentTransactionId ?? null,
       payload: input.payload ?? {},
       refs: input.refs ?? {},
@@ -80,7 +80,7 @@ export class FakeTransactionRecordService implements TransactionRecordService {
     if (options.kind) rows = rows.filter((r) => r.kind === options.kind);
     if (options.demoInstanceId)
       rows = rows.filter((r) => r.demoInstanceId === options.demoInstanceId);
-    if (options.brandId) rows = rows.filter((r) => r.brandId === options.brandId);
+    if (options.prospectId) rows = rows.filter((r) => r.prospectId === options.prospectId);
     if (options.parentTransactionId)
       rows = rows.filter(
         (r) => r.parentTransactionId === options.parentTransactionId,
@@ -124,7 +124,7 @@ export class FakeTransactionRecordService implements TransactionRecordService {
         input.demoInstanceId !== undefined
           ? input.demoInstanceId
           : row.demoInstanceId,
-      brandId: input.brandId !== undefined ? input.brandId : row.brandId,
+      prospectId: input.prospectId !== undefined ? input.prospectId : row.prospectId,
       updatedAt: this.nowFn(),
     };
     this.rows.set(id, next);

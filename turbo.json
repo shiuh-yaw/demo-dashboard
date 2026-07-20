@@ -43,7 +43,7 @@
     "APP_URL",
     "DATABASE_URL",
     "DIRECT_URL",
-    "USE_POSTGRES_BRANDS",
+    "USE_POSTGRES_PROSPECTS",
     "USE_POSTGRES_DEMO_CONFIGS"
   ],
   "tasks": {

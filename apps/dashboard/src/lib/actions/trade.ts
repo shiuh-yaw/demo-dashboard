@@ -28,15 +28,15 @@ export async function createTradeConfig(
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
-    const create = await tradeMapper.toCreateInput(services.brands, {
+    const create = await tradeMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
       config: (await normalizeBrandingLogos(config ?? {})) as TradeConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const brand = await services.brands.get(record.brandId);
-    const stored = tradeMapper.toStored(record, brand);
+    const prospect = await services.prospects.get(record.prospectId);
+    const stored = tradeMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/trade");
     return { success: true, data: stored };
@@ -59,10 +59,10 @@ export async function getTradeConfig(
     if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return { success: true, data: tradeMapper.toStored(record, brand) };
+    return { success: true, data: tradeMapper.toStored(record, prospect) };
   } catch (err) {
     console.error("Failed to get Trade config:", err);
     return { success: false, error: "Failed to get Trade config" };
@@ -88,7 +88,7 @@ export async function updateTradeConfig(
       return { success: false, error: "Access denied" };
     }
     const update = await tradeMapper.toUpdateInput(
-      services.brands,
+      services.prospects,
       existing,
       {
         ownerId: existing.ownerId || user.sub,
@@ -98,8 +98,8 @@ export async function updateTradeConfig(
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const brand = await services.brands.get(updated.brandId);
-    const stored = tradeMapper.toStored(updated, brand);
+    const prospect = await services.prospects.get(updated.prospectId);
+    const stored = tradeMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/trade");
     revalidatePath(`/trade/${id}`);
@@ -142,10 +142,10 @@ export async function getAllTradeConfigs(): Promise<{
   const all = await services.demoConfigs.list({ kind: "trade" });
   const stored = await Promise.all(
     all.map(async (record) => {
-      const brand = record.brandId
-        ? await services.brands.get(record.brandId)
+      const prospect = record.prospectId
+        ? await services.prospects.get(record.prospectId)
         : null;
-      return tradeMapper.toStored(record, brand);
+      return tradeMapper.toStored(record, prospect);
     }),
   );
   const userConfigs = stored.filter((c) => c.ownerId === user.sub);
@@ -164,10 +164,10 @@ export async function getTradeConfigPublic(
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "trade") return null;
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return tradeMapper.toStored(record, brand);
+    return tradeMapper.toStored(record, prospect);
   } catch (err) {
     console.error("Failed to get Trade config:", err);
     return null;

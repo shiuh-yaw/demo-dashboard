@@ -24,6 +24,32 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // Phase GTM-01: Brand renamed to Prospect. Operators have `/brands`
+      // bookmarks and links out in the wild; 308 (permanent) keeps them
+      // working and tells crawlers/clients to update to the new path.
+      {
+        source: "/brands",
+        destination: "/prospects",
+        permanent: true,
+      },
+      {
+        source: "/brands/:path*",
+        destination: "/prospects/:path*",
+        permanent: true,
+      },
+      // Same rename for the public brand-profile API route. No known
+      // consumer references it today (demo apps fetch resolved themes via
+      // DemoConfig, D-028), but redirecting costs nothing and protects
+      // against an out-of-repo caller.
+      {
+        source: "/api/brands/:path*",
+        destination: "/api/prospects/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

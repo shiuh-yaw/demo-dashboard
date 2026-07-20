@@ -31,15 +31,15 @@ export async function createVisaDirectConfig(
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
-    const create = await visaDirectMapper.toCreateInput(services.brands, {
+    const create = await visaDirectMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
       config: (await normalizeBrandingLogos(config ?? {})) as VisaDirectConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const brand = await services.brands.get(record.brandId);
-    const stored = visaDirectMapper.toStored(record, brand);
+    const prospect = await services.prospects.get(record.prospectId);
+    const stored = visaDirectMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/visa-direct");
     return { success: true, data: stored };
@@ -62,10 +62,10 @@ export async function getVisaDirectConfig(
     if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return { success: true, data: visaDirectMapper.toStored(record, brand) };
+    return { success: true, data: visaDirectMapper.toStored(record, prospect) };
   } catch (err) {
     console.error("Failed to get Visa Direct config:", err);
     return { success: false, error: "Failed to get Visa Direct config" };
@@ -91,7 +91,7 @@ export async function updateVisaDirectConfig(
       return { success: false, error: "Access denied" };
     }
     const update = await visaDirectMapper.toUpdateInput(
-      services.brands,
+      services.prospects,
       existing,
       {
         ownerId: existing.ownerId || user.sub,
@@ -101,8 +101,8 @@ export async function updateVisaDirectConfig(
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const brand = await services.brands.get(updated.brandId);
-    const stored = visaDirectMapper.toStored(updated, brand);
+    const prospect = await services.prospects.get(updated.prospectId);
+    const stored = visaDirectMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/visa-direct");
     revalidatePath(`/visa-direct/${id}`);
@@ -145,10 +145,10 @@ export async function getAllVisaDirectConfigs(): Promise<{
   const all = await services.demoConfigs.list({ kind: "visa-direct" });
   const stored = await Promise.all(
     all.map(async (record) => {
-      const brand = record.brandId
-        ? await services.brands.get(record.brandId)
+      const prospect = record.prospectId
+        ? await services.prospects.get(record.prospectId)
         : null;
-      return visaDirectMapper.toStored(record, brand);
+      return visaDirectMapper.toStored(record, prospect);
     }),
   );
   const userConfigs = stored.filter((c) => c.ownerId === user.sub);
@@ -169,10 +169,10 @@ export async function getVisaDirectConfigPublic(
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "visa-direct") return null;
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return visaDirectMapper.toStored(record, brand);
+    return visaDirectMapper.toStored(record, prospect);
   } catch (err) {
     console.error("Failed to get Visa Direct config:", err);
     return null;

@@ -1,8 +1,8 @@
 /**
  * Visa Direct ↔ DemoConfig mapper. See `earn.ts` for the pattern.
  *
- * Visa Direct's theme has a single brand-defining colour (`primaryColor`);
- * the rest is constrained to the dashboard's neutral palette. Brand
+ * Visa Direct's theme has a single prospect-defining colour (`primaryColor`);
+ * the rest is constrained to the dashboard's neutral palette. Prospect
  * hashing uses `(primaryColor, branding.logoUrl?)`.
  */
 
@@ -12,8 +12,8 @@ import {
   type VisaDirectConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveBrand } from "./brand-resolver";
-import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
+import { resolveProspect } from "./prospect-resolver";
+import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_VISA_DIRECT_CONFIG.theme.primaryColor!;
@@ -45,9 +45,9 @@ export const visaDirectMapper: DemoConfigMapper<
   kind: "visa-direct",
   untitledLabel: "Untitled Visa Direct Config",
 
-  async toCreateInput(brands, input) {
+  async toCreateInput(prospects, input) {
     const merged = mergeConfig(DEFAULT_VISA_DIRECT_CONFIG, input.config);
-    const brand = await resolveBrand(brands, {
+    const prospect = await resolveProspect(prospects, {
       ownerId: input.ownerId,
       name: input.name || visaDirectMapper.untitledLabel,
       primaryColor: pickPrimary(merged),
@@ -58,13 +58,13 @@ export const visaDirectMapper: DemoConfigMapper<
       ownerId: input.ownerId,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      brandId: brand.id,
+      prospectId: prospect.id,
       themeOverrides: null,
       config: merged as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(brands, existing, input) {
+  async toUpdateInput(prospects, existing, input) {
     const existingConfig = existing.config as VisaDirectConfig;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -86,26 +86,26 @@ export const visaDirectMapper: DemoConfigMapper<
         newPrimary !== pickPrimary(existingConfig) ||
         newLogoUrl !== pickLogoUrl(existingConfig)
       ) {
-        const brand = await resolveBrand(brands, {
+        const prospect = await resolveProspect(prospects, {
           ownerId: input.ownerId,
           name: input.name || visaDirectMapper.untitledLabel,
           primaryColor: newPrimary,
           logoUrl: newLogoUrl,
         });
-        update.brandId = brand.id;
+        update.prospectId = prospect.id;
       }
     }
     return update;
   },
 
-  toStored(record, brand) {
+  toStored(record, prospect) {
     const config = record.config as VisaDirectConfig | null | undefined;
-    const hydratedTheme: VisaDirectConfig["theme"] = hydrateBrandTheme(
-      brand,
+    const hydratedTheme: VisaDirectConfig["theme"] = hydrateProspectTheme(
+      prospect,
       config?.theme,
       record.themeOverrides,
     ) ?? (config?.theme ?? DEFAULT_VISA_DIRECT_CONFIG.theme);
-    const logoUrl = brandLogoUrl(brand);
+    const logoUrl = prospectLogoUrl(prospect);
     return {
       id: record.id,
       name: record.name ?? visaDirectMapper.untitledLabel,

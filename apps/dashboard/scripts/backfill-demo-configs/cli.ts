@@ -1,14 +1,14 @@
 /**
  * Phase 2 unified-DemoConfig — backfill CLI entry point.
  *
- * Wires real Redis and the `BrandService` + `DemoConfigService`
+ * Wires real Redis and the `ProspectService` + `DemoConfigService`
  * selected by their respective `USE_POSTGRES_*` flags, then prints a
  * human-readable report. The orchestrator is in `run.ts`; this file
  * holds zero business logic so the test suite covers the script's
  * full risk surface.
  *
  * Usage:
- *   USE_POSTGRES_BRANDS=true USE_POSTGRES_DEMO_CONFIGS=true \
+ *   USE_POSTGRES_PROSPECTS=true USE_POSTGRES_DEMO_CONFIGS=true \
  *     pnpm --filter @dynamic-demos/dashboard backfill:demo-configs
  *
  * Exit codes:
@@ -22,7 +22,7 @@
  */
 
 import { env } from "@/env";
-import { brandService } from "@/lib/services";
+import { prospectService } from "@/lib/services";
 import { PostgresDemoConfigService } from "@/lib/services/postgres/demo-configs";
 import { RedisDemoConfigService } from "@/lib/services/redis/demo-configs";
 import { getRedis } from "@/lib/redis";
@@ -44,7 +44,7 @@ async function main() {
     : new RedisDemoConfigService(redis, { enableLegacyFallback: false });
   const report = await runDemoConfigsBackfill({
     redis,
-    brands: brandService,
+    prospects: prospectService,
     demoConfigs,
     log: (m) => process.stdout.write(`${m}\n`),
   });

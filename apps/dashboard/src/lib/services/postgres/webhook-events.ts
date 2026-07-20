@@ -36,7 +36,7 @@ interface WebhookEventRow {
   normalizedPayload: unknown;
   transactionId: string | null;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   processingStatus: string;
   processingError: string | null;
   processedAt: Date | null;
@@ -60,7 +60,7 @@ export interface WebhookEventPrismaClient {
         normalizedPayload: unknown;
         transactionId?: string | null;
         demoInstanceId?: string | null;
-        brandId?: string | null;
+        prospectId?: string | null;
         processingStatus?: string;
       };
     }): Promise<WebhookEventRow>;
@@ -109,7 +109,7 @@ function toWebhookEvent(row: WebhookEventRow): WebhookEventRecord {
     normalizedPayload: row.normalizedPayload,
     transactionId: row.transactionId,
     demoInstanceId: row.demoInstanceId,
-    brandId: row.brandId,
+    prospectId: row.prospectId,
     processingStatus: row.processingStatus as WebhookProcessingStatus,
     processingError: row.processingError,
     processedAt: row.processedAt,
@@ -149,7 +149,7 @@ export class PostgresWebhookEventService implements WebhookEventService {
           normalizedPayload: input.normalizedPayload,
           transactionId: input.transactionId ?? null,
           demoInstanceId: input.demoInstanceId ?? null,
-          brandId: input.brandId ?? null,
+          prospectId: input.prospectId ?? null,
           processingStatus: input.processingStatus ?? "pending",
         },
       });

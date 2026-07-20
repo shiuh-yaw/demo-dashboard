@@ -64,7 +64,7 @@ function makeTxInput(
   return {
     kind: "checkout",
     demoInstanceId: "demo-1",
-    brandId: "brand-1",
+    prospectId: "prospect-1",
     payload: { foo: "bar" },
     refs: { idemKey: "abc" },
     ...overrides,
@@ -87,7 +87,7 @@ describe.each(txBackends)(
       expect(created.kind).toBe("checkout");
       expect(created.state).toBe(TransactionState.initialized);
       expect(created.demoInstanceId).toBe("demo-1");
-      expect(created.brandId).toBe("brand-1");
+      expect(created.prospectId).toBe("prospect-1");
       expect(created.parentTransactionId).toBeNull();
       expect(created.payload).toEqual({ foo: "bar" });
       expect(created.refs).toEqual({ idemKey: "abc" });
@@ -107,7 +107,7 @@ describe.each(txBackends)(
         kind: "swap",
       });
       expect(created.demoInstanceId).toBeNull();
-      expect(created.brandId).toBeNull();
+      expect(created.prospectId).toBeNull();
       expect(created.parentTransactionId).toBeNull();
       expect(created.payload).toEqual({});
       expect(created.refs).toEqual({});
@@ -141,11 +141,11 @@ describe.each(txBackends)(
       expect(owned[0]!.demoInstanceId).toBe("demo-1");
     });
 
-    it("list filters by brandId", async () => {
-      await svc.create(makeTxInput({ brandId: "brand-a" }));
-      await svc.create(makeTxInput({ brandId: "brand-b" }));
-      await svc.create(makeTxInput({ brandId: "brand-a" }));
-      const owned = await svc.list({ brandId: "brand-a" });
+    it("list filters by prospectId", async () => {
+      await svc.create(makeTxInput({ prospectId: "prospect-a" }));
+      await svc.create(makeTxInput({ prospectId: "prospect-b" }));
+      await svc.create(makeTxInput({ prospectId: "prospect-a" }));
+      const owned = await svc.list({ prospectId: "prospect-a" });
       expect(owned).toHaveLength(2);
     });
 
@@ -254,13 +254,13 @@ describe.each(txBackends)(
       expect(updated.state).toBe(TransactionState.initialized);
     });
 
-    it("updatePayload allows clearing brandId/demoInstanceId", async () => {
+    it("updatePayload allows clearing prospectId/demoInstanceId", async () => {
       const created = await svc.create(makeTxInput());
       const updated = await svc.updatePayload(created.id, {
-        brandId: null,
+        prospectId: null,
         demoInstanceId: null,
       });
-      expect(updated.brandId).toBeNull();
+      expect(updated.prospectId).toBeNull();
       expect(updated.demoInstanceId).toBeNull();
     });
 

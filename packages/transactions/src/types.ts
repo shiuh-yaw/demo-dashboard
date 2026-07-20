@@ -3,13 +3,13 @@ import type { TransactionState } from "./state";
 /**
  * Cross-package references attached to a Transaction. Optional because
  * not every demo or test fixture has all three (e.g. early Phase 1
- * dashboard transactions predate `brandId`).
+ * dashboard transactions predate `prospectId`).
  */
 export interface TransactionRefs {
   /** ID of the demo instance (config) that initiated the transaction. */
   demoInstanceId?: string;
-  /** ID of the brand profile linked to the demo instance. */
-  brandId?: string;
+  /** ID of the prospect profile linked to the demo instance. */
+  prospectId?: string;
   /** ID of the parent transaction in a multi-leg flow (e.g. sandwich). */
   parentTransactionId?: string;
 }

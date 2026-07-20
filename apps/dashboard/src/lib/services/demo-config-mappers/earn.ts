@@ -2,17 +2,17 @@
  * Earn ↔ DemoConfig mapper.
  *
  * Inbound (action create/update): take the form's `EarnConfig` payload,
- * derive a deterministic `brandId` from `(ownerId, theme.primaryColor,
+ * derive a deterministic `prospectId` from `(ownerId, theme.primaryColor,
  * branding.logoUrl?)`, stash the whole config payload in `config: Json`.
- * `themeOverrides` is left null for now — the per-config-vs-brand theme
- * diff calculation lands when stricter brand-vs-config drift detection
+ * `themeOverrides` is left null for now — the per-config-vs-prospect theme
+ * diff calculation lands when stricter prospect-vs-config drift detection
  * is needed; today the embedded `config.theme` is the carrier and
  * `<ThemeStyleTag>` still reads from that path.
  *
- * Outbound (action read): hydrate the linked Brand row (caller passes
- * the fetched Brand to keep this module pure), then project back into
+ * Outbound (action read): hydrate the linked Prospect row (caller passes
+ * the fetched Prospect to keep this module pure), then project back into
  * `StoredEarnConfig`. When the legacy Redis fallback surfaced a record
- * without a Brand row (`brand === null`), we preserve the legacy
+ * without a Prospect row (`prospect === null`), we preserve the legacy
  * embedded theme from the `config` payload — no theme is lost on the
  * pre-cutover read path.
  */
@@ -23,8 +23,8 @@ import {
   type StoredEarnConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveBrand } from "./brand-resolver";
-import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
+import { resolveProspect } from "./prospect-resolver";
+import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_EARN_CONFIG.theme!.primaryColor!;
@@ -69,15 +69,15 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
   kind: "earn",
   untitledLabel: "Untitled Earn Config",
 
-  async toCreateInput(brands, input) {
+  async toCreateInput(prospects, input) {
     const merged = mergeConfig(DEFAULT_EARN_CONFIG, input.config);
     const primary = merged.theme?.primaryColor ?? DEFAULT_PRIMARY;
     const logoUrl = pickLogoUrl(merged);
-    const brand = await resolveBrand(brands, {
+    const prospect = await resolveProspect(prospects, {
       ownerId: input.ownerId,
-      // Use the demo's name as a sensible default for the brand label
-      // on first upsert. Subsequent demos sharing the same brand keep
-      // the existing brand's name.
+      // Use the demo's name as a sensible default for the prospect label
+      // on first upsert. Subsequent demos sharing the same prospect keep
+      // the existing prospect's name.
       name: input.name || earnMapper.untitledLabel,
       primaryColor: primary,
       logoUrl,
@@ -92,13 +92,13 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
       // "Untitled Earn Config" fallback path is exercised consistently.
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      brandId: brand.id,
+      prospectId: prospect.id,
       themeOverrides: null,
       config: merged as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(brands, existing, input) {
+  async toUpdateInput(prospects, existing, input) {
     const existingConfig = existing.config as EarnConfig;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -119,7 +119,7 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
     }
     if (input.config) {
       update.config = mergedConfig as unknown as Record<string, unknown>;
-      // Theme changed → re-resolve Brand. We always recompute the brand
+      // Theme changed → re-resolve Prospect. We always recompute the prospect
       // here (not just when primaryColor changed) so partial updates
       // that swap logo / make a custom→dynamic transition land cleanly.
       const newPrimary = pickPrimary(mergedConfig);
@@ -130,7 +130,7 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
         newPrimary !== existingPrimary ||
         newLogoUrl !== existingLogoUrl
       ) {
-        const brand = await resolveBrand(brands, {
+        const prospect = await resolveProspect(prospects, {
           ownerId: input.ownerId,
           name: input.name || earnMapper.untitledLabel,
           primaryColor: newPrimary,
@@ -139,20 +139,20 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
             accentColor: mergedConfig.theme?.accentColor ?? null,
           },
         });
-        update.brandId = brand.id;
+        update.prospectId = prospect.id;
       }
     }
     return update;
   },
 
-  toStored(record, brand) {
+  toStored(record, prospect) {
     const config = record.config as EarnConfig | null | undefined;
-    const hydratedTheme = hydrateBrandTheme(
-      brand,
+    const hydratedTheme = hydrateProspectTheme(
+      prospect,
       config?.theme,
       record.themeOverrides,
     );
-    const logoUrl = brandLogoUrl(brand);
+    const logoUrl = prospectLogoUrl(prospect);
     return {
       id: record.id,
       name: record.name ?? earnMapper.untitledLabel,
@@ -162,7 +162,7 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
         theme: hydratedTheme,
         branding: {
           ...config?.branding,
-          logo: (brand?.logo ?? config?.branding?.logo ?? "dynamic") as import("@/lib/types/dashboard").EarnBrand,
+          logo: (prospect?.logo ?? config?.branding?.logo ?? "dynamic") as import("@/lib/types/dashboard").EarnBrand,
           ...(logoUrl != null && { logoUrl }),
         },
         layout: config?.layout,

@@ -35,8 +35,8 @@ export interface CanonicalWebhookEvent {
   transactionId: string | null;
   /** Optional demo instance id mirror for fast filtering when no transaction row exists. */
   demoInstanceId?: string | null;
-  /** Optional brand id mirror for fast filtering when no transaction row exists. */
-  brandId?: string | null;
+  /** Optional prospect id mirror for fast filtering when no transaction row exists. */
+  prospectId?: string | null;
   /**
    * Canonical state mapped from the event's payload, when the upstream
    * event represents a state change. Null for non-transaction events

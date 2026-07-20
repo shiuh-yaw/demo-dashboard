@@ -49,11 +49,11 @@ export function InlineWidgetPreview({
           ...cssVars,
         } as React.CSSProperties}
       >
-        {/* Brand Logo */}
+        {/* Prospect Logo */}
         {branding?.logo && (
           <img
             src={branding.logo}
-            alt="Brand logo"
+            alt="Prospect logo"
             className="h-12 object-contain"
           />
         )}

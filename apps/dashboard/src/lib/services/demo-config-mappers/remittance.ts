@@ -2,9 +2,9 @@
  * Remittance ↔ DemoConfig mapper. See `earn.ts` for the pattern.
  *
  * Remittance has historically been the most-themed demo type — both
- * primary and secondary colours drive the brand. We hash on
+ * primary and secondary colours drive the prospect. We hash on
  * `(primaryColor, branding.logoUrl?)` to match the backfill's
- * derivation (secondaryColor is enriched onto the resolved Brand but
+ * derivation (secondaryColor is enriched onto the resolved Prospect but
  * never participates in the id).
  */
 
@@ -14,8 +14,8 @@ import {
   type StoredRemittanceConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveBrand } from "./brand-resolver";
-import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
+import { resolveProspect } from "./prospect-resolver";
+import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_REMITTANCE_CONFIG.theme!.primaryColor!;
@@ -47,9 +47,9 @@ export const remittanceMapper: DemoConfigMapper<
   kind: "remittance",
   untitledLabel: "Untitled Remittance Config",
 
-  async toCreateInput(brands, input) {
+  async toCreateInput(prospects, input) {
     const merged = mergeConfig(DEFAULT_REMITTANCE_CONFIG, input.config);
-    const brand = await resolveBrand(brands, {
+    const prospect = await resolveProspect(prospects, {
       ownerId: input.ownerId,
       name: input.name || remittanceMapper.untitledLabel,
       primaryColor: pickPrimary(merged),
@@ -63,13 +63,13 @@ export const remittanceMapper: DemoConfigMapper<
       ownerId: input.ownerId,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      brandId: brand.id,
+      prospectId: prospect.id,
       themeOverrides: null,
       config: merged as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(brands, existing, input) {
+  async toUpdateInput(prospects, existing, input) {
     const existingConfig = existing.config as RemittanceConfig;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -91,7 +91,7 @@ export const remittanceMapper: DemoConfigMapper<
         newPrimary !== pickPrimary(existingConfig) ||
         newLogoUrl !== pickLogoUrl(existingConfig)
       ) {
-        const brand = await resolveBrand(brands, {
+        const prospect = await resolveProspect(prospects, {
           ownerId: input.ownerId,
           name: input.name || remittanceMapper.untitledLabel,
           primaryColor: newPrimary,
@@ -100,29 +100,29 @@ export const remittanceMapper: DemoConfigMapper<
             secondaryColor: mergedConfig.theme?.secondaryColor ?? null,
           },
         });
-        update.brandId = brand.id;
+        update.prospectId = prospect.id;
       }
     }
     return update;
   },
 
-  toStored(record, brand) {
+  toStored(record, prospect) {
     const config = record.config as RemittanceConfig | null | undefined;
-    const baseTheme = hydrateBrandTheme(
-      brand,
+    const baseTheme = hydrateProspectTheme(
+      prospect,
       config?.theme,
       record.themeOverrides,
     );
-    // Layer remittance-specific secondaryColor from the Brand.
+    // Layer remittance-specific secondaryColor from the Prospect.
     const hydratedTheme: RemittanceConfig["theme"] = baseTheme
       ? {
           ...baseTheme,
-          ...(brand?.secondaryColor != null && {
-            secondaryColor: brand.secondaryColor,
+          ...(prospect?.secondaryColor != null && {
+            secondaryColor: prospect.secondaryColor,
           }),
         }
       : baseTheme;
-    const logoUrl = brandLogoUrl(brand);
+    const logoUrl = prospectLogoUrl(prospect);
     return {
       id: record.id,
       name: record.name ?? remittanceMapper.untitledLabel,

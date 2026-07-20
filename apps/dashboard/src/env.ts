@@ -160,13 +160,13 @@ export const env = createEnv({
     DIRECT_URL: z.string().url().optional(),
     /**
      * Phase 2-brands cutover flag.
-     * When "true", the dashboard reads/writes Brand records via Postgres
+     * When "true", the dashboard reads/writes Prospect records via Postgres
      * (`@dynamic-demos/db`). When "false" (default), the Redis-backed
      * implementation handles them. The two implementations satisfy the
-     * same `BrandService` contract (see lib/services/__tests__/brands.parity.test.ts)
+     * same `ProspectService` contract (see lib/services/__tests__/prospects.parity.test.ts)
      * so production can be flipped without code changes.
      */
-    USE_POSTGRES_BRANDS: z
+    USE_POSTGRES_PROSPECTS: z
       .enum(["true", "false"])
       .optional()
       .default("false")
@@ -380,7 +380,7 @@ export const env = createEnv({
     IRON_MERCHANT_OFFRAMP_CURRENCY: process.env.IRON_MERCHANT_OFFRAMP_CURRENCY,
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
-    USE_POSTGRES_BRANDS: process.env.USE_POSTGRES_BRANDS,
+    USE_POSTGRES_PROSPECTS: process.env.USE_POSTGRES_PROSPECTS,
     USE_POSTGRES_TRANSACTIONS: process.env.USE_POSTGRES_TRANSACTIONS,
     USE_POSTGRES_DEMO_CONFIGS: process.env.USE_POSTGRES_DEMO_CONFIGS,
     MAGIC_SEND_VAULT_PRIVATE_KEY: process.env.MAGIC_SEND_VAULT_PRIVATE_KEY,

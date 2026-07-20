@@ -53,18 +53,18 @@ export async function extractThemeFromUrl(
     );
 
     const truncatedHtml = truncateHtml(html, 15000);
-    // Pull the logo as a base64 image so Claude can read the actual brand
+    // Pull the logo as a base64 image so Claude can read the actual prospect
     // colors off pixels rather than guessing from the HTML. Banks especially
     // ship white CTAs on red/blue branded chrome — without this, Claude
     // sees `background-color: white` in the CSS and confidently returns
     // `primaryColor: #ffffff`.
     const logoImage = logo ? await fetchLogoAsImage(logo) : null;
 
-    const promptText = `Analyze this brand and extract a cohesive color theme for a payment widget. Brand: ${hostname}
+    const promptText = `Analyze this prospect and extract a cohesive color theme for a payment widget. Prospect: ${hostname}
 
 ${
   logoImage
-    ? "I've attached the brand's logo as an image. Look at it FIRST — the dominant non-background colour in the logo is almost always the right primaryColor. The HTML below is for layout/surface cues only; the brand colour comes from the logo."
+    ? "I've attached the prospect's logo as an image. Look at it FIRST — the dominant non-background colour in the logo is almost always the right primaryColor. The HTML below is for layout/surface cues only; the prospect colour comes from the logo."
     : "Look at the HTML below for design language, CSS, and branding cues."
 }
 
@@ -73,8 +73,8 @@ ${truncatedHtml}
 \`\`\`
 
 Return a JSON theme object using hex colors (e.g., "#a855f7"). CRITICAL rules for colour selection:
-- \`primaryColor\` MUST be a saturated brand colour from the logo or branded chrome. NEVER return #ffffff or #000000 (or any near-white / near-black hex) for primaryColor unless the brand is genuinely monochromatic (Apple, Nike-style). If the site shows white CTAs sitting on a saturated background, pick the SATURATED background, not the white CTA.
-- \`accentColor\` same constraint — saturated, brand-aligned. Often equal to primaryColor.
+- \`primaryColor\` MUST be a saturated prospect colour from the logo or branded chrome. NEVER return #ffffff or #000000 (or any near-white / near-black hex) for primaryColor unless the prospect is genuinely monochromatic (Apple, Nike-style). If the site shows white CTAs sitting on a saturated background, pick the SATURATED background, not the white CTA.
+- \`accentColor\` same constraint — saturated, prospect-aligned. Often equal to primaryColor.
 - Neutrals belong on \`pageBackground\`, \`background\`, \`borderColor\`, \`mutedTextColor\` only.
 
 Schema:
@@ -83,9 +83,9 @@ Schema:
   "pageBackground": "hex",
   "background": "hex",
   "foreground": "hex",
-  "primaryColor": "hex (saturated brand colour, per the rules above)",
+  "primaryColor": "hex (saturated prospect colour, per the rules above)",
   "primaryHoverColor": "hex (slightly darker variant of primaryColor)",
-  "accentColor": "hex (saturated brand-aligned colour)",
+  "accentColor": "hex (saturated prospect-aligned colour)",
   "rowBackground": "hex",
   "rowHoverBackground": "hex",
   "mutedTextColor": "hex",
@@ -93,7 +93,7 @@ Schema:
   "gradientFrom": "rgba color (e.g., rgba(168, 85, 247, 0.15))",
   "gradientTo": "transparent",
   "borderRadius": "xs" | "sm" | "md" | "lg",
-  "brandName": "the brand/company name"
+  "prospectName": "the prospect/company name"
 }
 
 Return ONLY the JSON object, no explanation or markdown.`;
@@ -165,7 +165,7 @@ Return ONLY the JSON object, no explanation or markdown.`;
     };
 
     const branding: Partial<WidgetBranding> = {
-      name: parsed.brandName || cleanBrandName(title),
+      name: parsed.prospectName || cleanProspectName(title),
       logo: resolveUrl(logo, baseUrl.origin),
       showPoweredBy: true,
     };
@@ -240,7 +240,7 @@ async function extractThemeBasic(
     }
 
     const branding: Partial<WidgetBranding> = {
-      name: cleanBrandName(title),
+      name: cleanProspectName(title),
       logo: resolveUrl(logo, baseUrl.origin),
       showPoweredBy: true,
     };
@@ -355,7 +355,7 @@ function extractTitle(html: string): string | null {
   return match ? match[1].trim() : null;
 }
 
-function cleanBrandName(title: string): string {
+function cleanProspectName(title: string): string {
   return title
     .replace(/\s*[-|–—]\s*.+$/, "")
     .replace(/\s*\|.+$/, "")

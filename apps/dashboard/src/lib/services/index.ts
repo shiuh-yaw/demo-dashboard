@@ -5,7 +5,7 @@
  *
  * Most services still resolve to their Redis implementations. Cutover
  * flags flip record types onto Postgres one at a time:
- *   - USE_POSTGRES_BRANDS         → BrandService
+ *   - USE_POSTGRES_PROSPECTS         → ProspectService
  *   - USE_POSTGRES_TRANSACTIONS   → TransactionRecordService
  *   - USE_POSTGRES_DEMO_CONFIGS   → DemoConfigService (unified table —
  *                                  every demo kind, including remittance)
@@ -22,15 +22,15 @@ import { env } from "@/env";
 import { RedisTransactionService } from "./redis/transactions";
 import { RedisUserService } from "./redis/users";
 import { RedisCheckoutService } from "./redis/checkouts";
-import { RedisBrandService } from "./redis/brands";
+import { RedisProspectService } from "./redis/prospects";
 import { RedisTransactionRecordService } from "./redis/transactions-record";
 import { RedisDemoConfigService } from "./redis/demo-configs";
-import { PostgresBrandService } from "./postgres/brands";
+import { PostgresProspectService } from "./postgres/prospects";
 import { PostgresTransactionRecordService } from "./postgres/transactions";
 import { PostgresWebhookEventService } from "./postgres/webhook-events";
 import { PostgresDemoConfigService } from "./postgres/demo-configs";
 import type {
-  BrandService,
+  ProspectService,
   DemoConfigService,
   Services,
   TransactionRecordService,
@@ -41,9 +41,9 @@ import type {
 export const transactionService = new RedisTransactionService();
 export const userService = new RedisUserService();
 export const checkoutService = new RedisCheckoutService();
-export const brandService: BrandService = env.USE_POSTGRES_BRANDS
-  ? new PostgresBrandService()
-  : new RedisBrandService();
+export const prospectService: ProspectService = env.USE_POSTGRES_PROSPECTS
+  ? new PostgresProspectService()
+  : new RedisProspectService();
 export const transactionRecordService: TransactionRecordService =
   env.USE_POSTGRES_TRANSACTIONS
     ? new PostgresTransactionRecordService()
@@ -61,7 +61,7 @@ export const services: Services = {
   webhookEvents: webhookEventService,
   users: userService,
   checkouts: checkoutService,
-  brands: brandService,
+  prospects: prospectService,
   demoConfigs: demoConfigService,
 };
 
@@ -72,13 +72,13 @@ export type {
   CheckoutService,
   TransactionListOptions,
   UserListOptions,
-  BrandService,
-  BrandListOptions,
-  Brand,
-  BrandLogoKind,
-  BrandBorderRadius,
-  CreateBrandInput,
-  UpdateBrandInput,
+  ProspectService,
+  ProspectListOptions,
+  Prospect,
+  ProspectLogoKind,
+  ProspectBorderRadius,
+  CreateProspectInput,
+  UpdateProspectInput,
   TransactionRecordService,
   TransactionRecord,
   TransactionRecordListOptions,

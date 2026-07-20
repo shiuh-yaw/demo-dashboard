@@ -29,11 +29,11 @@ export function ProductSettings({
 
   return (
     <Section title="Product Settings">
-      <Field label="Brand Name">
+      <Field label="Prospect Name">
         <Input
           value={branding.name || ""}
           onChange={(e) => updateBranding("name", e.target.value)}
-          placeholder="Your Brand Name"
+          placeholder="Your Prospect Name"
         />
       </Field>
       <Field label="Product Image URL">

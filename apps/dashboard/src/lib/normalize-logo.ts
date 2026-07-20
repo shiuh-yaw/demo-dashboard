@@ -1,7 +1,7 @@
 /**
- * Brand logo normalization (server-side, best-effort).
+ * Prospect logo normalization (server-side, best-effort).
  *
- * Demo configs historically stored brand logos as raw external URLs. Many of
+ * Demo configs historically stored prospect logos as raw external URLs. Many of
  * those assets are square canvases with large transparent padding around a
  * small mark, so demo apps rendered them at wildly inconsistent perceived
  * sizes. At config-save time the dashboard normalizes the image instead:
@@ -42,7 +42,7 @@ const MAX_REDIRECTS = 3;
 const FIT_WIDTH = 512;
 const FIT_HEIGHT = 160;
 /** Blob store folder for normalized logos. */
-const BLOB_LOGO_PREFIX = "brand-logos/";
+const BLOB_LOGO_PREFIX = "prospect-logos/";
 /** Public hostname suffix of Vercel Blob stores (already-normalized URLs). */
 const BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com";
 

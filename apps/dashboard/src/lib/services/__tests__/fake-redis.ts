@@ -1,7 +1,7 @@
 /**
  * In-memory fake matching the dashboard's RedisClient interface
  * (apps/dashboard/src/lib/redis.ts). Sufficient for unit-testing the
- * RedisBrandService without spinning up Redis.
+ * RedisProspectService without spinning up Redis.
  */
 
 import type { RedisClient } from "@/lib/redis";

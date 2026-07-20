@@ -40,7 +40,7 @@ interface DemoConfigRow {
   ownerId: string;
   name: string | null;
   description: string | null;
-  brandId: string;
+  prospectId: string;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: Date;
@@ -61,14 +61,14 @@ export interface DemoConfigPrismaClient {
         ownerId: string;
         name?: string | null;
         description?: string | null;
-        brandId: string;
+        prospectId: string;
         themeOverrides?: unknown | null;
         config: unknown;
       };
     }): Promise<DemoConfigRow>;
     findUnique(args: { where: { id: string } }): Promise<DemoConfigRow | null>;
     findMany(args?: {
-      where?: { ownerId?: string; kind?: string; brandId?: string };
+      where?: { ownerId?: string; kind?: string; prospectId?: string };
       orderBy?: { createdAt?: "asc" | "desc" };
     }): Promise<DemoConfigRow[]>;
     update(args: {
@@ -76,7 +76,7 @@ export interface DemoConfigPrismaClient {
       data: Partial<{
         name: string | null;
         description: string | null;
-        brandId: string;
+        prospectId: string;
         themeOverrides: unknown | null;
         config: unknown;
       }>;
@@ -90,7 +90,7 @@ export interface DemoConfigPrismaClient {
         ownerId: string;
         name?: string | null;
         description?: string | null;
-        brandId: string;
+        prospectId: string;
         themeOverrides?: unknown | null;
         config: unknown;
       };
@@ -98,7 +98,7 @@ export interface DemoConfigPrismaClient {
         ownerId: string;
         name: string | null;
         description: string | null;
-        brandId: string;
+        prospectId: string;
         themeOverrides: unknown | null;
         config: unknown;
       }>;
@@ -116,7 +116,7 @@ function toRecord(row: DemoConfigRow): DemoConfigRecord {
     ownerId: row.ownerId,
     name: row.name,
     description: row.description,
-    brandId: row.brandId,
+    prospectId: row.prospectId,
     themeOverrides: row.themeOverrides ?? null,
     config: row.config,
     createdAt: row.createdAt,
@@ -142,7 +142,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         ownerId: input.ownerId,
         name: input.name ?? null,
         description: input.description ?? null,
-        brandId: input.brandId,
+        prospectId: input.prospectId,
         themeOverrides: input.themeOverrides ?? null,
         config: input.config,
       },
@@ -158,10 +158,10 @@ export class PostgresDemoConfigService implements DemoConfigService {
   async list(
     options: DemoConfigListOptions = {},
   ): Promise<DemoConfigRecord[]> {
-    const where: { ownerId?: string; kind?: string; brandId?: string } = {};
+    const where: { ownerId?: string; kind?: string; prospectId?: string } = {};
     if (options.ownerId) where.ownerId = options.ownerId;
     if (options.kind) where.kind = options.kind;
-    if (options.brandId) where.brandId = options.brandId;
+    if (options.prospectId) where.prospectId = options.prospectId;
     const rows = await this.client.demoConfig.findMany({
       where: Object.keys(where).length > 0 ? where : undefined,
       orderBy: { createdAt: "asc" },
@@ -190,7 +190,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
     >[0]["data"] = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.description !== undefined) data.description = input.description;
-    if (input.brandId !== undefined) data.brandId = input.brandId;
+    if (input.prospectId !== undefined) data.prospectId = input.prospectId;
     if (input.themeOverrides !== undefined)
       data.themeOverrides = input.themeOverrides;
     if (input.config !== undefined) data.config = input.config;
@@ -218,7 +218,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         ownerId: input.ownerId,
         name: input.name ?? null,
         description: input.description ?? null,
-        brandId: input.brandId,
+        prospectId: input.prospectId,
         themeOverrides: input.themeOverrides ?? null,
         config: input.config,
       },
@@ -226,7 +226,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         ownerId: input.ownerId,
         name: input.name ?? null,
         description: input.description ?? null,
-        brandId: input.brandId,
+        prospectId: input.prospectId,
         themeOverrides: input.themeOverrides ?? null,
         config: input.config,
       },

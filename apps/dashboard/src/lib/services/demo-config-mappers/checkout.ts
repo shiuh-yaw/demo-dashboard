@@ -3,7 +3,7 @@
  *
  * `StoredCheckoutConfig` carries `mode` and `config: WidgetConfig`. The
  * `mode` field is preserved on the embedded config payload so the
- * legacy round-trip is lossless. Brand hashing uses
+ * legacy round-trip is lossless. Prospect hashing uses
  * `(theme.primaryColor, branding.logo?)` — `WidgetBranding.logo` is a
  * URL string (no custom/dynamic discriminator).
  */
@@ -18,8 +18,8 @@ import type {
   StoredCheckoutConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveBrand } from "./brand-resolver";
-import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
+import { resolveProspect } from "./prospect-resolver";
+import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
 
 const DEFAULT_PRIMARY = DEFAULT_THEME.primaryColor;
@@ -78,11 +78,11 @@ export const checkoutMapper: Omit<
   "toCreateInput" | "toUpdateInput"
 > & {
   toCreateInput(
-    brands: import("../types").BrandService,
+    prospects: import("../types").ProspectService,
     input: CheckoutMapperCreateInput,
   ): Promise<import("../types").CreateDemoConfigInput>;
   toUpdateInput(
-    brands: import("../types").BrandService,
+    prospects: import("../types").ProspectService,
     existing: import("../types").DemoConfigRecord,
     input: CheckoutMapperUpdateInput,
   ): Promise<import("../types").UpdateDemoConfigInput>;
@@ -90,13 +90,13 @@ export const checkoutMapper: Omit<
   kind: "checkout",
   untitledLabel: "Untitled Checkout",
 
-  async toCreateInput(brands, input) {
+  async toCreateInput(prospects, input) {
     const merged = mergeConfig(DEFAULT_WIDGET_CONFIG, input.config);
     const payload: CheckoutConfigPayload = {
       ...merged,
       _checkoutMode: input.mode ?? "payment",
     };
-    const brand = await resolveBrand(brands, {
+    const prospect = await resolveProspect(prospects, {
       ownerId: input.ownerId,
       name: input.name || checkoutMapper.untitledLabel,
       primaryColor: pickPrimary(merged),
@@ -107,13 +107,13 @@ export const checkoutMapper: Omit<
       ownerId: input.ownerId,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      brandId: brand.id,
+      prospectId: prospect.id,
       themeOverrides: null,
       config: payload as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(brands, existing, input) {
+  async toUpdateInput(prospects, existing, input) {
     const existingConfig = existing.config as CheckoutConfigPayload;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -141,28 +141,28 @@ export const checkoutMapper: Omit<
         newPrimary !== pickPrimary(existingConfig) ||
         newLogoUrl !== pickLogoUrl(existingConfig)
       ) {
-        const brand = await resolveBrand(brands, {
+        const prospect = await resolveProspect(prospects, {
           ownerId: input.ownerId,
           name: input.name || checkoutMapper.untitledLabel,
           primaryColor: newPrimary,
           logoUrl: newLogoUrl,
         });
-        update.brandId = brand.id;
+        update.prospectId = prospect.id;
       }
     }
     return update;
   },
 
-  toStored(record, brand) {
+  toStored(record, prospect) {
     const payload = record.config as CheckoutConfigPayload | null | undefined;
     const mode: CheckoutMode = payload?._checkoutMode ?? "payment";
-    const hydratedTheme = hydrateBrandTheme(
-      brand,
+    const hydratedTheme = hydrateProspectTheme(
+      prospect,
       payload?.theme as Record<string, unknown> | undefined,
       record.themeOverrides,
       { foregroundKey: "foreground" },
     );
-    const logoUrl = brandLogoUrl(brand);
+    const logoUrl = prospectLogoUrl(prospect);
     const config: WidgetConfig = payload
       ? {
           ...(payload as WidgetConfig),

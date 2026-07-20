@@ -8,7 +8,7 @@
  * `scripts/backfill-demo-configs/run.ts` for the equivalent
  * fallback). So we cast through `Record<string, unknown>` to find any
  * embedded theme.primaryColor; if absent, fall back to a neutral
- * dynamic-blue default for brand resolution only.
+ * dynamic-blue default for prospect resolution only.
  */
 
 import {
@@ -17,12 +17,12 @@ import {
   type TradeConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveBrand } from "./brand-resolver";
-import { hydrateBrandTheme, brandLogoUrl } from "./brand-hydration";
+import { resolveProspect } from "./prospect-resolver";
+import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
 
 // Neutral fallback when no theme is supplied. Matches the dashboard's
-// historical default for brand-less Trade demos.
+// historical default for prospect-less Trade demos.
 const FALLBACK_PRIMARY = "#4779FF";
 
 function extractPrimary(c: Partial<TradeConfig> | undefined): string {
@@ -59,9 +59,9 @@ export const tradeMapper: DemoConfigMapper<TradeConfig, StoredTradeConfig> = {
   kind: "trade",
   untitledLabel: "Untitled Trade Config",
 
-  async toCreateInput(brands, input) {
+  async toCreateInput(prospects, input) {
     const merged = mergeConfig(DEFAULT_TRADE_CONFIG, input.config);
-    const brand = await resolveBrand(brands, {
+    const prospect = await resolveProspect(prospects, {
       ownerId: input.ownerId,
       name: input.name || tradeMapper.untitledLabel,
       primaryColor: extractPrimary(merged),
@@ -72,13 +72,13 @@ export const tradeMapper: DemoConfigMapper<TradeConfig, StoredTradeConfig> = {
       ownerId: input.ownerId,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      brandId: brand.id,
+      prospectId: prospect.id,
       themeOverrides: null,
       config: merged as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(brands, existing, input) {
+  async toUpdateInput(prospects, existing, input) {
     const existingConfig = existing.config as TradeConfig;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -100,41 +100,41 @@ export const tradeMapper: DemoConfigMapper<TradeConfig, StoredTradeConfig> = {
         newPrimary !== extractPrimary(existingConfig) ||
         newLogoUrl !== extractLogoUrl(existingConfig)
       ) {
-        const brand = await resolveBrand(brands, {
+        const prospect = await resolveProspect(prospects, {
           ownerId: input.ownerId,
           name: input.name || tradeMapper.untitledLabel,
           primaryColor: newPrimary,
           logoUrl: newLogoUrl,
         });
-        update.brandId = brand.id;
+        update.prospectId = prospect.id;
       }
     }
     return update;
   },
 
-  toStored(record, brand) {
+  toStored(record, prospect) {
     const config = record.config as TradeConfig | null | undefined;
     const configTheme = (config as { theme?: Record<string, unknown> } | null | undefined)?.theme;
-    const hydratedTheme = hydrateBrandTheme(
-      brand,
+    const hydratedTheme = hydrateProspectTheme(
+      prospect,
       configTheme,
       record.themeOverrides,
     );
-    const logoUrl = brandLogoUrl(brand);
+    const logoUrl = prospectLogoUrl(prospect);
     return {
       id: record.id,
       name: record.name ?? tradeMapper.untitledLabel,
       description: record.description ?? undefined,
       ownerId: record.ownerId || undefined,
-      config: brand
+      config: prospect
         ? ({
             ...config,
             branding: {
               ...config?.branding,
               ...(logoUrl != null
                 ? { logoUrl }
-                : brand.logoUrl != null
-                  ? { logoUrl: brand.logoUrl }
+                : prospect.logoUrl != null
+                  ? { logoUrl: prospect.logoUrl }
                   : {}),
             },
             theme: hydratedTheme,

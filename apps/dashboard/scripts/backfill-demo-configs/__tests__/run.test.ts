@@ -1,7 +1,7 @@
 /**
  * Tests for the unified-DemoConfig backfill orchestrator.
  *
- *   - happy path (each kind round-trips into a Brand + DemoConfig row).
+ *   - happy path (each kind round-trips into a Prospect + DemoConfig row).
  *   - skipped records (orphan owner, malformed theme, missing record).
  *   - idempotency (re-running yields zero new rows; second pass dedupes).
  *   - partial failure (one record throws, others still land).
@@ -14,7 +14,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { REDIS_KEYS, type RedisClient } from "@/lib/redis";
-import { RedisBrandService } from "@/lib/services/redis/brands";
+import { RedisProspectService } from "@/lib/services/redis/prospects";
 import { RedisDemoConfigService } from "@/lib/services/redis/demo-configs";
 import { createFakeRedis } from "@/lib/services/__tests__/fake-redis";
 import type {
@@ -26,7 +26,7 @@ import type {
   StoredWalletConfig,
 } from "@/lib/types/dashboard";
 import type {
-  BrandService,
+  ProspectService,
   DemoConfigService,
 } from "@/lib/services/types";
 
@@ -177,22 +177,22 @@ async function seedRemittance(
 
 describe("runDemoConfigsBackfill — happy path (each kind)", () => {
   let redis: RedisClient;
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
-  it("creates Brand + DemoConfig for an earn record and preserves the id", async () => {
+  it("creates Prospect + DemoConfig for an earn record and preserves the id", async () => {
     await seedEarn(redis, makeEarn());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -202,18 +202,18 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     expect(all).toHaveLength(1);
     expect(all[0]!.id).toBe("earn_1"); // Q-014
     expect(all[0]!.kind).toBe("earn");
-    expect(all[0]!.brandId).toMatch(/^bf_[a-f0-9]{24}$/);
+    expect(all[0]!.prospectId).toMatch(/^bf_[a-f0-9]{24}$/);
     expect(all[0]!.themeOverrides).toBeNull();
-    const allBrands = await brands.list();
-    expect(allBrands).toHaveLength(1);
-    expect(allBrands[0]!.id).toBe(all[0]!.brandId);
+    const allProspects = await prospects.list();
+    expect(allProspects).toHaveLength(1);
+    expect(allProspects[0]!.id).toBe(all[0]!.prospectId);
   });
 
-  it("creates Brand + DemoConfig for a wallet record", async () => {
+  it("creates Prospect + DemoConfig for a wallet record", async () => {
     await seedWallet(redis, makeWallet());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["wallet"],
     });
@@ -222,25 +222,25 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     expect(all[0]!.id).toBe("wallet_1");
   });
 
-  it("creates Brand + DemoConfig for a trade record (fallback brand extractor)", async () => {
+  it("creates Prospect + DemoConfig for a trade record (fallback prospect extractor)", async () => {
     await seedTrade(redis, makeTrade());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["trade"],
     });
     expect(report.totals.created).toBe(1);
     const all = await demoConfigs.list({ kind: "trade" });
     expect(all[0]!.id).toBe("trade_1");
-    expect(all[0]!.brandId).toMatch(/^bf_[a-f0-9]{24}$/);
+    expect(all[0]!.prospectId).toMatch(/^bf_[a-f0-9]{24}$/);
   });
 
-  it("creates Brand + DemoConfig for a visa-direct record", async () => {
+  it("creates Prospect + DemoConfig for a visa-direct record", async () => {
     await seedVisaDirect(redis, makeVisaDirect());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["visa-direct"],
     });
@@ -249,11 +249,11 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     expect(all[0]!.id).toBe("visa_1");
   });
 
-  it("creates Brand + DemoConfig for a checkout record", async () => {
+  it("creates Prospect + DemoConfig for a checkout record", async () => {
     await seedCheckout(redis, makeCheckout());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["checkout"],
     });
@@ -262,11 +262,11 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     expect(all[0]!.id).toBe("checkout_1");
   });
 
-  it("creates Brand + DemoConfig for a remittance record and preserves the legacy id (Q-014)", async () => {
+  it("creates Prospect + DemoConfig for a remittance record and preserves the legacy id (Q-014)", async () => {
     await seedRemittance(redis, makeRemittance());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["remittance"],
     });
@@ -277,16 +277,16 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     expect(all[0]!.id).toBe("rem_1"); // Q-014: legacy id preserved
     expect(all[0]!.kind).toBe("remittance");
     expect(all[0]!.ownerId).toBe("owner-1");
-    expect(all[0]!.brandId).toMatch(/^bf_[a-f0-9]{24}$/);
+    expect(all[0]!.prospectId).toMatch(/^bf_[a-f0-9]{24}$/);
     expect(all[0]!.themeOverrides).toBeNull();
     expect(all[0]!.config).toEqual({
       theme: { primaryColor: "#1a56db", secondaryColor: "#1e40af" },
       branding: { logoUrl: "https://example.com/logo.png" },
     });
-    const allBrands = await brands.list();
-    expect(allBrands).toHaveLength(1);
-    expect(allBrands[0]!.id).toBe(all[0]!.brandId);
-    expect(allBrands[0]!.primaryColor).toBe("#1a56db");
+    const allProspects = await prospects.list();
+    expect(allProspects).toHaveLength(1);
+    expect(allProspects[0]!.id).toBe(all[0]!.prospectId);
+    expect(allProspects[0]!.primaryColor).toBe("#1a56db");
   });
 
   it("walks every kind in one run and reports per-kind totals", async () => {
@@ -298,7 +298,7 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
     await seedRemittance(redis, makeRemittance());
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
     });
     expect(report.totals.created).toBe(6);
@@ -312,14 +312,14 @@ describe("runDemoConfigsBackfill — happy path (each kind)", () => {
   });
 });
 
-describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () => {
+describe("runDemoConfigsBackfill — skips (missing prospect fields, orphans)", () => {
   let redis: RedisClient;
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
@@ -329,7 +329,7 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
     await seedEarn(redis, makeEarn({ id: "orph", ownerId: undefined }));
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -350,7 +350,7 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
     );
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["wallet"],
     });
@@ -362,7 +362,7 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
     await redis.sadd(REDIS_KEYS.earnConfigList, "ghost");
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -378,7 +378,7 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
     );
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["remittance"],
     });
@@ -397,7 +397,7 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
     );
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["remittance"],
     });
@@ -408,12 +408,12 @@ describe("runDemoConfigsBackfill — skips (missing brand fields, orphans)", () 
 
 describe("runDemoConfigsBackfill — idempotency", () => {
   let redis: RedisClient;
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
@@ -423,7 +423,7 @@ describe("runDemoConfigsBackfill — idempotency", () => {
     await seedEarn(redis, makeEarn());
     const first = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -431,7 +431,7 @@ describe("runDemoConfigsBackfill — idempotency", () => {
 
     const second = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -440,25 +440,25 @@ describe("runDemoConfigsBackfill — idempotency", () => {
     expect(await demoConfigs.list({ kind: "earn" })).toHaveLength(1);
   });
 
-  it("collapses two records sharing theme + owner onto one Brand", async () => {
+  it("collapses two records sharing theme + owner onto one Prospect", async () => {
     await seedEarn(redis, makeEarn({ id: "earn_a" }));
     await seedEarn(redis, makeEarn({ id: "earn_b", name: "Other" }));
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
     expect(report.totals.created).toBe(2);
     expect(await demoConfigs.list({ kind: "earn" })).toHaveLength(2);
-    expect(await brands.list()).toHaveLength(1);
+    expect(await prospects.list()).toHaveLength(1);
   });
 
   it("preserves createdAt across re-runs (upsert semantics)", async () => {
     await seedEarn(redis, makeEarn());
     await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -466,7 +466,7 @@ describe("runDemoConfigsBackfill — idempotency", () => {
     await new Promise((r) => setTimeout(r, 5));
     await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["earn"],
     });
@@ -481,32 +481,32 @@ describe("runDemoConfigsBackfill — idempotency", () => {
     await seedRemittance(redis, makeRemittance());
     const first = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["remittance"],
     });
     expect(first.totals.created).toBe(1);
     const second = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs,
       kinds: ["remittance"],
     });
     expect(second.totals.created).toBe(0);
     expect(second.totals.deduped).toBe(1);
     expect(await demoConfigs.list({ kind: "remittance" })).toHaveLength(1);
-    expect(await brands.list()).toHaveLength(1);
+    expect(await prospects.list()).toHaveLength(1);
   });
 });
 
 describe("runDemoConfigsBackfill — partial failure", () => {
   let redis: RedisClient;
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
@@ -530,7 +530,7 @@ describe("runDemoConfigsBackfill — partial failure", () => {
     };
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs: failing,
       kinds: ["earn"],
     });
@@ -559,7 +559,7 @@ describe("runDemoConfigsBackfill — partial failure", () => {
     };
     const report = await runDemoConfigsBackfill({
       redis,
-      brands,
+      prospects,
       demoConfigs: failing,
       kinds: ["remittance"],
     });

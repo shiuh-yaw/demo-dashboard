@@ -203,7 +203,7 @@ export function createWebhookHandler(
         normalizedPayload: canonical.normalizedPayload,
         transactionId: canonical.transactionId ?? null,
         demoInstanceId: canonical.demoInstanceId ?? null,
-        brandId: canonical.brandId ?? null,
+        prospectId: canonical.prospectId ?? null,
       });
       eventId = created.id;
     } catch (err) {

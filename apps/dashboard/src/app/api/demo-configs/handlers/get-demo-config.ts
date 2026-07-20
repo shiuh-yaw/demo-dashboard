@@ -23,7 +23,7 @@ import { tradeMapper } from "@/lib/services/demo-config-mappers/trade";
 import { visaDirectMapper } from "@/lib/services/demo-config-mappers/visa-direct";
 import { walletMapper } from "@/lib/services/demo-config-mappers/wallet";
 import type {
-  Brand,
+  Prospect,
   DemoConfigKind,
   DemoConfigRecord,
 } from "@/lib/services/types";
@@ -39,7 +39,7 @@ const inputSchema = z.object({
  * checkout mapper adds `mode`, etc.). We only need `toStored` here.
  */
 interface ReadMapper {
-  toStored(record: DemoConfigRecord, brand: Brand | null): { ownerId?: string };
+  toStored(record: DemoConfigRecord, prospect: Prospect | null): { ownerId?: string };
 }
 
 const MAPPERS: Record<DemoConfigKind, ReadMapper> = {
@@ -62,8 +62,8 @@ export async function handleGetDemoConfig(rawInput: unknown): Promise<unknown> {
     throw new NotFoundError("Demo config not found");
   }
 
-  const brand = record.brandId
-    ? await services.brands.get(record.brandId)
+  const prospect = record.prospectId
+    ? await services.prospects.get(record.prospectId)
     : null;
 
   // Return only the inner config payload (theme + branding + layout + …),
@@ -72,7 +72,7 @@ export async function handleGetDemoConfig(rawInput: unknown): Promise<unknown> {
   // visual config. Critically, `@dynamic-demos/theme/fetchDemoConfig`
   // shallow-merges the response over a kind-shaped fallback — wrapper
   // fields would corrupt that merge.
-  const stored = MAPPERS[kind].toStored(record, brand) as {
+  const stored = MAPPERS[kind].toStored(record, prospect) as {
     config: unknown;
   };
   return stored.config;

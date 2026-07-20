@@ -31,15 +31,15 @@ export async function createRemittanceConfig(
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
-    const create = await remittanceMapper.toCreateInput(services.brands, {
+    const create = await remittanceMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
       name: name && name.length > 0 ? name : null,
       description: null,
       config: (await normalizeBrandingLogos(config ?? {})) as RemittanceConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const brand = await services.brands.get(record.brandId);
-    const stored = remittanceMapper.toStored(record, brand);
+    const prospect = await services.prospects.get(record.prospectId);
+    const stored = remittanceMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/remittance");
     return { success: true, data: stored };
@@ -62,10 +62,10 @@ export async function getRemittanceConfig(
     if (record.ownerId && record.ownerId !== user.sub) {
       return { success: false, error: "Access denied" };
     }
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return { success: true, data: remittanceMapper.toStored(record, brand) };
+    return { success: true, data: remittanceMapper.toStored(record, prospect) };
   } catch (err) {
     console.error("Failed to get Remittance config:", err);
     return { success: false, error: "Failed to get Remittance config" };
@@ -91,7 +91,7 @@ export async function updateRemittanceConfig(
       return { success: false, error: "Access denied" };
     }
     const update = await remittanceMapper.toUpdateInput(
-      services.brands,
+      services.prospects,
       existing,
       {
         ownerId: existing.ownerId || user.sub,
@@ -101,8 +101,8 @@ export async function updateRemittanceConfig(
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const brand = await services.brands.get(updated.brandId);
-    const stored = remittanceMapper.toStored(updated, brand);
+    const prospect = await services.prospects.get(updated.prospectId);
+    const stored = remittanceMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/remittance");
     revalidatePath(`/remittance/${id}`);
@@ -145,10 +145,10 @@ export async function getAllRemittanceConfigs(): Promise<{
   const all = await services.demoConfigs.list({ kind: "remittance" });
   const stored = await Promise.all(
     all.map(async (record) => {
-      const brand = record.brandId
-        ? await services.brands.get(record.brandId)
+      const prospect = record.prospectId
+        ? await services.prospects.get(record.prospectId)
         : null;
-      return remittanceMapper.toStored(record, brand);
+      return remittanceMapper.toStored(record, prospect);
     }),
   );
   const userConfigs = stored.filter((c) => c.ownerId === user.sub);
@@ -169,10 +169,10 @@ export async function getRemittanceConfigPublic(
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "remittance") return null;
-    const brand = record.brandId
-      ? await services.brands.get(record.brandId)
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
       : null;
-    return remittanceMapper.toStored(record, brand);
+    return remittanceMapper.toStored(record, prospect);
   } catch (err) {
     console.error("Failed to get Remittance config:", err);
     return null;

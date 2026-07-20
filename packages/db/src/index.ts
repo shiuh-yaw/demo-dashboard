@@ -10,8 +10,8 @@
  * Hard rule (D-015): only `apps/dashboard` may import from this package.
  * Demo apps fetch from the dashboard API; they never touch Postgres.
  *
- * Phase 2 scaffold: no models yet. Subsequent PRs add Brand, demo configs,
- * Transaction, and WebhookEvent.
+ * Phase 2 scaffold: no models yet. Subsequent PRs add Prospect (named
+ * Brand until Phase GTM-01), demo configs, Transaction, and WebhookEvent.
  */
 export { prisma } from "./client";
 export { Prisma, PrismaClient } from "@prisma/client";

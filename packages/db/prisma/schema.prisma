@@ -29,62 +29,121 @@ datasource db {
 // Models added incrementally — one PR per migration.
 //
 // Landed:
-//   PR 2-brands (Part A):     Brand.
+//   PR 2-brands (Part A):     Brand (renamed to Prospect in Phase GTM-01).
 //   PR 2-transactions:        Transaction, WebhookEvent.
 //   PR 2-demo-configs:        DemoConfig (unified per-demo-type carrier).
 //   PR 2-remittance-fold:     RemittanceConfig folded into DemoConfig with
 //                             kind = "remittance"; legacy table dropped.
+//   Phase GTM-01:             Brand -> Prospect via EXPAND-CONTRACT. This
+//                             (EXPAND) PR adds `Prospect` + `prospectId`
+//                             columns alongside the retained legacy `Brand`
+//                             table + `brandId` columns so the pre-promotion
+//                             deployment keeps working during the deploy
+//                             window. A prospect is a company we sell to;
+//                             its visual theme is one facet of that
+//                             identity, not the whole record. See
+//                             docs/projects/gtm-platform/DECISIONS.md.
 //
 // Pending:
+//   - Phase GTM-01b (CONTRACT): drop the deprecated `Brand` model, the
+//     `brandId` scalars, the forward-sync triggers, and the legacy FK/
+//     indexes once the GTM-01 deploy has promoted and been verified.
 //   - Action-layer cutover so legacy `lib/actions/<demoType>.ts` paths
 //     write to DemoConfig instead of their per-type Redis stores.
 
-/// First-class Brand record. Owns shared theme + logo metadata that demo
-/// configs (remittance, earn, etc.) reference via FK. `id` is application-
-/// generated (cuid) so it stays stable across backfill and matches the
-/// existing service-layer convention.
+/// First-class Prospect record (renamed from `Brand` in Phase GTM-01). A
+/// prospect is a company we sell to; it owns shared theme + logo metadata
+/// that demo configs (remittance, earn, etc.) reference via FK, plus
+/// identity fields (`domain`, `notes`) added for the GTM platform. `id` is
+/// application-generated (cuid) so it stays stable across backfill and
+/// matches the existing service-layer convention.
 ///
 /// Phase 2-brand-cutover (2026-05-06): expanded to carry every field the
 /// legacy `BrandProfile` aggregate (Redis-only, in
 /// `apps/dashboard/src/lib/actions/brands.ts`) carried. The actions
 /// surface still returns `BrandProfile` aggregates; this row is the
 /// canonical persistence backing them when `USE_POSTGRES_BRANDS=true`.
-model Brand {
-  id                  String             @id @default(cuid())
-  ownerId             String
-  name                String
-  description         String?
-  companyUrl          String?
+model Prospect {
+  id                 String       @id @default(cuid())
+  ownerId            String
+  name               String
+  description        String?
+  companyUrl         String?
   /// "custom" or "dynamic". Discriminator that decides whether `logoUrl`
   /// renders. Validated at the service layer.
-  logo                String             @default("dynamic")
-  logoUrl             String?
+  logo               String       @default("dynamic")
+  logoUrl            String?
   /// Border radius token: "xs" | "sm" | "md" | "lg". Validated at the
   /// service layer; column stays text for forward compat.
-  borderRadius        String?
-  primaryColor        String
-  primaryHoverColor   String?
-  secondaryColor      String?
-  accentColor         String?
-  pageBackground      String?
-  background          String?
-  foreground          String?
-  mutedTextColor      String?
-  borderColor         String?
-  rowBackground       String?
-  rowHoverBackground  String?
-  gradientFrom        String?
-  gradientTo          String?
+  borderRadius       String?
+  primaryColor       String
+  primaryHoverColor  String?
+  secondaryColor     String?
+  accentColor        String?
+  pageBackground     String?
+  background         String?
+  foreground         String?
+  mutedTextColor     String?
+  borderColor        String?
+  rowBackground      String?
+  rowHoverBackground String?
+  gradientFrom       String?
+  gradientTo         String?
   /// Linked demo-config ids (still Redis-resident until per-demo-type
   /// migrations land in PR 2-others). Mirrored on the row so the
-  /// canonical Brand record is self-contained.
-  demoEarnId          String?
-  demoCheckoutsId     String?
-  demoWalletId        String?
-  demoRemittanceId    String?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  demoConfigs         DemoConfig[]
+  /// canonical Prospect record is self-contained.
+  demoEarnId         String?
+  demoCheckoutsId    String?
+  demoWalletId       String?
+  demoRemittanceId   String?
+  /// Identity fields added in Phase GTM-01. Both nullable - existing rows
+  /// backfill safely with no value.
+  domain             String?
+  notes              String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  demoConfigs        DemoConfig[]
+
+  @@index([ownerId])
+}
+
+/// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration; no
+/// application code references this model. Kept declared ONLY so the schema
+/// matches the live production table during the expand-contract window (the
+/// GTM-01 EXPAND migration leaves "Brand" in place so the pre-promotion
+/// deployment keeps working). Its shape is frozen at the pre-rename state
+/// (see migrations 20260506161430_init_brand + 20260506200000_brand_full_schema).
+/// The `demoConfigs` back-relation exists only to represent the retained
+/// `DemoConfig_brandId_fkey` constraint - do not build on it.
+model Brand {
+  id                 String       @id @default(cuid())
+  ownerId            String
+  name               String
+  description        String?
+  companyUrl         String?
+  logo               String       @default("dynamic")
+  logoUrl            String?
+  borderRadius       String?
+  primaryColor       String
+  primaryHoverColor  String?
+  secondaryColor     String?
+  accentColor        String?
+  pageBackground     String?
+  background         String?
+  foreground         String?
+  mutedTextColor     String?
+  borderColor        String?
+  rowBackground      String?
+  rowHoverBackground String?
+  gradientFrom       String?
+  gradientTo         String?
+  demoEarnId         String?
+  demoCheckoutsId    String?
+  demoWalletId       String?
+  demoRemittanceId   String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  demoConfigs        DemoConfig[]
 
   @@index([ownerId])
 }
@@ -101,7 +160,7 @@ model Brand {
 /// canonical state machine carrier and Phase 5A's webhook receiver writes
 /// here only.
 model Transaction {
-  id                  String   @id @default(cuid())
+  id                  String         @id @default(cuid())
   /// Discriminator for the demo / flow that owns this transaction
   /// (e.g. "checkout", "disbursement", "payout", "swap").
   kind                String
@@ -110,9 +169,13 @@ model Transaction {
   state               String
   /// Optional pointer to the demo-instance config that initiated the flow.
   demoInstanceId      String?
-  /// Optional FK to a Brand row (added in PR 2-brands Part A). Stored as
-  /// String, not a relation, because brandId is also nullable for
+  /// Optional pointer to a Prospect row (added in PR 2-brands Part A as
+  /// `brandId`; superseded by `prospectId` in Phase GTM-01). Stored as
+  /// String, not a relation, because prospectId is also nullable for
   /// pre-Phase-2-brands transactions and we want decoupled lifetimes.
+  prospectId          String?
+  /// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration.
+  /// Retained during the expand-contract window; no code references it.
   brandId             String?
   /// Self-relation for multi-leg flows (e.g. "sandwich" cross-border).
   /// `parent` is unset for top-level transactions; `children` lists legs.
@@ -129,6 +192,8 @@ model Transaction {
   webhookEvents       WebhookEvent[]
 
   @@index([demoInstanceId])
+  @@index([prospectId])
+  /// @deprecated legacy index - dropped in the Phase GTM-01b CONTRACT migration.
   @@index([brandId])
   @@index([state])
   @@index([parentTransactionId])
@@ -165,6 +230,9 @@ model WebhookEvent {
   transaction       Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   /// Mirror fields for fast filtering when no Transaction row exists yet.
   demoInstanceId    String?
+  prospectId        String?
+  /// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration.
+  /// Retained during the expand-contract window; no code references it.
   brandId           String?
   /// "pending" | "processed" | "failed" | "ignored". Service layer enforces.
   processingStatus  String       @default("pending")
@@ -186,10 +254,10 @@ model WebhookEvent {
 /// Prisma enum: the meta-system goal is to add new demo types without
 /// a migration, so the column stays plain TEXT.
 ///
-/// `brandId` is the FK to the canonical `Brand` row (D-028). The
-/// optional `themeOverrides` carries per-config theme deltas merged on
-/// top of the brand's theme at the service boundary; null means
-/// "render the brand theme as-is."
+/// `prospectId` is the FK to the canonical `Prospect` row (D-028; column
+/// renamed from `brandId` in Phase GTM-01). The optional `themeOverrides`
+/// carries per-config theme deltas merged on top of the prospect's theme
+/// at the service boundary; null means "render the prospect theme as-is."
 ///
 /// `config` is kind-specific payload validated by the Zod schema on
 /// write. Initially permissive (`z.record(z.unknown())`); strict
@@ -208,14 +276,23 @@ model DemoConfig {
   ownerId        String
   name           String?
   description    String?
-  brandId        String
-  brand          Brand    @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  prospectId     String
+  prospect       Prospect @relation(fields: [prospectId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  /// @deprecated legacy - dropped in the Phase GTM-01b CONTRACT migration.
+  /// Was NOT NULL pre-rename; relaxed to nullable in the EXPAND migration so
+  /// the new deployment can insert with only `prospectId`. The `brand`
+  /// relation exists ONLY to represent the retained `DemoConfig_brandId_fkey`
+  /// constraint during the window; no code references it.
+  brandId        String?
+  brand          Brand?   @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   themeOverrides Json?
   config         Json
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([ownerId])
+  @@index([prospectId])
+  /// @deprecated legacy index - dropped in the Phase GTM-01b CONTRACT migration.
   @@index([brandId])
   @@index([kind])
   @@index([ownerId, kind])

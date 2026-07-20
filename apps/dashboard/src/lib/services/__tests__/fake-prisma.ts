@@ -1,30 +1,30 @@
 /**
- * Minimal in-memory fake for the prisma.brand delegate.
+ * Minimal in-memory fake for the prisma.prospect delegate.
  *
  * Why a hand-rolled fake instead of the real PrismaClient?
- *   The Postgres BrandService depends on a small slice of the delegate:
+ *   The Postgres ProspectService depends on a small slice of the delegate:
  *   create, findUnique, findMany (with optional `where.ownerId`), update,
  *   delete, upsert. Mocking that surface is a few dozen lines and avoids
  *   pulling Prisma + Postgres into a unit test. Real-database integration
  *   tests belong in a separate suite (out of scope for this PR).
  *
- * The shape here exactly matches the `BrandPrismaClient` interface the
+ * The shape here exactly matches the `ProspectPrismaClient` interface the
  * service expects, so structural typing keeps the fake honest.
  *
- * Phase 2-brand-cutover (2026-05-06): expanded to cover the wider Brand
+ * Phase 2-brand-cutover (2026-05-06): expanded to cover the wider Prospect
  * row (full visual theme + demo-config id mirrors).
  */
 
-import type { Brand, BrandBorderRadius, BrandLogoKind } from "../types";
+import type { Prospect, ProspectBorderRadius, ProspectLogoKind } from "../types";
 
-interface BrandWritable {
+interface ProspectWritable {
   ownerId: string;
   name: string;
   description: string | null;
   companyUrl: string | null;
-  logo: BrandLogoKind;
+  logo: ProspectLogoKind;
   logoUrl: string | null;
-  borderRadius: BrandBorderRadius | null;
+  borderRadius: ProspectBorderRadius | null;
   primaryColor: string;
   primaryHoverColor: string | null;
   secondaryColor: string | null;
@@ -42,10 +42,12 @@ interface BrandWritable {
   demoCheckoutsId: string | null;
   demoWalletId: string | null;
   demoRemittanceId: string | null;
+  domain: string | null;
+  notes: string | null;
 }
 
 interface CreateArgs {
-  data: Partial<BrandWritable> & {
+  data: Partial<ProspectWritable> & {
     ownerId: string;
     name: string;
     primaryColor: string;
@@ -63,7 +65,7 @@ interface FindManyArgs {
 
 interface UpdateArgs {
   where: { id: string };
-  data: Partial<BrandWritable>;
+  data: Partial<ProspectWritable>;
 }
 
 interface DeleteArgs {
@@ -72,37 +74,37 @@ interface DeleteArgs {
 
 interface UpsertArgs {
   where: { id: string };
-  create: Partial<BrandWritable> & {
+  create: Partial<ProspectWritable> & {
     id: string;
     ownerId: string;
     name: string;
     primaryColor: string;
   };
-  update: Partial<BrandWritable>;
+  update: Partial<ProspectWritable>;
 }
 
-export interface FakePrismaBrandDelegate {
-  create(args: CreateArgs): Promise<Brand>;
-  findUnique(args: FindUniqueArgs): Promise<Brand | null>;
-  findMany(args?: FindManyArgs): Promise<Brand[]>;
-  update(args: UpdateArgs): Promise<Brand>;
-  delete(args: DeleteArgs): Promise<Brand>;
-  upsert(args: UpsertArgs): Promise<Brand>;
+export interface FakePrismaProspectDelegate {
+  create(args: CreateArgs): Promise<Prospect>;
+  findUnique(args: FindUniqueArgs): Promise<Prospect | null>;
+  findMany(args?: FindManyArgs): Promise<Prospect[]>;
+  update(args: UpdateArgs): Promise<Prospect>;
+  delete(args: DeleteArgs): Promise<Prospect>;
+  upsert(args: UpsertArgs): Promise<Prospect>;
 }
 
 export interface FakePrismaClient {
-  brand: FakePrismaBrandDelegate;
+  prospect: FakePrismaProspectDelegate;
 }
 
 /**
- * Build a Brand row's nullable fields, defaulting any field the caller
+ * Build a Prospect row's nullable fields, defaulting any field the caller
  * omitted to the same null/discriminator the real Postgres column does.
  * Keeps the fake equivalent to the database when callers under-specify
  * input.
  */
 function applyNullDefaults(
-  data: Partial<BrandWritable>,
-): Omit<BrandWritable, "ownerId" | "name" | "primaryColor"> {
+  data: Partial<ProspectWritable>,
+): Omit<ProspectWritable, "ownerId" | "name" | "primaryColor"> {
   return {
     description: data.description ?? null,
     companyUrl: data.companyUrl ?? null,
@@ -125,21 +127,23 @@ function applyNullDefaults(
     demoCheckoutsId: data.demoCheckoutsId ?? null,
     demoWalletId: data.demoWalletId ?? null,
     demoRemittanceId: data.demoRemittanceId ?? null,
+    domain: data.domain ?? null,
+    notes: data.notes ?? null,
   };
 }
 
 export function createFakePrisma(): FakePrismaClient {
-  const store = new Map<string, Brand>();
+  const store = new Map<string, Prospect>();
   let counter = 0;
   const nextId = () => `cuid_${++counter}`;
   const now = () => new Date();
 
   return {
-    brand: {
+    prospect: {
       async create({ data }) {
         const id = nextId();
         const ts = now();
-        const row: Brand = {
+        const row: Prospect = {
           id,
           ownerId: data.ownerId,
           name: data.name,
@@ -172,13 +176,13 @@ export function createFakePrisma(): FakePrismaClient {
         if (!existing) {
           throw new Error(`Record to update not found. id=${where.id}`);
         }
-        const updated: Brand = {
+        const updated: Prospect = {
           ...existing,
           ...Object.fromEntries(
             Object.entries(data).filter(([, v]) => v !== undefined),
           ),
           updatedAt: now(),
-        } as Brand;
+        } as Prospect;
         store.set(where.id, updated);
         return { ...updated };
       },
@@ -194,7 +198,7 @@ export function createFakePrisma(): FakePrismaClient {
         const existing = store.get(where.id);
         if (!existing) {
           const ts = now();
-          const row: Brand = {
+          const row: Prospect = {
             id: where.id,
             ownerId: create.ownerId,
             name: create.name,
@@ -206,13 +210,13 @@ export function createFakePrisma(): FakePrismaClient {
           store.set(where.id, row);
           return { ...row };
         }
-        const updated: Brand = {
+        const updated: Prospect = {
           ...existing,
           ...Object.fromEntries(
             Object.entries(update).filter(([, v]) => v !== undefined),
           ),
           updatedAt: now(),
-        } as Brand;
+        } as Prospect;
         store.set(where.id, updated);
         return { ...updated };
       },

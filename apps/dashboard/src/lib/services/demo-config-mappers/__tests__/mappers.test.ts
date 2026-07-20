@@ -9,10 +9,10 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { RedisBrandService } from "@/lib/services/redis/brands";
+import { RedisProspectService } from "@/lib/services/redis/prospects";
 import { RedisDemoConfigService } from "@/lib/services/redis/demo-configs";
 import type {
-  BrandService,
+  ProspectService,
   DemoConfigService,
 } from "@/lib/services/types";
 
@@ -24,19 +24,19 @@ import { remittanceMapper } from "../remittance";
 import { createFakeRedis } from "../../__tests__/fake-redis";
 
 describe("walletMapper round-trip", () => {
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
   it("creates + reads back a wallet config", async () => {
-    const input = await walletMapper.toCreateInput(brands, {
+    const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Wallet",
       description: null,
@@ -49,14 +49,14 @@ describe("walletMapper round-trip", () => {
     expect(record.kind).toBe("wallet");
     const stored = walletMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.config.theme?.primaryColor).toBe("#abcdef");
     expect(stored.name).toBe("Wallet");
   });
 
   it("nullable name surfaces as 'Untitled Wallet Config'", async () => {
-    const input = await walletMapper.toCreateInput(brands, {
+    const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: null,
       description: null,
@@ -66,26 +66,26 @@ describe("walletMapper round-trip", () => {
     expect(record.name).toBeNull();
     const stored = walletMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("Untitled Wallet Config");
   });
 });
 
 describe("tradeMapper round-trip", () => {
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
   it("creates + reads back a trade config (no embedded theme)", async () => {
-    const input = await tradeMapper.toCreateInput(brands, {
+    const input = await tradeMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Trade",
       description: null,
@@ -96,14 +96,14 @@ describe("tradeMapper round-trip", () => {
     const record = await demoConfigs.create(input);
     const stored = tradeMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("Trade");
     expect(stored.config.branding?.appName).toBe("Trader");
   });
 
   it("nullable name surfaces as 'Untitled Trade Config'", async () => {
-    const input = await tradeMapper.toCreateInput(brands, {
+    const input = await tradeMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: null,
       description: null,
@@ -113,26 +113,26 @@ describe("tradeMapper round-trip", () => {
     expect(record.name).toBeNull();
     const stored = tradeMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("Untitled Trade Config");
   });
 });
 
 describe("visaDirectMapper round-trip", () => {
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
   it("creates + reads back a visa-direct config", async () => {
-    const input = await visaDirectMapper.toCreateInput(brands, {
+    const input = await visaDirectMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "VD",
       description: null,
@@ -144,7 +144,7 @@ describe("visaDirectMapper round-trip", () => {
     const record = await demoConfigs.create(input);
     const stored = visaDirectMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("VD");
     expect(stored.config.theme.primaryColor).toBe("#abcabc");
@@ -152,7 +152,7 @@ describe("visaDirectMapper round-trip", () => {
   });
 
   it("nullable name surfaces as 'Untitled Visa Direct Config'", async () => {
-    const input = await visaDirectMapper.toCreateInput(brands, {
+    const input = await visaDirectMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: null,
       description: null,
@@ -165,26 +165,26 @@ describe("visaDirectMapper round-trip", () => {
     expect(record.name).toBeNull();
     const stored = visaDirectMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("Untitled Visa Direct Config");
   });
 });
 
 describe("checkoutMapper round-trip", () => {
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
   it("creates + reads back a checkout config, preserving mode", async () => {
-    const input = await checkoutMapper.toCreateInput(brands, {
+    const input = await checkoutMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Checkout",
       description: null,
@@ -199,14 +199,14 @@ describe("checkoutMapper round-trip", () => {
     const record = await demoConfigs.create(input);
     const stored = checkoutMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.mode).toBe("deposit");
     expect(stored.config.theme?.primaryColor).toBe("#111111");
   });
 
   it("nullable name surfaces as 'Untitled Checkout'", async () => {
-    const input = await checkoutMapper.toCreateInput(brands, {
+    const input = await checkoutMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: null,
       description: null,
@@ -217,26 +217,26 @@ describe("checkoutMapper round-trip", () => {
     expect(record.name).toBeNull();
     const stored = checkoutMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("Untitled Checkout");
   });
 });
 
 describe("remittanceMapper round-trip", () => {
-  let brands: BrandService;
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
-  it("creates + reads back a remittance config with secondary color on Brand", async () => {
-    const input = await remittanceMapper.toCreateInput(brands, {
+  it("creates + reads back a remittance config with secondary color on Prospect", async () => {
+    const input = await remittanceMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Remit",
       description: null,
@@ -246,16 +246,16 @@ describe("remittanceMapper round-trip", () => {
       },
     });
     const record = await demoConfigs.create(input);
-    const brand = await brands.get(record.brandId);
-    expect(brand!.secondaryColor).toBe("#1e40af");
-    const stored = remittanceMapper.toStored(record, brand);
+    const prospect = await prospects.get(record.prospectId);
+    expect(prospect!.secondaryColor).toBe("#1e40af");
+    const stored = remittanceMapper.toStored(record, prospect);
     expect(stored.config.theme?.primaryColor).toBe("#1a56db");
     expect(stored.config.theme?.secondaryColor).toBe("#1e40af");
     expect(stored.name).toBe("Remit");
   });
 
   it("nullable name surfaces as 'Untitled Remittance Config'", async () => {
-    const input = await remittanceMapper.toCreateInput(brands, {
+    const input = await remittanceMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: null,
       description: null,
@@ -268,30 +268,30 @@ describe("remittanceMapper round-trip", () => {
     expect(record.name).toBeNull();
     const stored = remittanceMapper.toStored(
       record,
-      await brands.get(record.brandId),
+      await prospects.get(record.prospectId),
     );
     expect(stored.name).toBe("Untitled Remittance Config");
   });
 });
 
 // ---------------------------------------------------------------------------
-// Brand theme + logo hydration — extended palette fields
+// Prospect theme + logo hydration — extended palette fields
 // ---------------------------------------------------------------------------
 
-describe("walletMapper brand theme hydration", () => {
-  let brands: BrandService;
+describe("walletMapper prospect theme hydration", () => {
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
-  it("hydrates all extended brand palette fields", async () => {
-    const input = await walletMapper.toCreateInput(brands, {
+  it("hydrates all extended prospect palette fields", async () => {
+    const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Wallet",
       description: null,
@@ -301,9 +301,9 @@ describe("walletMapper brand theme hydration", () => {
       },
     });
     const record = await demoConfigs.create(input);
-    const brand = await brands.get(record.brandId);
-    // Enrich the brand with extended palette
-    const updated = await brands.update(brand!.id, {
+    const prospect = await prospects.get(record.prospectId);
+    // Enrich the prospect with extended palette
+    const updated = await prospects.update(prospect!.id, {
       pageBackground: "#f0f0f0",
       background: "#ffffff",
       foreground: "#111111",
@@ -329,8 +329,8 @@ describe("walletMapper brand theme hydration", () => {
     });
   });
 
-  it("hydrates brand logo into wallet branding", async () => {
-    const input = await walletMapper.toCreateInput(brands, {
+  it("hydrates prospect logo into wallet branding", async () => {
+    const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Wallet",
       description: null,
@@ -340,30 +340,30 @@ describe("walletMapper brand theme hydration", () => {
       },
     });
     const record = await demoConfigs.create(input);
-    const brand = await brands.get(record.brandId);
-    const updated = await brands.update(brand!.id, {
+    const prospect = await prospects.get(record.prospectId);
+    const updated = await prospects.update(prospect!.id, {
       logo: "custom",
-      logoUrl: "https://brand.com/logo.svg",
+      logoUrl: "https://prospect.com/logo.svg",
     });
     const stored = walletMapper.toStored(record, updated);
-    expect(stored.config.branding?.logo).toBe("https://brand.com/logo.svg");
+    expect(stored.config.branding?.logo).toBe("https://prospect.com/logo.svg");
   });
 });
 
-describe("visaDirectMapper brand theme hydration", () => {
-  let brands: BrandService;
+describe("visaDirectMapper prospect theme hydration", () => {
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
-  it("hydrates extended brand fields and logoUrl", async () => {
-    const input = await visaDirectMapper.toCreateInput(brands, {
+  it("hydrates extended prospect fields and logoUrl", async () => {
+    const input = await visaDirectMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "VD",
       description: null,
@@ -373,33 +373,33 @@ describe("visaDirectMapper brand theme hydration", () => {
       },
     });
     const record = await demoConfigs.create(input);
-    const brand = await brands.get(record.brandId);
-    const updated = await brands.update(brand!.id, {
+    const prospect = await prospects.get(record.prospectId);
+    const updated = await prospects.update(prospect!.id, {
       foreground: "#222222",
       logo: "custom",
-      logoUrl: "https://brand.com/vd.svg",
+      logoUrl: "https://prospect.com/vd.svg",
     });
     const stored = visaDirectMapper.toStored(record, updated);
     expect(stored.config.theme.foregroundColor).toBe("#222222");
-    expect(stored.config.branding.logoUrl).toBe("https://brand.com/vd.svg");
+    expect(stored.config.branding.logoUrl).toBe("https://prospect.com/vd.svg");
     expect(stored.config.branding.bannerText).toBe("test");
   });
 });
 
-describe("remittanceMapper brand theme hydration", () => {
-  let brands: BrandService;
+describe("remittanceMapper prospect theme hydration", () => {
+  let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
     const redis = createFakeRedis();
-    brands = new RedisBrandService(redis);
+    prospects = new RedisProspectService(redis);
     demoConfigs = new RedisDemoConfigService(redis, {
       enableLegacyFallback: false,
     });
   });
 
-  it("hydrates secondaryColor from brand alongside extended palette", async () => {
-    const input = await remittanceMapper.toCreateInput(brands, {
+  it("hydrates secondaryColor from prospect alongside extended palette", async () => {
+    const input = await remittanceMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Remit",
       description: null,
@@ -409,33 +409,33 @@ describe("remittanceMapper brand theme hydration", () => {
       },
     });
     const record = await demoConfigs.create(input);
-    const brand = await brands.get(record.brandId);
-    const updated = await brands.update(brand!.id, {
+    const prospect = await prospects.get(record.prospectId);
+    const updated = await prospects.update(prospect!.id, {
       foreground: "#333333",
       pageBackground: "#f5f5f5",
       secondaryColor: "#new-secondary",
       logo: "custom",
-      logoUrl: "https://brand.com/r.svg",
+      logoUrl: "https://prospect.com/r.svg",
     });
     const stored = remittanceMapper.toStored(record, updated);
     expect(stored.config.theme?.foregroundColor).toBe("#333333");
     expect(stored.config.theme?.pageBackground).toBe("#f5f5f5");
     expect(stored.config.theme?.secondaryColor).toBe("#new-secondary");
-    expect(stored.config.branding?.logoUrl).toBe("https://brand.com/r.svg");
+    expect(stored.config.branding?.logoUrl).toBe("https://prospect.com/r.svg");
   });
 });
 
-describe("brand resolution determinism — cross-kind", () => {
-  let brands: BrandService;
+describe("prospect resolution determinism — cross-kind", () => {
+  let prospects: ProspectService;
 
   beforeEach(() => {
-    brands = new RedisBrandService(createFakeRedis());
+    prospects = new RedisProspectService(createFakeRedis());
   });
 
-  it("two demos with same owner+primary+logo share a Brand", async () => {
+  it("two demos with same owner+primary+logo share a Prospect", async () => {
     const earnInput = await (
       await import("../earn")
-    ).earnMapper.toCreateInput(brands, {
+    ).earnMapper.toCreateInput(prospects, {
       ownerId: "shared",
       name: "Earn",
       description: null,
@@ -448,7 +448,7 @@ describe("brand resolution determinism — cross-kind", () => {
         layout: {},
       },
     });
-    const walletInput = await walletMapper.toCreateInput(brands, {
+    const walletInput = await walletMapper.toCreateInput(prospects, {
       ownerId: "shared",
       name: "Wallet",
       description: null,
@@ -457,6 +457,6 @@ describe("brand resolution determinism — cross-kind", () => {
         branding: { logo: "https://shared.com/l.svg" },
       },
     });
-    expect(earnInput.brandId).toBe(walletInput.brandId);
+    expect(earnInput.prospectId).toBe(walletInput.prospectId);
   });
 });

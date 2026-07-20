@@ -4,7 +4,7 @@
  * Shared Appearance Form Component
  *
  * Reusable form for editing theme/branding settings across all demo types.
- * Supports both simplified mode (for Brands) and full mode (for Checkouts/Wallets).
+ * Supports both simplified mode (for Prospects) and full mode (for Checkouts/Wallets).
  */
 
 import { useState } from "react";
@@ -104,7 +104,7 @@ interface AppearanceFormProps {
 
   /**
    * Simplified mode hides extended color fields
-   * Use for Brand profiles that only need core colors
+   * Use for Prospect profiles that only need core colors
    */
   simplified?: boolean;
 

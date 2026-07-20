@@ -223,45 +223,45 @@ export interface CheckoutService {
 }
 
 // =============================================================================
-// Brand Service
+// Prospect Service
 // =============================================================================
 //
-// Phase 2-brands: first-class Brand records (separate from the legacy
-// `BrandProfile` aggregate in `lib/actions/brands.ts`, which is a richer
+// Phase 2-brands: first-class Prospect records (separate from the legacy
+// `ProspectProfile` aggregate in `lib/actions/prospects.ts`, which is a richer
 // object with auto-generated demos baked in). Both shapes coexist —
-// BrandService is the migration target for the Postgres flip.
+// ProspectService is the migration target for the Postgres flip.
 
 /**
  * Border radius token. Mirrors `BorderRadiusSize` in
  * `lib/types/dashboard.ts` — kept service-local so the service module
  * stays standalone.
  */
-export type BrandBorderRadius = "xs" | "sm" | "md" | "lg";
+export type ProspectBorderRadius = "xs" | "sm" | "md" | "lg";
 
 /**
  * Logo discriminator. "dynamic" renders the default Dynamic mark;
  * "custom" renders `logoUrl`.
  */
-export type BrandLogoKind = "custom" | "dynamic";
+export type ProspectLogoKind = "custom" | "dynamic";
 
 /**
- * Brand row as it lives in Postgres (mirrors the Prisma `Brand` model).
+ * Prospect row as it lives in Postgres (mirrors the Prisma `Prospect` model).
  * The dashboard service layer surfaces this shape regardless of backend.
  *
  * Phase 2-brand-cutover (2026-05-06): expanded to carry every field the
- * legacy `BrandProfile` aggregate carried. The colour fields used to
- * live in a nested `BrandTheme` object on the Redis-only aggregate;
+ * legacy `ProspectProfile` aggregate carried. The colour fields used to
+ * live in a nested `ProspectTheme` object on the Redis-only aggregate;
  * they now live flat on the row in both backends.
  */
-export interface Brand {
+export interface Prospect {
   id: string;
   ownerId: string;
   name: string;
   description: string | null;
   companyUrl: string | null;
-  logo: BrandLogoKind;
+  logo: ProspectLogoKind;
   logoUrl: string | null;
-  borderRadius: BrandBorderRadius | null;
+  borderRadius: ProspectBorderRadius | null;
   primaryColor: string;
   primaryHoverColor: string | null;
   secondaryColor: string | null;
@@ -279,19 +279,22 @@ export interface Brand {
   demoCheckoutsId: string | null;
   demoWalletId: string | null;
   demoRemittanceId: string | null;
+  /** Identity fields added in Phase GTM-01. Both nullable. */
+  domain: string | null;
+  notes: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface CreateBrandInput {
+export interface CreateProspectInput {
   ownerId: string;
   name: string;
   description?: string | null;
   companyUrl?: string | null;
   /** Defaults to "dynamic" if omitted. */
-  logo?: BrandLogoKind;
+  logo?: ProspectLogoKind;
   logoUrl?: string | null;
-  borderRadius?: BrandBorderRadius | null;
+  borderRadius?: ProspectBorderRadius | null;
   primaryColor: string;
   primaryHoverColor?: string | null;
   secondaryColor?: string | null;
@@ -309,15 +312,17 @@ export interface CreateBrandInput {
   demoCheckoutsId?: string | null;
   demoWalletId?: string | null;
   demoRemittanceId?: string | null;
+  domain?: string | null;
+  notes?: string | null;
 }
 
-export interface UpdateBrandInput {
+export interface UpdateProspectInput {
   name?: string;
   description?: string | null;
   companyUrl?: string | null;
-  logo?: BrandLogoKind;
+  logo?: ProspectLogoKind;
   logoUrl?: string | null;
-  borderRadius?: BrandBorderRadius | null;
+  borderRadius?: ProspectBorderRadius | null;
   primaryColor?: string;
   primaryHoverColor?: string | null;
   secondaryColor?: string | null;
@@ -335,29 +340,31 @@ export interface UpdateBrandInput {
   demoCheckoutsId?: string | null;
   demoWalletId?: string | null;
   demoRemittanceId?: string | null;
+  domain?: string | null;
+  notes?: string | null;
 }
 
-export interface BrandListOptions {
-  /** When set, restrict results to brands owned by this user. */
+export interface ProspectListOptions {
+  /** When set, restrict results to prospects owned by this user. */
   ownerId?: string;
 }
 
-export interface BrandService {
-  create(input: CreateBrandInput): Promise<Brand>;
-  get(id: string): Promise<Brand | null>;
-  list(options?: BrandListOptions): Promise<Brand[]>;
-  update(id: string, input: UpdateBrandInput): Promise<Brand>;
+export interface ProspectService {
+  create(input: CreateProspectInput): Promise<Prospect>;
+  get(id: string): Promise<Prospect | null>;
+  list(options?: ProspectListOptions): Promise<Prospect[]>;
+  update(id: string, input: UpdateProspectInput): Promise<Prospect>;
   delete(id: string): Promise<void>;
   /**
    * Idempotent create-or-update by caller-supplied id. Used by the
    * Phase 2-brands backfill so re-runs don't duplicate rows. The
-   * caller supplies a deterministic id derived from the brand's
-   * stable shape (see scripts/backfill-brands/hash.ts).
+   * caller supplies a deterministic id derived from the prospect's
+   * stable shape (see scripts/backfill-prospects/hash.ts).
    *
    * If the row exists, all fields are overwritten with the new input
    * and `updatedAt` bumps. `createdAt` is preserved on update.
    */
-  upsertWithId(id: string, input: CreateBrandInput): Promise<Brand>;
+  upsertWithId(id: string, input: CreateProspectInput): Promise<Prospect>;
 }
 
 // =============================================================================
@@ -382,8 +389,8 @@ export interface BrandService {
 export interface TransactionRecordRefs {
   /** ID of the demo instance (config) that initiated the transaction. */
   demoInstanceId?: string | null;
-  /** ID of the brand profile linked to the demo instance. */
-  brandId?: string | null;
+  /** ID of the prospect profile linked to the demo instance. */
+  prospectId?: string | null;
   /** ID of the parent transaction in a multi-leg flow. */
   parentTransactionId?: string | null;
 }
@@ -401,7 +408,7 @@ export interface TransactionRecord {
   kind: string;
   state: TransactionState;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   parentTransactionId: string | null;
   payload: unknown;
   refs: unknown;
@@ -414,7 +421,7 @@ export interface CreateTransactionRecordInput {
   /** Optional initial state. Defaults to `"initialized"` if omitted. */
   state?: TransactionState;
   demoInstanceId?: string | null;
-  brandId?: string | null;
+  prospectId?: string | null;
   parentTransactionId?: string | null;
   payload?: unknown;
   refs?: unknown;
@@ -438,12 +445,12 @@ export interface UpdateTransactionPayloadInput {
   payload?: unknown;
   refs?: unknown;
   demoInstanceId?: string | null;
-  brandId?: string | null;
+  prospectId?: string | null;
 }
 
 export interface TransactionRecordListOptions {
   demoInstanceId?: string;
-  brandId?: string;
+  prospectId?: string;
   state?: TransactionState | TransactionState[];
   kind?: string;
   parentTransactionId?: string;
@@ -501,7 +508,7 @@ export interface WebhookEventRecord {
   normalizedPayload: unknown;
   transactionId: string | null;
   demoInstanceId: string | null;
-  brandId: string | null;
+  prospectId: string | null;
   processingStatus: WebhookProcessingStatus;
   processingError: string | null;
   processedAt: Date | null;
@@ -517,7 +524,7 @@ export interface CreateWebhookEventInput {
   normalizedPayload: unknown;
   transactionId?: string | null;
   demoInstanceId?: string | null;
-  brandId?: string | null;
+  prospectId?: string | null;
   /** Defaults to "pending" if omitted. */
   processingStatus?: WebhookProcessingStatus;
 }
@@ -601,7 +608,7 @@ export type DemoConfigKind =
 /**
  * Demo config row as it lives in Postgres (mirrors the Prisma `DemoConfig`
  * model). The dashboard service layer surfaces this shape regardless of
- * backend. `themeOverrides` is optional per D-028 — `Brand` is the source
+ * backend. `themeOverrides` is optional per D-028 — `Prospect` is the source
  * of truth for visual theme; demos may carry per-config overrides.
  */
 export interface DemoConfigRecord {
@@ -610,10 +617,10 @@ export interface DemoConfigRecord {
   ownerId: string;
   name: string | null;
   description: string | null;
-  brandId: string;
+  prospectId: string;
   /**
    * Optional per-config theme overrides merged on top of the linked
-   * Brand's theme at the service boundary. Null means "render brand
+   * Prospect's theme at the service boundary. Null means "render prospect
    * theme as-is" (D-028).
    */
   themeOverrides: unknown | null;
@@ -633,7 +640,7 @@ export interface CreateDemoConfigInput {
   ownerId: string;
   name?: string | null;
   description?: string | null;
-  brandId: string;
+  prospectId: string;
   themeOverrides?: unknown | null;
   config: unknown;
 }
@@ -641,7 +648,7 @@ export interface CreateDemoConfigInput {
 export interface UpdateDemoConfigInput {
   name?: string | null;
   description?: string | null;
-  brandId?: string;
+  prospectId?: string;
   themeOverrides?: unknown | null;
   config?: unknown;
 }
@@ -651,8 +658,8 @@ export interface DemoConfigListOptions {
   ownerId?: string;
   /** When set, restrict results to configs of this kind. */
   kind?: DemoConfigKind;
-  /** When set, restrict results to configs that reference this Brand. */
-  brandId?: string;
+  /** When set, restrict results to configs that reference this Prospect. */
+  prospectId?: string;
 }
 
 export interface DemoConfigService {
@@ -686,6 +693,6 @@ export interface Services {
   webhookEvents: WebhookEventService;
   users: UserService;
   checkouts: CheckoutService;
-  brands: BrandService;
+  prospects: ProspectService;
   demoConfigs: DemoConfigService;
 }

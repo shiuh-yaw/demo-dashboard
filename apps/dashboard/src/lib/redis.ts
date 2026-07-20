@@ -271,27 +271,36 @@ export const REDIS_KEYS = {
   visaDirectConfigList: `${DASHBOARD_PREFIX}:visa-direct:list`,
 
   // ==========================================================================
-  // Brand Profiles (unified branding across demo types)
+  // Prospect Profiles (unified branding across demo types; entity renamed
+  // from Brand -> Prospect in Phase GTM-01)
+  //
+  // Phase GTM-01: only the accessor names below were renamed. The literal
+  // Redis key strings ("brand", "brands", "brand-v2", ...) are deliberately
+  // left unchanged so existing Redis-resident rows (RedisProspectService,
+  // the default backend while USE_POSTGRES_PROSPECTS is unset) keep
+  // resolving after deploy -- renaming the key strings would silently
+  // orphan every existing record.
   // ==========================================================================
 
-  /** Single brand profile by ID */
-  brandProfile: (id: string) => `${DASHBOARD_PREFIX}:brand:${id}`,
+  /** Single prospect profile by ID */
+  prospectProfile: (id: string) => `${DASHBOARD_PREFIX}:brand:${id}`,
 
-  /** Set of all brand profile IDs */
-  brandProfileList: `${DASHBOARD_PREFIX}:brands`,
+  /** Set of all prospect profile IDs */
+  prospectProfileList: `${DASHBOARD_PREFIX}:brands`,
 
   // ==========================================================================
-  // Phase 2-brands — service-layer Brand records (separate from BrandProfile
-  // above, which is the legacy rich aggregate used by lib/actions/brands.ts).
-  // The new Brand shape mirrors the Postgres model so the Redis backend can
-  // serve as a parity baseline behind USE_POSTGRES_BRANDS.
+  // Phase 2-brands — service-layer Prospect records (separate from
+  // ProspectProfile above, which is the legacy rich aggregate used by
+  // lib/actions/prospects.ts). The new Prospect shape mirrors the Postgres
+  // model so the Redis backend can serve as a parity baseline behind
+  // USE_POSTGRES_PROSPECTS.
   // ==========================================================================
 
-  /** Single Brand record by ID. */
-  brandRecord: (id: string) => `${DASHBOARD_PREFIX}:brand-v2:${id}`,
+  /** Single Prospect record by ID. */
+  prospectRecord: (id: string) => `${DASHBOARD_PREFIX}:brand-v2:${id}`,
 
-  /** Set of all Brand record IDs. */
-  brandRecordList: `${DASHBOARD_PREFIX}:brand-v2:list`,
+  /** Set of all Prospect record IDs. */
+  prospectRecordList: `${DASHBOARD_PREFIX}:brand-v2:list`,
 
   // ==========================================================================
   // Phase 2-transactions — canonical TransactionRecord (state-machine carrier).

@@ -5,9 +5,9 @@
  * (`dashboard:earn:<id>`, `dashboard:wallet:<id>`,
  * `dashboard:trade:<id>`, `dashboard:visa-direct:<id>`,
  * `dashboard:remittance:<id>`, `payment-widget:config:<id>` for
- * checkouts), upserts a Brand row for the embedded theme (idempotent
- * via `hashBrandKey` from the brand backfill), then upserts a
- * `DemoConfig` row that links to that Brand with `kind=<demoType>`.
+ * checkouts), upserts a Prospect row for the embedded theme (idempotent
+ * via `hashProspectKey` from the prospect backfill), then upserts a
+ * `DemoConfig` row that links to that Prospect with `kind=<demoType>`.
  * Legacy ids are preserved (Q-014) so existing demo URLs keep
  * resolving unchanged.
  *
@@ -18,7 +18,7 @@
 
 import type { RedisClient } from "@/lib/redis";
 import type {
-  BrandService,
+  ProspectService,
   DemoConfigKind,
   DemoConfigService,
 } from "@/lib/services/types";
@@ -52,8 +52,8 @@ export interface DemoConfigsBackfillRecordResult {
   outcome: "created" | "deduped" | "skipped" | "failed";
   /** Set when `outcome === "created" | "deduped"`. */
   configId?: string;
-  /** Brand row used for the FK; set when create/dedupe succeeds. */
-  brandId?: string;
+  /** Prospect row used for the FK; set when create/dedupe succeeds. */
+  prospectId?: string;
   reason?: string;
 }
 
@@ -85,7 +85,7 @@ export interface DemoConfigsBackfillReport {
  */
 export interface DemoConfigsBackfillDeps {
   redis: RedisClient;
-  brands: BrandService;
+  prospects: ProspectService;
   demoConfigs: DemoConfigService;
   /**
    * Optional logger — defaults to a no-op. Tests inject a recording
