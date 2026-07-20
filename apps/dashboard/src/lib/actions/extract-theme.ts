@@ -125,12 +125,24 @@ Return ONLY the JSON object, no explanation or markdown.`;
     let message;
     try {
       message = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        // claude-sonnet-4-20250514 retired June 15, 2026 and started
+        // 404-ing every call here, silently degrading every extraction to
+        // the heuristic fallback below. claude-sonnet-5 is the documented
+        // replacement. Thinking is explicitly disabled: this is a single
+        // short structured-JSON extraction, not a reasoning task, and
+        // Sonnet 5 runs adaptive thinking by default when omitted.
+        model: "claude-sonnet-5",
         max_tokens: 1024,
+        thinking: { type: "disabled" },
         messages: [{ role: "user", content: userContent }],
       });
     } catch (err) {
-      console.warn("AI extraction failed, using fallback:", err);
+      // Error level with a stable tag so log drains/alerts catch it - the
+      // sonnet-4 retirement hid behind an untagged warn here for a month.
+      console.error(
+        `[extract-theme:anthropic-failure] falling back to basic heuristic for ${baseUrl}`,
+        err,
+      );
       return extractThemeBasic(url, baseUrl);
     }
 
