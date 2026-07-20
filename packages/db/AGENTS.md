@@ -13,7 +13,10 @@ Prisma + Supabase Postgres access layer. Provides a serverless-safe
 incrementally: `Brand` (2-brands; renamed to `Prospect` in Phase GTM-01),
 `Transaction` + `WebhookEvent` (2-transactions), `DemoConfig`
 (2-demo-configs — unified per-demo-type carrier; remittance folded in via
-`fold_remittance_into_demo_config`).
+`fold_remittance_into_demo_config`), `User` (Phase GTM-03; renamed from
+`Profile`, gained `dynamicUserId` in the GTM-D-002 amendment) + `ShareLink` +
+`VisitorSession` + `TrackEvent` (Phase GTM-03); `Team` + `TeamMembership` +
+`ProspectTheme` (Phase GTM-03.5A, folded into `gtm_tables`).
 
 ## Hard rule: single consumer
 
@@ -38,7 +41,10 @@ fetch from that endpoint instead.
 
 - `prisma` — singleton `PrismaClient` with delegates for every declared
   model: `prisma.prospect`, `prisma.transaction`, `prisma.webhookEvent`,
-  `prisma.demoConfig`. (stable)
+  `prisma.demoConfig`, `prisma.user`, `prisma.shareLink`,
+  `prisma.visitorSession`, `prisma.trackEvent`, `prisma.team`,
+  `prisma.teamMembership`, `prisma.prospectTheme`. (stable)
+
 - `Prisma` — namespace re-exported from `@prisma/client` for input/output
   typing (e.g., `Prisma.ProspectCreateInput`). (stable)
 - `PrismaClient` — class re-export for callers that need their own instance
@@ -50,8 +56,16 @@ fetch from that endpoint instead.
   in Phase GTM-01 - a prospect is a company we sell to, identity + theme in
   one record). Full visual theme + logo discriminator + linked demo-config
   ids, plus nullable `domain` and `notes` identity columns added in Phase
-  GTM-01. Service: `apps/dashboard/src/lib/services/postgres/prospects.ts`,
-  flag `USE_POSTGRES_PROSPECTS`.
+  GTM-01. Phase GTM-03.5A added `teamId` (FK, NOT NULL post-backfill),
+  `createdById` (nullable FK), `status ProspectStatus`, and a partial unique
+  index on `(teamId, lower(domain))` (raw SQL, Prisma-invisible; skipped-not-
+  failed on legacy collisions). Flat palette stays canonical until 03.5B.
+  Service: `postgres/prospects.ts`, flag `USE_POSTGRES_PROSPECTS`.
+- `Team` / `TeamMembership` / `ProspectTheme` (Phase GTM-03.5A) — workspace +
+  `(userId, teamId)`-unique membership (no per-membership role; default team
+  slug `gtm`) and the 1:1 `Prospect` palette (`prospectId` unique FK;
+  identity stays on `Prospect`). `services.teams` (`postgres/teams.ts`);
+  `ProspectTheme` populated by the migration + `backfill:prospect-themes`.
 - `DemoConfig` — unified per-instance config carrier for every demo type
   (earn, wallet, trade, visa-direct, checkout, remittance). `kind` is a
   TEXT discriminator validated app-side via a Zod discriminated union, **not**
@@ -60,21 +74,50 @@ fetch from that endpoint instead.
   Phase GTM-01) → `Prospect` (D-028); optional `themeOverrides Json?`
   merges on top of the prospect theme at the service boundary. Indexed on
   `ownerId`, `prospectId`, `kind`, `(ownerId, kind)`. Service:
-  `apps/dashboard/src/lib/services/postgres/demo-configs.ts`,
-  flag `USE_POSTGRES_DEMO_CONFIGS`. Replaces what would otherwise be one
+  `postgres/demo-configs.ts`, flag `USE_POSTGRES_DEMO_CONFIGS`. Replaces what would otherwise be one
   table per demo type; legacy `RemittanceConfig` rows were migrated here
-  with `kind="remittance"` and the legacy table dropped (D-029).
+  with `kind="remittance"` and the legacy table dropped (D-029). Phase
+  GTM-03.5A made `prospectId` nullable and added `createdById` (nullable FK).
 - `Transaction` — canonical "money in flight" record (D-010). State
   validated by `assertValidTransition` at the service boundary; DB stores
   verbatim. Indexed on `demoInstanceId`, `prospectId` (renamed from
   `brandId` in Phase GTM-01), `state`, `parentTransactionId`. Self-FK for
-  multi-leg flows. Service:
-  `apps/dashboard/src/lib/services/postgres/transactions.ts`, flag
+  multi-leg flows. Service: `postgres/transactions.ts`, flag
   `USE_POSTGRES_TRANSACTIONS`.
 - `WebhookEvent` — audit row for every received webhook (D-011). Unique on
   `(provider, providerEventId)` for dedup. Optional FK to `Transaction`
   with `ON DELETE SET NULL`. Postgres-only by design. Phase 5A's webhook
   receiver framework is the consumer.
+- `User` (Phase GTM-03; renamed from `Profile`, GTM-D-002 2026-07-20) - the
+  single internal-person entity (SE / admin / owner identity). Created lazily
+  on first verified sign-in. `dynamicUserId` (Dynamic JWT `sub`) is
+  nullable/unique, captured at first sign-in (Phase GTM-04), write-once
+  thereafter - joins this row to the legacy `ownerId` values already
+  stored on `Prospect`/`DemoConfig`. `role` is the Prisma `Role` enum
+  (`OWNER | ADMIN | MEMBER | VIEWER`, default `MEMBER` - GTM-D-002
+  extension, 2026-07-20, replacing the earlier free-text "se" | "operator"
+  column) and gates mutations + the operations surface (Phase GTM-04).
+  Phase GTM-03.5A added `deactivatedAt DateTime?` (offboarding) and
+  `services.users.claimLegacyRecords(user)` (idempotent `createdById`
+  reconciliation). Unique on `email`. Service: `postgres/users.ts`,
+  registered as `services.users` (amendment, 2026-07-20 - the legacy
+  per-checkout wallet-user Redis service moved to `services.legacyWalletUsers`
+  to free this key), Postgres-only.
+- `ShareLink` (Phase GTM-03) - per-prospect, per-demo share link. `token`
+  (`nanoid(21)`, url-safe) is unique. FK `userId` → `User` (renamed from
+  `profileId` in the GTM-D-002 amendment); `demoConfigId` / `prospectId`
+  are deliberately unconstrained scalars (mirrors the
+  `Transaction.prospectId` decoupled-lifetime pattern) - `mint` verifies
+  both exist at the service layer instead. Service: `postgres/share-links.ts`.
+- `VisitorSession` / `TrackEvent` (Phase GTM-03) - session + event rows for
+  the GTM tracker (`packages/analytics`). Both ids are **client-generated
+  UUIDs with no `@default`** - every insert is upsert/`skipDuplicates`
+  idempotent. `TrackEvent.sessionId` FKs `VisitorSession`;
+  `VisitorSession.shareLinkId` FKs `ShareLink` (`ON DELETE SET NULL`).
+  Indexed on `shareLinkId`, `(demoSlug, startedAt)`, `(sessionId, ts)`.
+  Write service (upsert-by-batch): write-only in this phase.
+  `apps/dashboard/src/lib/services/postgres/visitor-sessions.ts`,
+  Postgres-only; read/aggregate queries land in Phase GTM-08.
 
 ## Required environment
 
@@ -148,5 +191,9 @@ export async function listDemoConfigs(ownerId: string, kind: string) {
   deterministic Prospect id from `(ownerId, primaryColor, logoUrl)`
   (hash inputs unchanged by the Phase GTM-01 rename) and preserved legacy
   ids (Q-014).
-- RLS is enabled on every Phase-2 table. Prisma connects as superuser and
-  bypasses it; service-layer ownership checks remain the trust boundary.
+- RLS is enabled on every Phase-2 table, the four Phase GTM-03 tables, and
+  the three GTM-03.5A tables (`Team`, `TeamMembership`, `ProspectTheme`) in
+  the migration that creates them. Prisma connects as superuser and bypasses
+  it; service-layer ownership checks remain the trust boundary.
+  `packages/db/scripts/replay-check.sh` (local-only) replays all migrations,
+  asserts an empty `migrate diff`, and verifies the GTM-03.5A backfills.

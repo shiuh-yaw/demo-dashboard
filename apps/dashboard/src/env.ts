@@ -244,6 +244,12 @@ export const env = createEnv({
      */
     DYNAMIC_WEBHOOK_SECRET: z.string().optional(),
     /**
+     * Dynamic admin API bearer token (`dyn_...`). Server-only. Used solely
+     * by the `backfill:users` script to list environment users; no runtime
+     * request path reads it. Sandbox-by-default per D-005.
+     */
+    DYNAMIC_API_TOKEN: z.string().optional(),
+    /**
      * Internal API gating secret for /api/magic-send/intents/[id]/execute.
      * External callers cannot trigger userop dispatch — only the
      * dashboard's own webhook receiver may. Sent as the
@@ -387,6 +393,7 @@ export const env = createEnv({
     MAGIC_SEND_VAULT_CHAIN_ID: process.env.MAGIC_SEND_VAULT_CHAIN_ID,
     MAGIC_SEND_VAULT_RPC_URL: process.env.MAGIC_SEND_VAULT_RPC_URL,
     DYNAMIC_WEBHOOK_SECRET: process.env.DYNAMIC_WEBHOOK_SECRET,
+    DYNAMIC_API_TOKEN: process.env.DYNAMIC_API_TOKEN,
     INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,
     SUMSUB_APP_TOKEN: process.env.SUMSUB_APP_TOKEN,
     SUMSUB_SECRET_KEY: process.env.SUMSUB_SECRET_KEY,

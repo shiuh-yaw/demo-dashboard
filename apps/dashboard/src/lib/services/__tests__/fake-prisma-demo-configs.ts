@@ -18,9 +18,10 @@ interface DemoConfigRow {
   id: string;
   kind: string;
   ownerId: string;
+  createdById: string | null;
   name: string | null;
   description: string | null;
-  prospectId: string;
+  prospectId: string | null;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: Date;
@@ -42,6 +43,7 @@ export function createFakeDemoConfigPrisma(): DemoConfigPrismaClient {
           id,
           kind: data.kind,
           ownerId: data.ownerId,
+          createdById: data.createdById ?? null,
           name: data.name ?? null,
           description: data.description ?? null,
           prospectId: data.prospectId,
@@ -106,6 +108,7 @@ export function createFakeDemoConfigPrisma(): DemoConfigPrismaClient {
             id: where.id,
             kind: create.kind,
             ownerId: create.ownerId,
+            createdById: create.createdById ?? null,
             name: create.name ?? null,
             description: create.description ?? null,
             prospectId: create.prospectId,

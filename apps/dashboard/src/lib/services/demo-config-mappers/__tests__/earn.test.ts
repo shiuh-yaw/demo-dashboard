@@ -170,6 +170,7 @@ describe("earnMapper", () => {
       id: "legacy-1",
       kind: "earn" as const,
       ownerId: "owner-x",
+      createdById: null,
       name: "Legacy",
       description: null,
       prospectId: "",

@@ -22,8 +22,9 @@ Plan complete. Awaiting Wave 1 dispatch. Track progress in `PROGRESS.md`.
 Wave 1  ->  [Phase 01: Brand -> Prospect rename]     ┐ parallel
             [Phase 02: packages/analytics tracker]   ┘
 
-Wave 2  ->  [Phase 03: GTM schema (Profile, ShareLink, VisitorSession, TrackEvent)]   (after 01)
-            [Phase 04: Auth allowlist + roles]        (after 03)
+Wave 2  ->  [Phase 03: GTM schema (User, ShareLink, VisitorSession, TrackEvent)]   (after 01)
+            [Phase 03.5: Prospect-first model (teams, identity, theme extraction)] (after 03)
+            [Phase 04: Auth allowlist + roles]        (after 03 + 03.5 PR A)
 
 Wave 3  ->  [Phase 05: Share links + context endpoint]  ┐ parallel (05 after 03+04, 06 after 02+03)
             [Phase 06: Ingest /api/track]               ┘
@@ -45,7 +46,8 @@ Dispatch rules are identical to the demo-meta-system plan: one agent per phase f
 | `phases/01-prospect-rename.md` | 01. Brand -> Prospect rename | 2-3 days | - |
 | `phases/02-analytics-package.md` | 02. `packages/analytics` tracker | 2-3 days | - |
 | `phases/03-gtm-schema.md` | 03. GTM Prisma models + services | 1-2 days | 01 |
-| `phases/04-auth-roles.md` | 04. Domain allowlist + two roles | 1-2 days | 03 |
+| `phases/03.5-prospect-first-model.md` | 03.5 Prospect-first model (teams, identity, theme extraction; 2 PRs) - PR A (expand + backfill) folded into #151; PR B (cutover) remains | 3-4 days | 03 |
+| `phases/04-users-roles-sharing.md` | 04. Users, role enum, workspace sharing (team-scoped) | 1-2 days | 03, 03.5A |
 | `phases/05-share-links.md` | 05. Share links, `/s/[token]`, context endpoint | 2 days | 03, 04 |
 | `phases/06-ingest.md` | 06. Ingest pipeline `POST /api/track` | 2-3 days | 02, 03 |
 | `phases/07-ia-relayout.md` | 07. IA relayout (`/dashboard`, droplet-native surfaces) | 4-5 days | 01, 04 |
@@ -85,28 +87,95 @@ Phase files reference these; they are the single source of truth for cross-phase
 //   domain String?   notes String?
 // FK renames: DemoConfig.brandId -> prospectId, Transaction.brandId -> prospectId.
 
-model Profile {
+// Amended GTM-D-002 (2026-07-20): Profile renamed to User - the single
+// internal-person entity - and gains dynamicUserId (the Dynamic JWT sub,
+// nullable, captured at first sign-in by Phase 04). Existing ownerId
+// values on Prospect/DemoConfig are Dynamic subs; dynamicUserId makes
+// them joinable at read time. Visibility is workspace-shared (Phase 04).
+
+// Amended GTM-D-002 extension (2026-07-20): role becomes a real Prisma
+// enum - Role { OWNER ADMIN MEMBER VIEWER }, default MEMBER. Seeded from
+// GTM_OWNER_EMAILS / GTM_ADMIN_EMAILS (Phase 04; no env code lands before
+// then). Semantics: OWNER - everything incl. role grants, only OWNERs
+// modify OWNERs; ADMIN - operations surface, mutate any record, grant
+// roles below ADMIN; MEMBER - sign-in default, create + mutate own
+// records, mint share links; VIEWER - read-only.
+
+// Amended GTM-D-003 (2026-07-20): User gains deactivatedAt (offboarding
+// lifecycle). Team/TeamMembership/ProspectTheme added; Prospect and
+// DemoConfig field additions below.
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model User {
   id            String      @id @default(cuid())
   email         String      @unique
+  dynamicUserId String?     @unique // Dynamic JWT sub; write-once once set
   displayName   String?
   avatarUrl     String?
   schedulingUrl String?
-  role          String      @default("se") // "se" | "operator"
+  role          Role        @default(MEMBER)
+  deactivatedAt DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   shareLinks    ShareLink[]
 }
+
+// Phase 03.5 (GTM-D-003): teams, prospect identity + theme extraction.
+
+enum ProspectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  members   TeamMembership[]
+}
+
+model TeamMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  team      Team     @relation(fields: [teamId], references: [id])
+  @@unique([userId, teamId])
+}
+
+model ProspectTheme {
+  id         String   @id @default(cuid())
+  prospectId String   @unique
+  prospect   Prospect @relation(fields: [prospectId], references: [id])
+  // palette columns copied verbatim from Prospect's current theme fields
+}
+
+// Prospect (Phase 01/03.5) gains: teamId (FK, NOT NULL post-backfill),
+// createdById String? (FK -> User), status ProspectStatus @default(ACTIVE);
+// partial unique (teamId, lower(domain)). Identity fields (name, domain,
+// logoUrl, notes, logo, companyUrl, description) stay on Prospect.
+
+// DemoConfig (Phase 03.5) gains: createdById String?; prospectId becomes
+// NULLABLE ("built for"; unbound = reusable/showcase demo).
 
 model ShareLink {
   id           String           @id @default(cuid())
   token        String           @unique // nanoid(21), url-safe
   demoConfigId String
   prospectId   String
-  profileId    String
+  userId       String
   status       String           @default("active") // "active" | "revoked"
   expiresAt    DateTime?
   createdAt    DateTime         @default(now())
-  profile      Profile          @relation(fields: [profileId], references: [id])
+  user         User             @relation(fields: [userId], references: [id])
   sessions     VisitorSession[]
 }
 
@@ -195,17 +264,20 @@ Cookies (demo-domain scoped, set by the tracker): `dd_anon` (uuid, 1y), `dd_shar
 ### Services (dashboard `src/lib/services/`)
 
 - `services.prospects.*` (Phase 01, renamed from brands - same method surface).
-- `services.profiles.getOrCreateByEmail(email): Promise<Profile>`, `services.profiles.update(id, { displayName, schedulingUrl, avatarUrl })` (Phase 03).
-- `services.shareLinks.mint({ demoConfigId, prospectId, profileId }): Promise<ShareLink>`, `.resolveByToken(token): Promise<ShareLink | null>` (active + unexpired only), `.revoke(id)` (Phase 03).
-- `services.visitorSessions.upsertFromBatch(batch, { geo, ua, ipHash, shareLinkId }): Promise<{ created: boolean }>` - `created` is true when the session row was newly inserted; Phase 10's enrichment hook keys off it (Phase 03 implements, Phase 06 consumes).
+- `services.users.getOrCreateByEmail(email): Promise<User>`, `services.users.update(id, { displayName, schedulingUrl, avatarUrl, dynamicUserId })` (Phase 03; amended for GTM-D-002 - `dynamicUserId` is write-once, `update` rejects overwriting a non-null value with a different one), `services.users.resolveByDynamicIds(subs: string[]): Promise<Map<string, User>>` (batch lookup by Dynamic JWT sub, consumed by Phase 04/07). Registered as `services.users` (amendment, 2026-07-20; previously `services.gtmUsers`) - the legacy per-checkout wallet-user Redis service moved to `services.legacyWalletUsers` to free this key.
+- `services.users.claimLegacyRecords(user)` (Phase 03.5) - one-shot legacy `createdById` reconciliation for records whose `ownerId` matches the user's Dynamic sub; consumed by Phase 04's `getSessionUser`.
+- `services.teams.{create, list, addMember, removeMember, membershipsForUser}` (Phase 03.5).
+- `visibleProspectIds(user)` policy helper (Phase 04) - team-membership scoped; ADMIN+ unscoped.
+- `services.shareLinks.mint({ demoConfigId, prospectId, userId }): Promise<ShareLink>`, `.resolveByToken(token): Promise<ShareLinkWithContext | null>` (active + unexpired only; `ShareLinkWithContext` = `ShareLink & { user: User; prospect: Prospect }` - `ShareLink` has no Prisma relation to `Prospect`, so the service does a second lookup and stitches it in for Phase 05's context endpoint), `.revoke(id)` (Phase 03).
+- `services.visitorSessions.upsertFromBatch(batch, { geo, ua, ipHash, shareLinkId, isInternal }): Promise<{ created: boolean }>` - `created` is true when the session row was newly inserted; Phase 10's enrichment hook keys off it (Phase 03 implements, Phase 06 consumes). `isInternal` was implicit in this line pre-Phase-03 but is spelled out in `phases/03-gtm-schema.md`'s meta shape and always required - `VisitorSession.isInternal` has no sane default derivable from `geo`/`ua`/`ipHash` alone, and the batch's own top-level `isInternal` hint is not authoritative (server-resolved, e.g. from the `dd_internal` cookie, is).
 - `services.analytics.demoSummary(demoConfigId)`, `.viewers(demoConfigId)`, `.sessions(demoConfigId)`, `.orgOverview()` (Phase 08).
 
 ### Auth helpers (Phase 04, `src/lib/auth/gtm.ts`)
 
 ```ts
-getSessionProfile(): Promise<Profile | null>  // verified Dynamic JWT -> allowlist check -> getOrCreate
-requireProfile(): Promise<Profile>            // throws/redirects when unauthenticated or off-domain
-requireOperator(): Promise<Profile>           // role check, fail closed
+getSessionUser(): Promise<User | null>  // verified Dynamic JWT -> allowlist check -> getOrCreate -> capture dynamicUserId
+requireUser(): Promise<User>            // throws/redirects when unauthenticated or off-domain
+requireOperator(): Promise<User>        // role check, fail closed
 ```
 
 ### Enrichment (Phase 10, `src/lib/enrichment/`)
@@ -229,11 +301,13 @@ Runs post-response via Next 15 `after()` inside the ingest route on session crea
 ### Environment additions (all server-only except `NEXT_PUBLIC_TRACK_URL`)
 
 - `GTM_ALLOWED_DOMAINS` - comma-separated (`fireblocks.com,dynamic.xyz`).
-- `GTM_OPERATOR_EMAILS` - comma-separated seed list.
+- `GTM_OWNER_EMAILS` - comma-separated seed list for the `OWNER` role (supersedes the earlier `GTM_OPERATOR_EMAILS` placeholder; GTM-D-002 extension).
+- `GTM_ADMIN_EMAILS` - comma-separated seed list for the `ADMIN` role.
 - `TRACK_CORS_ORIGINS` - comma-separated demo origins.
 - `IP_HASH_SALT` - random salt for ipHash.
 - `IPINFO_TOKEN` - company-level enrichment (optional; noop provider without it).
 - `NEXT_PUBLIC_TRACK_URL` - dashboard ingest base URL, set per demo app.
+- `DYNAMIC_API_TOKEN` - Phase 03.5's `backfill-users` script (Dynamic admin API); only added if no existing server token is found on survey.
 
 ---
 

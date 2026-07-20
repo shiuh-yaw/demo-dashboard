@@ -40,6 +40,7 @@ interface StoredDemoConfigRow {
   id: string;
   kind: DemoConfigKind;
   ownerId: string;
+  createdById: string | null;
   name: string | null;
   description: string | null;
   prospectId: string;
@@ -58,8 +59,10 @@ interface StoredDemoConfigRow {
  * reading `undefined`.
  */
 interface PersistedDemoConfigRow
-  extends Omit<StoredDemoConfigRow, "prospectId"> {
+  extends Omit<StoredDemoConfigRow, "prospectId" | "createdById"> {
   prospectId?: string;
+  /** Absent on rows written before GTM-03.5A; read as null. */
+  createdById?: string | null;
   /** @deprecated Legacy field name, pre-Phase-GTM-01. Read-compat only. */
   brandId?: string;
 }
@@ -84,6 +87,7 @@ function toRecord(stored: PersistedDemoConfigRow): DemoConfigRecord {
     id: stored.id,
     kind: stored.kind,
     ownerId: stored.ownerId,
+    createdById: stored.createdById ?? null,
     name: stored.name,
     description: stored.description,
     prospectId: resolveProspectId(stored),
@@ -122,6 +126,7 @@ export class RedisDemoConfigService implements DemoConfigService {
       id,
       kind: input.kind,
       ownerId: input.ownerId,
+      createdById: input.createdById ?? null,
       name: input.name ?? null,
       description: input.description ?? null,
       prospectId: input.prospectId,
@@ -280,6 +285,7 @@ export class RedisDemoConfigService implements DemoConfigService {
           id,
           kind: input.kind,
           ownerId: input.ownerId,
+          createdById: input.createdById ?? null,
           name: input.name ?? null,
           description: input.description ?? null,
           prospectId: input.prospectId,
@@ -292,6 +298,7 @@ export class RedisDemoConfigService implements DemoConfigService {
           id,
           kind: input.kind,
           ownerId: input.ownerId,
+          createdById: input.createdById ?? null,
           name: input.name ?? null,
           description: input.description ?? null,
           prospectId: input.prospectId,
@@ -416,6 +423,7 @@ function legacyToRecord(
     id,
     kind,
     ownerId: raw.ownerId ?? "",
+    createdById: null,
     name: raw.name ?? null,
     description: raw.description ?? null,
     prospectId: "",

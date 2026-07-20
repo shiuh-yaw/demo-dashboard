@@ -10,7 +10,7 @@ One logical PR.
 
 ## Wave + dependencies
 
-- Wave 3, after Phases 03 (services) and 04 (`requireProfile`). Blocks 09. Parallel with 06.
+- Wave 3, after Phases 03 (services) and 04 (`requireUser`). Blocks 09. Parallel with 06.
 
 ## Skills to use
 
@@ -25,21 +25,22 @@ One logical PR.
 - The context endpoint returns only `prospectName` and `cta { label, url }` - never emails, ids, theme internals, or SE identity beyond the CTA label. 200 `{}` for anything invalid.
 - CTA `url` must be https (validated at profile save in Phase 03; re-assert here before returning).
 - Launch URLs come from the demo catalog (`src/lib/landing/demos.ts` `launchUrl` wiring) + the demo instance's theme param - reuse the existing link-generation helpers the dashboard already uses for its "open demo" buttons (`rg 'theme=' apps/dashboard/src` to find them). Do not invent a second URL builder.
+- Mint coherence rule (Phase 03.5, GTM-D-003): a `DemoConfig` bound to prospect A (`prospectId` set) mints only for A - reject a mint request naming a different prospect. An unbound config (`prospectId` null) mints for any prospect; the link's own prospect supplies the theme. Theme precedence: bound prospect > link prospect > config overrides > defaults. Minting requires `MEMBER`+ (Phase 04's role gate).
 
 ## Required reading before code changes
 
 - `apps/dashboard/src/lib/landing/demos.ts` and the existing demo-link generation (post `?id=` -> `?theme=` rename, PRs #74/#77/#80).
-- `services.shareLinks` / `services.profiles` (Phase 03), `requireProfile` (Phase 04).
+- `services.shareLinks` / `services.users` (Phase 03), `requireUser` (Phase 04).
 - How existing server actions in `lib/actions/` validate + return.
 
 ## What needs to happen
 
-1. **Mint + revoke actions** (`lib/actions/share-links.ts`): `mintShareLink({ demoConfigId, prospectId })` -> `requireProfile()` -> `services.shareLinks.mint({ ..., profileId: profile.id })` -> returns `{ url: `${origin}/s/${token}` }`. `revokeShareLink(id)` -> owner or operator only.
+1. **Mint + revoke actions** (`lib/actions/share-links.ts`): `mintShareLink({ demoConfigId, prospectId })` -> `requireUser()` -> `services.shareLinks.mint({ ..., userId: user.id })` -> returns `{ url: `${origin}/s/${token}` }`. `revokeShareLink(id)` -> owner or operator only.
 2. **`/s/[token]/route.ts`** in `(public)`: `services.shareLinks.resolveByToken` -> build demo launch URL with `?share=<token>&theme=<prospectTheme>` -> 302. Fallbacks per hard rule 1. `export const dynamic = "force-dynamic"`.
-3. **`GET /api/track/context/route.ts`**: public; CORS headers from `TRACK_CORS_ORIGINS` (+ `OPTIONS` handler); resolve token; respond `{ prospectName, cta: profile.schedulingUrl ? { label: "Book a call" + (profile.displayName ? ` with ${profile.displayName}` : ""), url } : null }`; `{}` otherwise. Cache-Control: no-store.
+3. **`GET /api/track/context/route.ts`**: public; CORS headers from `TRACK_CORS_ORIGINS` (+ `OPTIONS` handler); resolve token; respond `{ prospectName, cta: user.schedulingUrl ? { label: "Book a call" + (user.displayName ? ` with ${user.displayName}` : ""), url } : null }`; `{}` otherwise. Cache-Control: no-store.
 4. **Minimal share UI**: a "Copy share link" button on the existing per-kind config lists (each demo row) opening a small droplet-styled popover: pick prospect (existing prospect list), mint, copy URL. Keep it deliberately minimal - Phase 07 rebuilds the surface.
 5. **Env**: `TRACK_CORS_ORIGINS` added to env validation + `.env.example` placeholder (shared with Phase 06 - coordinate: if 06 already merged it, reuse).
-6. **Tests**: mint requires profile; revoke by non-owner non-operator rejected; `/s/` redirect for active token carries both query params; revoked token redirects plain; unknown token redirects `/`; context endpoint returns `{}` for revoked, full shape for active, never a 4xx/5xx for bad tokens; CORS headers present for allowlisted origin, absent otherwise.
+6. **Tests**: mint requires a signed-in user; revoke by non-owner non-operator rejected; `/s/` redirect for active token carries both query params; revoked token redirects plain; unknown token redirects `/`; context endpoint returns `{}` for revoked, full shape for active, never a 4xx/5xx for bad tokens; CORS headers present for allowlisted origin, absent otherwise.
 
 ## Acceptance criteria
 

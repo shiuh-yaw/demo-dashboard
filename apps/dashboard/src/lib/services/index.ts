@@ -29,12 +29,20 @@ import { PostgresProspectService } from "./postgres/prospects";
 import { PostgresTransactionRecordService } from "./postgres/transactions";
 import { PostgresWebhookEventService } from "./postgres/webhook-events";
 import { PostgresDemoConfigService } from "./postgres/demo-configs";
+import { PostgresGtmUserService } from "./postgres/users";
+import { PostgresTeamService } from "./postgres/teams";
+import { PostgresShareLinkService } from "./postgres/share-links";
+import { PostgresVisitorSessionService } from "./postgres/visitor-sessions";
 import type {
   ProspectService,
   DemoConfigService,
   Services,
   TransactionRecordService,
   WebhookEventService,
+  GtmUserService,
+  TeamService,
+  ShareLinkService,
+  VisitorSessionService,
 } from "./types";
 
 // Export service instances
@@ -53,16 +61,27 @@ export const webhookEventService: WebhookEventService =
 export const demoConfigService: DemoConfigService = env.USE_POSTGRES_DEMO_CONFIGS
   ? new PostgresDemoConfigService()
   : new RedisDemoConfigService();
+// Postgres-only, no cutover flag - no legacy Redis equivalent for any of
+// these three (same rationale as WebhookEventService above).
+export const gtmUserService: GtmUserService = new PostgresGtmUserService();
+export const teamService: TeamService = new PostgresTeamService();
+export const shareLinkService: ShareLinkService = new PostgresShareLinkService();
+export const visitorSessionService: VisitorSessionService =
+  new PostgresVisitorSessionService();
 
 // Export as combined services object
 export const services: Services = {
   transactions: transactionService,
   transactionRecords: transactionRecordService,
   webhookEvents: webhookEventService,
-  users: userService,
+  legacyWalletUsers: userService,
   checkouts: checkoutService,
   prospects: prospectService,
   demoConfigs: demoConfigService,
+  users: gtmUserService,
+  teams: teamService,
+  shareLinks: shareLinkService,
+  visitorSessions: visitorSessionService,
 };
 
 // Re-export types
@@ -98,5 +117,30 @@ export type {
   CreateDemoConfigInput,
   UpdateDemoConfigInput,
   Services,
+  GtmUserService,
+  GtmUser,
+  GtmUserRole,
+  UpdateGtmUserInput,
+  ClaimLegacyRecordsResult,
+  TeamService,
+  Team,
+  TeamMembership,
+  CreateTeamInput,
+  ShareLinkService,
+  ShareLink,
+  ShareLinkStatus,
+  ShareLinkWithContext,
+  MintShareLinkInput,
+  VisitorSessionService,
+  TrackEventInput,
+  TrackBatchInput,
+  VisitorSessionMeta,
+  UpsertVisitorSessionResult,
 } from "./types";
-export { DuplicateWebhookEventError } from "./types";
+export {
+  DuplicateWebhookEventError,
+  InvalidSchedulingUrlError,
+  DynamicUserIdConflictError,
+  DemoConfigNotFoundError,
+  ShareLinkProspectNotFoundError,
+} from "./types";

@@ -38,9 +38,10 @@ interface DemoConfigRow {
   id: string;
   kind: string;
   ownerId: string;
+  createdById: string | null;
   name: string | null;
   description: string | null;
-  prospectId: string;
+  prospectId: string | null;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: Date;
@@ -59,6 +60,7 @@ export interface DemoConfigPrismaClient {
       data: {
         kind: string;
         ownerId: string;
+        createdById?: string | null;
         name?: string | null;
         description?: string | null;
         prospectId: string;
@@ -74,6 +76,7 @@ export interface DemoConfigPrismaClient {
     update(args: {
       where: { id: string };
       data: Partial<{
+        createdById: string | null;
         name: string | null;
         description: string | null;
         prospectId: string;
@@ -88,6 +91,7 @@ export interface DemoConfigPrismaClient {
         id: string;
         kind: string;
         ownerId: string;
+        createdById?: string | null;
         name?: string | null;
         description?: string | null;
         prospectId: string;
@@ -96,6 +100,7 @@ export interface DemoConfigPrismaClient {
       };
       update: Partial<{
         ownerId: string;
+        createdById: string | null;
         name: string | null;
         description: string | null;
         prospectId: string;
@@ -114,9 +119,12 @@ function toRecord(row: DemoConfigRow): DemoConfigRecord {
     // trust the boundary held.
     kind: row.kind as DemoConfigKind,
     ownerId: row.ownerId,
+    createdById: row.createdById,
     name: row.name,
     description: row.description,
-    prospectId: row.prospectId,
+    // Column is nullable post-03.5A; the read model stays non-null ("" for
+    // unbound) until the 03.5B mapper cutover reworks resolution.
+    prospectId: row.prospectId ?? "",
     themeOverrides: row.themeOverrides ?? null,
     config: row.config,
     createdAt: row.createdAt,
@@ -140,6 +148,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
       data: {
         kind: input.kind,
         ownerId: input.ownerId,
+        createdById: input.createdById ?? null,
         name: input.name ?? null,
         description: input.description ?? null,
         prospectId: input.prospectId,
@@ -188,6 +197,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
     const data: Parameters<
       DemoConfigPrismaClient["demoConfig"]["update"]
     >[0]["data"] = {};
+    if (input.createdById !== undefined) data.createdById = input.createdById;
     if (input.name !== undefined) data.name = input.name;
     if (input.description !== undefined) data.description = input.description;
     if (input.prospectId !== undefined) data.prospectId = input.prospectId;
@@ -216,6 +226,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         id,
         kind: input.kind,
         ownerId: input.ownerId,
+        createdById: input.createdById ?? null,
         name: input.name ?? null,
         description: input.description ?? null,
         prospectId: input.prospectId,
@@ -224,6 +235,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
       },
       update: {
         ownerId: input.ownerId,
+        createdById: input.createdById ?? null,
         name: input.name ?? null,
         description: input.description ?? null,
         prospectId: input.prospectId,

@@ -80,6 +80,17 @@ describe.each(backends)("DemoConfigService parity ($name)", ({ build }) => {
     expect(created.updatedAt).toBeInstanceOf(Date);
   });
 
+  it("defaults createdById to null and round-trips an explicit value", async () => {
+    const created = await svc.create(makeInput());
+    expect(created.createdById).toBeNull();
+    const withCreator = await svc.create(
+      makeInput({ createdById: "user-7" }),
+    );
+    expect(withCreator.createdById).toBe("user-7");
+    const fetched = await svc.get(withCreator.id);
+    expect(fetched!.createdById).toBe("user-7");
+  });
+
   it("treats missing description as null", async () => {
     const created = await svc.create(makeInput({ description: undefined }));
     expect(created.description).toBeNull();

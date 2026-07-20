@@ -244,6 +244,14 @@ export type ProspectBorderRadius = "xs" | "sm" | "md" | "lg";
  */
 export type ProspectLogoKind = "custom" | "dynamic";
 
+/** Lifecycle state. Mirrors the Prisma `ProspectStatus` enum. */
+export type ProspectStatus = "ACTIVE" | "ARCHIVED";
+
+/// Seeded default team every user and prospect joins initially. Literal id
+/// matches the value seeded by the gtm_tables migration; slug drives lookup.
+export const DEFAULT_TEAM_ID = "team_gtm_default";
+export const DEFAULT_TEAM_SLUG = "gtm";
+
 /**
  * Prospect row as it lives in Postgres (mirrors the Prisma `Prospect` model).
  * The dashboard service layer surfaces this shape regardless of backend.
@@ -256,6 +264,11 @@ export type ProspectLogoKind = "custom" | "dynamic";
 export interface Prospect {
   id: string;
   ownerId: string;
+  /** Owning team. Defaults to the seeded default team when unset on write. */
+  teamId: string;
+  /** Resolved creator (FK -> User); null for legacy rows not yet reconciled. */
+  createdById: string | null;
+  status: ProspectStatus;
   name: string;
   description: string | null;
   companyUrl: string | null;
@@ -288,6 +301,10 @@ export interface Prospect {
 
 export interface CreateProspectInput {
   ownerId: string;
+  /** Defaults to the seeded default team when omitted (PR A write path). */
+  teamId?: string;
+  createdById?: string | null;
+  status?: ProspectStatus;
   name: string;
   description?: string | null;
   companyUrl?: string | null;
@@ -317,6 +334,9 @@ export interface CreateProspectInput {
 }
 
 export interface UpdateProspectInput {
+  teamId?: string;
+  createdById?: string | null;
+  status?: ProspectStatus;
   name?: string;
   description?: string | null;
   companyUrl?: string | null;
@@ -615,8 +635,12 @@ export interface DemoConfigRecord {
   id: string;
   kind: DemoConfigKind;
   ownerId: string;
+  /** Resolved creator (FK -> User); null for legacy rows not yet reconciled. */
+  createdById: string | null;
   name: string | null;
   description: string | null;
+  /// Column is nullable since GTM-03.5A; the read model stays non-null (""
+  /// for unbound) until the 03.5B mapper cutover reworks resolution.
   prospectId: string;
   /**
    * Optional per-config theme overrides merged on top of the linked
@@ -638,6 +662,7 @@ export interface DemoConfigRecord {
 export interface CreateDemoConfigInput {
   kind: DemoConfigKind;
   ownerId: string;
+  createdById?: string | null;
   name?: string | null;
   description?: string | null;
   prospectId: string;
@@ -646,6 +671,7 @@ export interface CreateDemoConfigInput {
 }
 
 export interface UpdateDemoConfigInput {
+  createdById?: string | null;
   name?: string | null;
   description?: string | null;
   prospectId?: string;
@@ -684,6 +710,292 @@ export interface DemoConfigService {
 }
 
 // =============================================================================
+// GTM User Service
+// =============================================================================
+//
+// Single internal-person entity (mirrors the Prisma `User` model).
+// Postgres-only, no cutover flag - `services.users` always resolves to
+// `PostgresGtmUserService`. Types stay `Gtm`-prefixed: `User` is already
+// imported above for the legacy per-checkout wallet user, and `User` is
+// also the Prisma model name.
+
+/// Mirrors the Prisma `Role` enum. OWNER: everything, incl. role grants -
+/// only OWNERs modify OWNERs. ADMIN: mutates any record, grants roles below
+/// ADMIN, reaches the operations surface. MEMBER: sign-in default - creates
+/// and mutates own records, mints share links. VIEWER: read-only.
+export type GtmUserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+
+export interface GtmUser {
+  id: string;
+  email: string;
+  /** Dynamic JWT `sub`. Null until first verified sign-in; write-once
+   * thereafter - see `DynamicUserIdConflictError`. */
+  dynamicUserId: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  schedulingUrl: string | null;
+  role: GtmUserRole;
+  /** Offboarding lifecycle. Non-null rejects sign-in (Phase 04). */
+  deactivatedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Per-table counts of legacy records claimed by `claimLegacyRecords`. */
+export interface ClaimLegacyRecordsResult {
+  prospects: number;
+  demoConfigs: number;
+}
+
+/**
+ * Fields a caller may change via `GtmUserService.update`. `schedulingUrl`
+ * is validated at the service layer (zod, https-only) before it ever
+ * reaches Prisma - rejects `javascript:`, `http://`, and any non-https
+ * scheme. `dynamicUserId` is write-once - see `DynamicUserIdConflictError`.
+ */
+export interface UpdateGtmUserInput {
+  displayName?: string | null;
+  schedulingUrl?: string | null;
+  avatarUrl?: string | null;
+  dynamicUserId?: string | null;
+}
+
+export class InvalidSchedulingUrlError extends Error {
+  constructor(reason: string) {
+    super(`Invalid schedulingUrl: ${reason}`);
+    this.name = "InvalidSchedulingUrlError";
+  }
+}
+
+/**
+ * Thrown by `GtmUserService.update` when `dynamicUserId` is already set to
+ * a different, non-null value - the column is write-once.
+ */
+export class DynamicUserIdConflictError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly existing: string,
+    public readonly attempted: string,
+  ) {
+    super(
+      `User ${userId} already has dynamicUserId "${existing}"; refusing to overwrite with "${attempted}"`,
+    );
+    this.name = "DynamicUserIdConflictError";
+  }
+}
+
+export interface GtmUserService {
+  /**
+   * Normalises `email` to lowercase before lookup/create so the same
+   * person never ends up with two rows because of casing. Creates with
+   * `dynamicUserId: null`; role seeding (OWNER/ADMIN allowlists) stays out
+   * of this service.
+   */
+  getOrCreateByEmail(email: string): Promise<GtmUser>;
+  get(id: string): Promise<GtmUser | null>;
+  update(id: string, input: UpdateGtmUserInput): Promise<GtmUser>;
+  /** Role assignment. */
+  setRole(id: string, role: GtmUserRole): Promise<GtmUser>;
+  /**
+   * Batch-resolves users by Dynamic JWT `sub` (`dynamicUserId`) - the join
+   * key back to `Prospect.ownerId` / `DemoConfig.ownerId`. Unknown subs are
+   * simply absent from the returned map.
+   */
+  resolveByDynamicIds(subs: string[]): Promise<Map<string, GtmUser>>;
+  /**
+   * One UPDATE per table setting `createdById = user.id` on Prospect +
+   * DemoConfig rows whose `ownerId` equals the user's `dynamicUserId` and
+   * whose `createdById` is still null. Idempotent (re-runs claim nothing);
+   * no-op when `dynamicUserId` is null. Returns per-table counts.
+   */
+  claimLegacyRecords(
+    user: Pick<GtmUser, "id" | "dynamicUserId">,
+  ): Promise<ClaimLegacyRecordsResult>;
+}
+
+// =============================================================================
+// Team Service
+// =============================================================================
+//
+// Team + TeamMembership (no per-membership role; workspace Role governs).
+// Postgres-only, no cutover flag. Seeded default team has slug "gtm".
+
+export interface Team {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: Date;
+}
+
+export interface TeamMembership {
+  id: string;
+  userId: string;
+  teamId: string;
+  createdAt: Date;
+}
+
+export interface CreateTeamInput {
+  name: string;
+  slug: string;
+}
+
+export interface TeamService {
+  create(input: CreateTeamInput): Promise<Team>;
+  list(): Promise<Team[]>;
+  /** Idempotent: adding an existing (userId, teamId) returns the current row. */
+  addMember(userId: string, teamId: string): Promise<TeamMembership>;
+  /** Idempotent: removing an absent membership is a no-op. */
+  removeMember(userId: string, teamId: string): Promise<void>;
+  membershipsForUser(userId: string): Promise<TeamMembership[]>;
+  /** The seeded default team (slug "gtm"); null if not seeded. */
+  defaultTeam(): Promise<Team | null>;
+}
+
+// =============================================================================
+// Share Link Service
+// =============================================================================
+//
+// Per-prospect, per-demo share link. Postgres-only, no cutover flag. No
+// Prisma-level FK to `Prospect`/`DemoConfig` (decoupled lifetimes, like
+// `Transaction.prospectId` / `WebhookEvent.prospectId`); `mint` verifies
+// both exist at the service layer instead.
+
+export type ShareLinkStatus = "active" | "revoked";
+
+export interface ShareLink {
+  id: string;
+  token: string;
+  demoConfigId: string;
+  prospectId: string;
+  userId: string;
+  status: ShareLinkStatus;
+  expiresAt: Date | null;
+  createdAt: Date;
+}
+
+/** `resolveByToken`'s return shape. `user` comes via the Prisma relation;
+ * `prospect` via a service-layer lookup since `ShareLink` has no
+ * FK/relation field for it. */
+export interface ShareLinkWithContext extends ShareLink {
+  user: GtmUser;
+  prospect: Prospect;
+}
+
+export interface MintShareLinkInput {
+  demoConfigId: string;
+  prospectId: string;
+  userId: string;
+}
+
+export class DemoConfigNotFoundError extends Error {
+  constructor(public readonly demoConfigId: string) {
+    super(`DemoConfig not found: ${demoConfigId}`);
+    this.name = "DemoConfigNotFoundError";
+  }
+}
+
+export class ShareLinkProspectNotFoundError extends Error {
+  constructor(public readonly prospectId: string) {
+    super(`Prospect not found: ${prospectId}`);
+    this.name = "ShareLinkProspectNotFoundError";
+  }
+}
+
+export interface ShareLinkService {
+  /**
+   * Verifies `demoConfigId` and `prospectId` both exist (throws
+   * `DemoConfigNotFoundError` / `ShareLinkProspectNotFoundError`
+   * otherwise), then mints a `nanoid(21)` url-safe token and creates the
+   * row with `status: "active"`.
+   */
+  mint(input: MintShareLinkInput): Promise<ShareLink>;
+  /**
+   * Returns `null` unless the link exists, `status === "active"`, and
+   * (when set) `expiresAt` is in the future. Never throws - the
+   * share-link path must never 404 for prospects (GTM hard rule).
+   */
+  resolveByToken(token: string): Promise<ShareLinkWithContext | null>;
+  /** Flips `status` to `"revoked"`. Idempotent - revoking twice is a no-op. */
+  revoke(id: string): Promise<ShareLink>;
+}
+
+// =============================================================================
+// Visitor Session Service
+// =============================================================================
+//
+// `VisitorSession.id` / `TrackEvent.id` are client-generated UUIDs
+// (packages/analytics mints them) - no `@default`, so every insert here
+// must be idempotent-friendly. This service is write-only.
+
+/**
+ * One event as it arrives in a validated batch. Mirrors
+ * `packages/analytics`'s `trackEventSchema` structurally without importing
+ * it, so `packages/db`'s only consumer (D-015) stays free of the
+ * cross-package dependency.
+ */
+export interface TrackEventInput {
+  /** Client-generated UUID - becomes `TrackEvent.id`, the idempotency key. */
+  eventId: string;
+  type: "pageview" | "step" | "milestone";
+  /** `name === "heartbeat"` events advance `lastSeenAt` but are never persisted as a row. */
+  name: string;
+  path?: string;
+  /** Epoch ms, client clock. */
+  ts: number;
+  props?: Record<string, unknown>;
+}
+
+/** Mirrors `packages/analytics`'s `trackBatchSchema` structurally (see `TrackEventInput`). */
+export interface TrackBatchInput {
+  sessionId: string;
+  anonId: string;
+  demoSlug: string;
+  /** Present when the visit carries a `?share=` token. Unused by this
+   * service directly - callers resolve it to `meta.shareLinkId` before
+   * calling `upsertFromBatch`. */
+  shareToken?: string;
+  /** Client-declared hint. `meta.isInternal` (server-resolved) is
+   * authoritative for persistence - this service does not read this field. */
+  isInternal?: boolean;
+  events: TrackEventInput[];
+}
+
+/**
+ * Request-derived metadata the ingest route computes server-side and
+ * passes alongside the batch. Never trust these values from the client
+ * payload directly - geo/UA are derived from headers, `ipHash` is
+ * `sha256(ip + IP_HASH_SALT)` (raw IP never persisted).
+ */
+export interface VisitorSessionMeta {
+  geo: { country?: string; region?: string; city?: string };
+  ua: { device?: string; os?: string; browser?: string };
+  ipHash: string;
+  shareLinkId: string | null;
+  isInternal: boolean;
+}
+
+export interface UpsertVisitorSessionResult {
+  /** True when the session row was newly inserted by this call - used to
+   * gate one-time enrichment. */
+  created: boolean;
+}
+
+export interface VisitorSessionService {
+  /**
+   * Upserts the `VisitorSession` row by `batch.sessionId`: creates it with
+   * `meta` on first sight, or (on subsequent calls) advances `lastSeenAt`
+   * forward-only to the max event `ts` in this batch - never backward,
+   * and meta fields are not re-applied on update. Then inserts every
+   * non-heartbeat event via `createMany({ skipDuplicates: true })` so
+   * retried batches / duplicate event ids never double-write.
+   */
+  upsertFromBatch(
+    batch: TrackBatchInput,
+    meta: VisitorSessionMeta,
+  ): Promise<UpsertVisitorSessionResult>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
@@ -691,8 +1003,15 @@ export interface Services {
   transactions: TransactionService;
   transactionRecords: TransactionRecordService;
   webhookEvents: WebhookEventService;
-  users: UserService;
+  /// Legacy per-checkout wallet-user Redis service (address, chainIds, tx
+  /// stats) - see `redis/users.ts`.
+  legacyWalletUsers: UserService;
   checkouts: CheckoutService;
   prospects: ProspectService;
   demoConfigs: DemoConfigService;
+  /// GTM SE/operator identity record.
+  users: GtmUserService;
+  teams: TeamService;
+  shareLinks: ShareLinkService;
+  visitorSessions: VisitorSessionService;
 }

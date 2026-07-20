@@ -15,14 +15,16 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import { getRedis, REDIS_KEYS, type RedisClient } from "@/lib/redis";
-import type {
-  Prospect,
-  ProspectBorderRadius,
-  ProspectListOptions,
-  ProspectLogoKind,
-  ProspectService,
-  CreateProspectInput,
-  UpdateProspectInput,
+import {
+  DEFAULT_TEAM_ID,
+  type Prospect,
+  type ProspectBorderRadius,
+  type ProspectListOptions,
+  type ProspectLogoKind,
+  type ProspectService,
+  type ProspectStatus,
+  type CreateProspectInput,
+  type UpdateProspectInput,
 } from "../types";
 
 /**
@@ -33,6 +35,9 @@ import type {
 interface StoredProspect {
   id: string;
   ownerId: string;
+  teamId: string;
+  createdById: string | null;
+  status: ProspectStatus;
   name: string;
   description: string | null;
   companyUrl: string | null;
@@ -80,6 +85,9 @@ function fromCreateInput(
 ): Omit<StoredProspect, "id" | "createdAt" | "updatedAt"> {
   return {
     ownerId: input.ownerId,
+    teamId: input.teamId ?? DEFAULT_TEAM_ID,
+    createdById: input.createdById ?? null,
+    status: input.status ?? "ACTIVE",
     name: input.name,
     description: input.description ?? null,
     companyUrl: input.companyUrl ?? null,

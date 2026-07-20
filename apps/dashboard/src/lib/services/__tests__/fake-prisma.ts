@@ -15,10 +15,19 @@
  * row (full visual theme + demo-config id mirrors).
  */
 
-import type { Prospect, ProspectBorderRadius, ProspectLogoKind } from "../types";
+import {
+  DEFAULT_TEAM_ID,
+  type Prospect,
+  type ProspectBorderRadius,
+  type ProspectLogoKind,
+  type ProspectStatus,
+} from "../types";
 
 interface ProspectWritable {
   ownerId: string;
+  teamId: string;
+  createdById: string | null;
+  status: ProspectStatus;
   name: string;
   description: string | null;
   companyUrl: string | null;
@@ -106,6 +115,9 @@ function applyNullDefaults(
   data: Partial<ProspectWritable>,
 ): Omit<ProspectWritable, "ownerId" | "name" | "primaryColor"> {
   return {
+    teamId: data.teamId ?? DEFAULT_TEAM_ID,
+    createdById: data.createdById ?? null,
+    status: data.status ?? "ACTIVE",
     description: data.description ?? null,
     companyUrl: data.companyUrl ?? null,
     logo: data.logo ?? "dynamic",

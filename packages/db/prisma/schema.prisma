@@ -1,22 +1,13 @@
-// Prisma schema for @dynamic-demos/db
+// Prisma schema for @dynamic-demos/db. Consumed only by apps/dashboard (D-015).
 //
-// Phase 2 scaffold — no real models yet. Subsequent PRs (2-brands,
-// 2-remittance, 2-others, 2-transactions) introduce the actual data model.
-//
-// Decisions referenced:
-//   - D-013: Postgres = Prisma + Supabase. Two URLs (pooler runtime, direct migrations).
-//   - D-015: packages/db consumed only by apps/dashboard. Apps fetch via dashboard API.
-//
-// Hard rules:
-//   - DATABASE_URL must point at the Supabase pooler (port 6543) for runtime.
-//   - DIRECT_URL must point at the direct connection (port 5432) for migrations.
-//   - `prisma db push` is forbidden in production. Only `prisma migrate deploy`.
+// DATABASE_URL = Supabase pooler (6543, runtime). DIRECT_URL = direct (5432,
+// migrations). `prisma db push` is forbidden in production - only
+// `prisma migrate deploy`.
 
 generator client {
   provider      = "prisma-client-js"
-  // `native` = local dev. `rhel-openssl-3.0.x` = Vercel serverless
-  // runtime. Without the linux target, Vercel functions fail at runtime
-  // with "Prisma Client could not locate the Query Engine".
+  // rhel target required: without it Vercel functions fail at runtime with
+  // "Prisma Client could not locate the Query Engine".
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -26,54 +17,38 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Models added incrementally — one PR per migration.
-//
-// Landed:
-//   PR 2-brands (Part A):     Brand (renamed to Prospect in Phase GTM-01).
-//   PR 2-transactions:        Transaction, WebhookEvent.
-//   PR 2-demo-configs:        DemoConfig (unified per-demo-type carrier).
-//   PR 2-remittance-fold:     RemittanceConfig folded into DemoConfig with
-//                             kind = "remittance"; legacy table dropped.
-//   Phase GTM-01:             Brand -> Prospect via EXPAND-CONTRACT. EXPAND
-//                             (20260717000000_prospect_rename) added
-//                             `Prospect` + `prospectId` alongside the legacy
-//                             `Brand` + `brandId`. A prospect is a company we
-//                             sell to; its visual theme is one facet of that
-//                             identity, not the whole record. See
-//                             docs/projects/gtm-platform/DECISIONS.md.
-//   Phase GTM-01b:            CONTRACT (20260717010000_prospect_contract):
-//                             dropped the legacy `Brand` table, `brandId`
-//                             columns, the FK/indexes, and the forward-sync
-//                             triggers after the GTM-01 deploy promoted.
-//
-// Pending:
-//   - Action-layer cutover so legacy `lib/actions/<demoType>.ts` paths
-//     write to DemoConfig instead of their per-type Redis stores.
+enum ProspectStatus {
+  ACTIVE
+  ARCHIVED
+}
 
-/// First-class Prospect record (renamed from `Brand` in Phase GTM-01). A
-/// prospect is a company we sell to; it owns shared theme + logo metadata
-/// that demo configs (remittance, earn, etc.) reference via FK, plus
-/// identity fields (`domain`, `notes`) added for the GTM platform. `id` is
-/// application-generated (cuid) so it stays stable across backfill and
-/// matches the existing service-layer convention.
-///
-/// Phase 2-brand-cutover (2026-05-06): expanded to carry every field the
-/// legacy `BrandProfile` aggregate (Redis-only, in
-/// `apps/dashboard/src/lib/actions/brands.ts`) carried. The actions
-/// surface still returns `BrandProfile` aggregates; this row is the
-/// canonical persistence backing them when `USE_POSTGRES_BRANDS=true`.
-model Prospect {
-  id                 String       @id @default(cuid())
-  ownerId            String
-  name               String
-  description        String?
-  companyUrl         String?
-  /// "custom" or "dynamic". Discriminator that decides whether `logoUrl`
-  /// renders. Validated at the service layer.
-  logo               String       @default("dynamic")
-  logoUrl            String?
-  /// Border radius token: "xs" | "sm" | "md" | "lg". Validated at the
-  /// service layer; column stays text for forward compat.
+/// Team-owned workspace. Seeded default has slug "gtm".
+model Team {
+  id          String           @id @default(cuid())
+  name        String
+  slug        String           @unique
+  createdAt   DateTime         @default(now())
+  memberships TeamMembership[]
+  prospects   Prospect[]
+}
+
+/// User membership in a Team. No per-membership role (workspace Role governs).
+model TeamMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  team      Team     @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+}
+
+/// 1:1 visual palette for a Prospect. Identity fields stay on Prospect.
+model ProspectTheme {
+  id                 String   @id @default(cuid())
+  prospectId         String   @unique
   borderRadius       String?
   primaryColor       String
   primaryHoverColor  String?
@@ -88,59 +63,71 @@ model Prospect {
   rowHoverBackground String?
   gradientFrom       String?
   gradientTo         String?
-  /// Linked demo-config ids (still Redis-resident until per-demo-type
-  /// migrations land in PR 2-others). Mirrored on the row so the
-  /// canonical Prospect record is self-contained.
+  prospect           Prospect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+}
+
+/// A company we sell to. Owns identity + theme; demo configs reference it.
+model Prospect {
+  id                 String         @id @default(cuid())
+  ownerId            String
+  /// DB default is a deploy-window crutch for pre-teamId clients; dropped at contract.
+  teamId             String         @default("team_gtm_default")
+  createdById        String?
+  status             ProspectStatus @default(ACTIVE)
+  name               String
+  description        String?
+  companyUrl         String?
+  /// "custom" | "dynamic" - decides whether `logoUrl` renders. Validated at the service layer.
+  logo               String         @default("dynamic")
+  logoUrl            String?
+  /// Palette copied to ProspectTheme in GTM-03.5A; still canonical until the 03.5B cutover.
+  borderRadius       String?
+  primaryColor       String
+  primaryHoverColor  String?
+  secondaryColor     String?
+  accentColor        String?
+  pageBackground     String?
+  background         String?
+  foreground         String?
+  mutedTextColor     String?
+  borderColor        String?
+  rowBackground      String?
+  rowHoverBackground String?
+  gradientFrom       String?
+  gradientTo         String?
+  /// @deprecated Dropped in the contract migration; query DemoConfig.prospectId instead.
   demoEarnId         String?
   demoCheckoutsId    String?
   demoWalletId       String?
   demoRemittanceId   String?
-  /// Identity fields added in Phase GTM-01. Both nullable - existing rows
-  /// backfill safely with no value.
   domain             String?
   notes              String?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   demoConfigs        DemoConfig[]
+  team               Team           @relation(fields: [teamId], references: [id])
+  createdBy          User?          @relation("ProspectCreatedBy", fields: [createdById], references: [id])
+  theme              ProspectTheme?
 
   @@index([ownerId])
+  @@index([teamId])
+  @@index([createdById])
 }
 
-/// Canonical "money in flight" transaction record (D-010). Every state
-/// mutation goes through `assertValidTransition` from `@dynamic-demos/transactions`
-/// at the service-layer boundary; the database stores the state string
-/// verbatim. Apps never read or write this table — only the dashboard via
-/// `apps/dashboard/src/lib/services/postgres/transactions.ts` (D-015).
-///
-/// Distinct from the legacy `Transaction` shape in
-/// `apps/dashboard/src/lib/types/dashboard.ts`, which is the LI.FI-checkout-
-/// bound record persisted in Redis. The two coexist; this model is the
-/// canonical state machine carrier and Phase 5A's webhook receiver writes
-/// here only.
+/// Canonical transaction record (D-010). State changes only via
+/// `assertValidTransition` at the service boundary - never widen at the DB.
 model Transaction {
   id                  String         @id @default(cuid())
-  /// Discriminator for the demo / flow that owns this transaction
-  /// (e.g. "checkout", "disbursement", "payout", "swap").
   kind                String
-  /// Canonical TransactionState string. Validation happens at the service
-  /// boundary — never widen at the DB.
   state               String
-  /// Optional pointer to the demo-instance config that initiated the flow.
   demoInstanceId      String?
-  /// Optional pointer to a Prospect row (added in PR 2-brands Part A as
-  /// `brandId`; superseded by `prospectId` in Phase GTM-01). Stored as
-  /// String, not a relation, because prospectId is also nullable for
-  /// pre-Phase-2-brands transactions and we want decoupled lifetimes.
+  /// String, not a relation - nullable for pre-Phase-2 rows; decoupled lifetimes.
   prospectId          String?
-  /// Self-relation for multi-leg flows (e.g. "sandwich" cross-border).
-  /// `parent` is unset for top-level transactions; `children` lists legs.
+  /// Self-relation for multi-leg flows; null for top-level transactions.
   parentTransactionId String?
   parent              Transaction?   @relation("TransactionParentChild", fields: [parentTransactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children            Transaction[]  @relation("TransactionParentChild")
-  /// Kind-specific data payload. Schema enforced at the service layer.
   payload             Json
-  /// Cross-package references not first-class on this row (e.g. provider
-  /// ids, idempotency keys). Service layer narrows the shape.
   refs                Json
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
@@ -152,36 +139,22 @@ model Transaction {
   @@index([parentTransactionId])
 }
 
-/// Webhook event audit row (D-011). Phase 5A's webhook receivers persist
-/// every received event before doing work; this table is the system of
-/// record for "what arrived, when, and was it valid". The unique
-/// `(provider, providerEventId)` constraint is the dedup primitive — every
-/// receiver upserts on it so retries don't double-process.
-///
-/// `signatureValid = false` rows are kept on purpose: invalid signatures
-/// are an attack signal worth auditing.
+/// Webhook audit row (D-011). `(provider, providerEventId)` is the dedup
+/// primitive. `signatureValid = false` rows are kept on purpose - invalid
+/// signatures are an attack signal worth auditing.
 model WebhookEvent {
   id                String       @id @default(cuid())
   provider          String
-  /// Provider-supplied event id. Combined with `provider` it's the dedup
-  /// key — a retry from the same provider always lands on the same row.
   providerEventId   String
   eventType         String
-  /// Provider-claimed occurrence timestamp (from the payload).
   occurredAt        DateTime
-  /// Wall-clock timestamp the dashboard observed the event.
   receivedAt        DateTime     @default(now())
-  /// True if HMAC / signature verification passed.
   signatureValid    Boolean
-  /// Untouched payload as the provider sent it. Source of truth for replay.
+  /// Untouched provider payload - source of truth for replay.
   rawPayload        Json
-  /// Provider-agnostic shape produced by the receiver's normaliser.
   normalizedPayload Json
-  /// Optional FK to the Transaction this event references. Populated when
-  /// the receiver can resolve a local transaction; null otherwise.
   transactionId     String?
   transaction       Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  /// Mirror fields for fast filtering when no Transaction row exists yet.
   demoInstanceId    String?
   prospectId        String?
   /// "pending" | "processed" | "failed" | "ignored". Service layer enforces.
@@ -195,46 +168,107 @@ model WebhookEvent {
   @@index([processingStatus])
 }
 
-/// Unified per-instance config carrier for every demo type (earn,
-/// wallet, trade, visa-direct, checkout, remittance). Replaces what
-/// would otherwise be one Postgres table per demo type — `kind` is the
-/// discriminator. The closed set of kinds is enforced in the
-/// application layer (Zod discriminated union at
-/// `apps/dashboard/src/lib/services/demo-config-schemas.ts`), not via a
-/// Prisma enum: the meta-system goal is to add new demo types without
-/// a migration, so the column stays plain TEXT.
-///
-/// `prospectId` is the FK to the canonical `Prospect` row (D-028; column
-/// renamed from `brandId` in Phase GTM-01). The optional `themeOverrides`
-/// carries per-config theme deltas merged on top of the prospect's theme
-/// at the service boundary; null means "render the prospect theme as-is."
-///
-/// `config` is kind-specific payload validated by the Zod schema on
-/// write. Initially permissive (`z.record(z.unknown())`); strict
-/// per-kind schemas land alongside the action-layer wiring follow-up.
-///
-/// Apps never read this table directly — only the dashboard via the
-/// service layer (D-015). Service:
-/// `apps/dashboard/src/lib/services/postgres/demo-configs.ts`, flag
-/// `USE_POSTGRES_DEMO_CONFIGS`.
+/// Per-instance config for every demo type; `kind` discriminates. Plain TEXT
+/// (no enum) on purpose: new demo types must not require a migration. Kinds
+/// validated by the Zod union in demo-config-schemas.ts.
 model DemoConfig {
-  id             String   @id @default(cuid())
-  /// One of: 'earn' | 'wallet' | 'trade' | 'visa-direct' | 'checkout'
-  /// | 'remittance'. Validated app-side; no Prisma enum so new kinds
-  /// don't require a migration.
+  id             String    @id @default(cuid())
   kind           String
   ownerId        String
+  createdById    String?
   name           String?
   description    String?
-  prospectId     String
-  prospect       Prospect @relation(fields: [prospectId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  prospectId     String?
+  prospect       Prospect? @relation(fields: [prospectId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  createdBy      User?     @relation("DemoConfigCreatedBy", fields: [createdById], references: [id])
   themeOverrides Json?
   config         Json
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([ownerId])
   @@index([prospectId])
   @@index([kind])
   @@index([ownerId, kind])
+  @@index([createdById])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+/// Internal team member. Created lazily on first allowlisted sign-in.
+model User {
+  id                 String           @id @default(cuid())
+  email              String           @unique
+  /// Dynamic JWT `sub`; joins legacy `ownerId` values. Write-once (service layer).
+  dynamicUserId      String?          @unique
+  displayName        String?
+  avatarUrl          String?
+  schedulingUrl      String?
+  role               Role             @default(MEMBER)
+  deactivatedAt      DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  shareLinks         ShareLink[]
+  memberships        TeamMembership[]
+  createdProspects   Prospect[]       @relation("ProspectCreatedBy")
+  createdDemoConfigs DemoConfig[]     @relation("DemoConfigCreatedBy")
+}
+
+/// Per-prospect trackable demo link, minted by a user.
+model ShareLink {
+  id           String           @id @default(cuid())
+  token        String           @unique // nanoid(21), url-safe
+  demoConfigId String
+  prospectId   String
+  userId       String
+  status       String           @default("active") // "active" | "revoked"
+  expiresAt    DateTime?
+  createdAt    DateTime         @default(now())
+  user         User             @relation(fields: [userId], references: [id])
+  sessions     VisitorSession[]
+}
+
+/// One visitor's session on a live demo. Geo/UA are derived server-side,
+/// never trusted from the client payload.
+model VisitorSession {
+  id          String       @id // client-generated UUID - no @default; upserts must stay idempotent
+  shareLinkId String?
+  demoSlug    String
+  anonId      String
+  startedAt   DateTime     @default(now())
+  lastSeenAt  DateTime     @default(now())
+  device      String?
+  os          String?
+  browser     String?
+  country     String?
+  region      String?
+  city        String?
+  ipHash      String?
+  isInternal  Boolean      @default(false)
+  enrichment  Json?
+  shareLink   ShareLink?   @relation(fields: [shareLinkId], references: [id])
+  events      TrackEvent[]
+
+  @@index([shareLinkId])
+  @@index([demoSlug, startedAt])
+}
+
+/// One tracked event in a session. "heartbeat"-named events advance the
+/// session's lastSeenAt but are never persisted here.
+model TrackEvent {
+  id        String         @id // client-generated event UUID - doubles as the idempotency key
+  sessionId String
+  ts        DateTime
+  type      String // "pageview" | "step" | "milestone"
+  name      String
+  path      String?
+  props     Json?
+  session   VisitorSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId, ts])
 }

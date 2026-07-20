@@ -17,19 +17,24 @@
  */
 
 import { prisma as defaultPrisma } from "@dynamic-demos/db";
-import type {
-  Prospect,
-  ProspectBorderRadius,
-  ProspectListOptions,
-  ProspectLogoKind,
-  ProspectService,
-  CreateProspectInput,
-  UpdateProspectInput,
+import {
+  DEFAULT_TEAM_ID,
+  type Prospect,
+  type ProspectBorderRadius,
+  type ProspectListOptions,
+  type ProspectLogoKind,
+  type ProspectService,
+  type ProspectStatus,
+  type CreateProspectInput,
+  type UpdateProspectInput,
 } from "../types";
 
 /** Fields that flow identically through create/update/upsert. */
 type ProspectWritable = {
   ownerId: string;
+  teamId: string;
+  createdById: string | null;
+  status: ProspectStatus;
   name: string;
   description: string | null;
   companyUrl: string | null;
@@ -105,6 +110,9 @@ export interface ProspectPrismaClient {
 function fromCreateInput(input: CreateProspectInput): ProspectWritable {
   return {
     ownerId: input.ownerId,
+    teamId: input.teamId ?? DEFAULT_TEAM_ID,
+    createdById: input.createdById ?? null,
+    status: input.status ?? "ACTIVE",
     name: input.name,
     description: input.description ?? null,
     companyUrl: input.companyUrl ?? null,
@@ -142,6 +150,9 @@ function fromCreateInput(input: CreateProspectInput): ProspectWritable {
 function fromUpdateInput(input: UpdateProspectInput): Partial<ProspectWritable> {
   const data: Partial<ProspectWritable> = {};
   const keys: ReadonlyArray<keyof UpdateProspectInput> = [
+    "teamId",
+    "createdById",
+    "status",
     "name",
     "description",
     "companyUrl",

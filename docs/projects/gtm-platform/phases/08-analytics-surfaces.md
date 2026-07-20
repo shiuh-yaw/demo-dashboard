@@ -26,6 +26,7 @@ One logical PR.
 - Enrichment JSON renders defensively: person name/avatar/linkedin if present, else company, else "Anonymous" + geo. Never render raw enrichment JSON.
 - Duration displayed as `HH:MM:SS`; sessions with a single event show `00:00:00` (matches Coast semantics), not blank.
 - Charts follow the dataviz skill; droplet components via the Phase 07 shim.
+- All aggregates respect team visibility (GTM-D-003, Phase 04's `visibleProspectIds`) - a MEMBER's org overview and per-prospect rollups only cover prospects their team(s) can see; ADMIN+ is unscoped.
 
 ## Required reading before code changes
 
@@ -39,11 +40,13 @@ One logical PR.
    - `demoSummary(demoConfigId, { includeInternal = false })` -> `{ sessions, viewers, avgDurationSec }` (viewers = distinct anonId; duration = `lastSeenAt - startedAt`).
    - `viewers(demoConfigId, opts)` -> grouped by anonId: `{ anonId, identity: { name?, email?, avatarUrl?, linkedinUrl?, company? } | null, geo, device, sessionCount, sessions: [...] }` (identity from the latest session's enrichment JSON).
    - `sessions(demoConfigId, opts)` -> flat session rows with `eventCount`, `stepViewCount` (events where `type IN ("step","pageview")` - count pageviews as step views for Coast parity, document this), timestamps.
-   - `orgOverview({ days = 30 })` -> `{ byDemo: [{ demoConfigId, name, prospectName, sessions }], totals, recentSessions: [...] }`.
-   - Tests: fixtures with known rows -> exact expected aggregates; internal-exclusion; distinct-viewer counting; empty demo -> zeros.
+   - `orgOverview({ days = 30 })` -> `{ byDemo: [{ demoConfigId, name, prospectName, sessions }], totals, recentSessions: [...] }`, scoped by `visibleProspectIds(user)`; leads with "recently active prospects" (see item 5).
+   - `prospectSummary(prospectId)` -> per-prospect rollup: sessions across all its demos, last-active timestamp, milestone depth, and a simple engagement score (document the formula in the service file).
+   - Tests: fixtures with known rows -> exact expected aggregates; internal-exclusion; distinct-viewer counting; empty demo -> zeros; team-visibility scoping (MEMBER sees only their teams' prospects, ADMIN+ sees all).
 2. **Analytics drawer** (Demos table): stat tiles + Viewers/Sessions tabs per the Coast reference; "Analytics updated" timestamp; per-viewer expandable session table.
 3. **`/dashboard/analytics`**: sessions-by-demo bar chart (dataviz skill), totals row, recent-sessions list (prospect, demo, duration, geo, when). Placeholder slot for the future live view stream (post-v1) - an empty-state card, not a fake feed.
 4. **Wire the Demos-table sessions/viewers columns** to `demoSummary` (replacing stub internals; call sites unchanged).
+5. **Prospect-level rollups**: the Prospects detail page's Engagement tab (Phase 07) and the org analytics page both surface `prospectSummary` data; the org page leads with a "recently active prospects" list (most recent `lastActive` first) ahead of the sessions-by-demo chart.
 
 ## Acceptance criteria
 

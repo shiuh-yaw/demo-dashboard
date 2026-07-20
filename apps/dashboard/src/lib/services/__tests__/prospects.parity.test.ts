@@ -331,6 +331,33 @@ describe.each(backends)("ProspectService parity ($name)", ({ build }) => {
     expect(refetched!.notes).toBe("closed - moving to pilot");
   });
 
+  it("defaults teamId to the default team, createdById to null, status to ACTIVE", async () => {
+    const created = await svc.create(makeInput());
+    expect(created.teamId).toBe("team_gtm_default");
+    expect(created.createdById).toBeNull();
+    expect(created.status).toBe("ACTIVE");
+    const fetched = await svc.get(created.id);
+    expect(fetched!.teamId).toBe("team_gtm_default");
+    expect(fetched!.status).toBe("ACTIVE");
+  });
+
+  it("round-trips explicit teamId / createdById / status and updates them", async () => {
+    const created = await svc.create(
+      makeInput({ teamId: "team_x", createdById: "user-1", status: "ARCHIVED" }),
+    );
+    expect(created.teamId).toBe("team_x");
+    expect(created.createdById).toBe("user-1");
+    expect(created.status).toBe("ARCHIVED");
+    const updated = await svc.update(created.id, {
+      status: "ACTIVE",
+      createdById: null,
+    });
+    expect(updated.status).toBe("ACTIVE");
+    expect(updated.createdById).toBeNull();
+    // teamId unchanged by the partial update.
+    expect(updated.teamId).toBe("team_x");
+  });
+
   it("ownership scoping holds across the wider row (list + get)", async () => {
     const owned = await svc.create(
       makeInput({ ownerId: "owner-1", name: "Owned" }),
