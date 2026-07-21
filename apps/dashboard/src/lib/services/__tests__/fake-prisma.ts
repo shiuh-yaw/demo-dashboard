@@ -101,8 +101,44 @@ export interface FakePrismaProspectDelegate {
   upsert(args: UpsertArgs): Promise<Prospect>;
 }
 
+/** The theme-column subset mirrored onto the 1:1 `ProspectTheme` row. */
+type ProspectThemeFields = Pick<
+  ProspectWritable,
+  | "borderRadius"
+  | "primaryColor"
+  | "primaryHoverColor"
+  | "secondaryColor"
+  | "accentColor"
+  | "pageBackground"
+  | "background"
+  | "foreground"
+  | "mutedTextColor"
+  | "borderColor"
+  | "rowBackground"
+  | "rowHoverBackground"
+  | "gradientFrom"
+  | "gradientTo"
+>;
+
+type ProspectThemeRow = { prospectId: string } & ProspectThemeFields;
+
+export interface FakePrismaProspectThemeDelegate {
+  findUnique(args: {
+    where: { prospectId: string };
+  }): Promise<ProspectThemeRow | null>;
+  findMany(args: {
+    where: { prospectId: { in: string[] } };
+  }): Promise<ProspectThemeRow[]>;
+  upsert(args: {
+    where: { prospectId: string };
+    create: { prospectId: string } & ProspectThemeFields;
+    update: ProspectThemeFields;
+  }): Promise<ProspectThemeRow>;
+}
+
 export interface FakePrismaClient {
   prospect: FakePrismaProspectDelegate;
+  prospectTheme: FakePrismaProspectThemeDelegate;
 }
 
 /**
@@ -146,11 +182,32 @@ function applyNullDefaults(
 
 export function createFakePrisma(): FakePrismaClient {
   const store = new Map<string, Prospect>();
+  const themeStore = new Map<string, ProspectThemeRow>();
   let counter = 0;
   const nextId = () => `cuid_${++counter}`;
   const now = () => new Date();
 
   return {
+    prospectTheme: {
+      async findUnique({ where }) {
+        const row = themeStore.get(where.prospectId);
+        return row ? { ...row } : null;
+      },
+      async findMany({ where }) {
+        const ids = new Set(where.prospectId.in);
+        return Array.from(themeStore.values())
+          .filter((row) => ids.has(row.prospectId))
+          .map((row) => ({ ...row }));
+      },
+      async upsert({ where, create, update }) {
+        const existing = themeStore.get(where.prospectId);
+        const row: ProspectThemeRow = existing
+          ? { ...existing, ...update }
+          : { ...create };
+        themeStore.set(where.prospectId, row);
+        return { ...row };
+      },
+    },
     prospect: {
       async create({ data }) {
         const id = nextId();

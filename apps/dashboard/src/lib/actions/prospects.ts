@@ -524,8 +524,11 @@ export async function createProspectProfile(
     }
 
     // 1) Create the canonical Prospect row first so the id is stable.
+    const createdById =
+      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)
+        ?.id ?? null;
     const created = await prospectService.create(
-      createRequestToInput(user.sub, request),
+      createRequestToInput(user.sub, createdById, request),
     );
 
     // 2) Build the ProspectSettings the demo-config orchestration expects.
@@ -740,6 +743,88 @@ export async function getAllProspectProfiles(): Promise<{
     .sort(sortByUpdated);
 
   return { profiles: userProfiles, orphaned: orphanedProfiles };
+}
+
+/**
+ * Appearance fields carried per option so the picker's consuming editor can
+ * prefill the Appearance section on selection without a second round trip.
+ * Mirrors AppearanceTheme's field names (apps/dashboard/src/components/shared/appearance-form.tsx).
+ */
+export interface ProspectOptionTheme {
+  logoUrl: string | null;
+  primaryColor: string;
+  primaryHoverColor: string | null;
+  accentColor: string | null;
+  pageBackground: string | null;
+  background: string | null;
+  foreground: string | null;
+  mutedTextColor: string | null;
+  borderColor: string | null;
+  rowBackground: string | null;
+  rowHoverBackground: string | null;
+  gradientFrom: string | null;
+  gradientTo: string | null;
+  borderRadius: string | null;
+}
+
+/** Minimal shape for the prospect picker (GTM-03.5B) - full curation UX is Phase 07's. */
+export interface ProspectOption {
+  id: string;
+  name: string;
+  /** True when the current user created this prospect - drives the "My prospects" grouping. */
+  isMine: boolean;
+  /** companyUrl, for the row's ProspectIcon favicon; null when the prospect has none. */
+  domain: string | null;
+  theme: ProspectOptionTheme;
+}
+
+/**
+ * List prospects for the config-form prospect picker. Workspace-shared
+ * visibility (DESIGN.md decision 10) - every signed-in user sees every
+ * prospect, not just their own; "mine" only changes the grouping, not the
+ * membership.
+ */
+export async function listProspectOptions(): Promise<
+  ActionResult<ProspectOption[]>
+> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: "Authentication required" };
+  try {
+    const currentUserId =
+      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)
+        ?.id ?? null;
+    const all = await prospectService.list();
+    const options = all
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        isMine: p.createdById
+          ? p.createdById === currentUserId
+          : p.ownerId === user.sub,
+        domain: p.companyUrl,
+        theme: {
+          logoUrl: p.logoUrl,
+          primaryColor: p.primaryColor,
+          primaryHoverColor: p.primaryHoverColor,
+          accentColor: p.accentColor,
+          pageBackground: p.pageBackground,
+          background: p.background,
+          foreground: p.foreground,
+          mutedTextColor: p.mutedTextColor,
+          borderColor: p.borderColor,
+          rowBackground: p.rowBackground,
+          rowHoverBackground: p.rowHoverBackground,
+          gradientFrom: p.gradientFrom,
+          gradientTo: p.gradientTo,
+          borderRadius: p.borderRadius,
+        },
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { success: true, data: options };
+  } catch (err) {
+    console.error("Failed to list prospects:", err);
+    return { success: false, error: "Failed to list prospects" };
+  }
 }
 
 /**

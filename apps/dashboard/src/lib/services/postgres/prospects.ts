@@ -11,6 +11,15 @@
  * shape and lib/services/prospect-mapper.ts for the projection back to
  * the ProspectProfile aggregate consumers expect.
  *
+ * GTM-03.5B: the palette also lives in `ProspectTheme` (1:1). Every write
+ * here dual-writes both the flat columns on `Prospect` (rollback safety
+ * until the contract phase drops them) and the `ProspectTheme` row; every
+ * read joins `ProspectTheme` and overlays it onto the flat columns, falling
+ * back to the flat columns untouched when no theme row exists yet (rows
+ * written before this deploy, or written by a path that bypasses this
+ * service). Consumers keep reading `Prospect.primaryColor` etc. unchanged -
+ * only the internal source of truth moved.
+ *
  * D-013: this module never opens its own connection — it relies on the
  * `prisma` singleton from @dynamic-demos/db so pool usage stays correct.
  * D-015: only apps/dashboard imports @dynamic-demos/db.
@@ -62,6 +71,62 @@ type ProspectWritable = {
   notes: string | null;
 };
 
+/** The subset of `ProspectWritable` that also lives on `ProspectTheme`. */
+type ProspectThemeFields = Pick<
+  ProspectWritable,
+  | "borderRadius"
+  | "primaryColor"
+  | "primaryHoverColor"
+  | "secondaryColor"
+  | "accentColor"
+  | "pageBackground"
+  | "background"
+  | "foreground"
+  | "mutedTextColor"
+  | "borderColor"
+  | "rowBackground"
+  | "rowHoverBackground"
+  | "gradientFrom"
+  | "gradientTo"
+>;
+
+const THEME_FIELD_KEYS: ReadonlyArray<keyof ProspectThemeFields> = [
+  "borderRadius",
+  "primaryColor",
+  "primaryHoverColor",
+  "secondaryColor",
+  "accentColor",
+  "pageBackground",
+  "background",
+  "foreground",
+  "mutedTextColor",
+  "borderColor",
+  "rowBackground",
+  "rowHoverBackground",
+  "gradientFrom",
+  "gradientTo",
+];
+
+type ProspectThemeRow = { prospectId: string } & ProspectThemeFields;
+
+function themeFieldsOf(data: ProspectWritable): ProspectThemeFields {
+  const theme = {} as ProspectThemeFields;
+  for (const key of THEME_FIELD_KEYS) {
+    (theme as Record<string, unknown>)[key] = data[key];
+  }
+  return theme;
+}
+
+/** Theme row wins wholesale when present; absent row means unmigrated. */
+function overlayTheme(prospect: Prospect, theme: ProspectThemeRow | null): Prospect {
+  if (!theme) return prospect;
+  const merged = { ...prospect };
+  for (const key of THEME_FIELD_KEYS) {
+    (merged as Record<string, unknown>)[key] = theme[key];
+  }
+  return merged;
+}
+
 /**
  * Minimal subset of the Prisma client used by PostgresProspectService.
  * Lets unit tests inject an in-memory fake without dragging
@@ -97,6 +162,19 @@ export interface ProspectPrismaClient {
       };
       update: Partial<ProspectWritable>;
     }): Promise<Prospect>;
+  };
+  prospectTheme: {
+    findUnique(args: {
+      where: { prospectId: string };
+    }): Promise<ProspectThemeRow | null>;
+    findMany(args: {
+      where: { prospectId: { in: string[] } };
+    }): Promise<ProspectThemeRow[]>;
+    upsert(args: {
+      where: { prospectId: string };
+      create: { prospectId: string } & ProspectThemeFields;
+      update: ProspectThemeFields;
+    }): Promise<ProspectThemeRow>;
   };
 }
 
@@ -194,38 +272,80 @@ export class PostgresProspectService implements ProspectService {
     this.client = client ?? (defaultPrisma as unknown as ProspectPrismaClient);
   }
 
+  /** Upserts the ProspectTheme row so it never drifts from the flat columns. */
+  private async writeTheme(
+    prospectId: string,
+    data: ProspectWritable,
+  ): Promise<void> {
+    const theme = themeFieldsOf(data);
+    await this.client.prospectTheme.upsert({
+      where: { prospectId },
+      create: { prospectId, ...theme },
+      update: theme,
+    });
+  }
+
   async create(input: CreateProspectInput): Promise<Prospect> {
-    return this.client.prospect.create({ data: fromCreateInput(input) });
+    const data = fromCreateInput(input);
+    const row = await this.client.prospect.create({ data });
+    await this.writeTheme(row.id, data);
+    return row;
   }
 
   async get(id: string): Promise<Prospect | null> {
-    return this.client.prospect.findUnique({ where: { id } });
+    const row = await this.client.prospect.findUnique({ where: { id } });
+    if (!row) return null;
+    const theme = await this.client.prospectTheme.findUnique({
+      where: { prospectId: id },
+    });
+    return overlayTheme(row, theme);
   }
 
   async list(options: ProspectListOptions = {}): Promise<Prospect[]> {
-    return this.client.prospect.findMany({
+    const rows = await this.client.prospect.findMany({
       where: options.ownerId ? { ownerId: options.ownerId } : undefined,
       orderBy: { createdAt: "asc" },
     });
+    if (rows.length === 0) return [];
+    const themes = await this.client.prospectTheme.findMany({
+      where: { prospectId: { in: rows.map((r) => r.id) } },
+    });
+    const byProspectId = new Map(themes.map((t) => [t.prospectId, t]));
+    return rows.map((row) => overlayTheme(row, byProspectId.get(row.id) ?? null));
   }
 
   async update(id: string, input: UpdateProspectInput): Promise<Prospect> {
-    return this.client.prospect.update({
+    const updateData = fromUpdateInput(input);
+    const existing = await this.client.prospect.findUnique({ where: { id } });
+    if (!existing) {
+      throw new Error(`Prospect not found: ${id}`);
+    }
+    const merged: ProspectWritable = { ...existing, ...updateData };
+    // Theme must land before the flat columns on update - reads let the
+    // ProspectTheme row win wholesale, so a crash between the two writes
+    // must never leave a stale theme readable (create keeps prospect-first
+    // for the FK ProspectTheme.prospectId depends on).
+    await this.writeTheme(id, merged);
+    const row = await this.client.prospect.update({
       where: { id },
-      data: fromUpdateInput(input),
+      data: updateData,
     });
+    return row;
   }
 
   async delete(id: string): Promise<void> {
+    // ProspectTheme FK is `onDelete: Cascade` - no explicit theme delete.
     await this.client.prospect.delete({ where: { id } });
   }
 
   async upsertWithId(id: string, input: CreateProspectInput): Promise<Prospect> {
     const data = fromCreateInput(input);
-    return this.client.prospect.upsert({
+    const row = await this.client.prospect.upsert({
       where: { id },
       create: { id, ...data },
       update: data,
     });
+    await this.writeTheme(row.id, data);
+    return row;
   }
 }

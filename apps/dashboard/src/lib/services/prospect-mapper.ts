@@ -85,6 +85,7 @@ export function prospectToProfile(prospect: Prospect): ProspectProfile {
  */
 export function createRequestToInput(
   ownerId: string,
+  createdById: string | null,
   request: CreateProspectProfileRequest,
 ): CreateProspectInput {
   // Merge with defaults so the row is always populated. The caller's
@@ -96,6 +97,7 @@ export function createRequestToInput(
   const theme: Partial<ProspectTheme> = merged.theme ?? {};
   return {
     ownerId,
+    createdById,
     name: request.name || "Untitled Prospect",
     description: null,
     domain: null,

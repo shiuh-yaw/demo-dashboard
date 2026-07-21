@@ -20,6 +20,7 @@ import {
   type VisaDirectTheme,
 } from "@/lib/types/dashboard";
 import { VisaDirectForm } from "../components/visa-direct-form";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
 
 export default function NewVisaDirectConfigPage() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function NewVisaDirectConfigPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
+  const [prospectId, setProspectId] = useState<string | null>(null);
   const [branding, setBranding] = useState<VisaDirectBranding>(
     DEFAULT_VISA_DIRECT_CONFIG.branding
   );
@@ -44,7 +46,7 @@ export default function NewVisaDirectConfigPage() {
 
     try {
       const config: Partial<VisaDirectConfig> = { branding, theme };
-      const result = await createVisaDirectConfig(name.trim(), config);
+      const result = await createVisaDirectConfig(name.trim(), config, prospectId);
 
       if (result.success) {
         router.push(`/visa-direct/${result.data.id}`);
@@ -87,6 +89,13 @@ export default function NewVisaDirectConfigPage() {
             {isCreating ? "Creating..." : "Create Config"}
           </Button>
         </div>
+      </div>
+
+      <div className="max-w-xl mb-5">
+        <label className="block text-xs font-medium text-slate-700 mb-1.5">
+          Prospect
+        </label>
+        <ProspectPicker value={prospectId} onChange={setProspectId} />
       </div>
 
       <VisaDirectForm

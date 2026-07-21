@@ -3,14 +3,12 @@
  *
  * `StoredCheckoutConfig` carries `mode` and `config: WidgetConfig`. The
  * `mode` field is preserved on the embedded config payload so the
- * legacy round-trip is lossless. Prospect hashing uses
- * `(theme.primaryColor, branding.logo?)` — `WidgetBranding.logo` is a
- * URL string (no custom/dynamic discriminator).
+ * legacy round-trip is lossless. `WidgetBranding.logo` is a URL string
+ * (no custom/dynamic discriminator).
  */
 
 import {
   DEFAULT_WIDGET_CONFIG,
-  DEFAULT_THEME,
   type WidgetConfig,
 } from "@/lib/widget-config";
 import type {
@@ -18,11 +16,12 @@ import type {
   StoredCheckoutConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveProspect } from "./prospect-resolver";
-import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
+import {
+  hydrateProspectTheme,
+  prospectDisplayFields,
+  prospectLogoUrl,
+} from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
-
-const DEFAULT_PRIMARY = DEFAULT_THEME.primaryColor;
 
 /**
  * Carry the legacy `mode` field through `config: Json`. We embed it
@@ -32,15 +31,6 @@ const DEFAULT_PRIMARY = DEFAULT_THEME.primaryColor;
 interface CheckoutConfigPayload extends WidgetConfig {
   mode: WidgetConfig["mode"];
   _checkoutMode?: CheckoutMode;
-}
-
-function pickPrimary(c: Partial<WidgetConfig> | undefined): string {
-  return c?.theme?.primaryColor ?? DEFAULT_PRIMARY;
-}
-
-function pickLogoUrl(c: Partial<WidgetConfig> | undefined): string | null {
-  const logo = c?.branding?.logo;
-  return logo && logo.length > 0 ? logo : null;
 }
 
 function mergeConfig(
@@ -59,9 +49,11 @@ function mergeConfig(
 
 export interface CheckoutMapperCreateInput {
   ownerId: string;
+  createdById?: string | null;
   name: string | null;
   description?: string | null;
   mode?: CheckoutMode;
+  prospectId: string | null;
   config: WidgetConfig;
 }
 
@@ -70,6 +62,7 @@ export interface CheckoutMapperUpdateInput {
   name?: string | null;
   description?: string | null;
   mode?: CheckoutMode;
+  prospectId?: string | null;
   config?: Partial<WidgetConfig>;
 }
 
@@ -90,30 +83,25 @@ export const checkoutMapper: Omit<
   kind: "checkout",
   untitledLabel: "Untitled Checkout",
 
-  async toCreateInput(prospects, input) {
+  async toCreateInput(_prospects, input) {
     const merged = mergeConfig(DEFAULT_WIDGET_CONFIG, input.config);
     const payload: CheckoutConfigPayload = {
       ...merged,
       _checkoutMode: input.mode ?? "payment",
     };
-    const prospect = await resolveProspect(prospects, {
-      ownerId: input.ownerId,
-      name: input.name || checkoutMapper.untitledLabel,
-      primaryColor: pickPrimary(merged),
-      logoUrl: pickLogoUrl(merged),
-    });
     return {
       kind: checkoutMapper.kind,
       ownerId: input.ownerId,
+      createdById: input.createdById ?? null,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      prospectId: prospect.id,
+      prospectId: input.prospectId,
       themeOverrides: null,
       config: payload as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(prospects, existing, input) {
+  async toUpdateInput(_prospects, existing, input) {
     const existingConfig = existing.config as CheckoutConfigPayload;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -127,6 +115,9 @@ export const checkoutMapper: Omit<
     if (input.description !== undefined) {
       update.description = input.description ?? null;
     }
+    if (input.prospectId !== undefined) {
+      update.prospectId = input.prospectId;
+    }
     if (input.config !== undefined || input.mode !== undefined) {
       const nextMode =
         input.mode ?? existingConfig._checkoutMode ?? "payment";
@@ -135,20 +126,6 @@ export const checkoutMapper: Omit<
         _checkoutMode: nextMode,
       };
       update.config = payload;
-      const newPrimary = pickPrimary(mergedConfig);
-      const newLogoUrl = pickLogoUrl(mergedConfig);
-      if (
-        newPrimary !== pickPrimary(existingConfig) ||
-        newLogoUrl !== pickLogoUrl(existingConfig)
-      ) {
-        const prospect = await resolveProspect(prospects, {
-          ownerId: input.ownerId,
-          name: input.name || checkoutMapper.untitledLabel,
-          primaryColor: newPrimary,
-          logoUrl: newLogoUrl,
-        });
-        update.prospectId = prospect.id;
-      }
     }
     return update;
   },
@@ -180,6 +157,8 @@ export const checkoutMapper: Omit<
       mode,
       config,
       ownerId: record.ownerId || undefined,
+      prospectId: record.prospectId,
+      ...prospectDisplayFields(prospect),
       createdAt: record.createdAt.toISOString(),
       updatedAt: record.updatedAt.toISOString(),
     };

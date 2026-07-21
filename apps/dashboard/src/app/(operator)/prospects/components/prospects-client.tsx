@@ -20,6 +20,7 @@ import type { ProspectProfile } from "@/lib/types/dashboard";
 import { deleteProspectProfile } from "@/lib/actions/prospects";
 import { Button } from "@dynamic-demos/ui";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { ProspectIcon } from "@/components/shared/prospect-icon";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 
 interface ProspectsClientProps {
@@ -196,7 +197,12 @@ export function ProspectsClient({
                 }}
               >
                 {/* Prospect */}
-                <div className="px-4 py-3">
+                <div className="px-4 py-3 flex items-center gap-2.5">
+                  <ProspectIcon
+                    domain={profile.companyUrl}
+                    name={profile.name}
+                    size={36}
+                  />
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-slate-900 truncate">
                       {profile.name}

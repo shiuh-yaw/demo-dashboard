@@ -63,7 +63,7 @@ export interface DemoConfigPrismaClient {
         createdById?: string | null;
         name?: string | null;
         description?: string | null;
-        prospectId: string;
+        prospectId: string | null;
         themeOverrides?: unknown | null;
         config: unknown;
       };
@@ -79,7 +79,7 @@ export interface DemoConfigPrismaClient {
         createdById: string | null;
         name: string | null;
         description: string | null;
-        prospectId: string;
+        prospectId: string | null;
         themeOverrides: unknown | null;
         config: unknown;
       }>;
@@ -94,7 +94,7 @@ export interface DemoConfigPrismaClient {
         createdById?: string | null;
         name?: string | null;
         description?: string | null;
-        prospectId: string;
+        prospectId: string | null;
         themeOverrides?: unknown | null;
         config: unknown;
       };
@@ -103,7 +103,7 @@ export interface DemoConfigPrismaClient {
         createdById: string | null;
         name: string | null;
         description: string | null;
-        prospectId: string;
+        prospectId: string | null;
         themeOverrides: unknown | null;
         config: unknown;
       }>;
@@ -122,9 +122,7 @@ function toRecord(row: DemoConfigRow): DemoConfigRecord {
     createdById: row.createdById,
     name: row.name,
     description: row.description,
-    // Column is nullable post-03.5A; the read model stays non-null ("" for
-    // unbound) until the 03.5B mapper cutover reworks resolution.
-    prospectId: row.prospectId ?? "",
+    prospectId: row.prospectId,
     themeOverrides: row.themeOverrides ?? null,
     config: row.config,
     createdAt: row.createdAt,

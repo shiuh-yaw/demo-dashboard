@@ -14,6 +14,7 @@ import { updateEarnConfig } from "@/lib/actions/earns";
 import { Button } from "@dynamic-demos/ui";
 import { Input } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
 import { env } from "@/env";
 import type {
   StoredEarnConfig,
@@ -44,6 +45,9 @@ export function EarnConfigEditor({
   const [copied, setCopied] = useState(false);
 
   const [name, setName] = useState(initialConfig.name);
+  const [prospectId, setProspectId] = useState<string | null>(
+    initialConfig.prospectId ?? null
+  );
   const [description, setDescription] = useState(
     initialConfig.description || "",
   );
@@ -106,6 +110,7 @@ export function EarnConfigEditor({
         name: name.trim(),
         description: description.trim() || undefined,
         config,
+        prospectId,
       });
 
       if (result.success) {
@@ -207,6 +212,13 @@ export function EarnConfigEditor({
               Company name shown in browser tab (e.g., &quot;Name - Earn
               Demo&quot;)
             </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              Prospect
+            </label>
+            <ProspectPicker value={prospectId} onChange={setProspectId} />
           </div>
 
           <div>

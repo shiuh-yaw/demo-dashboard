@@ -84,3 +84,23 @@ export function prospectLogoUrl(prospect: Prospect | null): string | undefined {
     ? prospect.logoUrl
     : undefined;
 }
+
+/**
+ * Name + domain-ish display fields for list-row `ProspectIcon` rendering.
+ * `domain` sources from `companyUrl` (the field the prospect editor
+ * actually writes); the row's `<ProspectIcon>` normalizes protocol/path.
+ */
+export interface ProspectDisplayFields {
+  prospectName: string | null;
+  prospectDomain: string | null;
+}
+
+export function prospectDisplayFields(
+  prospect: Prospect | null,
+): ProspectDisplayFields {
+  if (!prospect) return { prospectName: null, prospectDomain: null };
+  return {
+    prospectName: prospect.name,
+    prospectDomain: prospect.companyUrl ?? null,
+  };
+}

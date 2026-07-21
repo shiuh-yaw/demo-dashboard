@@ -24,6 +24,7 @@ import { deleteCheckout } from "@/lib/actions/checkouts";
 import { Button } from "@dynamic-demos/ui";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Toast } from "./editor/toast";
+import { ProspectIcon } from "@/components/shared/prospect-icon";
 import { env } from "@/env";
 
 const WIDGET_PROJECT_URL = env.NEXT_PUBLIC_WIDGET_PROJECT_URL;
@@ -221,6 +222,18 @@ export function CheckoutsClient({
                       <p className="text-[11px] text-slate-500 truncate">
                         {config.description}
                       </p>
+                    )}
+                    {config.prospectName && (
+                      <div className="flex items-center gap-1 mt-0.5 min-w-0">
+                        <ProspectIcon
+                          domain={config.prospectDomain}
+                          name={config.prospectName}
+                          size={14}
+                        />
+                        <span className="text-[11px] text-slate-500 truncate">
+                          {config.prospectName}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>

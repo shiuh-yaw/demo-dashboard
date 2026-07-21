@@ -8,15 +8,15 @@ import "@/lib/dynamicClient";
  * Application Providers
  *
  * Wraps the application with all necessary context providers:
- * - ThemeProvider: Handles light/dark mode theming
+ * - ThemeProvider: forced light - operator pages hardcode light backgrounds
  * - DynamicInit: Handles Dynamic SDK auth state sync (prevents logout issues)
  */
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="light"
+      forcedTheme="light"
       disableTransitionOnChange
     >
       <DynamicInit />

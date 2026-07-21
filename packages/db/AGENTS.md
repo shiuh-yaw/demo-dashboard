@@ -8,125 +8,96 @@ status: stable
 
 # @dynamic-demos/db
 
-Prisma + Supabase Postgres access layer. Provides a serverless-safe
-`PrismaClient` singleton and the schema definition. Models landed
-incrementally: `Brand` (2-brands; renamed to `Prospect` in Phase GTM-01),
-`Transaction` + `WebhookEvent` (2-transactions), `DemoConfig`
-(2-demo-configs — unified per-demo-type carrier; remittance folded in via
-`fold_remittance_into_demo_config`), `User` (Phase GTM-03; renamed from
-`Profile`, gained `dynamicUserId` in the GTM-D-002 amendment) + `ShareLink` +
-`VisitorSession` + `TrackEvent` (Phase GTM-03); `Team` + `TeamMembership` +
-`ProspectTheme` (Phase GTM-03.5A, folded into `gtm_tables`).
+Prisma + Supabase Postgres access layer: a serverless-safe `PrismaClient`
+singleton, the schema definition, and the migration history.
 
 ## Hard rule: single consumer
 
-**Only `apps/dashboard` imports from this package** (D-015). Every demo app
-under `apps/<name>/` reads configuration from the dashboard HTTP API and
-persists transient state in Redis. Importing `@dynamic-demos/db` from any
-other app or package is a violation that CI will eventually enforce.
-
-If you find yourself wanting to import this in a demo app, the right fix is
-to add an endpoint under `apps/dashboard/src/app/api/orchestrate/...` and
-fetch from that endpoint instead.
+**Only `apps/dashboard` imports from this package** (D-015). Demo apps read
+configuration from the dashboard HTTP API and persist transient state in
+Redis. If a demo app needs data, add an endpoint under
+`apps/dashboard/src/app/api/orchestrate/...` and fetch it.
 
 `apps/spark26/` is zero-touch (D-006) and explicitly excluded.
 
-## Capabilities
-
-- Exports a serverless-safe Prisma singleton (`prisma`).
-- Re-exports `Prisma` and `PrismaClient` types from `@prisma/client`.
-- Owns `prisma/schema.prisma` and the migration history under `prisma/migrations/`.
-
 ## Public surface
 
-- `prisma` — singleton `PrismaClient` with delegates for every declared
-  model: `prisma.prospect`, `prisma.transaction`, `prisma.webhookEvent`,
-  `prisma.demoConfig`, `prisma.user`, `prisma.shareLink`,
-  `prisma.visitorSession`, `prisma.trackEvent`, `prisma.team`,
-  `prisma.teamMembership`, `prisma.prospectTheme`. (stable)
-
-- `Prisma` — namespace re-exported from `@prisma/client` for input/output
-  typing (e.g., `Prisma.ProspectCreateInput`). (stable)
-- `PrismaClient` — class re-export for callers that need their own instance
-  (rare; prefer the singleton). (stable)
+- `prisma` - singleton `PrismaClient` with delegates for every declared
+  model: `prospect`, `transaction`, `webhookEvent`, `demoConfig`, `user`,
+  `shareLink`, `visitorSession`, `trackEvent`, `team`, `teamMembership`,
+  `prospectTheme`. (stable)
+- `Prisma` - namespace re-export from `@prisma/client` for input/output
+  typing (e.g. `Prisma.ProspectCreateInput`). (stable)
+- `PrismaClient` - class re-export; prefer the singleton. (stable)
 
 ### Models at a glance
 
-- `Prospect` — first-class prospect record (2-brands; renamed from `Brand`
-  in Phase GTM-01 - a prospect is a company we sell to, identity + theme in
-  one record). Full visual theme + logo discriminator + linked demo-config
-  ids, plus nullable `domain` and `notes` identity columns added in Phase
-  GTM-01. Phase GTM-03.5A added `teamId` (FK, NOT NULL post-backfill),
-  `createdById` (nullable FK), `status ProspectStatus`, and a partial unique
-  index on `(teamId, lower(domain))` (raw SQL, Prisma-invisible; skipped-not-
-  failed on legacy collisions). Flat palette stays canonical until 03.5B.
+- `Prospect` - first-class prospect record: identity (`name`, nullable
+  `domain`, `notes`), flat palette columns, logo discriminator, linked
+  demo-config ids, `teamId` (FK, NOT NULL, default team), `createdById`
+  (nullable FK to `User`), `status ProspectStatus`. Partial unique index on
+  `(teamId, lower(domain))` lives in raw SQL and is Prisma-invisible.
   Service: `postgres/prospects.ts`, flag `USE_POSTGRES_PROSPECTS`.
-- `Team` / `TeamMembership` / `ProspectTheme` (Phase GTM-03.5A) — workspace +
-  `(userId, teamId)`-unique membership (no per-membership role; default team
-  slug `gtm`) and the 1:1 `Prospect` palette (`prospectId` unique FK;
-  identity stays on `Prospect`). `services.teams` (`postgres/teams.ts`);
-  `ProspectTheme` populated by the migration + `backfill:prospect-themes`.
-- `DemoConfig` — unified per-instance config carrier for every demo type
+  Dual-write rule: every create/update writes BOTH the flat palette columns
+  and the `ProspectTheme` row (create prospect-first for the FK; update
+  theme-first so a crash never leaves a stale theme readable). Reads let an
+  existing `ProspectTheme` row win wholesale, flat columns are the fallback.
+- `Team` / `TeamMembership` - workspace + `(userId, teamId)`-unique
+  membership (no per-membership role yet; default team slug `gtm`).
+  Service: `postgres/teams.ts` as `services.teams`.
+- `ProspectTheme` - 1:1 palette for a `Prospect` (`prospectId` unique FK,
+  `ON DELETE CASCADE`); identity stays on `Prospect`. Populated by
+  `backfill:prospect-themes` and kept in sync by every prospect write.
+- `DemoConfig` - unified per-instance config carrier for every demo type
   (earn, wallet, trade, visa-direct, checkout, remittance). `kind` is a
-  TEXT discriminator validated app-side via a Zod discriminated union, **not**
-  a Prisma enum — adding a new demo type is a Zod/Type edit, not a migration
-  (D-013, meta-system goal). FK `prospectId` (renamed from `brandId` in
-  Phase GTM-01) → `Prospect` (D-028); optional `themeOverrides Json?`
-  merges on top of the prospect theme at the service boundary. Indexed on
-  `ownerId`, `prospectId`, `kind`, `(ownerId, kind)`. Service:
-  `postgres/demo-configs.ts`, flag `USE_POSTGRES_DEMO_CONFIGS`. Replaces what would otherwise be one
-  table per demo type; legacy `RemittanceConfig` rows were migrated here
-  with `kind="remittance"` and the legacy table dropped (D-029). Phase
-  GTM-03.5A made `prospectId` nullable and added `createdById` (nullable FK).
-- `Transaction` — canonical "money in flight" record (D-010). State
-  validated by `assertValidTransition` at the service boundary; DB stores
-  verbatim. Indexed on `demoInstanceId`, `prospectId` (renamed from
-  `brandId` in Phase GTM-01), `state`, `parentTransactionId`. Self-FK for
-  multi-leg flows. Service: `postgres/transactions.ts`, flag
-  `USE_POSTGRES_TRANSACTIONS`.
-- `WebhookEvent` — audit row for every received webhook (D-011). Unique on
+  TEXT discriminator validated app-side via a Zod discriminated union, NOT
+  a Prisma enum - a new demo type is a Zod/type edit, not a migration
+  (D-013). `prospectId` is a nullable FK to `Prospect` (D-028): `null`
+  means unbound/showcase; mappers never hash-resolve or auto-create a
+  Prospect on write. `createdById` (nullable FK) is stamped on create.
+  Optional `themeOverrides Json?` merges on top of the prospect theme at
+  the service boundary. Indexed on `ownerId`, `prospectId`, `kind`,
+  `(ownerId, kind)`. Service: `postgres/demo-configs.ts`, flag
+  `USE_POSTGRES_DEMO_CONFIGS`.
+- `Transaction` - canonical "money in flight" record (D-010). State is
+  validated by `assertValidTransition` at the service boundary; the DB
+  stores it verbatim. Self-FK for multi-leg flows. Indexed on
+  `demoInstanceId`, `prospectId`, `state`, `parentTransactionId`.
+  Service: `postgres/transactions.ts`, flag `USE_POSTGRES_TRANSACTIONS`.
+- `WebhookEvent` - audit row per received webhook (D-011). Unique on
   `(provider, providerEventId)` for dedup. Optional FK to `Transaction`
-  with `ON DELETE SET NULL`. Postgres-only by design. Phase 5A's webhook
-  receiver framework is the consumer.
-- `User` (Phase GTM-03; renamed from `Profile`, GTM-D-002 2026-07-20) - the
-  single internal-person entity (SE / admin / owner identity). Created lazily
-  on first verified sign-in. `dynamicUserId` (Dynamic JWT `sub`) is
-  nullable/unique, captured at first sign-in (Phase GTM-04), write-once
-  thereafter - joins this row to the legacy `ownerId` values already
-  stored on `Prospect`/`DemoConfig`. `role` is the Prisma `Role` enum
-  (`OWNER | ADMIN | MEMBER | VIEWER`, default `MEMBER` - GTM-D-002
-  extension, 2026-07-20, replacing the earlier free-text "se" | "operator"
-  column) and gates mutations + the operations surface (Phase GTM-04).
-  Phase GTM-03.5A added `deactivatedAt DateTime?` (offboarding) and
-  `services.users.claimLegacyRecords(user)` (idempotent `createdById`
-  reconciliation). Unique on `email`. Service: `postgres/users.ts`,
-  registered as `services.users` (amendment, 2026-07-20 - the legacy
-  per-checkout wallet-user Redis service moved to `services.legacyWalletUsers`
-  to free this key), Postgres-only.
-- `ShareLink` (Phase GTM-03) - per-prospect, per-demo share link. `token`
-  (`nanoid(21)`, url-safe) is unique. FK `userId` → `User` (renamed from
-  `profileId` in the GTM-D-002 amendment); `demoConfigId` / `prospectId`
-  are deliberately unconstrained scalars (mirrors the
-  `Transaction.prospectId` decoupled-lifetime pattern) - `mint` verifies
-  both exist at the service layer instead. Service: `postgres/share-links.ts`.
-- `VisitorSession` / `TrackEvent` (Phase GTM-03) - session + event rows for
-  the GTM tracker (`packages/analytics`). Both ids are **client-generated
-  UUIDs with no `@default`** - every insert is upsert/`skipDuplicates`
-  idempotent. `TrackEvent.sessionId` FKs `VisitorSession`;
-  `VisitorSession.shareLinkId` FKs `ShareLink` (`ON DELETE SET NULL`).
-  Indexed on `shareLinkId`, `(demoSlug, startedAt)`, `(sessionId, ts)`.
-  Write service (upsert-by-batch): write-only in this phase.
-  `apps/dashboard/src/lib/services/postgres/visitor-sessions.ts`,
-  Postgres-only; read/aggregate queries land in Phase GTM-08.
+  with `ON DELETE SET NULL`. Postgres-only.
+- `User` - the single internal-person entity, created lazily on first
+  verified sign-in. `email` unique. `dynamicUserId` (Dynamic JWT `sub`) is
+  nullable/unique and write-once - it joins this row to the `ownerId`
+  values stored on `Prospect`/`DemoConfig`, which are never rewritten.
+  `role` is the Prisma `Role` enum (`OWNER | ADMIN | MEMBER | VIEWER`,
+  default `MEMBER`). `deactivatedAt DateTime?` marks offboarding.
+  `services.users.claimLegacyRecords(user)` is the idempotent
+  `createdById` reconciliation hook. Service: `postgres/users.ts` as
+  `services.users` (the legacy per-checkout wallet-user Redis service is
+  `services.legacyWalletUsers`), Postgres-only.
+- `ShareLink` - per-prospect, per-demo share link. `token` (`nanoid(21)`,
+  url-safe) unique. FK `userId` -> `User`; `demoConfigId` / `prospectId`
+  are deliberately unconstrained scalars (decoupled-lifetime pattern) -
+  `mint` verifies both exist at the service layer. Service:
+  `postgres/share-links.ts`.
+- `VisitorSession` / `TrackEvent` - session + event rows for the GTM
+  tracker (`packages/analytics`). Both ids are client-generated UUIDs with
+  no `@default` - every insert is upsert/`skipDuplicates` idempotent.
+  `TrackEvent.sessionId` FKs `VisitorSession`; `VisitorSession.shareLinkId`
+  FKs `ShareLink` (`ON DELETE SET NULL`). Indexed on `shareLinkId`,
+  `(demoSlug, startedAt)`, `(sessionId, ts)`. Write-only service:
+  `postgres/visitor-sessions.ts`; read/aggregate queries are a later phase.
 
 ## Required environment
 
-- `DATABASE_URL` — Supabase pooler URL, port 6543, runtime — required
-- `DIRECT_URL` — Supabase direct URL, port 5432, migrations only — required
+- `DATABASE_URL` - Supabase pooler URL, port 6543, runtime - required
+- `DIRECT_URL` - Supabase direct URL, port 5432, migrations only - required
 
-D-013: pooler URL is mandatory for runtime to avoid exhausting serverless
-connections; direct URL is mandatory for migrations because the pooler
-does not support DDL transactions.
+D-013: the pooler URL is mandatory at runtime to avoid exhausting
+serverless connections; the direct URL is mandatory for migrations because
+the pooler does not support DDL transactions.
 
 Sandbox-by-default (D-005): point both at a local or sandbox Supabase
 project for dev. Production opt-in only via explicit env override.
@@ -140,9 +111,9 @@ project for dev. Production opt-in only via explicit env override.
 
 **Invariants**
 
-- The Prisma client is a singleton at module scope (D-013 — serverless-safe).
-- `DATABASE_URL` is the pooler; `DIRECT_URL` is the direct connection. Never
-  swap them.
+- The Prisma client is a singleton at module scope (D-013, serverless-safe).
+- `DATABASE_URL` is the pooler; `DIRECT_URL` is the direct connection.
+  Never swap them.
 - `prisma db push` is forbidden in production; only `prisma migrate deploy`.
 - This package is consumed only by `apps/dashboard` (D-015).
 
@@ -170,30 +141,24 @@ export async function listDemoConfigs(ownerId: string, kind: string) {
 - Do: run `pnpm --filter @dynamic-demos/db prisma:generate` after pulling
   schema changes.
 - Don't: import this package from any app other than `apps/dashboard`.
-- Don't: instantiate `new PrismaClient()` ad hoc in dashboard code; use the
-  exported singleton so connection pooling stays correct.
+- Don't: instantiate `new PrismaClient()` ad hoc; use the singleton so
+  connection pooling stays correct.
 - Don't: run `prisma db push` in production; CI rejects it.
-- Don't: add a Prisma enum for `DemoConfig.kind` — the closed set lives in
+- Don't: add a Prisma enum for `DemoConfig.kind` - the closed set lives in
   `apps/dashboard/src/lib/services/demo-config-schemas.ts` so a new kind
   doesn't need a migration.
 
 ## Open questions / known gaps
 
-- Action-layer cutover: legacy `lib/actions/{earns,wallets,trade,visa-direct,
-  checkouts,remittance}.ts` still write to per-type Redis stores. A
-  follow-up PR routes them through `DemoConfigService`.
-- `RemittanceConfig` ↔ `DemoConfig` fold: **done** — legacy table dropped
-  by `fold_remittance_into_demo_config`; rows live in `DemoConfig` with
-  `kind="remittance"` and the unified backfill handles them.
-- Backfills: prospect (`backfill:prospects`; `backfill:brands` kept as an
-  alias for one release) and unified demo-configs (`backfill:demo-configs`
-  — covers every kind including remittance). Both idempotent —
-  deterministic Prospect id from `(ownerId, primaryColor, logoUrl)`
-  (hash inputs unchanged by the Phase GTM-01 rename) and preserved legacy
-  ids (Q-014).
-- RLS is enabled on every Phase-2 table, the four Phase GTM-03 tables, and
-  the three GTM-03.5A tables (`Team`, `TeamMembership`, `ProspectTheme`) in
-  the migration that creates them. Prisma connects as superuser and bypasses
-  it; service-layer ownership checks remain the trust boundary.
-  `packages/db/scripts/replay-check.sh` (local-only) replays all migrations,
-  asserts an empty `migrate diff`, and verifies the GTM-03.5A backfills.
+- Contract phase pending: the flat palette columns on `Prospect` duplicate
+  `ProspectTheme` until a follow-up drops them (three-deploy rule: remove
+  deprecated Prisma fields first, drop columns after).
+- `USE_POSTGRES_TRANSACTIONS` is not yet enabled anywhere; the
+  `Transaction` cutover is unfinished.
+- Backfills (`backfill:prospects`, `backfill:demo-configs`,
+  `backfill:prospect-themes`, `backfill:users`) are idempotent and safe to
+  re-run.
+- RLS is enabled on every table in the migration that creates it. Prisma
+  connects as superuser and bypasses it; service-layer ownership checks
+  remain the trust boundary. `packages/db/scripts/replay-check.sh`
+  (local-only) replays all migrations and asserts an empty `migrate diff`.

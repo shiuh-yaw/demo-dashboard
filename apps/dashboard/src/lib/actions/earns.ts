@@ -7,10 +7,9 @@
  * Authenticates via Dynamic JWT cookie.
  *
  * TD-002: routes through `services.demoConfigs.*` (unified `DemoConfig`
- * row, discriminated by `kind`) via the `earnMapper`. Prospect resolution
- * is deterministic — `(ownerId, primaryColor, logoUrl)` hashes onto a
- * stable `prospectId` so action-created and backfill-created rows share
- * the same Prospect. The Redis backend stays canonical until ops flips
+ * row, discriminated by `kind`) via the `earnMapper`. `prospectId` is
+ * caller-supplied (GTM-03.5B) - the form passes it explicitly, `null` means
+ * unbound. The Redis backend stays canonical until ops flips
  * `USE_POSTGRES_DEMO_CONFIGS=true`; the legacy per-kind Redis keyspace
  * is still readable via the service's read-fallback path.
  */
@@ -31,7 +30,8 @@ type ActionResult<T> =
  */
 export async function createEarnConfig(
   name: string,
-  config?: Partial<EarnConfig>
+  config?: Partial<EarnConfig>,
+  prospectId: string | null = null
 ): Promise<ActionResult<StoredEarnConfig>> {
   const user = await getCurrentUser();
   if (!user) {
@@ -39,14 +39,21 @@ export async function createEarnConfig(
   }
 
   try {
+    const createdById =
+      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
+      null;
     const create = await earnMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
+      createdById,
       name: name && name.length > 0 ? name : null,
       description: null,
+      prospectId,
       config: (await normalizeBrandingLogos(config ?? {})) as EarnConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const prospect = await services.prospects.get(record.prospectId);
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
+      : null;
     const stored = earnMapper.toStored(record, prospect);
 
     revalidatePath("/");
@@ -97,6 +104,7 @@ export async function updateEarnConfig(
     name?: string;
     description?: string;
     config?: Partial<EarnConfig>;
+    prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredEarnConfig>> {
   const user = await getCurrentUser();
@@ -120,11 +128,14 @@ export async function updateEarnConfig(
         ownerId: existing.ownerId || user.sub,
         name: updates.name,
         description: updates.description,
+        prospectId: updates.prospectId,
         config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const prospect = await services.prospects.get(updated.prospectId);
+    const prospect = updated.prospectId
+      ? await services.prospects.get(updated.prospectId)
+      : null;
     const stored = earnMapper.toStored(updated, prospect);
 
     revalidatePath("/");

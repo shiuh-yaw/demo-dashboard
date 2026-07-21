@@ -13,6 +13,7 @@ import Link from "next/link";
 import { createEarnConfig } from "@/lib/actions/earns";
 import { Button } from "@dynamic-demos/ui";
 import { Input } from "@dynamic-demos/ui";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
 import type { EarnBrand, EarnConfig } from "@/lib/types/dashboard";
 
 const BRAND_OPTIONS: { value: EarnBrand; label: string }[] = [
@@ -29,6 +30,7 @@ export default function NewEarnConfigPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
+  const [prospectId, setProspectId] = useState<string | null>(null);
   const [brand, setBrand] = useState<EarnBrand>("dynamic");
   const [logoUrl, setLogoUrl] = useState("");
   const [tokenName, setTokenName] = useState("USDC");
@@ -69,7 +71,7 @@ export default function NewEarnConfigPage() {
         },
       };
 
-      const result = await createEarnConfig(name.trim(), config);
+      const result = await createEarnConfig(name.trim(), config, prospectId);
 
       if (result.success) {
         router.push(`/earns/${result.data.id}`);
@@ -117,6 +119,14 @@ export default function NewEarnConfigPage() {
               Company name shown in browser tab (e.g., &quot;Name - Earn
               Demo&quot;)
             </p>
+          </div>
+
+          {/* Prospect */}
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              Prospect
+            </label>
+            <ProspectPicker value={prospectId} onChange={setProspectId} />
           </div>
 
           {/* Page Title */}

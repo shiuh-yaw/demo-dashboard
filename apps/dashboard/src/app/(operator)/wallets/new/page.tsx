@@ -22,7 +22,15 @@ import {
   DEFAULT_APPEARANCE_THEME,
 } from "@/components/shared/appearance-form";
 import { InlineWidgetPreview } from "@/components/shared/inline-widget-preview";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
+import type { ProspectOption } from "@/lib/actions/prospects";
+import {
+  applyProspectTheme,
+  prospectOptionThemeToAppearance,
+} from "@/lib/prospect-theme-merge";
 import type { WalletConfig } from "@/lib/types/dashboard";
+
+const DEFAULT_LOGO = { logo: "" };
 
 export default function NewWalletConfigPage() {
   const router = useRouter();
@@ -30,6 +38,7 @@ export default function NewWalletConfigPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
+  const [prospectId, setProspectId] = useState<string | null>(null);
 
   // Appearance state
   const [theme, setTheme] = useState<AppearanceTheme>({
@@ -39,6 +48,20 @@ export default function NewWalletConfigPage() {
     logo: "",
     showPoweredBy: true,
   });
+
+  // Unbound (null) changes nothing - only a real prospect selection prefills.
+  function handleProspectSelect(option: ProspectOption | null) {
+    if (!option) return;
+    const incoming = prospectOptionThemeToAppearance(option.theme);
+    setTheme((current) =>
+      applyProspectTheme(current, DEFAULT_APPEARANCE_THEME, incoming)
+    );
+    setBranding((current) =>
+      applyProspectTheme(current, DEFAULT_LOGO, {
+        logo: option.theme.logoUrl ?? undefined,
+      })
+    );
+  }
 
   async function handleCreate() {
     if (!name.trim()) {
@@ -70,7 +93,7 @@ export default function NewWalletConfigPage() {
           showPoweredBy: branding.showPoweredBy,
         },
       };
-      const result = await createWalletConfig(name.trim(), config);
+      const result = await createWalletConfig(name.trim(), config, prospectId);
 
       if (result.success) {
         router.push(`/wallets/${result.data.id}`);
@@ -127,6 +150,13 @@ export default function NewWalletConfigPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="My Wallet Config"
+              />
+            </Field>
+            <Field label="Prospect">
+              <ProspectPicker
+                value={prospectId}
+                onChange={setProspectId}
+                onSelectOption={handleProspectSelect}
               />
             </Field>
           </Section>

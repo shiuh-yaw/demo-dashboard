@@ -2,8 +2,7 @@
  * Wallet ↔ DemoConfig mapper. See `earn.ts` for the pattern.
  *
  * Wallet's branding stores the logo URL directly in `branding.logo`
- * (string), not via a `custom | dynamic` discriminator. Prospect hash key
- * uses that URL as the `logoUrl` input.
+ * (string), not via a `custom | dynamic` discriminator.
  */
 
 import {
@@ -12,20 +11,12 @@ import {
   type WalletConfig,
 } from "@/lib/types/dashboard";
 
-import { resolveProspect } from "./prospect-resolver";
-import { hydrateProspectTheme, prospectLogoUrl } from "./prospect-hydration";
+import {
+  hydrateProspectTheme,
+  prospectDisplayFields,
+  prospectLogoUrl,
+} from "./prospect-hydration";
 import type { DemoConfigMapper } from "./types";
-
-const DEFAULT_PRIMARY = DEFAULT_WALLET_CONFIG.theme!.primaryColor!;
-
-function pickPrimary(c: Partial<WalletConfig> | undefined): string {
-  return c?.theme?.primaryColor ?? DEFAULT_PRIMARY;
-}
-
-function pickLogoUrl(c: Partial<WalletConfig> | undefined): string | null {
-  const logo = c?.branding?.logo;
-  return logo && logo.length > 0 ? logo : null;
-}
 
 function mergeConfig(
   base: WalletConfig,
@@ -48,29 +39,21 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
   kind: "wallet",
   untitledLabel: "Untitled Wallet Config",
 
-  async toCreateInput(prospects, input) {
+  async toCreateInput(_prospects, input) {
     const merged = mergeConfig(DEFAULT_WALLET_CONFIG, input.config);
-    const prospect = await resolveProspect(prospects, {
-      ownerId: input.ownerId,
-      name: input.name || walletMapper.untitledLabel,
-      primaryColor: pickPrimary(merged),
-      logoUrl: pickLogoUrl(merged),
-      extra: {
-        accentColor: merged.theme?.accentColor ?? null,
-      },
-    });
     return {
       kind: walletMapper.kind,
       ownerId: input.ownerId,
+      createdById: input.createdById ?? null,
       name: input.name && input.name.length > 0 ? input.name : null,
       description: input.description ?? null,
-      prospectId: prospect.id,
+      prospectId: input.prospectId,
       themeOverrides: null,
       config: merged as unknown as Record<string, unknown>,
     };
   },
 
-  async toUpdateInput(prospects, existing, input) {
+  async toUpdateInput(_prospects, existing, input) {
     const existingConfig = existing.config as WalletConfig;
     const mergedConfig = input.config
       ? mergeConfig(existingConfig, input.config)
@@ -84,25 +67,11 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
     if (input.description !== undefined) {
       update.description = input.description ?? null;
     }
+    if (input.prospectId !== undefined) {
+      update.prospectId = input.prospectId;
+    }
     if (input.config) {
       update.config = mergedConfig;
-      const newPrimary = pickPrimary(mergedConfig);
-      const newLogoUrl = pickLogoUrl(mergedConfig);
-      if (
-        newPrimary !== pickPrimary(existingConfig) ||
-        newLogoUrl !== pickLogoUrl(existingConfig)
-      ) {
-        const prospect = await resolveProspect(prospects, {
-          ownerId: input.ownerId,
-          name: input.name || walletMapper.untitledLabel,
-          primaryColor: newPrimary,
-          logoUrl: newLogoUrl,
-          extra: {
-            accentColor: mergedConfig.theme?.accentColor ?? null,
-          },
-        });
-        update.prospectId = prospect.id;
-      }
     }
     return update;
   },
@@ -121,6 +90,8 @@ export const walletMapper: DemoConfigMapper<WalletConfig, StoredWalletConfig> = 
       name: record.name ?? walletMapper.untitledLabel,
       description: record.description ?? undefined,
       ownerId: record.ownerId || undefined,
+      prospectId: record.prospectId,
+      ...prospectDisplayFields(prospect),
       config: {
         theme: hydratedTheme,
         branding: {

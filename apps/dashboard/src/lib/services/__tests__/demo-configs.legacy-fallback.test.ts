@@ -122,18 +122,17 @@ describe("RedisDemoConfigService legacy fallback", () => {
     void v2;
   });
 
-  it("derives a stable prospectId placeholder for legacy rows missing prospectId", async () => {
-    // Legacy rows don't carry prospectId; the fallback should surface a
-    // deterministic synthetic prospectId so callers can hydrate Prospect
-    // separately. Empty string is the simplest contract — the mapper
-    // layer is responsible for filling in the real prospect at read time.
+  it("derives a null prospectId for legacy rows missing prospectId", async () => {
+    // Legacy rows don't carry prospectId; the fallback surfaces null so
+    // callers can tell "unbound" apart from a real linked Prospect. The
+    // mapper layer is responsible for filling in the real prospect at
+    // read time if one is later resolved.
     const legacy = makeLegacyEarn({ id: "no-prospect" });
     await redis.set(REDIS_KEYS.earnConfig(legacy.id), legacy);
 
     const result = await svc.get("no-prospect");
     expect(result).not.toBeNull();
-    // Legacy rows have no embedded prospectId — fallback synthesises empty.
-    expect(typeof result!.prospectId).toBe("string");
+    expect(result!.prospectId).toBeNull();
   });
 
   it("reads the legacy brandId field from a v2-keyspace row predating the Phase GTM-01 rename", async () => {

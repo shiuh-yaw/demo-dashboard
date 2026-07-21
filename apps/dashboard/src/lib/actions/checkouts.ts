@@ -32,23 +32,31 @@ type ActionResult<T> =
 export async function createCheckout(
   name: string,
   mode?: CheckoutMode,
-  config?: Partial<WidgetConfig>
+  config?: Partial<WidgetConfig>,
+  prospectId: string | null = null
 ): Promise<ActionResult<StoredCheckoutConfig>> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
+    const createdById =
+      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
+      null;
     const create = await checkoutMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
+      createdById,
       name: name && name.length > 0 ? name : null,
       description: null,
       mode: mode ?? "payment",
+      prospectId,
       config: await normalizeBrandingLogos({
         ...DEFAULT_WIDGET_CONFIG,
         ...config,
       }),
     });
     const record = await services.demoConfigs.create(create);
-    const prospect = await services.prospects.get(record.prospectId);
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
+      : null;
     const stored = checkoutMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/checkouts");
@@ -89,6 +97,7 @@ export async function updateCheckout(
     description?: string;
     mode?: CheckoutMode;
     config?: WidgetConfig;
+    prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredCheckoutConfig>> {
   const user = await getCurrentUser();
@@ -109,11 +118,14 @@ export async function updateCheckout(
         name: updates.name,
         description: updates.description,
         mode: updates.mode,
+        prospectId: updates.prospectId,
         config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const prospect = await services.prospects.get(updated.prospectId);
+    const prospect = updated.prospectId
+      ? await services.prospects.get(updated.prospectId)
+      : null;
     const stored = checkoutMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/checkouts");

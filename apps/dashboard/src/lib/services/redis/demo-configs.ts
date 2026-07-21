@@ -43,7 +43,8 @@ interface StoredDemoConfigRow {
   createdById: string | null;
   name: string | null;
   description: string | null;
-  prospectId: string;
+  /// Null since GTM-03.5B - "built for" nobody yet (unbound/showcase demo).
+  prospectId: string | null;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: string;
@@ -60,7 +61,7 @@ interface StoredDemoConfigRow {
  */
 interface PersistedDemoConfigRow
   extends Omit<StoredDemoConfigRow, "prospectId" | "createdById"> {
-  prospectId?: string;
+  prospectId?: string | null;
   /** Absent on rows written before GTM-03.5A; read as null. */
   createdById?: string | null;
   /** @deprecated Legacy field name, pre-Phase-GTM-01. Read-compat only. */
@@ -69,7 +70,9 @@ interface PersistedDemoConfigRow
 
 /**
  * Resolves the prospect link off a raw stored row, falling back to the
- * legacy `brandId` field.
+ * legacy `brandId` field. `null` means genuinely unbound (GTM-03.5B); it is
+ * distinct from the legacy fallback rows below, which predate Prospect
+ * records entirely.
  *
  * Mirrors the Redis-key-literal rationale in `redis.ts`: stored field
  * values in production predate the Brand -> Prospect rename (Phase
@@ -78,8 +81,8 @@ interface PersistedDemoConfigRow
  * that rewrites every persisted row from `brandId` to `prospectId`
  * first, or every pre-rename row silently loses its prospect link.
  */
-function resolveProspectId(stored: PersistedDemoConfigRow): string {
-  return stored.prospectId ?? stored.brandId ?? "";
+function resolveProspectId(stored: PersistedDemoConfigRow): string | null {
+  return stored.prospectId ?? stored.brandId ?? null;
 }
 
 function toRecord(stored: PersistedDemoConfigRow): DemoConfigRecord {
@@ -426,7 +429,7 @@ function legacyToRecord(
     createdById: null,
     name: raw.name ?? null,
     description: raw.description ?? null,
-    prospectId: "",
+    prospectId: null,
     themeOverrides: null,
     config: raw.config,
     createdAt,

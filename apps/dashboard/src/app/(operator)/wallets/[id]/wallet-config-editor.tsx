@@ -22,8 +22,16 @@ import {
   DEFAULT_APPEARANCE_THEME,
 } from "@/components/shared/appearance-form";
 import { InlineWidgetPreview } from "@/components/shared/inline-widget-preview";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
+import type { ProspectOption } from "@/lib/actions/prospects";
+import {
+  applyProspectTheme,
+  prospectOptionThemeToAppearance,
+} from "@/lib/prospect-theme-merge";
 import { env } from "@/env";
 import type { StoredWalletConfig, WalletConfig } from "@/lib/types/dashboard";
+
+const DEFAULT_LOGO = { logo: "" };
 
 const WALLET_PROJECT_URL = env.NEXT_PUBLIC_WALLET_PROJECT_URL;
 
@@ -39,6 +47,9 @@ export function WalletConfigEditor({
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState(initialConfig.name);
+  const [prospectId, setProspectId] = useState<string | null>(
+    initialConfig.prospectId ?? null
+  );
 
   // Initialize appearance state from config
   const [theme, setTheme] = useState<AppearanceTheme>({
@@ -61,6 +72,20 @@ export function WalletConfigEditor({
     logo: initialConfig.config.branding?.logo || "",
     showPoweredBy: initialConfig.config.branding?.showPoweredBy ?? true,
   });
+
+  // Unbound (null) changes nothing - only a real prospect selection prefills.
+  function handleProspectSelect(option: ProspectOption | null) {
+    if (!option) return;
+    const incoming = prospectOptionThemeToAppearance(option.theme);
+    setTheme((current) =>
+      applyProspectTheme(current, DEFAULT_APPEARANCE_THEME, incoming)
+    );
+    setBranding((current) =>
+      applyProspectTheme(current, DEFAULT_LOGO, {
+        logo: option.theme.logoUrl ?? undefined,
+      })
+    );
+  }
 
   const demoUrl = `${WALLET_PROJECT_URL}/?theme=${initialConfig.id}`;
 
@@ -98,6 +123,7 @@ export function WalletConfigEditor({
       const result = await updateWalletConfig(initialConfig.id, {
         name: name.trim(),
         config,
+        prospectId,
       });
 
       if (result.success) {
@@ -158,6 +184,13 @@ export function WalletConfigEditor({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="My Wallet Config"
+              />
+            </Field>
+            <Field label="Prospect">
+              <ProspectPicker
+                value={prospectId}
+                onChange={setProspectId}
+                onSelectOption={handleProspectSelect}
               />
             </Field>
           </Section>

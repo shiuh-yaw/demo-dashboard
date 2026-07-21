@@ -13,6 +13,7 @@ import { updateTradeConfig } from "@/lib/actions/trade";
 import { Button, Input } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { Section, Field } from "@/app/(operator)/checkouts/components/editor/form-components";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
 import { env } from "@/env";
 import type {
   StoredTradeConfig,
@@ -32,6 +33,9 @@ export function TradeConfigEditor({
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState(initialConfig.name);
+  const [prospectId, setProspectId] = useState<string | null>(
+    initialConfig.prospectId ?? null
+  );
   const [logoUrl, setLogoUrl] = useState(
     initialConfig.config.branding?.logoUrl ?? ""
   );
@@ -60,6 +64,7 @@ export function TradeConfigEditor({
       const result = await updateTradeConfig(initialConfig.id, {
         name: name.trim(),
         config,
+        prospectId,
       });
 
       if (result.success) {
@@ -115,6 +120,9 @@ export function TradeConfigEditor({
               onChange={(e) => setName(e.target.value)}
               placeholder="My Trade Config"
             />
+          </Field>
+          <Field label="Prospect">
+            <ProspectPicker value={prospectId} onChange={setProspectId} />
           </Field>
         </Section>
 

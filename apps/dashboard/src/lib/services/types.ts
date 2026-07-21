@@ -639,9 +639,9 @@ export interface DemoConfigRecord {
   createdById: string | null;
   name: string | null;
   description: string | null;
-  /// Column is nullable since GTM-03.5A; the read model stays non-null (""
-  /// for unbound) until the 03.5B mapper cutover reworks resolution.
-  prospectId: string;
+  /// Null means "built for" nobody yet - a reusable/showcase demo, not bound
+  /// to a Prospect. Set explicitly by the caller; never hash-derived.
+  prospectId: string | null;
   /**
    * Optional per-config theme overrides merged on top of the linked
    * Prospect's theme at the service boundary. Null means "render prospect
@@ -665,7 +665,7 @@ export interface CreateDemoConfigInput {
   createdById?: string | null;
   name?: string | null;
   description?: string | null;
-  prospectId: string;
+  prospectId: string | null;
   themeOverrides?: unknown | null;
   config: unknown;
 }
@@ -674,7 +674,7 @@ export interface UpdateDemoConfigInput {
   createdById?: string | null;
   name?: string | null;
   description?: string | null;
-  prospectId?: string;
+  prospectId?: string | null;
   themeOverrides?: unknown | null;
   config?: unknown;
 }

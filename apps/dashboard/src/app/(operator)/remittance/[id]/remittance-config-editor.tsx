@@ -14,6 +14,7 @@ import { updateRemittanceConfig } from "@/lib/actions/remittance";
 import { Button, Input } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { Section, Field } from "@/app/(operator)/checkouts/components/editor/form-components";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
 import { env } from "@/env";
 import type {
   StoredRemittanceConfig,
@@ -34,6 +35,9 @@ export function RemittanceConfigEditor({
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState(initialConfig.name);
+  const [prospectId, setProspectId] = useState<string | null>(
+    initialConfig.prospectId ?? null
+  );
   const [primaryColor, setPrimaryColor] = useState(
     initialConfig.config.theme?.primaryColor ?? "#1a56db"
   );
@@ -68,6 +72,7 @@ export function RemittanceConfigEditor({
       const result = await updateRemittanceConfig(initialConfig.id, {
         name: name.trim(),
         config,
+        prospectId,
       });
 
       if (result.success) {
@@ -123,6 +128,9 @@ export function RemittanceConfigEditor({
               onChange={(e) => setName(e.target.value)}
               placeholder="My Remittance Config"
             />
+          </Field>
+          <Field label="Prospect">
+            <ProspectPicker value={prospectId} onChange={setProspectId} />
           </Field>
         </Section>
 

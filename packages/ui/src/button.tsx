@@ -32,7 +32,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 outline-none cursor-pointer";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none outline-none cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0";
 
 /**
  * Button variants using Tailwind v4 CSS variable syntax.
@@ -93,6 +93,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     if (asChild && isValidElement(children)) {
       return cloneElement(children as ReactElement<{ className?: string; ref?: React.Ref<unknown> }>, {
+        ...props,
         className: cn(
           (children as ReactElement<{ className?: string }>).props.className,
           buttonClassName,

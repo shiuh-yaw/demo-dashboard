@@ -23,20 +23,28 @@ type ActionResult<T> =
 
 export async function createWalletConfig(
   name: string,
-  config?: Partial<WalletConfig>
+  config?: Partial<WalletConfig>,
+  prospectId: string | null = null
 ): Promise<ActionResult<StoredWalletConfig>> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Authentication required" };
 
   try {
+    const createdById =
+      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
+      null;
     const create = await walletMapper.toCreateInput(services.prospects, {
       ownerId: user.sub,
+      createdById,
       name: name && name.length > 0 ? name : null,
       description: null,
+      prospectId,
       config: (await normalizeBrandingLogos(config ?? {})) as WalletConfig,
     });
     const record = await services.demoConfigs.create(create);
-    const prospect = await services.prospects.get(record.prospectId);
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
+      : null;
     const stored = walletMapper.toStored(record, prospect);
     revalidatePath("/");
     revalidatePath("/wallets");
@@ -76,6 +84,7 @@ export async function updateWalletConfig(
     name?: string;
     description?: string;
     config?: Partial<WalletConfig>;
+    prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredWalletConfig>> {
   const user = await getCurrentUser();
@@ -95,11 +104,14 @@ export async function updateWalletConfig(
         ownerId: existing.ownerId || user.sub,
         name: updates.name,
         description: updates.description,
+        prospectId: updates.prospectId,
         config: await normalizeBrandingLogos(updates.config),
       },
     );
     const updated = await services.demoConfigs.update(id, update);
-    const prospect = await services.prospects.get(updated.prospectId);
+    const prospect = updated.prospectId
+      ? await services.prospects.get(updated.prospectId)
+      : null;
     const stored = walletMapper.toStored(updated, prospect);
     revalidatePath("/");
     revalidatePath("/wallets");

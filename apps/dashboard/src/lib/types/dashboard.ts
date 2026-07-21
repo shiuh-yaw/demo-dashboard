@@ -39,6 +39,12 @@ export interface StoredCheckoutConfig {
   updatedAt: string;
   /** Owner ID who owns this config */
   ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
 }
 
 /**
@@ -204,6 +210,12 @@ export interface StoredEarnConfig {
   updatedAt: string;
   /** Owner ID who owns this config */
   ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
 }
 
 /**
@@ -340,6 +352,12 @@ export interface StoredWalletConfig {
   updatedAt: string;
   /** Owner ID who owns this config */
   ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
 }
 
 /**
@@ -423,6 +441,12 @@ export interface StoredRemittanceConfig {
   createdAt: string;
   updatedAt: string;
   ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
 }
 
 // =============================================================================
@@ -464,6 +488,12 @@ export interface StoredTradeConfig {
   createdAt: string;
   updatedAt: string;
   ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
 }
 
 // =============================================================================
@@ -522,6 +552,12 @@ export interface StoredVisaDirectConfig {
   createdAt: string;
   updatedAt: string;
   ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
 }
 
 // =============================================================================

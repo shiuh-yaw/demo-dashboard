@@ -14,6 +14,7 @@ import { createTradeConfig } from "@/lib/actions/trade";
 import { Button, Input } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { Section, Field } from "@/app/(operator)/checkouts/components/editor/form-components";
+import { ProspectPicker } from "@/components/shared/prospect-picker";
 import type { TradeConfig } from "@/lib/types/dashboard";
 
 export default function NewTradeConfigPage() {
@@ -22,6 +23,7 @@ export default function NewTradeConfigPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const [name, setName] = useState("");
+  const [prospectId, setProspectId] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [appName, setAppName] = useState("NovaX");
 
@@ -40,7 +42,7 @@ export default function NewTradeConfigPage() {
           appName: appName.trim() || undefined,
         },
       };
-      const result = await createTradeConfig(name.trim(), config);
+      const result = await createTradeConfig(name.trim(), config, prospectId);
 
       if (result.success) {
         router.push(`/trade/${result.data.id}`);
@@ -93,6 +95,9 @@ export default function NewTradeConfigPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="My Trade Config"
             />
+          </Field>
+          <Field label="Prospect">
+            <ProspectPicker value={prospectId} onChange={setProspectId} />
           </Field>
         </Section>
 

@@ -1,7 +1,7 @@
 /**
  * Tests for the earn ↔ DemoConfig mapper. Covers:
  *   - Inbound projection: StoredEarnConfig → CreateDemoConfigInput (prospectId
- *     derived from theme; theme split off; rest in `config`).
+ *     is caller-supplied, GTM-03.5B - no hash-derived auto-create).
  *   - Outbound projection: DemoConfigRecord + Prospect → StoredEarnConfig
  *     (theme merged from Prospect + themeOverrides; legacy name surfaced
  *     with "Untitled" fallback when DB has null).
@@ -37,11 +37,17 @@ describe("earnMapper", () => {
     expect(earnMapper.kind).toBe("earn");
   });
 
-  it("toCreateInput resolves a prospectId via the theme's primaryColor", async () => {
+  it("toCreateInput passes the caller-supplied prospectId through unchanged", async () => {
+    const prospect = await prospects.create({
+      ownerId: "owner-1",
+      name: "Acme",
+      primaryColor: "#4779FF",
+    });
     const input = await earnMapper.toCreateInput(prospects, {
       ownerId: "owner-1",
       name: "My Earn",
       description: "test",
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#4779FF" },
         branding: { logo: "dynamic", tokenName: "USDC" },
@@ -51,15 +57,63 @@ describe("earnMapper", () => {
     expect(input.kind).toBe("earn");
     expect(input.ownerId).toBe("owner-1");
     expect(input.name).toBe("My Earn");
-    expect(input.prospectId).toMatch(/^bf_[0-9a-f]{24}$/);
+    expect(input.prospectId).toBe(prospect.id);
     expect(input.themeOverrides).toBeDefined();
   });
 
+  it("toCreateInput accepts a null prospectId (unbound demo)", async () => {
+    const input = await earnMapper.toCreateInput(prospects, {
+      ownerId: "owner-1",
+      name: "Showcase",
+      description: null,
+      prospectId: null,
+      config: {
+        theme: { primaryColor: "#4779FF" },
+        branding: { logo: "dynamic" },
+        layout: {},
+      },
+    });
+    expect(input.prospectId).toBeNull();
+  });
+
+  it("toCreateInput stamps createdById when the caller resolved a sub", async () => {
+    const input = await earnMapper.toCreateInput(prospects, {
+      ownerId: "owner-1",
+      createdById: "user-1",
+      name: "My Earn",
+      description: null,
+      prospectId: null,
+      config: { theme: {}, branding: { logo: "dynamic" }, layout: {} },
+    });
+    expect(input.createdById).toBe("user-1");
+  });
+
+  it("toCreateInput stamps null createdById when the sub doesn't resolve", async () => {
+    const input = await earnMapper.toCreateInput(prospects, {
+      ownerId: "owner-1",
+      createdById: null,
+      name: "My Earn",
+      description: null,
+      prospectId: null,
+      config: { theme: {}, branding: { logo: "dynamic" }, layout: {} },
+    });
+    expect(input.createdById).toBeNull();
+  });
+
   it("toCreateInput round-trips through DemoConfigService and rehydrates as StoredEarnConfig", async () => {
+    const prospect = await prospects.create({
+      ownerId: "owner-1",
+      name: "Acme",
+      primaryColor: "#4779FF",
+      accentColor: "#1967D2",
+      logo: "custom",
+      logoUrl: "https://x.com/l.svg",
+    });
     const create = await earnMapper.toCreateInput(prospects, {
       ownerId: "owner-1",
       name: "USDC Earn",
       description: null,
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#4779FF", accentColor: "#1967D2" },
         branding: { logo: "custom", logoUrl: "https://x.com/l.svg" },
@@ -67,13 +121,16 @@ describe("earnMapper", () => {
       },
     });
     const record = await demoConfigs.create(create);
-    const prospect = await prospects.get(record.prospectId);
-    const stored = earnMapper.toStored(record, prospect);
+    const linked = record.prospectId
+      ? await prospects.get(record.prospectId)
+      : null;
+    const stored = earnMapper.toStored(record, linked);
 
     expect(stored.id).toBe(record.id);
     expect(stored.name).toBe("USDC Earn");
     expect(stored.ownerId).toBe("owner-1");
-    expect(stored.config.theme?.primaryColor).toBe("#4779ff");
+    expect(stored.prospectId).toBe(prospect.id);
+    expect(stored.config.theme?.primaryColor).toBe("#4779FF");
     expect(stored.config.branding?.logo).toBe("custom");
     expect(stored.config.branding?.logoUrl).toBe("https://x.com/l.svg");
     expect(stored.config.layout?.showSidebar).toBe(true);
@@ -84,6 +141,7 @@ describe("earnMapper", () => {
       ownerId: "owner-2",
       name: null,
       description: null,
+      prospectId: null,
       config: {
         theme: { primaryColor: "#abcdef" },
         branding: { logo: "dynamic" },
@@ -92,7 +150,7 @@ describe("earnMapper", () => {
     });
     const record = await demoConfigs.create(create);
     expect(record.name).toBeNull();
-    const stored = earnMapper.toStored(record, await prospects.get(record.prospectId));
+    const stored = earnMapper.toStored(record, null);
     expect(stored.name).toBe("Untitled Earn Config");
   });
 
@@ -101,6 +159,7 @@ describe("earnMapper", () => {
       ownerId: "owner-3",
       name: "",
       description: null,
+      prospectId: null,
       config: {
         theme: { primaryColor: "#222222" },
         branding: { logo: "dynamic" },
@@ -110,11 +169,22 @@ describe("earnMapper", () => {
     expect(create.name).toBeNull();
   });
 
-  it("toUpdateInput re-resolves prospectId when theme color changes", async () => {
+  it("toUpdateInput rebinds prospectId only when the caller sets it explicitly", async () => {
+    const prospectA = await prospects.create({
+      ownerId: "owner-1",
+      name: "A",
+      primaryColor: "#111111",
+    });
+    const prospectB = await prospects.create({
+      ownerId: "owner-1",
+      name: "B",
+      primaryColor: "#999999",
+    });
     const create = await earnMapper.toCreateInput(prospects, {
       ownerId: "owner-1",
       name: "v1",
       description: null,
+      prospectId: prospectA.id,
       config: {
         theme: { primaryColor: "#111111" },
         branding: { logo: "dynamic" },
@@ -122,17 +192,28 @@ describe("earnMapper", () => {
       },
     });
     const record = await demoConfigs.create(create);
-    const originalProspect = record.prospectId;
 
-    const update = await earnMapper.toUpdateInput(prospects, record, {
+    // Theme change alone must NOT rebind the prospect (hash-auto-create is dead).
+    const themeOnly = await earnMapper.toUpdateInput(prospects, record, {
       ownerId: "owner-1",
       name: "v2",
-      config: {
-        theme: { primaryColor: "#999999" },
-      },
+      config: { theme: { primaryColor: "#999999" } },
     });
-    expect(update.prospectId).toBeDefined();
-    expect(update.prospectId).not.toBe(originalProspect);
+    expect(themeOnly.prospectId).toBeUndefined();
+
+    // Explicit prospectId rebinds.
+    const rebind = await earnMapper.toUpdateInput(prospects, record, {
+      ownerId: "owner-1",
+      prospectId: prospectB.id,
+    });
+    expect(rebind.prospectId).toBe(prospectB.id);
+
+    // Explicit null unbinds.
+    const unbind = await earnMapper.toUpdateInput(prospects, record, {
+      ownerId: "owner-1",
+      prospectId: null,
+    });
+    expect(unbind.prospectId).toBeNull();
   });
 
   it("toUpdateInput merges config when partial updates land", async () => {
@@ -140,6 +221,7 @@ describe("earnMapper", () => {
       ownerId: "owner-1",
       name: "v1",
       description: null,
+      prospectId: null,
       config: {
         theme: { primaryColor: "#aabbcc", accentColor: "#001122" },
         branding: { logo: "dynamic", tokenName: "USDC" },
@@ -164,8 +246,8 @@ describe("earnMapper", () => {
   });
 
   it("toStored falls back to DEFAULT_EARN_CONFIG theme when prospect is null (legacy fallback path)", async () => {
-    // Simulate the legacy-Redis read fallback: record.prospectId === ""
-    // and the prospect lookup misses. Mapper still produces a sane theme.
+    // Simulate the legacy-Redis read fallback: record.prospectId === null
+    // and there is no linked prospect. Mapper still produces a sane theme.
     const fakeRecord = {
       id: "legacy-1",
       kind: "earn" as const,
@@ -173,7 +255,7 @@ describe("earnMapper", () => {
       createdById: null,
       name: "Legacy",
       description: null,
-      prospectId: "",
+      prospectId: null,
       themeOverrides: null,
       config: {
         theme: { primaryColor: "#deadbe" },
@@ -186,6 +268,7 @@ describe("earnMapper", () => {
     const stored = earnMapper.toStored(fakeRecord, null);
     // Legacy theme preserved from the embedded `config.theme`.
     expect(stored.config.theme?.primaryColor).toBe("#deadbe");
+    expect(stored.prospectId).toBeNull();
     void DEFAULT_EARN_CONFIG;
   });
 });

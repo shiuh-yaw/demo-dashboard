@@ -5,6 +5,9 @@
  * contract. This file exercises the same shape for the other five
  * kinds — wallet, trade, visa-direct, checkout, remittance — so a
  * regression in any single mapper's create/read round-trip fails CI.
+ *
+ * GTM-03.5B: prospectId is caller-supplied on every mapper; none of them
+ * resolve or create a Prospect anymore.
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
@@ -35,11 +38,17 @@ describe("walletMapper round-trip", () => {
     });
   });
 
-  it("creates + reads back a wallet config", async () => {
+  it("creates + reads back a wallet config bound to an explicit prospect", async () => {
+    const prospect = await prospects.create({
+      ownerId: "o1",
+      name: "P1",
+      primaryColor: "#abcdef",
+    });
     const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Wallet",
       description: null,
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#abcdef" },
         branding: { logo: "https://x.com/l.svg" },
@@ -47,28 +56,30 @@ describe("walletMapper round-trip", () => {
     });
     const record = await demoConfigs.create(input);
     expect(record.kind).toBe("wallet");
+    expect(record.prospectId).toBe(prospect.id);
     const stored = walletMapper.toStored(
       record,
-      await prospects.get(record.prospectId),
+      record.prospectId ? await prospects.get(record.prospectId) : null,
     );
     expect(stored.config.theme?.primaryColor).toBe("#abcdef");
     expect(stored.name).toBe("Wallet");
+    expect(stored.prospectId).toBe(prospect.id);
   });
 
-  it("nullable name surfaces as 'Untitled Wallet Config'", async () => {
+  it("creates an unbound wallet config when prospectId is null", async () => {
     const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: null,
       description: null,
+      prospectId: null,
       config: { theme: { primaryColor: "#123456" }, branding: {} },
     });
     const record = await demoConfigs.create(input);
     expect(record.name).toBeNull();
-    const stored = walletMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    expect(record.prospectId).toBeNull();
+    const stored = walletMapper.toStored(record, null);
     expect(stored.name).toBe("Untitled Wallet Config");
+    expect(stored.prospectId).toBeNull();
   });
 });
 
@@ -89,15 +100,13 @@ describe("tradeMapper round-trip", () => {
       ownerId: "o1",
       name: "Trade",
       description: null,
+      prospectId: null,
       config: {
         branding: { logoUrl: "https://t.com/l.svg", appName: "Trader" },
       },
     });
     const record = await demoConfigs.create(input);
-    const stored = tradeMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = tradeMapper.toStored(record, null);
     expect(stored.name).toBe("Trade");
     expect(stored.config.branding?.appName).toBe("Trader");
   });
@@ -107,14 +116,12 @@ describe("tradeMapper round-trip", () => {
       ownerId: "o1",
       name: null,
       description: null,
+      prospectId: null,
       config: { branding: {} },
     });
     const record = await demoConfigs.create(input);
     expect(record.name).toBeNull();
-    const stored = tradeMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = tradeMapper.toStored(record, null);
     expect(stored.name).toBe("Untitled Trade Config");
   });
 });
@@ -136,16 +143,14 @@ describe("visaDirectMapper round-trip", () => {
       ownerId: "o1",
       name: "VD",
       description: null,
+      prospectId: null,
       config: {
         branding: { bannerText: "test", logoUrl: "https://v.com/l.svg" },
         theme: { primaryColor: "#abcabc" },
       },
     });
     const record = await demoConfigs.create(input);
-    const stored = visaDirectMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = visaDirectMapper.toStored(record, null);
     expect(stored.name).toBe("VD");
     expect(stored.config.theme.primaryColor).toBe("#abcabc");
     expect(stored.config.branding.bannerText).toBe("test");
@@ -156,6 +161,7 @@ describe("visaDirectMapper round-trip", () => {
       ownerId: "o1",
       name: null,
       description: null,
+      prospectId: null,
       config: {
         branding: { bannerText: "", logoUrl: undefined },
         theme: { primaryColor: "#abcabc" },
@@ -163,10 +169,7 @@ describe("visaDirectMapper round-trip", () => {
     });
     const record = await demoConfigs.create(input);
     expect(record.name).toBeNull();
-    const stored = visaDirectMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = visaDirectMapper.toStored(record, null);
     expect(stored.name).toBe("Untitled Visa Direct Config");
   });
 });
@@ -189,6 +192,7 @@ describe("checkoutMapper round-trip", () => {
       name: "Checkout",
       description: null,
       mode: "deposit",
+      prospectId: null,
       config: {
         mode: "deposit",
         depositPresets: [5, 10],
@@ -197,10 +201,7 @@ describe("checkoutMapper round-trip", () => {
       },
     });
     const record = await demoConfigs.create(input);
-    const stored = checkoutMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = checkoutMapper.toStored(record, null);
     expect(stored.mode).toBe("deposit");
     expect(stored.config.theme?.primaryColor).toBe("#111111");
   });
@@ -211,14 +212,12 @@ describe("checkoutMapper round-trip", () => {
       name: null,
       description: null,
       mode: "payment",
+      prospectId: null,
       config: { mode: "payment", theme: { primaryColor: "#aaaaaa" } },
     });
     const record = await demoConfigs.create(input);
     expect(record.name).toBeNull();
-    const stored = checkoutMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = checkoutMapper.toStored(record, null);
     expect(stored.name).toBe("Untitled Checkout");
   });
 });
@@ -235,23 +234,33 @@ describe("remittanceMapper round-trip", () => {
     });
   });
 
-  it("creates + reads back a remittance config with secondary color on Prospect", async () => {
+  it("creates + reads back a remittance config bound to an explicit prospect", async () => {
+    const prospect = await prospects.create({
+      ownerId: "o1",
+      name: "Remit Co",
+      primaryColor: "#1a56db",
+      secondaryColor: "#1e40af",
+    });
     const input = await remittanceMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Remit",
       description: null,
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#1a56db", secondaryColor: "#1e40af" },
         branding: { logoUrl: "https://r.com/l.svg" },
       },
     });
     const record = await demoConfigs.create(input);
-    const prospect = await prospects.get(record.prospectId);
-    expect(prospect!.secondaryColor).toBe("#1e40af");
-    const stored = remittanceMapper.toStored(record, prospect);
+    const linked = record.prospectId
+      ? await prospects.get(record.prospectId)
+      : null;
+    expect(linked!.secondaryColor).toBe("#1e40af");
+    const stored = remittanceMapper.toStored(record, linked);
     expect(stored.config.theme?.primaryColor).toBe("#1a56db");
     expect(stored.config.theme?.secondaryColor).toBe("#1e40af");
     expect(stored.name).toBe("Remit");
+    expect(stored.prospectId).toBe(prospect.id);
   });
 
   it("nullable name surfaces as 'Untitled Remittance Config'", async () => {
@@ -259,6 +268,7 @@ describe("remittanceMapper round-trip", () => {
       ownerId: "o1",
       name: null,
       description: null,
+      prospectId: null,
       config: {
         theme: { primaryColor: "#1a56db" },
         branding: {},
@@ -266,10 +276,7 @@ describe("remittanceMapper round-trip", () => {
     });
     const record = await demoConfigs.create(input);
     expect(record.name).toBeNull();
-    const stored = remittanceMapper.toStored(
-      record,
-      await prospects.get(record.prospectId),
-    );
+    const stored = remittanceMapper.toStored(record, null);
     expect(stored.name).toBe("Untitled Remittance Config");
   });
 });
@@ -291,19 +298,24 @@ describe("walletMapper prospect theme hydration", () => {
   });
 
   it("hydrates all extended prospect palette fields", async () => {
+    const prospect = await prospects.create({
+      ownerId: "o1",
+      name: "P1",
+      primaryColor: "#abcdef",
+    });
     const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Wallet",
       description: null,
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#abcdef" },
         branding: { logo: "https://x.com/l.svg" },
       },
     });
     const record = await demoConfigs.create(input);
-    const prospect = await prospects.get(record.prospectId);
     // Enrich the prospect with extended palette
-    const updated = await prospects.update(prospect!.id, {
+    const updated = await prospects.update(prospect.id, {
       pageBackground: "#f0f0f0",
       background: "#ffffff",
       foreground: "#111111",
@@ -330,18 +342,23 @@ describe("walletMapper prospect theme hydration", () => {
   });
 
   it("hydrates prospect logo into wallet branding", async () => {
+    const prospect = await prospects.create({
+      ownerId: "o1",
+      name: "P1",
+      primaryColor: "#abcdef",
+    });
     const input = await walletMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Wallet",
       description: null,
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#abcdef" },
         branding: {},
       },
     });
     const record = await demoConfigs.create(input);
-    const prospect = await prospects.get(record.prospectId);
-    const updated = await prospects.update(prospect!.id, {
+    const updated = await prospects.update(prospect.id, {
       logo: "custom",
       logoUrl: "https://prospect.com/logo.svg",
     });
@@ -363,18 +380,23 @@ describe("visaDirectMapper prospect theme hydration", () => {
   });
 
   it("hydrates extended prospect fields and logoUrl", async () => {
+    const prospect = await prospects.create({
+      ownerId: "o1",
+      name: "P1",
+      primaryColor: "#abcabc",
+    });
     const input = await visaDirectMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "VD",
       description: null,
+      prospectId: prospect.id,
       config: {
         branding: { bannerText: "test" },
         theme: { primaryColor: "#abcabc" },
       },
     });
     const record = await demoConfigs.create(input);
-    const prospect = await prospects.get(record.prospectId);
-    const updated = await prospects.update(prospect!.id, {
+    const updated = await prospects.update(prospect.id, {
       foreground: "#222222",
       logo: "custom",
       logoUrl: "https://prospect.com/vd.svg",
@@ -399,18 +421,24 @@ describe("remittanceMapper prospect theme hydration", () => {
   });
 
   it("hydrates secondaryColor from prospect alongside extended palette", async () => {
+    const prospect = await prospects.create({
+      ownerId: "o1",
+      name: "P1",
+      primaryColor: "#1a56db",
+      secondaryColor: "#1e40af",
+    });
     const input = await remittanceMapper.toCreateInput(prospects, {
       ownerId: "o1",
       name: "Remit",
       description: null,
+      prospectId: prospect.id,
       config: {
         theme: { primaryColor: "#1a56db", secondaryColor: "#1e40af" },
         branding: { logoUrl: "https://r.com/l.svg" },
       },
     });
     const record = await demoConfigs.create(input);
-    const prospect = await prospects.get(record.prospectId);
-    const updated = await prospects.update(prospect!.id, {
+    const updated = await prospects.update(prospect.id, {
       foreground: "#333333",
       pageBackground: "#f5f5f5",
       secondaryColor: "#new-secondary",
@@ -425,20 +453,21 @@ describe("remittanceMapper prospect theme hydration", () => {
   });
 });
 
-describe("prospect resolution determinism — cross-kind", () => {
+describe("mappers never resolve or create a Prospect", () => {
   let prospects: ProspectService;
 
   beforeEach(() => {
     prospects = new RedisProspectService(createFakeRedis());
   });
 
-  it("two demos with same owner+primary+logo share a Prospect", async () => {
+  it("two demos created with the same theme but no explicit prospectId stay unbound (no hash convergence)", async () => {
     const earnInput = await (
       await import("../earn")
     ).earnMapper.toCreateInput(prospects, {
       ownerId: "shared",
       name: "Earn",
       description: null,
+      prospectId: null,
       config: {
         theme: { primaryColor: "#445566" },
         branding: {
@@ -452,11 +481,14 @@ describe("prospect resolution determinism — cross-kind", () => {
       ownerId: "shared",
       name: "Wallet",
       description: null,
+      prospectId: null,
       config: {
         theme: { primaryColor: "#445566" },
         branding: { logo: "https://shared.com/l.svg" },
       },
     });
-    expect(earnInput.prospectId).toBe(walletInput.prospectId);
+    expect(earnInput.prospectId).toBeNull();
+    expect(walletInput.prospectId).toBeNull();
+    expect(await prospects.list()).toHaveLength(0);
   });
 });
