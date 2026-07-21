@@ -27,7 +27,6 @@
 
 import { prisma as defaultPrisma } from "@dynamic-demos/db";
 import {
-  DEFAULT_TEAM_ID,
   type Prospect,
   type ProspectBorderRadius,
   type ProspectListOptions,
@@ -41,7 +40,7 @@ import {
 /** Fields that flow identically through create/update/upsert. */
 type ProspectWritable = {
   ownerId: string;
-  teamId: string;
+  teamId: string | null;
   createdById: string | null;
   status: ProspectStatus;
   name: string;
@@ -188,7 +187,7 @@ export interface ProspectPrismaClient {
 function fromCreateInput(input: CreateProspectInput): ProspectWritable {
   return {
     ownerId: input.ownerId,
-    teamId: input.teamId ?? DEFAULT_TEAM_ID,
+    teamId: input.teamId ?? null,
     createdById: input.createdById ?? null,
     status: input.status ?? "ACTIVE",
     name: input.name,

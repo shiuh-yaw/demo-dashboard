@@ -331,13 +331,13 @@ describe.each(backends)("ProspectService parity ($name)", ({ build }) => {
     expect(refetched!.notes).toBe("closed - moving to pilot");
   });
 
-  it("defaults teamId to the default team, createdById to null, status to ACTIVE", async () => {
+  it("defaults teamId to null, createdById to null, status to ACTIVE", async () => {
     const created = await svc.create(makeInput());
-    expect(created.teamId).toBe("team_gtm_default");
+    expect(created.teamId).toBeNull();
     expect(created.createdById).toBeNull();
     expect(created.status).toBe("ACTIVE");
     const fetched = await svc.get(created.id);
-    expect(fetched!.teamId).toBe("team_gtm_default");
+    expect(fetched!.teamId).toBeNull();
     expect(fetched!.status).toBe("ACTIVE");
   });
 

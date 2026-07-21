@@ -283,6 +283,13 @@ export const env = createEnv({
      * (ID document only).
      */
     SUMSUB_LEVEL_NAME: z.string().min(1).optional().default("id-only"),
+    /**
+     * GTM sign-in allowlist: comma-separated email domains permitted into the
+     * operator surface (e.g. `fireblocks.com,dynamic.xyz`). Matching is on the
+     * full domain after `@`, lowercased, exact. Empty (default) fails
+     * closed - nobody passes. There is NO individual-email allowlist.
+     */
+    GTM_ALLOWED_DOMAINS: z.string().optional().default(""),
   },
   /*
    * Environment variables available on the client (and server).
@@ -399,6 +406,7 @@ export const env = createEnv({
     SUMSUB_SECRET_KEY: process.env.SUMSUB_SECRET_KEY,
     SUMSUB_ENVIRONMENT: process.env.SUMSUB_ENVIRONMENT,
     SUMSUB_LEVEL_NAME: process.env.SUMSUB_LEVEL_NAME,
+    GTM_ALLOWED_DOMAINS: process.env.GTM_ALLOWED_DOMAINS,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,

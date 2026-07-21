@@ -1,6 +1,6 @@
 /**
  * Postgres-backed TeamService (Prisma + Supabase via @dynamic-demos/db).
- * Team + TeamMembership; no per-membership role (workspace Role governs).
+ * Team + TeamMembership; per-team role (global OWNER/ADMIN bypass it).
  * Postgres-only, no cutover flag (no legacy Redis equivalent).
  *
  * D-013: relies on the `prisma` singleton; never opens its own connection.
@@ -9,8 +9,9 @@
 
 import { prisma as defaultPrisma } from "@dynamic-demos/db";
 import {
-  DEFAULT_TEAM_SLUG,
+  TeamMembershipNotFoundError,
   type CreateTeamInput,
+  type UserRole,
   type Team,
   type TeamMembership,
   type TeamService,
@@ -32,7 +33,7 @@ export interface TeamPrismaClient {
   };
   teamMembership: {
     create(args: {
-      data: { userId: string; teamId: string };
+      data: { userId: string; teamId: string; role?: string };
     }): Promise<TeamMembershipRow>;
     findUnique(args: {
       where: { userId_teamId: { userId: string; teamId: string } };
@@ -41,6 +42,10 @@ export interface TeamPrismaClient {
       where: { userId: string };
       orderBy?: { createdAt?: "asc" | "desc" };
     }): Promise<TeamMembershipRow[]>;
+    update(args: {
+      where: { userId_teamId: { userId: string; teamId: string } };
+      data: { role: string };
+    }): Promise<TeamMembershipRow>;
     deleteMany(args: {
       where: { userId: string; teamId: string };
     }): Promise<{ count: number }>;
@@ -61,6 +66,7 @@ function toMembership(row: TeamMembershipRow): TeamMembership {
     id: row.id,
     userId: row.userId,
     teamId: row.teamId,
+    role: row.role as UserRole,
     createdAt: row.createdAt,
   };
 }
@@ -86,15 +92,20 @@ export class PostgresTeamService implements TeamService {
     return rows.map(toTeam);
   }
 
-  async addMember(userId: string, teamId: string): Promise<TeamMembership> {
+  async addMember(
+    userId: string,
+    teamId: string,
+    role: UserRole = "MEMBER",
+  ): Promise<TeamMembership> {
     try {
       const row = await this.client.teamMembership.create({
-        data: { userId, teamId },
+        data: { userId, teamId, role },
       });
       return toMembership(row);
     } catch (err) {
       if (!isUniqueConstraintError(err)) throw err;
-      // Membership already exists (P2002 on the unique pair) - read it back.
+      // Membership already exists (P2002 on the unique pair) - read it back
+      // unchanged; role is not re-applied on an idempotent re-add.
       const existing = await this.client.teamMembership.findUnique({
         where: { userId_teamId: { userId, teamId } },
       });
@@ -107,18 +118,27 @@ export class PostgresTeamService implements TeamService {
     await this.client.teamMembership.deleteMany({ where: { userId, teamId } });
   }
 
+  async setMembershipRole(
+    userId: string,
+    teamId: string,
+    role: UserRole,
+  ): Promise<TeamMembership> {
+    const existing = await this.client.teamMembership.findUnique({
+      where: { userId_teamId: { userId, teamId } },
+    });
+    if (!existing) throw new TeamMembershipNotFoundError(userId, teamId);
+    const updated = await this.client.teamMembership.update({
+      where: { userId_teamId: { userId, teamId } },
+      data: { role },
+    });
+    return toMembership(updated);
+  }
+
   async membershipsForUser(userId: string): Promise<TeamMembership[]> {
     const rows = await this.client.teamMembership.findMany({
       where: { userId },
       orderBy: { createdAt: "asc" },
     });
     return rows.map(toMembership);
-  }
-
-  async defaultTeam(): Promise<Team | null> {
-    const row = await this.client.team.findUnique({
-      where: { slug: DEFAULT_TEAM_SLUG },
-    });
-    return row ? toTeam(row) : null;
   }
 }

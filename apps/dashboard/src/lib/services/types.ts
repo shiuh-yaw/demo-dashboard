@@ -247,11 +247,6 @@ export type ProspectLogoKind = "custom" | "dynamic";
 /** Lifecycle state. Mirrors the Prisma `ProspectStatus` enum. */
 export type ProspectStatus = "ACTIVE" | "ARCHIVED";
 
-/// Seeded default team every user and prospect joins initially. Literal id
-/// matches the value seeded by the gtm_tables migration; slug drives lookup.
-export const DEFAULT_TEAM_ID = "team_gtm_default";
-export const DEFAULT_TEAM_SLUG = "gtm";
-
 /**
  * Prospect row as it lives in Postgres (mirrors the Prisma `Prospect` model).
  * The dashboard service layer surfaces this shape regardless of backend.
@@ -264,8 +259,8 @@ export const DEFAULT_TEAM_SLUG = "gtm";
 export interface Prospect {
   id: string;
   ownerId: string;
-  /** Owning team. Defaults to the seeded default team when unset on write. */
-  teamId: string;
+  /** Owning team; null until a prospect is explicitly assigned to one. */
+  teamId: string | null;
   /** Resolved creator (FK -> User); null for legacy rows not yet reconciled. */
   createdById: string | null;
   status: ProspectStatus;
@@ -301,8 +296,8 @@ export interface Prospect {
 
 export interface CreateProspectInput {
   ownerId: string;
-  /** Defaults to the seeded default team when omitted (PR A write path). */
-  teamId?: string;
+  /** Null when omitted; a prospect belongs to no team until explicitly assigned. */
+  teamId?: string | null;
   createdById?: string | null;
   status?: ProspectStatus;
   name: string;
@@ -334,7 +329,7 @@ export interface CreateProspectInput {
 }
 
 export interface UpdateProspectInput {
-  teamId?: string;
+  teamId?: string | null;
   createdById?: string | null;
   status?: ProspectStatus;
   name?: string;
@@ -723,7 +718,7 @@ export interface DemoConfigService {
 /// only OWNERs modify OWNERs. ADMIN: mutates any record, grants roles below
 /// ADMIN, reaches the operations surface. MEMBER: sign-in default - creates
 /// and mutates own records, mints share links. VIEWER: read-only.
-export type GtmUserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type UserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 
 export interface GtmUser {
   id: string;
@@ -734,7 +729,7 @@ export interface GtmUser {
   displayName: string | null;
   avatarUrl: string | null;
   schedulingUrl: string | null;
-  role: GtmUserRole;
+  role: UserRole;
   /** Offboarding lifecycle. Non-null rejects sign-in (Phase 04). */
   deactivatedAt: Date | null;
   createdAt: Date;
@@ -793,9 +788,11 @@ export interface GtmUserService {
    */
   getOrCreateByEmail(email: string): Promise<GtmUser>;
   get(id: string): Promise<GtmUser | null>;
+  /** Read-only lookup by email (lowercased); null when absent. Never creates. */
+  findByEmail(email: string): Promise<GtmUser | null>;
   update(id: string, input: UpdateGtmUserInput): Promise<GtmUser>;
   /** Role assignment. */
-  setRole(id: string, role: GtmUserRole): Promise<GtmUser>;
+  setRole(id: string, role: UserRole): Promise<GtmUser>;
   /**
    * Batch-resolves users by Dynamic JWT `sub` (`dynamicUserId`) - the join
    * key back to `Prospect.ownerId` / `DemoConfig.ownerId`. Unknown subs are
@@ -831,6 +828,8 @@ export interface TeamMembership {
   id: string;
   userId: string;
   teamId: string;
+  /** Per-team role (same `Role` enum). Global OWNER/ADMIN bypass it. */
+  role: UserRole;
   createdAt: Date;
 }
 
@@ -839,16 +838,36 @@ export interface CreateTeamInput {
   slug: string;
 }
 
+export class TeamMembershipNotFoundError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly teamId: string,
+  ) {
+    super(`TeamMembership not found: userId=${userId} teamId=${teamId}`);
+    this.name = "TeamMembershipNotFoundError";
+  }
+}
+
 export interface TeamService {
   create(input: CreateTeamInput): Promise<Team>;
   list(): Promise<Team[]>;
-  /** Idempotent: adding an existing (userId, teamId) returns the current row. */
-  addMember(userId: string, teamId: string): Promise<TeamMembership>;
+  /** Idempotent: adding an existing (userId, teamId) returns the current row
+   * unchanged (role is not re-applied). Defaults new members to MEMBER. */
+  addMember(
+    userId: string,
+    teamId: string,
+    role?: UserRole,
+  ): Promise<TeamMembership>;
   /** Idempotent: removing an absent membership is a no-op. */
   removeMember(userId: string, teamId: string): Promise<void>;
+  /** Sets a membership's role. Throws `TeamMembershipNotFoundError` when the
+   * (userId, teamId) pair has no membership. */
+  setMembershipRole(
+    userId: string,
+    teamId: string,
+    role: UserRole,
+  ): Promise<TeamMembership>;
   membershipsForUser(userId: string): Promise<TeamMembership[]>;
-  /** The seeded default team (slug "gtm"); null if not seeded. */
-  defaultTeam(): Promise<Team | null>;
 }
 
 // =============================================================================

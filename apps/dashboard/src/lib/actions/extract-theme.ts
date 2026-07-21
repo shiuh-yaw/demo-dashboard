@@ -3,6 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { WidgetTheme, WidgetBranding } from "@/lib/widget-config";
 import { env } from "@/env";
+import { getSessionUser } from "@/lib/auth/gtm";
 
 interface ExtractedTheme {
   theme: Partial<WidgetTheme>;
@@ -16,6 +17,11 @@ interface ExtractedTheme {
 export async function extractThemeFromUrl(
   url: string,
 ): Promise<{ success: boolean; data?: ExtractedTheme; error?: string }> {
+  // Server-side fetch of a caller-supplied URL - session required (SSRF guard).
+  const user = await getSessionUser();
+  if (!user) {
+    return { success: false, error: "Authentication required" };
+  }
   try {
     if (!url.startsWith("http")) url = `https://${url}`;
 

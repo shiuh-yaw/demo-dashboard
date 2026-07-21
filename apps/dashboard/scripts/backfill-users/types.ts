@@ -2,13 +2,13 @@
  * Phase GTM-03.5A - backfill-users types.
  *
  * The script lists Dynamic environment users, upserts a `User` row for each
- * allowlisted email, links `dynamicUserId`, ensures default-team membership,
- * and re-runs the `createdById` resolution. Types define the seam between the
- * Dynamic admin client (network in) and the orchestrator (services out) so
- * unit tests drive it with in-memory fakes.
+ * allowlisted email, links `dynamicUserId`, and re-runs the `createdById`
+ * resolution. Types define the seam between the Dynamic admin client
+ * (network in) and the orchestrator (services out) so unit tests drive it
+ * with in-memory fakes.
  */
 
-import type { GtmUserService, TeamService } from "@/lib/services/types";
+import type { GtmUserService } from "@/lib/services/types";
 
 /** One directory entry from the Dynamic admin API. */
 export interface DynamicDirectoryUser {
@@ -40,7 +40,6 @@ export interface BackfillUsersReport {
   results: BackfillUserResult[];
   totals: {
     usersUpserted: number;
-    membershipsEnsured: number;
     prospectsClaimed: number;
     demoConfigsClaimed: number;
     skipped: number;
@@ -50,7 +49,6 @@ export interface BackfillUsersReport {
 export interface BackfillUsersDeps {
   client: DynamicDirectoryClient;
   users: GtmUserService;
-  teams: TeamService;
   /** Lowercased email domains that pass the allowlist (GTM_ALLOWED_DOMAINS). */
   allowedDomains: string[];
   /** When true, computes the plan and writes nothing. */

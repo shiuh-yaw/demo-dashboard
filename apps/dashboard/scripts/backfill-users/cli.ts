@@ -1,8 +1,8 @@
 /**
  * Phase GTM-03.5A - backfill-users CLI entry point.
  *
- * Wires the real Dynamic admin client + Postgres user/team services, then
- * prints a human-readable report. Business logic lives in run.ts.
+ * Wires the real Dynamic admin client + Postgres user service, then prints a
+ * human-readable report. Business logic lives in run.ts.
  *
  * Usage:
  *   pnpm --filter @dynamic-demos/dashboard backfill:users [--dry-run]
@@ -14,7 +14,7 @@
  */
 
 import { env } from "@/env";
-import { gtmUserService, teamService } from "@/lib/services";
+import { gtmUserService } from "@/lib/services";
 
 import { createDynamicDirectoryClient } from "./dynamic-client";
 import { runBackfillUsers } from "./run";
@@ -39,7 +39,6 @@ async function main() {
   const report = await runBackfillUsers({
     client,
     users: gtmUserService,
-    teams: teamService,
     allowedDomains,
     dryRun,
     log: (m) => process.stdout.write(`${m}\n`),
@@ -49,7 +48,6 @@ async function main() {
     `\n=== User backfill complete${dryRun ? " (dry-run)" : ""} ===\n`,
   );
   process.stdout.write(`usersUpserted:      ${report.totals.usersUpserted}\n`);
-  process.stdout.write(`membershipsEnsured: ${report.totals.membershipsEnsured}\n`);
   process.stdout.write(`prospectsClaimed:   ${report.totals.prospectsClaimed}\n`);
   process.stdout.write(`demoConfigsClaimed: ${report.totals.demoConfigsClaimed}\n`);
   process.stdout.write(`skipped:            ${report.totals.skipped}\n`);

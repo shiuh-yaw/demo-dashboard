@@ -91,7 +91,7 @@ Phase files reference these; they are the single source of truth for cross-phase
 // internal-person entity - and gains dynamicUserId (the Dynamic JWT sub,
 // nullable, captured at first sign-in by Phase 04). Existing ownerId
 // values on Prospect/DemoConfig are Dynamic subs; dynamicUserId makes
-// them joinable at read time. Visibility is workspace-shared (Phase 04).
+// them joinable at read time. Visibility is progressive - own + team (Phase 04).
 
 // Amended GTM-D-002 extension (2026-07-20): role becomes a real Prisma
 // enum - Role { OWNER ADMIN MEMBER VIEWER }, default MEMBER. Seeded from
@@ -145,6 +145,7 @@ model TeamMembership {
   id        String   @id @default(cuid())
   userId    String
   teamId    String
+  role      Role     @default(MEMBER) // per-team role (GTM-D-002/D-003, Phase 04); additive migration
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   team      Team     @relation(fields: [teamId], references: [id])
@@ -158,10 +159,11 @@ model ProspectTheme {
   // palette columns copied verbatim from Prospect's current theme fields
 }
 
-// Prospect (Phase 01/03.5) gains: teamId (FK, NOT NULL post-backfill),
-// createdById String? (FK -> User), status ProspectStatus @default(ACTIVE);
-// partial unique (teamId, lower(domain)). Identity fields (name, domain,
-// logoUrl, notes, logo, companyUrl, description) stay on Prospect.
+// Prospect (Phase 01/03.5) gains: teamId String? (nullable FK, no default -
+// explicit assignment only), createdById String? (FK -> User), status
+// ProspectStatus @default(ACTIVE); partial unique (teamId, lower(domain)).
+// Identity fields (name, domain, logoUrl, notes, logo, companyUrl,
+// description) stay on Prospect.
 
 // DemoConfig (Phase 03.5) gains: createdById String?; prospectId becomes
 // NULLABLE ("built for"; unbound = reusable/showcase demo).
@@ -274,10 +276,17 @@ Cookies (demo-domain scoped, set by the tracker): `dd_anon` (uuid, 1y), `dd_shar
 
 ### Auth helpers (Phase 04, `src/lib/auth/gtm.ts`)
 
+Amended by GTM-D-002/D-003 (2026-07-20): per-team roles ship in v1 -
+`TeamMembership.role` (same `Role` enum, additive migration in Phase 04). The role
+matrix lives in `src/lib/auth/policy.ts` (pure `canMutateRecord` / `canCreateRecord` /
+`canMintShareLinks` / `canAccessOperations` / `canSetRole`); visibility is progressive
+(own records + team-membership records; ADMIN/OWNER unscoped) via `visibleProspectIds(user)`.
+
 ```ts
-getSessionUser(): Promise<User | null>  // verified Dynamic JWT -> allowlist check -> getOrCreate -> capture dynamicUserId
-requireUser(): Promise<User>            // throws/redirects when unauthenticated or off-domain
-requireOperator(): Promise<User>        // role check, fail closed
+getSessionUser(): Promise<User | null>  // verified Dynamic JWT -> GTM_ALLOWED_DOMAINS exact-match -> getOrCreateByEmail -> write-once dynamicUserId capture + claimLegacyRecords. No team auto-join (explicit-only). Deactivated/off-domain -> null.
+requireUser(): Promise<User>            // redirect("/dashboard/denied") when unauthenticated or off-domain
+requireAdmin(): Promise<User>           // ADMIN+ (canAccessOperations), fail closed
+// mutation guards: visibleProspectIds(user), canMutateProspect(user, prospect), canMutateDemoConfig(user, record)
 ```
 
 ### Enrichment (Phase 10, `src/lib/enrichment/`)
@@ -300,9 +309,7 @@ Runs post-response via Next 15 `after()` inside the ingest route on session crea
 
 ### Environment additions (all server-only except `NEXT_PUBLIC_TRACK_URL`)
 
-- `GTM_ALLOWED_DOMAINS` - comma-separated (`fireblocks.com,dynamic.xyz`).
-- `GTM_OWNER_EMAILS` - comma-separated seed list for the `OWNER` role (supersedes the earlier `GTM_OPERATOR_EMAILS` placeholder; GTM-D-002 extension).
-- `GTM_ADMIN_EMAILS` - comma-separated seed list for the `ADMIN` role.
+- `GTM_ALLOWED_DOMAINS` - comma-separated (`fireblocks.com,dynamic.xyz`). Exact domain match, fail-closed when empty. This is the ONLY GTM auth env var: GTM-D-002 (2026-07-20) dropped all role-seeding env vars (`GTM_OWNER_EMAILS`/`GTM_ADMIN_EMAILS`) and the individual-email allowlist. The first OWNER is bootstrapped by the `set-role` CLI; every other role is granted in-app.
 - `TRACK_CORS_ORIGINS` - comma-separated demo origins.
 - `IP_HASH_SALT` - random salt for ipHash.
 - `IPINFO_TOKEN` - company-level enrichment (optional; noop provider without it).

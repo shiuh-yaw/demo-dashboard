@@ -14,15 +14,16 @@ import { createResponse, createErrorResponse } from "@/lib/api-response";
 import { handleWorker, type WorkerPayload } from "./handler";
 
 export async function POST(request: NextRequest) {
-  // Verify QStash signature
+  // QStash signature is mandatory - unsigned requests are rejected.
   const signature = request.headers.get("upstash-signature");
   const body = await request.text();
 
-  if (signature) {
-    const isValid = await verifyQStashSignature(signature, body);
-    if (!isValid) {
-      return createErrorResponse("Unauthorized", 401);
-    }
+  if (!signature) {
+    return createErrorResponse("Unauthorized", 401);
+  }
+  const isValid = await verifyQStashSignature(signature, body);
+  if (!isValid) {
+    return createErrorResponse("Unauthorized", 401);
   }
 
   // Parse payload

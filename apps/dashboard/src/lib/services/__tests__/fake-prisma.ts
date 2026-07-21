@@ -16,7 +16,6 @@
  */
 
 import {
-  DEFAULT_TEAM_ID,
   type Prospect,
   type ProspectBorderRadius,
   type ProspectLogoKind,
@@ -25,7 +24,7 @@ import {
 
 interface ProspectWritable {
   ownerId: string;
-  teamId: string;
+  teamId: string | null;
   createdById: string | null;
   status: ProspectStatus;
   name: string;
@@ -151,7 +150,7 @@ function applyNullDefaults(
   data: Partial<ProspectWritable>,
 ): Omit<ProspectWritable, "ownerId" | "name" | "primaryColor"> {
   return {
-    teamId: data.teamId ?? DEFAULT_TEAM_ID,
+    teamId: data.teamId ?? null,
     createdById: data.createdById ?? null,
     status: data.status ?? "ACTIVE",
     description: data.description ?? null,

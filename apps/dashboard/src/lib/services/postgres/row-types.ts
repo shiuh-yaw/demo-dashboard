@@ -40,13 +40,14 @@ export interface TeamMembershipRow {
   id: string;
   userId: string;
   teamId: string;
+  role: string;
   createdAt: Date;
 }
 
 export interface ProspectRow {
   id: string;
   ownerId: string;
-  teamId: string;
+  teamId: string | null;
   createdById: string | null;
   status: string;
   name: string;

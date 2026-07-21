@@ -11,7 +11,13 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getSessionUser,
+  canMutateDemoConfig,
+  visibleProspectIds,
+  isDemoConfigVisible,
+} from "@/lib/auth/gtm";
+import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
 import { visaDirectMapper } from "@/lib/services/demo-config-mappers/visa-direct";
@@ -29,15 +35,15 @@ export async function createVisaDirectConfig(
   config?: Partial<VisaDirectConfig>,
   prospectId: string | null = null
 ): Promise<ActionResult<StoredVisaDirectConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
+  if (!canCreateRecord(user)) {
+    return { success: false, error: "Access denied" };
+  }
   try {
-    const createdById =
-      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
-      null;
     const create = await visaDirectMapper.toCreateInput(services.prospects, {
-      ownerId: user.sub,
-      createdById,
+      ownerId: user.dynamicUserId ?? "",
+      createdById: user.id,
       name: name && name.length > 0 ? name : null,
       description: null,
       prospectId,
@@ -60,15 +66,17 @@ export async function createVisaDirectConfig(
 export async function getVisaDirectConfig(
   id: string
 ): Promise<ActionResult<StoredVisaDirectConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "visa-direct") {
       return { success: false, error: "Visa Direct config not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
-      return { success: false, error: "Access denied" };
+    const visible = await visibleProspectIds(user);
+    if (!isDemoConfigVisible(user, visible, record)) {
+      // Same not-found shape as a missing id - no existence oracle.
+      return { success: false, error: "Visa Direct config not found" };
     }
     const prospect = record.prospectId
       ? await services.prospects.get(record.prospectId)
@@ -89,21 +97,21 @@ export async function updateVisaDirectConfig(
     prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredVisaDirectConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const existing = await services.demoConfigs.get(id);
     if (!existing || existing.kind !== "visa-direct") {
       return { success: false, error: "Visa Direct config not found" };
     }
-    if (existing.ownerId && existing.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, existing))) {
       return { success: false, error: "Access denied" };
     }
     const update = await visaDirectMapper.toUpdateInput(
       services.prospects,
       existing,
       {
-        ownerId: existing.ownerId || user.sub,
+        ownerId: existing.ownerId,
         name: updates.name,
         description: updates.description,
         prospectId: updates.prospectId,
@@ -128,14 +136,14 @@ export async function updateVisaDirectConfig(
 export async function deleteVisaDirectConfig(
   id: string
 ): Promise<ActionResult<{ deleted: true }>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "visa-direct") {
       return { success: false, error: "Visa Direct config not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, record))) {
       return { success: false, error: "Access denied" };
     }
     await services.demoConfigs.delete(id);
@@ -152,9 +160,12 @@ export async function getAllVisaDirectConfigs(): Promise<{
   configs: StoredVisaDirectConfig[];
   orphaned: StoredVisaDirectConfig[];
 }> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { configs: [], orphaned: [] };
-  const all = await services.demoConfigs.list({ kind: "visa-direct" });
+  const visible = await visibleProspectIds(user);
+  const all = (await services.demoConfigs.list({ kind: "visa-direct" })).filter((r) =>
+    isDemoConfigVisible(user, visible, r),
+  );
   const stored = await Promise.all(
     all.map(async (record) => {
       const prospect = record.prospectId
@@ -163,7 +174,7 @@ export async function getAllVisaDirectConfigs(): Promise<{
       return visaDirectMapper.toStored(record, prospect);
     }),
   );
-  const userConfigs = stored.filter((c) => c.ownerId === user.sub);
+  const userConfigs = stored.filter((c) => c.ownerId);
   const orphanedConfigs = stored.filter((c) => !c.ownerId);
   const sortByUpdated = (
     a: StoredVisaDirectConfig,

@@ -23,7 +23,7 @@ import {
   InvalidSchedulingUrlError,
   type ClaimLegacyRecordsResult,
   type GtmUser,
-  type GtmUserRole,
+  type UserRole,
   type GtmUserService,
   type UpdateGtmUserInput,
 } from "../types";
@@ -118,7 +118,7 @@ function toGtmUser(row: UserRow): GtmUser {
     displayName: row.displayName,
     avatarUrl: row.avatarUrl,
     schedulingUrl: row.schedulingUrl,
-    role: row.role as GtmUserRole,
+    role: row.role as UserRole,
     deactivatedAt: row.deactivatedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -160,6 +160,14 @@ export class PostgresGtmUserService implements GtmUserService {
 
   async get(id: string): Promise<GtmUser | null> {
     const row = await this.client.user.findUnique({ where: { id } });
+    return row ? toGtmUser(row) : null;
+  }
+
+  async findByEmail(email: string): Promise<GtmUser | null> {
+    const normalized = email.trim().toLowerCase();
+    const row = await this.client.user.findUnique({
+      where: { email: normalized },
+    });
     return row ? toGtmUser(row) : null;
   }
 
@@ -207,7 +215,7 @@ export class PostgresGtmUserService implements GtmUserService {
     return toGtmUser(updated);
   }
 
-  async setRole(id: string, role: GtmUserRole): Promise<GtmUser> {
+  async setRole(id: string, role: UserRole): Promise<GtmUser> {
     const updated = await this.client.user.update({
       where: { id },
       data: { role },

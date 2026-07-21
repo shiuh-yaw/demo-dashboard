@@ -119,7 +119,7 @@ export type {
   Services,
   GtmUserService,
   GtmUser,
-  GtmUserRole,
+  UserRole,
   UpdateGtmUserInput,
   ClaimLegacyRecordsResult,
   TeamService,
@@ -143,4 +143,5 @@ export {
   DynamicUserIdConflictError,
   DemoConfigNotFoundError,
   ShareLinkProspectNotFoundError,
+  TeamMembershipNotFoundError,
 } from "./types";

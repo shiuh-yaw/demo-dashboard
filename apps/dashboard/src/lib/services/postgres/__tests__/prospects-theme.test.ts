@@ -90,7 +90,7 @@ describe("PostgresProspectService + ProspectTheme dual-write", () => {
     const row: Prospect = {
       id: "p1",
       ownerId: "owner-1",
-      teamId: "team_gtm_default",
+      teamId: null,
       createdById: null,
       status: "ACTIVE",
       name: "Legacy Co",

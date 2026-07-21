@@ -67,6 +67,8 @@ export function createFakeTeamPrisma(): TeamPrismaClient & {
           id: `tm_${++mc}`,
           userId: data.userId,
           teamId: data.teamId,
+          // Mirrors the Postgres/Prisma schema default (`Role.MEMBER`).
+          role: data.role ?? "MEMBER",
           createdAt: now(),
         };
         memberships.set(row.id, row);
@@ -84,6 +86,17 @@ export function createFakeTeamPrisma(): TeamPrismaClient & {
           .filter((m) => m.userId === where.userId)
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
           .map((m) => ({ ...m }));
+      },
+      async update({ where, data }) {
+        const { userId, teamId } = where.userId_teamId;
+        for (const [id, m] of memberships) {
+          if (m.userId === userId && m.teamId === teamId) {
+            const updated: TeamMembershipRow = { ...m, role: data.role };
+            memberships.set(id, updated);
+            return { ...updated };
+          }
+        }
+        throw new Error(`Record to update not found. ${userId}/${teamId}`);
       },
       async deleteMany({ where }) {
         let count = 0;

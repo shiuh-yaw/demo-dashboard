@@ -1,7 +1,8 @@
 /**
  * Backfill orchestrator. Idempotent and rerunnable: `getOrCreateByEmail`,
- * `dynamicUserId` write-once, `addMember`, and `claimLegacyRecords` all
- * converge on re-run. `--dry-run` computes the plan without writing.
+ * `dynamicUserId` write-once, and `claimLegacyRecords` all converge on
+ * re-run. `--dry-run` computes the plan without writing. Team membership is
+ * explicit-only; the backfill never joins a team.
  */
 
 import { DynamicUserIdConflictError } from "@/lib/services/types";
@@ -15,7 +16,6 @@ import type {
 function emptyTotals(): BackfillUsersReport["totals"] {
   return {
     usersUpserted: 0,
-    membershipsEnsured: 0,
     prospectsClaimed: 0,
     demoConfigsClaimed: 0,
     skipped: 0,
@@ -34,14 +34,6 @@ export async function runBackfillUsers(
   const allowed = new Set(deps.allowedDomains.map((d) => d.trim().toLowerCase()));
   const results: BackfillUserResult[] = [];
   const totals = emptyTotals();
-
-  // Membership target. Absent means the expand migration has not run - fatal.
-  const team = await deps.teams.defaultTeam();
-  if (!team) {
-    throw new Error(
-      "default team (slug 'gtm') not found - run the gtm_tables migration first",
-    );
-  }
 
   const directory = await deps.client.listEnvironmentUsers();
   for (const entry of directory) {
@@ -80,9 +72,6 @@ export async function runBackfillUsers(
         throw err;
       }
     }
-
-    await deps.teams.addMember(user.id, team.id);
-    totals.membershipsEnsured++;
 
     const claimed = await deps.users.claimLegacyRecords({
       id: user.id,

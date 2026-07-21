@@ -15,7 +15,13 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getSessionUser,
+  canMutateDemoConfig,
+  visibleProspectIds,
+  isDemoConfigVisible,
+} from "@/lib/auth/gtm";
+import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
 import { earnMapper } from "@/lib/services/demo-config-mappers/earn";
@@ -33,18 +39,18 @@ export async function createEarnConfig(
   config?: Partial<EarnConfig>,
   prospectId: string | null = null
 ): Promise<ActionResult<StoredEarnConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
 
+  if (!canCreateRecord(user)) {
+    return { success: false, error: "Access denied" };
+  }
   try {
-    const createdById =
-      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
-      null;
     const create = await earnMapper.toCreateInput(services.prospects, {
-      ownerId: user.sub,
-      createdById,
+      ownerId: user.dynamicUserId ?? "",
+      createdById: user.id,
       name: name && name.length > 0 ? name : null,
       description: null,
       prospectId,
@@ -72,7 +78,7 @@ export async function createEarnConfig(
 export async function getEarnConfig(
   id: string
 ): Promise<ActionResult<StoredEarnConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -82,8 +88,10 @@ export async function getEarnConfig(
     if (!record || record.kind !== "earn") {
       return { success: false, error: "Earn config not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
-      return { success: false, error: "Access denied" };
+    const visible = await visibleProspectIds(user);
+    if (!isDemoConfigVisible(user, visible, record)) {
+      // Same not-found shape as a missing id - no existence oracle.
+      return { success: false, error: "Earn config not found" };
     }
     const prospect = record.prospectId
       ? await services.prospects.get(record.prospectId)
@@ -107,7 +115,7 @@ export async function updateEarnConfig(
     prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredEarnConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -117,7 +125,7 @@ export async function updateEarnConfig(
     if (!existing || existing.kind !== "earn") {
       return { success: false, error: "Earn config not found" };
     }
-    if (existing.ownerId && existing.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, existing))) {
       return { success: false, error: "Access denied" };
     }
 
@@ -125,7 +133,7 @@ export async function updateEarnConfig(
       services.prospects,
       existing,
       {
-        ownerId: existing.ownerId || user.sub,
+        ownerId: existing.ownerId,
         name: updates.name,
         description: updates.description,
         prospectId: updates.prospectId,
@@ -155,7 +163,7 @@ export async function updateEarnConfig(
 export async function deleteEarnConfig(
   id: string
 ): Promise<ActionResult<{ deleted: true }>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -165,7 +173,7 @@ export async function deleteEarnConfig(
     if (!record || record.kind !== "earn") {
       return { success: false, error: "Earn config not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, record))) {
       return { success: false, error: "Access denied" };
     }
     await services.demoConfigs.delete(id);
@@ -189,10 +197,13 @@ export async function getAllEarnConfigs(): Promise<{
   configs: StoredEarnConfig[];
   orphaned: StoredEarnConfig[];
 }> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { configs: [], orphaned: [] };
 
-  const all = await services.demoConfigs.list({ kind: "earn" });
+  const visible = await visibleProspectIds(user);
+  const all = (await services.demoConfigs.list({ kind: "earn" })).filter((r) =>
+    isDemoConfigVisible(user, visible, r),
+  );
   // Hydrate each row's Prospect. List sizes are small (per-owner index makes
   // owner-scoped lists O(N owned)) so a per-row prospect lookup is fine.
   const stored = await Promise.all(
@@ -204,7 +215,7 @@ export async function getAllEarnConfigs(): Promise<{
     }),
   );
 
-  const userConfigs = stored.filter((c) => c.ownerId === user.sub);
+  const userConfigs = stored.filter((c) => c.ownerId);
   const orphanedConfigs = stored.filter((c) => !c.ownerId);
   const sortByUpdated = (a: StoredEarnConfig, b: StoredEarnConfig) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();

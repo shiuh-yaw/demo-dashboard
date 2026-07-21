@@ -249,7 +249,7 @@ export function ProspectPicker({
                 row.group === "mine" && previousGroup !== "mine"
                   ? "My prospects"
                   : row.group === "others" && previousGroup !== "others"
-                    ? "Team prospects"
+                    ? "All prospects"
                     : null;
               const id = `${listboxId}-${rowKey(row)}`;
               const isActive = index === activeIndex;

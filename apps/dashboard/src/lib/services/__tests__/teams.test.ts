@@ -7,7 +7,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { PostgresTeamService } from "@/lib/services/postgres/teams";
-import { DEFAULT_TEAM_SLUG } from "@/lib/services/types";
+import { TeamMembershipNotFoundError } from "@/lib/services/types";
 
 import { createFakeTeamPrisma } from "./fake-prisma-teams";
 
@@ -35,21 +35,46 @@ describe("PostgresTeamService", () => {
     await expect(svc.create({ name: "Two", slug: "dup" })).rejects.toThrow();
   });
 
-  it("adds a member and returns the membership", async () => {
+  it("adds a member defaulting to the MEMBER role", async () => {
     const team = await svc.create({ name: "T", slug: "t" });
     const m = await svc.addMember("u1", team.id);
     expect(m.userId).toBe("u1");
     expect(m.teamId).toBe(team.id);
+    expect(m.role).toBe("MEMBER");
     expect(m.id).toEqual(expect.any(String));
   });
 
-  it("addMember is idempotent on the (userId, teamId) unique pair", async () => {
+  it("adds a member with an explicit role", async () => {
     const team = await svc.create({ name: "T", slug: "t" });
-    const first = await svc.addMember("u1", team.id);
-    const second = await svc.addMember("u1", team.id);
+    const m = await svc.addMember("u1", team.id, "ADMIN");
+    expect(m.role).toBe("ADMIN");
+  });
+
+  it("addMember is idempotent on the (userId, teamId) unique pair and keeps the existing role", async () => {
+    const team = await svc.create({ name: "T", slug: "t" });
+    const first = await svc.addMember("u1", team.id, "ADMIN");
+    // A concurrent auto-join (MEMBER) must not downgrade an existing ADMIN.
+    const second = await svc.addMember("u1", team.id, "MEMBER");
     expect(second.id).toBe(first.id);
+    expect(second.role).toBe("ADMIN");
     const memberships = await svc.membershipsForUser("u1");
     expect(memberships).toHaveLength(1);
+  });
+
+  it("setMembershipRole changes an existing membership's role", async () => {
+    const team = await svc.create({ name: "T", slug: "t" });
+    await svc.addMember("u1", team.id);
+    const updated = await svc.setMembershipRole("u1", team.id, "OWNER");
+    expect(updated.role).toBe("OWNER");
+    const [membership] = await svc.membershipsForUser("u1");
+    expect(membership!.role).toBe("OWNER");
+  });
+
+  it("setMembershipRole throws when the membership is absent", async () => {
+    const team = await svc.create({ name: "T", slug: "t" });
+    await expect(
+      svc.setMembershipRole("ghost", team.id, "ADMIN"),
+    ).rejects.toBeInstanceOf(TeamMembershipNotFoundError);
   });
 
   it("membershipsForUser returns every team the user belongs to", async () => {
@@ -69,13 +94,5 @@ describe("PostgresTeamService", () => {
     expect(await svc.membershipsForUser("u1")).toHaveLength(0);
     // Second remove is a no-op (idempotent), does not throw.
     await expect(svc.removeMember("u1", team.id)).resolves.toBeUndefined();
-  });
-
-  it("defaultTeam resolves the seeded team by slug 'gtm'", async () => {
-    expect(await svc.defaultTeam()).toBeNull();
-    await svc.create({ name: "GTM", slug: DEFAULT_TEAM_SLUG });
-    const def = await svc.defaultTeam();
-    expect(def).not.toBeNull();
-    expect(def!.slug).toBe(DEFAULT_TEAM_SLUG);
   });
 });

@@ -13,7 +13,7 @@ function makeProspect(overrides: Partial<Prospect> = {}): Prospect {
   return {
     id: "bf_test",
     ownerId: "o1",
-    teamId: "team_gtm_default",
+    teamId: null,
     createdById: null,
     status: "ACTIVE",
     name: "SpaceX",

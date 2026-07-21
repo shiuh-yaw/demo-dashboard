@@ -11,7 +11,13 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getSessionUser,
+  canMutateDemoConfig,
+  visibleProspectIds,
+  isDemoConfigVisible,
+} from "@/lib/auth/gtm";
+import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
 import { tradeMapper } from "@/lib/services/demo-config-mappers/trade";
@@ -26,15 +32,15 @@ export async function createTradeConfig(
   config?: Partial<TradeConfig>,
   prospectId: string | null = null
 ): Promise<ActionResult<StoredTradeConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
+  if (!canCreateRecord(user)) {
+    return { success: false, error: "Access denied" };
+  }
   try {
-    const createdById =
-      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
-      null;
     const create = await tradeMapper.toCreateInput(services.prospects, {
-      ownerId: user.sub,
-      createdById,
+      ownerId: user.dynamicUserId ?? "",
+      createdById: user.id,
       name: name && name.length > 0 ? name : null,
       description: null,
       prospectId,
@@ -57,15 +63,17 @@ export async function createTradeConfig(
 export async function getTradeConfig(
   id: string
 ): Promise<ActionResult<StoredTradeConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "trade") {
       return { success: false, error: "Trade config not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
-      return { success: false, error: "Access denied" };
+    const visible = await visibleProspectIds(user);
+    if (!isDemoConfigVisible(user, visible, record)) {
+      // Same not-found shape as a missing id - no existence oracle.
+      return { success: false, error: "Trade config not found" };
     }
     const prospect = record.prospectId
       ? await services.prospects.get(record.prospectId)
@@ -86,21 +94,21 @@ export async function updateTradeConfig(
     prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredTradeConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const existing = await services.demoConfigs.get(id);
     if (!existing || existing.kind !== "trade") {
       return { success: false, error: "Trade config not found" };
     }
-    if (existing.ownerId && existing.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, existing))) {
       return { success: false, error: "Access denied" };
     }
     const update = await tradeMapper.toUpdateInput(
       services.prospects,
       existing,
       {
-        ownerId: existing.ownerId || user.sub,
+        ownerId: existing.ownerId,
         name: updates.name,
         description: updates.description,
         prospectId: updates.prospectId,
@@ -125,14 +133,14 @@ export async function updateTradeConfig(
 export async function deleteTradeConfig(
   id: string
 ): Promise<ActionResult<{ deleted: true }>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "trade") {
       return { success: false, error: "Trade config not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, record))) {
       return { success: false, error: "Access denied" };
     }
     await services.demoConfigs.delete(id);
@@ -149,9 +157,12 @@ export async function getAllTradeConfigs(): Promise<{
   configs: StoredTradeConfig[];
   orphaned: StoredTradeConfig[];
 }> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { configs: [], orphaned: [] };
-  const all = await services.demoConfigs.list({ kind: "trade" });
+  const visible = await visibleProspectIds(user);
+  const all = (await services.demoConfigs.list({ kind: "trade" })).filter((r) =>
+    isDemoConfigVisible(user, visible, r),
+  );
   const stored = await Promise.all(
     all.map(async (record) => {
       const prospect = record.prospectId
@@ -160,7 +171,7 @@ export async function getAllTradeConfigs(): Promise<{
       return tradeMapper.toStored(record, prospect);
     }),
   );
-  const userConfigs = stored.filter((c) => c.ownerId === user.sub);
+  const userConfigs = stored.filter((c) => c.ownerId);
   const orphanedConfigs = stored.filter((c) => !c.ownerId);
   const sortByUpdated = (a: StoredTradeConfig, b: StoredTradeConfig) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();

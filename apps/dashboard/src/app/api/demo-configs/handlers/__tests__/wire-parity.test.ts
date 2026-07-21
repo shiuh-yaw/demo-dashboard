@@ -25,7 +25,7 @@ import type { DemoConfigRecord, Prospect } from "@/lib/services/types";
 const FIXTURE_PROSPECT: Prospect = {
   id: "prospect_fixture",
   ownerId: "owner_fixture",
-  teamId: "team_gtm_default",
+  teamId: null,
   createdById: "user_fixture",
   status: "ACTIVE",
   name: "Fixture Co",

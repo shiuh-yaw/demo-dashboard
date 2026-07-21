@@ -22,7 +22,13 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getSessionUser,
+  canMutateProspect,
+  visibleProspectIds,
+  isProspectVisible,
+} from "@/lib/auth/gtm";
+import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeLogoUrl } from "@/lib/normalize-logo";
 import { prospectService, services } from "@/lib/services";
 import {
@@ -504,9 +510,12 @@ async function deleteProspectDemoConfigs(demos: {
 export async function createProspectProfile(
   request: CreateProspectProfileRequest,
 ): Promise<ActionResult<ProspectProfile>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
+  }
+  if (!canCreateRecord(user)) {
+    return { success: false, error: "Access denied" };
   }
 
   try {
@@ -524,11 +533,9 @@ export async function createProspectProfile(
     }
 
     // 1) Create the canonical Prospect row first so the id is stable.
-    const createdById =
-      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)
-        ?.id ?? null;
+    const ownerId = user.dynamicUserId ?? "";
     const created = await prospectService.create(
-      createRequestToInput(user.sub, createdById, request),
+      createRequestToInput(ownerId, user.id, request),
     );
 
     // 2) Build the ProspectSettings the demo-config orchestration expects.
@@ -542,7 +549,7 @@ export async function createProspectProfile(
       created.id,
       created.name,
       merged,
-      user.sub,
+      ownerId,
       request.generateDemos,
     );
 
@@ -569,7 +576,7 @@ export async function createProspectProfile(
 export async function getProspectProfile(
   id: string,
 ): Promise<ActionResult<ProspectProfile>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -579,8 +586,10 @@ export async function getProspectProfile(
     if (!prospect) {
       return { success: false, error: "Prospect profile not found" };
     }
-    if (prospect.ownerId && prospect.ownerId !== user.sub) {
-      return { success: false, error: "Access denied" };
+    const visible = await visibleProspectIds(user);
+    if (!isProspectVisible(visible, prospect.id)) {
+      // Same not-found shape as a missing id - no existence oracle.
+      return { success: false, error: "Prospect profile not found" };
     }
     return { success: true, data: prospectToProfile(prospect) };
   } catch (err) {
@@ -596,7 +605,7 @@ export async function updateProspectProfile(
   id: string,
   request: UpdateProspectProfileRequest,
 ): Promise<ActionResult<ProspectProfile>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -606,7 +615,7 @@ export async function updateProspectProfile(
     if (!existing) {
       return { success: false, error: "Prospect profile not found" };
     }
-    if (existing.ownerId && existing.ownerId !== user.sub) {
+    if (!(await canMutateProspect(user, existing))) {
       return { success: false, error: "Access denied" };
     }
 
@@ -623,43 +632,10 @@ export async function updateProspectProfile(
     }
 
     // Persist the prospect-row changes first so demo-config updates see
-    // the new theme.
+    // the new theme. Stored ownerId is never rewritten; createdById is the
+    // attribution linkage.
     const data = updateRequestToInput(request);
-    let updated = await prospectService.update(id, data);
-
-    // Claim orphan rows by patching ownerId. UpdateProspectInput
-    // intentionally doesn't expose ownerId — only this code path needs
-    // to mutate it, so we route through upsertWithId which overwrites
-    // every column. We project from the fresh `updated` row to keep
-    // every field consistent.
-    if (!existing.ownerId && user.sub) {
-      updated = await prospectService.upsertWithId(updated.id, {
-        ownerId: user.sub,
-        name: updated.name,
-        description: updated.description,
-        companyUrl: updated.companyUrl,
-        logo: updated.logo,
-        logoUrl: updated.logoUrl,
-        borderRadius: updated.borderRadius,
-        primaryColor: updated.primaryColor,
-        primaryHoverColor: updated.primaryHoverColor,
-        secondaryColor: updated.secondaryColor,
-        accentColor: updated.accentColor,
-        pageBackground: updated.pageBackground,
-        background: updated.background,
-        foreground: updated.foreground,
-        mutedTextColor: updated.mutedTextColor,
-        borderColor: updated.borderColor,
-        rowBackground: updated.rowBackground,
-        rowHoverBackground: updated.rowHoverBackground,
-        gradientFrom: updated.gradientFrom,
-        gradientTo: updated.gradientTo,
-        demoEarnId: updated.demoEarnId,
-        demoCheckoutsId: updated.demoCheckoutsId,
-        demoWalletId: updated.demoWalletId,
-        demoRemittanceId: updated.demoRemittanceId,
-      });
-    }
+    const updated = await prospectService.update(id, data);
 
     // Update demo configs using the merged settings.
     const merged: ProspectSettings = {
@@ -685,7 +661,7 @@ export async function updateProspectProfile(
 export async function deleteProspectProfile(
   id: string,
 ): Promise<ActionResult<{ deleted: true }>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -695,7 +671,7 @@ export async function deleteProspectProfile(
     if (!prospect) {
       return { success: false, error: "Prospect profile not found" };
     }
-    if (prospect.ownerId && prospect.ownerId !== user.sub) {
+    if (!(await canMutateProspect(user, prospect))) {
       return { success: false, error: "Access denied" };
     }
 
@@ -726,15 +702,20 @@ export async function getAllProspectProfiles(): Promise<{
   profiles: ProspectProfile[];
   orphaned: ProspectProfile[];
 }> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { profiles: [], orphaned: [] };
 
-  const all = await prospectService.list();
+  const visible = await visibleProspectIds(user);
+  const all = (await prospectService.list()).filter((b) =>
+    isProspectVisible(visible, b.id),
+  );
   const sortByUpdated = (a: ProspectProfile, b: ProspectProfile) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 
+  // profiles carries every visible prospect with an owner; orphaned carries
+  // legacy rows with no owner (visible to ADMIN/OWNER only).
   const userProfiles = all
-    .filter((b) => b.ownerId === user.sub)
+    .filter((b) => b.ownerId)
     .map(prospectToProfile)
     .sort(sortByUpdated);
   const orphanedProfiles = all
@@ -779,28 +760,27 @@ export interface ProspectOption {
 }
 
 /**
- * List prospects for the config-form prospect picker. Workspace-shared
- * visibility (DESIGN.md decision 10) - every signed-in user sees every
- * prospect, not just their own; "mine" only changes the grouping, not the
- * membership.
+ * List prospects for the config-form prospect picker. Progressive visibility:
+ * a scoped user sees only their own prospects plus their teams'; ADMIN/OWNER
+ * see all. `isMine` drives the picker grouping.
  */
 export async function listProspectOptions(): Promise<
   ActionResult<ProspectOption[]>
 > {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
-    const currentUserId =
-      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)
-        ?.id ?? null;
-    const all = await prospectService.list();
+    const visible = await visibleProspectIds(user);
+    const all = (await prospectService.list()).filter((p) =>
+      isProspectVisible(visible, p.id),
+    );
     const options = all
       .map((p) => ({
         id: p.id,
         name: p.name,
         isMine: p.createdById
-          ? p.createdById === currentUserId
-          : p.ownerId === user.sub,
+          ? p.createdById === user.id
+          : p.ownerId === user.dynamicUserId,
         domain: p.companyUrl,
         theme: {
           logoUrl: p.logoUrl,
@@ -850,7 +830,7 @@ export async function deleteProspectDemo(
   id: string,
   demoType: "earn" | "checkouts" | "wallet" | "remittance",
 ): Promise<ActionResult<ProspectProfile>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -860,7 +840,7 @@ export async function deleteProspectDemo(
     if (!prospect) {
       return { success: false, error: "Prospect profile not found" };
     }
-    if (prospect.ownerId && prospect.ownerId !== user.sub) {
+    if (!(await canMutateProspect(user, prospect))) {
       return { success: false, error: "Access denied" };
     }
 
@@ -902,7 +882,7 @@ export async function createMissingDemos(
     remittance?: boolean;
   },
 ): Promise<ActionResult<ProspectProfile>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) {
     return { success: false, error: "Authentication required" };
   }
@@ -912,7 +892,7 @@ export async function createMissingDemos(
     if (!prospect) {
       return { success: false, error: "Prospect profile not found" };
     }
-    if (prospect.ownerId && prospect.ownerId !== user.sub) {
+    if (!(await canMutateProspect(user, prospect))) {
       return { success: false, error: "Access denied" };
     }
 
@@ -928,7 +908,7 @@ export async function createMissingDemos(
       profile.id,
       profile.name,
       profile.prospect,
-      user.sub,
+      prospect.ownerId,
       createOptions,
     );
 

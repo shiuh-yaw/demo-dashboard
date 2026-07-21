@@ -14,7 +14,13 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getSessionUser,
+  canMutateDemoConfig,
+  visibleProspectIds,
+  isDemoConfigVisible,
+} from "@/lib/auth/gtm";
+import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { getRedis, REDIS_KEYS } from "@/lib/redis";
 import { services } from "@/lib/services";
@@ -35,15 +41,15 @@ export async function createCheckout(
   config?: Partial<WidgetConfig>,
   prospectId: string | null = null
 ): Promise<ActionResult<StoredCheckoutConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
+  if (!canCreateRecord(user)) {
+    return { success: false, error: "Access denied" };
+  }
   try {
-    const createdById =
-      (await services.users.resolveByDynamicIds([user.sub])).get(user.sub)?.id ??
-      null;
     const create = await checkoutMapper.toCreateInput(services.prospects, {
-      ownerId: user.sub,
-      createdById,
+      ownerId: user.dynamicUserId ?? "",
+      createdById: user.id,
       name: name && name.length > 0 ? name : null,
       description: null,
       mode: mode ?? "payment",
@@ -70,15 +76,12 @@ export async function createCheckout(
 export async function getCheckout(
   id: string
 ): Promise<ActionResult<StoredCheckoutConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "checkout") {
       return { success: false, error: "Checkout not found" };
-    }
-    if (record.ownerId && record.ownerId !== user.sub) {
-      return { success: false, error: "Access denied" };
     }
     const prospect = record.prospectId
       ? await services.prospects.get(record.prospectId)
@@ -100,21 +103,21 @@ export async function updateCheckout(
     prospectId?: string | null;
   }
 ): Promise<ActionResult<StoredCheckoutConfig>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const existing = await services.demoConfigs.get(id);
     if (!existing || existing.kind !== "checkout") {
       return { success: false, error: "Checkout not found" };
     }
-    if (existing.ownerId && existing.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, existing))) {
       return { success: false, error: "Access denied" };
     }
     const update = await checkoutMapper.toUpdateInput(
       services.prospects,
       existing,
       {
-        ownerId: existing.ownerId || user.sub,
+        ownerId: existing.ownerId,
         name: updates.name,
         description: updates.description,
         mode: updates.mode,
@@ -140,14 +143,14 @@ export async function updateCheckout(
 export async function deleteCheckout(
   id: string
 ): Promise<ActionResult<{ deleted: true }>> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const record = await services.demoConfigs.get(id);
     if (!record || record.kind !== "checkout") {
       return { success: false, error: "Checkout not found" };
     }
-    if (record.ownerId && record.ownerId !== user.sub) {
+    if (!(await canMutateDemoConfig(user, record))) {
       return { success: false, error: "Access denied" };
     }
     await services.demoConfigs.delete(id);
@@ -164,9 +167,12 @@ export async function getAllCheckoutConfigs(): Promise<{
   checkouts: StoredCheckoutConfig[];
   orphaned: StoredCheckoutConfig[];
 }> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return { checkouts: [], orphaned: [] };
-  const all = await services.demoConfigs.list({ kind: "checkout" });
+  const visible = await visibleProspectIds(user);
+  const all = (await services.demoConfigs.list({ kind: "checkout" })).filter((r) =>
+    isDemoConfigVisible(user, visible, r),
+  );
   const stored = await Promise.all(
     all.map(async (record) => {
       const prospect = record.prospectId
@@ -175,7 +181,7 @@ export async function getAllCheckoutConfigs(): Promise<{
       return checkoutMapper.toStored(record, prospect);
     }),
   );
-  const userCheckouts = stored.filter((c) => c.ownerId === user.sub);
+  const userCheckouts = stored.filter((c) => c.ownerId);
   const orphanedCheckouts = stored.filter((c) => !c.ownerId);
   const sortByUpdated = (a: StoredCheckoutConfig, b: StoredCheckoutConfig) =>
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
@@ -192,11 +198,13 @@ export async function getAllCheckoutConfigs(): Promise<{
 export async function getCheckoutConfig(
   id: string
 ): Promise<StoredCheckoutConfig | null> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return null;
   const record = await services.demoConfigs.get(id);
   if (!record || record.kind !== "checkout") return null;
-  if (record.ownerId && record.ownerId !== user.sub) return null;
+  const visible = await visibleProspectIds(user);
+  // Same not-found shape (null) as a missing id - no existence oracle.
+  if (!isDemoConfigVisible(user, visible, record)) return null;
   const prospect = record.prospectId
     ? await services.prospects.get(record.prospectId)
     : null;
@@ -213,7 +221,7 @@ export async function getCheckoutConfig(
 export async function getCheckoutTransactionCount(
   checkoutId: string
 ): Promise<number> {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
   if (!user) return 0;
   const config = await getCheckoutConfig(checkoutId);
   if (!config) return 0;

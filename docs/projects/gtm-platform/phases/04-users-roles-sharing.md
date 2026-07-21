@@ -4,13 +4,13 @@
 
 ## Your role
 
-Turn the dashboard's single-operator model into real user management: allowlisted sign-in auto-creates a `User` row (Phase 03, amended: model `User`, `dynamicUserId`, `Role` enum), roles gate mutations and the admin surface, and visibility flips from owner-scoped to **workspace-shared** - every signed-in user sees all prospects and demos (the Coast model).
+Turn the dashboard's single-operator model into real user management: allowlisted sign-in auto-creates a `User` row (Phase 03, amended: model `User`, `dynamicUserId`, `Role` enum), roles gate mutations and the admin surface, and visibility is **progressive** (amended 2026-07-21) - a scoped user sees only records they own plus records of teams they belong to (mine-only with zero memberships); ADMIN/OWNER unscoped.
 
 One logical PR.
 
 ## Wave + dependencies
 
-- After Phase 03 (#151) AND Phase 03.5 PR A (needs `services.users`, `services.teams`, the default team, and `claimLegacyRecords`). Blocks 05 and 07.
+- After Phase 03 (#151) AND Phase 03.5 PR A (needs `services.users`, `services.teams`, and `claimLegacyRecords`). Blocks 05 and 07.
 
 ## Decision context (GTM-D-002, locked 2026-07-20)
 
@@ -21,7 +21,7 @@ One logical PR.
   - MEMBER: default on first sign-in. Create records, mutate own records (ownerId === their dynamicUserId), mint share links, edit own user profile.
   - VIEWER: read-only everywhere; no minting, no mutations.
 - Existing `ownerId` values on Prospect/DemoConfig ARE Dynamic subs - they join to `User.dynamicUserId`. Never rewrite stored ownerId values; `createdById` FKs (Phase 03.5) are the real linkage. Records with no resolvable creator show "-" (legacy rows).
-- Visibility (GTM-D-003): TEAM-scoped, not owner-scoped. A user sees prospects (and demos bound or shared to them) of teams they belong to; ADMIN/OWNER see everything. Day one this equals workspace-shared because every user auto-joins the seeded default team. Ownership = attribution + mutation guard, never a visibility filter.
+- Visibility (GTM-D-003, amended 2026-07-21): PROGRESSIVE. A scoped user sees records they own (`createdById === user.id`, `ownerId === user.dynamicUserId` fallback) plus prospects/demos of teams they belong to; ADMIN/OWNER see everything. Teams are optional and explicit-only (no seeded default team, no auto-join), so with zero memberships this is mine-only. `Prospect.teamId` is nullable with no default. Ownership = attribution + a visibility scope + mutation guard.
 
 ## Skills to use
 
@@ -54,7 +54,7 @@ One logical PR.
    - `canAccessOperations(user)`: ADMIN+.
    - `canSetRole(actor, targetCurrentRole, newRole)`: OWNER -> any; ADMIN -> only when both `targetCurrentRole` and `newRole` are MEMBER or VIEWER; others never.
 2. **`apps/dashboard/src/lib/auth/gtm.ts`** per PLAN.md contract:
-   - `getSessionUser()`: verified Dynamic session (email + sub) -> lowercase email -> `GTM_ALLOWED_DOMAINS` exact-match check -> `services.users.getOrCreateByEmail(email)` -> persist `dynamicUserId = sub` if unset (write-once; log + keep original on mismatch, never overwrite) -> on first sub capture, fire `services.users.claimLegacyRecords(user)` (one-shot legacy createdById reconciliation, Phase 03.5) -> ensure default-team membership (auto-join). Role seeding at creation: email in `GTM_OWNER_EMAILS` -> OWNER, else `GTM_ADMIN_EMAILS` -> ADMIN, else MEMBER. Deactivated users (`deactivatedAt` set) are rejected like off-domain. Null on any failure.
+   - `getSessionUser()`: verified Dynamic session (email + sub) -> lowercase email -> `GTM_ALLOWED_DOMAINS` exact-match check -> `services.users.getOrCreateByEmail(email)` -> persist `dynamicUserId = sub` if unset (write-once; log + keep original on mismatch, never overwrite) -> on first sub capture, fire `services.users.claimLegacyRecords(user)` (one-shot legacy createdById reconciliation, Phase 03.5). No team auto-join (membership is explicit-only). Deactivated users (`deactivatedAt` set) are rejected like off-domain. Null on any failure.
    - `requireUser()` / `requireAdmin()`: as contracted; denied page at `/dashboard/denied`.
 3. **Wire the `(operator)` layout** to `requireUser()`.
 4. **Visibility flip**: one `visibleProspectIds(user)` helper (team-membership join; ADMIN+ -> unscoped) used by every list action. Demo-type actions + prospects action drop the `ownerId === user.sub` filter and scope by the helper instead (unbound demos - null prospectId - are workspace-visible). Edit/delete guards become `canMutateRecord`. Create paths: VIEWER rejected; others stamp `createdById` + `ownerId = user.sub` per Phase 03.5's dual-write rule. Route all actions through the shared policy helpers, not per-file logic.
@@ -82,4 +82,4 @@ Update `../PROGRESS.md`. Unblocks 05 and (with 01) 07.
 
 ## Out of scope
 
-- Per-prospect ACLs (workspace-shared is locked). Invite flows. Role-management UI and profile-editing UI (07). Nav/IA changes (07). The Demos table itself (07).
+- Per-prospect ACLs (progressive own + team visibility is locked). Invite flows. Team-assignment UI. Role-management UI and profile-editing UI (07). Nav/IA changes (07). The Demos table itself (07).

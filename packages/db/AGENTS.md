@@ -34,17 +34,19 @@ Redis. If a demo app needs data, add an endpoint under
 
 - `Prospect` - first-class prospect record: identity (`name`, nullable
   `domain`, `notes`), flat palette columns, logo discriminator, linked
-  demo-config ids, `teamId` (FK, NOT NULL, default team), `createdById`
-  (nullable FK to `User`), `status ProspectStatus`. Partial unique index on
+  demo-config ids, `teamId` (nullable FK, no default - a prospect belongs to
+  no team until explicitly assigned), `createdById` (nullable FK to `User`),
+  `status ProspectStatus`. Partial unique index on
   `(teamId, lower(domain))` lives in raw SQL and is Prisma-invisible.
   Service: `postgres/prospects.ts`, flag `USE_POSTGRES_PROSPECTS`.
   Dual-write rule: every create/update writes BOTH the flat palette columns
   and the `ProspectTheme` row (create prospect-first for the FK; update
   theme-first so a crash never leaves a stale theme readable). Reads let an
   existing `ProspectTheme` row win wholesale, flat columns are the fallback.
-- `Team` / `TeamMembership` - workspace + `(userId, teamId)`-unique
-  membership (no per-membership role yet; default team slug `gtm`).
-  Service: `postgres/teams.ts` as `services.teams`.
+- `Team` / `TeamMembership` - team + `(userId, teamId)`-unique membership
+  with a per-membership `role`. Membership is explicit-only; there is no
+  seeded default team and no auto-join. Service: `postgres/teams.ts` as
+  `services.teams`.
 - `ProspectTheme` - 1:1 palette for a `Prospect` (`prospectId` unique FK,
   `ON DELETE CASCADE`); identity stays on `Prospect`. Populated by
   `backfill:prospect-themes` and kept in sync by every prospect write.
