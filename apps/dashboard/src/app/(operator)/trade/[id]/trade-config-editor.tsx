@@ -7,6 +7,7 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { updateTradeConfig } from "@/lib/actions/trade";
@@ -14,13 +15,11 @@ import { Button, Input } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { Section, Field } from "@/app/(operator)/checkouts/components/editor/form-components";
 import { ProspectPicker } from "@/components/shared/prospect-picker";
-import { env } from "@/env";
+import { demoThemeUrl } from "@/lib/share-links/launch-url";
 import type {
   StoredTradeConfig,
   TradeConfig,
 } from "@/lib/types/dashboard";
-
-const TRADE_PROJECT_URL = env.NEXT_PUBLIC_TRADE_PROJECT_URL;
 
 interface TradeConfigEditorProps {
   config: StoredTradeConfig;
@@ -43,7 +42,7 @@ export function TradeConfigEditor({
     initialConfig.config.branding?.appName ?? "NovaX"
   );
 
-  const demoUrl = `${TRADE_PROJECT_URL}/?theme=${initialConfig.id}`;
+  const demoUrl = demoThemeUrl("trade", initialConfig.id);
 
   async function handleSave() {
     if (!name.trim()) {
@@ -86,7 +85,7 @@ export function TradeConfigEditor({
         <div className="flex items-center gap-3">
           <Link
             href="/trade"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className={ICON_ACTION}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>

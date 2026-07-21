@@ -15,15 +15,15 @@ Design spec + execution plan landed in [#145](https://github.com/dynamic-labs-os
 
 | Phase | Status | PR | Notes |
 |---|---|---|---|
-| 03. GTM schema | 🟡 in-flight | [#151](https://github.com/dynamic-labs-oss/demo-dashboard/pull/151) | Implemented; awaiting review + merge. 4 tables + RLS in one additive migration, write-path services for users/share-links/visitor-sessions, amended twice in place (GTM-D-002: Profile -> User + dynamicUserId; GTM-D-002 extension: role -> Prisma `Role` enum) - see PR for both amendment notes. |
-| 03.5. Prospect-first model (teams, identity, theme extraction) | 🟡 in-flight | [#151](https://github.com/dynamic-labs-oss/demo-dashboard/pull/151) | PR A (expand + backfill) folded into #151 - migration extended in place (Team/TeamMembership/ProspectTheme + Prospect/DemoConfig/User columns, RLS, in-migration backfills), `services.teams` + `claimLegacyRecords`, `backfill:users` + `backfill:prospect-themes` scripts. PR B (cutover) remains. Depends on 03. Blocks 04, 05, 07, 08 (GTM-D-003). |
-| 04. Auth allowlist + roles | ⚪️ pending | - | Depends on 03 + 03.5 PR A (needs `services.users`, `services.teams`, default team, `claimLegacyRecords`). |
+| 03. GTM schema | 🟢 done | [#151](https://github.com/dynamic-labs-oss/demo-dashboard/pull/151) | Merged. 4 tables + RLS in one additive migration, write-path services for users/share-links/visitor-sessions, amended twice in place (GTM-D-002: Profile -> User + dynamicUserId; GTM-D-002 extension: role -> Prisma `Role` enum) - see PR for both amendment notes. |
+| 03.5. Prospect-first model (teams, identity, theme extraction) | 🟢 done | [#151](https://github.com/dynamic-labs-oss/demo-dashboard/pull/151), [#156](https://github.com/dynamic-labs-oss/demo-dashboard/pull/156) | Merged. PR A (expand + backfill) folded into #151; PR B (cutover, GTM-03.5B) merged as #156 - deliberate prospect creation everywhere, hash-auto-create retired from the mapper layer, `ProspectPicker` wired into the per-kind forms. |
+| 04. Auth allowlist + roles | 🟢 done | [#158](https://github.com/dynamic-labs-oss/demo-dashboard/pull/158) | Merged. Domain allowlist, `Role` enum + per-team `TeamMembership.role`, policy module (`lib/auth/policy.ts`), session/visibility guards (`lib/auth/gtm.ts`, progressive own+team visibility per the GTM-D-003 amendment), `set-role` bootstrap CLI. |
 
 ## Wave 3
 
 | Phase | Status | PR | Notes |
 |---|---|---|---|
-| 05. Share links + context endpoint | ⚪️ pending | - | - |
+| 05. Share links + context endpoint | 🟡 in-flight | - | Implemented on `gtm/05-share-links`; awaiting PR + review. `/s/[token]` redirect (never a dead link), `GET /api/track/context` (CORS-allowlisted, PII-minimal), mint/revoke actions with GTM-D-003 mint coherence, minimal "Copy share link" popover on the six per-kind lists. |
 | 06. Ingest /api/track | ⚪️ pending | - | - |
 
 ## Wave 4

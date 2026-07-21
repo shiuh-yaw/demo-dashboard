@@ -8,7 +8,7 @@ status: experimental
 
 # @dynamic-demos/analytics
 
-Client tracker demo apps mount to report sessions, pageviews, steps, and milestone events to the dashboard's GTM ingest endpoint, plus a book-a-call CTA component. This package only speaks HTTP to endpoints the dashboard provides (`POST /api/track`, `GET /api/track/context`) - it has no database code and does not know how those endpoints are implemented.
+Client tracker demo apps mount to report sessions, pageviews, steps, and milestone events to the dashboard's GTM ingest endpoint, plus a book-a-call CTA component. This package only speaks HTTP to endpoints the dashboard provides (`POST /api/track`, `GET /api/share/context`) - it has no database code and does not know how those endpoints are implemented.
 
 ## Capabilities
 
@@ -95,4 +95,4 @@ function SendButton() {
 
 - Session-replay sidecar and enrichment-provider pixel wiring are post-v1; `pixelSlot?: ReactNode` on `<GtmTracker>` is the reserved extension point, currently unused.
 - No app is mounted against this package yet - `apps/wallet` pilot instrumentation lands in Phase 09.
-- The ingest (`POST /api/track`) and context (`GET /api/track/context`) endpoints don't exist yet (Phases 06, 05) - this package is built and tested against the contract only, via a mock fetch.
+- The ingest (`POST /api/track`) and context (`GET /api/share/context`) endpoints don't exist yet (Phases 06, 05) - this package is built and tested against the contract only, via a mock fetch.

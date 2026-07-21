@@ -44,7 +44,9 @@ interface DemoPageProps {
 }
 
 export function generateStaticParams() {
-  return LANDING_DEMOS.map((demo) => ({ slug: demo.slug }));
+  return LANDING_DEMOS.filter((demo) => demo.showOnLanding).map((demo) => ({
+    slug: demo.slug,
+  }));
 }
 
 export async function generateMetadata({

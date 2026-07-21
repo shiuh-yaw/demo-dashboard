@@ -7,6 +7,7 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -67,7 +68,7 @@ export default function NewVisaDirectConfigPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/visa-direct"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className={ICON_ACTION}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>

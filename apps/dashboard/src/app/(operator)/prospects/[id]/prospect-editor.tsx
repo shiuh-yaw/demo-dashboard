@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -26,7 +27,7 @@ import {
 } from "lucide-react";
 import type { ProspectProfile, ProspectTheme } from "@/lib/types/dashboard";
 import { updateProspectProfile, createMissingDemos, deleteProspectDemo } from "@/lib/actions/prospects";
-import { Button, Input } from "@dynamic-demos/ui";
+import { Button, Input, Tooltip } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { Section, Field } from "@/app/(operator)/checkouts/components/editor/form-components";
 import {
@@ -35,10 +36,20 @@ import {
   AppearanceBranding,
   DEFAULT_APPEARANCE_THEME,
 } from "@/components/shared/appearance-form";
-import { env } from "@/env";
+import { demoThemeUrl } from "@/lib/share-links/launch-url";
+import type { DemoConfigKind } from "@/lib/services/types";
+import { ShareLinkButton } from "@/components/shared/share-link-button";
 
 // Demo type configuration
 type DemoType = "earn" | "checkouts" | "wallet" | "remittance";
+
+// ProspectDemos keys use "checkouts" (plural); DemoConfigKind uses "checkout".
+const DEMO_KIND: Record<DemoType, DemoConfigKind> = {
+  earn: "earn",
+  checkouts: "checkout",
+  wallet: "wallet",
+  remittance: "remittance",
+};
 
 interface DemoConfig {
   type: DemoType;
@@ -46,7 +57,6 @@ interface DemoConfig {
   icon: LucideIcon;
   iconBg: string;
   iconColor: string;
-  baseUrl: string;
   configRoute: string; // Dashboard route to edit config
 }
 
@@ -57,7 +67,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     icon: Banknote,
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
-    baseUrl: env.NEXT_PUBLIC_EARN_PROJECT_URL,
     configRoute: "/earns",
   },
   {
@@ -66,7 +75,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     icon: ArrowUpDown,
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
-    baseUrl: env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
     configRoute: "/checkouts",
   },
   {
@@ -75,7 +83,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     icon: Wallet,
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
-    baseUrl: env.NEXT_PUBLIC_WALLET_PROJECT_URL,
     configRoute: "/wallets",
   },
   {
@@ -84,7 +91,6 @@ const DEMO_CONFIGS: DemoConfig[] = [
     icon: Send,
     iconBg: "bg-slate-100",
     iconColor: "text-slate-500",
-    baseUrl: env.NEXT_PUBLIC_REMITTANCE_PROJECT_URL,
     configRoute: "/remittance",
   },
 ];
@@ -124,7 +130,7 @@ export function ProspectEditor({ profile: initialProfile }: ProspectEditorProps)
   function getDemoUrl(config: DemoConfig): string | null {
     const demoId = profile.demos[config.type];
     if (!demoId) return null;
-    return `${config.baseUrl}/?theme=${demoId}`;
+    return demoThemeUrl(DEMO_KIND[config.type], demoId);
   }
 
   async function handleSave() {
@@ -234,7 +240,7 @@ export function ProspectEditor({ profile: initialProfile }: ProspectEditorProps)
         <div className="flex items-center gap-3">
           <Link
             href="/prospects"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className={ICON_ACTION}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -281,45 +287,61 @@ export function ProspectEditor({ profile: initialProfile }: ProspectEditorProps)
                   <div className="flex items-center gap-1">
                     {url ? (
                       <>
-                        <Link
-                          href={`${config.configRoute}/${profile.demos[config.type]}`}
-                          className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] hover:bg-[#e1e4ea] rounded-md transition-colors"
-                          title="Edit config"
-                        >
-                          <Settings className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          onClick={() => copyLink(url, label)}
-                          className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] hover:bg-[#e1e4ea] rounded-md transition-colors cursor-pointer"
-                          title="Copy link"
-                        >
-                          {copiedLink === label ? (
-                            <Check className="w-3.5 h-3.5 text-green-500" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] hover:bg-[#e1e4ea] rounded-md transition-colors"
-                          title="Open demo"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                          onClick={() => handleDeleteDemo(config.type)}
-                          disabled={isDeletingDemo !== null}
-                          className="p-1.5 text-[#99a0ae] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
-                          title="Delete demo"
-                        >
-                          {isDeletingDemo === config.type ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                        </button>
+                        <Tooltip content="Edit config" position="top">
+                          <Link
+                            href={`${config.configRoute}/${profile.demos[config.type]}`}
+                            className={ICON_ACTION}
+                            aria-label="Edit config"
+                          >
+                            <Settings className="w-3.5 h-3.5" />
+                          </Link>
+                        </Tooltip>
+                        <Tooltip content="Copy link" position="top">
+                          <button
+                            onClick={() => copyLink(url, label)}
+                            className={ICON_ACTION}
+                            aria-label="Copy link"
+                          >
+                            {copiedLink === label ? (
+                              <Check className="w-3.5 h-3.5 text-green-500" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Open demo" position="top">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={ICON_ACTION}
+                            aria-label="Open demo"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </Tooltip>
+                        <ShareLinkButton
+                          demoConfigId={profile.demos[config.type]!}
+                          boundProspect={{
+                            id: profile.id,
+                            name: profile.name,
+                            domain: profile.companyUrl,
+                          }}
+                        />
+                        <Tooltip content="Delete demo" position="top">
+                          <button
+                            onClick={() => handleDeleteDemo(config.type)}
+                            disabled={isDeletingDemo !== null}
+                            className="p-1.5 text-[#99a0ae] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                            aria-label="Delete demo"
+                          >
+                            {isDeletingDemo === config.type ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </Tooltip>
                       </>
                     ) : (
                       <Button

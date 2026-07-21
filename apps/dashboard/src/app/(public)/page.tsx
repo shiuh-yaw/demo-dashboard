@@ -24,7 +24,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-6 pt-4 pb-16">
         <h2 className="sr-only">Demos</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {LANDING_DEMOS.map((demo) => (
+          {LANDING_DEMOS.filter((demo) => demo.showOnLanding).map((demo) => (
             <DemoCard key={demo.slug} demo={demo} />
           ))}
         </div>

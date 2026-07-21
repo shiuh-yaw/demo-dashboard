@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -28,12 +29,10 @@ import {
   applyProspectTheme,
   prospectOptionThemeToAppearance,
 } from "@/lib/prospect-theme-merge";
-import { env } from "@/env";
+import { demoThemeUrl } from "@/lib/share-links/launch-url";
 import type { StoredWalletConfig, WalletConfig } from "@/lib/types/dashboard";
 
 const DEFAULT_LOGO = { logo: "" };
-
-const WALLET_PROJECT_URL = env.NEXT_PUBLIC_WALLET_PROJECT_URL;
 
 interface WalletConfigEditorProps {
   config: StoredWalletConfig;
@@ -87,7 +86,7 @@ export function WalletConfigEditor({
     );
   }
 
-  const demoUrl = `${WALLET_PROJECT_URL}/?theme=${initialConfig.id}`;
+  const demoUrl = demoThemeUrl("wallet", initialConfig.id);
 
   async function handleSave() {
     if (!name.trim()) {
@@ -147,7 +146,7 @@ export function WalletConfigEditor({
         <div className="flex items-center gap-3">
           <Link
             href="/wallets"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className={ICON_ACTION}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>

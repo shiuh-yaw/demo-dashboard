@@ -6,6 +6,8 @@
  * get public domains; a missing `url` renders as "Coming soon".
  */
 
+import type { DemoConfigKind } from "@/lib/services/types";
+
 export interface LandingDemo {
   /** Unique, used for /demos/[slug]. */
   slug: string;
@@ -17,6 +19,10 @@ export interface LandingDemo {
   category: "wallet" | "checkout" | "offramp";
   /** Live deployment; absent → "Coming soon". */
   url?: string;
+  /** Publicly listed on the landing page + /demos/[slug]; hidden demos stay operator-only. */
+  showOnLanding: boolean;
+  /** Operator demo-config kind this entry launches; absent for standalone showcase apps. */
+  kind?: DemoConfigKind;
   /** Feature bullets for the detail page. */
   highlights: string[];
   /** Dynamic features + providers powering the demo - "Under the hood" chips. */
@@ -28,6 +34,8 @@ export interface LandingDemo {
 export const LANDING_DEMOS: LandingDemo[] = [
   {
     slug: "wallet",
+    showOnLanding: true,
+    kind: "wallet",
     name: "Wallet",
     tagline: "A non-custodial embedded wallet your users control.",
     description:
@@ -59,6 +67,8 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "trade",
+    showOnLanding: true,
+    kind: "trade",
     name: "Trade",
     tagline: "Trade tokens and prediction markets from one unified portfolio.",
     description:
@@ -81,6 +91,8 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "earn",
+    showOnLanding: true,
+    kind: "earn",
     name: "Earn",
     tagline: "Deposit USDC into curated yield vaults in a few taps.",
     description:
@@ -108,6 +120,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "flow",
+    showOnLanding: true,
     name: "Flow",
     tagline: "Accept any crypto from any source, settle in stablecoins anywhere.",
     description:
@@ -135,6 +148,8 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "remittance",
+    showOnLanding: true,
+    kind: "remittance",
     name: "Remittance",
     tagline: "Send stablecoins onchain, deliver fiat to bank accounts abroad.",
     description:
@@ -161,6 +176,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "stablecoin-card",
+    showOnLanding: true,
     name: "Stablecoin Card",
     tagline: "A virtual Visa debit card funded by stablecoins in your wallet.",
     description:
@@ -190,8 +206,49 @@ export const LANDING_DEMOS: LandingDemo[] = [
       },
     ],
   },
+  {
+    slug: "checkouts",
+    showOnLanding: false,
+    kind: "checkout",
+    name: "Checkouts",
+    tagline: "Embedded payment widget for crypto deposits and purchases.",
+    description:
+      "A configurable checkout widget where end users deposit or purchase with crypto inside a host app. Branded per prospect from the dashboard; internal-only until it gets a public domain.",
+    category: "checkout",
+    url: "https://dynamic-checkouts.vercel.app",
+    highlights: [
+      "Embeddable payment widget",
+      "Crypto deposits and purchases",
+      "Per-prospect branding from the dashboard",
+    ],
+    stack: ["Embedded wallets", "Checkout widget", "Per-prospect theming"],
+    resources: [],
+  },
+  {
+    slug: "visa-direct",
+    showOnLanding: false,
+    kind: "visa-direct",
+    name: "Visa Direct",
+    tagline: "Push USDC-funded payouts to eligible Visa cards.",
+    description:
+      "A card-payout experience where USDC funds push payments to eligible Visa cards in near real time. Branded per prospect from the dashboard; internal-only until it gets a public domain.",
+    category: "offramp",
+    url: "https://demo-visa-direct.vercel.app",
+    highlights: [
+      "Push payouts to Visa cards",
+      "USDC funding",
+      "Near real-time settlement",
+    ],
+    stack: ["Visa Direct payouts", "USDC funding", "Fireblocks custody"],
+    resources: [],
+  },
 ];
 
+export function getDemoByKind(kind: DemoConfigKind): LandingDemo | undefined {
+  return LANDING_DEMOS.find((demo) => demo.kind === kind);
+}
+
 export function getDemoBySlug(slug: string): LandingDemo | undefined {
-  return LANDING_DEMOS.find((demo) => demo.slug === slug);
+  // Hidden demos 404 publicly - detail pages must never resolve them.
+  return LANDING_DEMOS.find((demo) => demo.slug === slug && demo.showOnLanding);
 }

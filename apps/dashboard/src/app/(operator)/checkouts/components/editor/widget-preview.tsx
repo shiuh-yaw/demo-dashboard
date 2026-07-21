@@ -9,10 +9,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ExternalLink, RefreshCw, Radio } from "lucide-react";
+import { Tooltip } from "@dynamic-demos/ui";
 import type { WidgetConfig } from "@/lib/widget-config";
-import { env } from "@/env";
-
-const WIDGET_PROJECT_URL = env.NEXT_PUBLIC_WIDGET_PROJECT_URL;
+import { demoThemeUrl, launchBaseUrl } from "@/lib/share-links/launch-url";
 
 interface WidgetPreviewProps {
   config: WidgetConfig;
@@ -26,11 +25,9 @@ export function WidgetPreview({ config, widgetId }: WidgetPreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Live preview URL
-  const livePreviewUrl = `${WIDGET_PROJECT_URL}/preview`;
+  const livePreviewUrl = `${launchBaseUrl("checkout")}/preview`;
   // Saved widget URL (for "open in new tab")
-  const savedWidgetUrl = widgetId
-    ? `${WIDGET_PROJECT_URL}/?theme=${widgetId}`
-    : null;
+  const savedWidgetUrl = widgetId ? demoThemeUrl("checkout", widgetId) : null;
 
   // Send config to iframe via postMessage
   const sendConfigToIframe = useCallback(() => {
@@ -99,25 +96,29 @@ export function WidgetPreview({ config, widgetId }: WidgetPreviewProps) {
 
         <div className="flex items-center gap-1">
           {/* Refresh button */}
-          <button
-            onClick={refreshIframe}
-            className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] rounded-md transition-colors"
-            title="Refresh preview"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content="Refresh preview" position="top">
+            <button
+              onClick={refreshIframe}
+              className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] rounded-md transition-colors"
+              aria-label="Refresh preview"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
 
           {/* Open saved widget in new tab */}
           {savedWidgetUrl && (
-            <a
-              href={savedWidgetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] rounded-md transition-colors"
-              title="Open saved widget in new tab"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            <Tooltip content="Open saved widget in new tab" position="top">
+              <a
+                href={savedWidgetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 text-[#99a0ae] hover:text-[#0e121b] rounded-md transition-colors"
+                aria-label="Open saved widget in new tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </Tooltip>
           )}
         </div>
       </div>

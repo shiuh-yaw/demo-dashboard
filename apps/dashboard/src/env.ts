@@ -1,17 +1,12 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
-import { getDemoBySlug } from "@/lib/landing/demos";
 
 /**
  * Demo launch/preview links default to the public catalog entry
  * (src/lib/landing/demos.ts - the single source of truth for demo
- * URLs); the NEXT_PUBLIC_*_PROJECT_URL env vars remain as local-dev
+ * URLs); NEXT_PUBLIC_DEMO_URL_OVERRIDES (JSON) supplies local-dev
  * overrides. Fallback covers demos without a catalog entry.
  */
-function catalogDemoUrl(slug: string, fallback: string): string {
-  return getDemoBySlug(slug)?.url ?? fallback;
-}
-
 export const env = createEnv({
   /*
    * Server side Environment variables, not available on the client.
@@ -290,6 +285,13 @@ export const env = createEnv({
      * closed - nobody passes. There is NO individual-email allowlist.
      */
     GTM_ALLOWED_DOMAINS: z.string().optional().default(""),
+    /**
+     * CORS allowlist for the public tracker-facing endpoints (`/s/[token]`'s
+     * context call, Phase GTM-06's `/api/track`): comma-separated demo
+     * origins (e.g. `https://wallet.dynamic.dev`). Empty (default) allows
+     * no origin - the endpoints still respond, just without CORS headers.
+     */
+    TRACK_CORS_ORIGINS: z.string().optional().default(""),
   },
   /*
    * Environment variables available on the client (and server).
@@ -304,59 +306,13 @@ export const env = createEnv({
      */
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string(),
     /**
-     * Widget Project URL for live preview
-     * Points to the running nextjs-payment-widget project
-     * Defaults to http://localhost:3000 (no public catalog entry yet)
+     * Optional per-kind launch-URL overrides as JSON, e.g.
+     * `{"earn":"http://localhost:4002","checkout":"http://localhost:3000"}`.
+     * The demo catalog (src/lib/landing/demos.ts) is the canonical source of
+     * base URLs; this var covers local dev servers and kinds without a
+     * public domain yet. Invalid JSON is ignored.
      */
-    NEXT_PUBLIC_WIDGET_PROJECT_URL: z
-      .string()
-      .url()
-      .default("http://localhost:3000"),
-    /**
-     * Earn demo URL for launch/preview links.
-     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
-     * set the env var to point at a local dev server instead.
-     */
-    NEXT_PUBLIC_EARN_PROJECT_URL: z
-      .string()
-      .url()
-      .default(catalogDemoUrl("earn", "http://localhost:3000")),
-    /**
-     * Wallet demo URL for launch/preview links.
-     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
-     * set the env var to point at a local dev server instead.
-     */
-    NEXT_PUBLIC_WALLET_PROJECT_URL: z
-      .string()
-      .url()
-      .default(catalogDemoUrl("wallet", "http://localhost:3000")),
-    /**
-     * Remittance demo URL for launch/preview links.
-     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
-     * set the env var to point at a local dev server instead.
-     */
-    NEXT_PUBLIC_REMITTANCE_PROJECT_URL: z
-      .string()
-      .url()
-      .default(catalogDemoUrl("remittance", "http://localhost:4004")),
-    /**
-     * Trade demo URL for launch/preview links.
-     * Defaults to the public catalog entry (src/lib/landing/demos.ts);
-     * set the env var to point at a local dev server instead.
-     */
-    NEXT_PUBLIC_TRADE_PROJECT_URL: z
-      .string()
-      .url()
-      .default(catalogDemoUrl("trade", "http://localhost:4005")),
-    /**
-     * Visa Direct Project URL for live preview
-     * Points to the running visa-direct demo project
-     * Defaults to http://localhost:4007
-     */
-    NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL: z
-      .string()
-      .url()
-      .default("http://localhost:4007"),
+    NEXT_PUBLIC_DEMO_URL_OVERRIDES: z.string().optional().default("{}"),
   },
   /*
    * Due to how Next.js bundles environment variables on Edge and Client,
@@ -407,16 +363,10 @@ export const env = createEnv({
     SUMSUB_ENVIRONMENT: process.env.SUMSUB_ENVIRONMENT,
     SUMSUB_LEVEL_NAME: process.env.SUMSUB_LEVEL_NAME,
     GTM_ALLOWED_DOMAINS: process.env.GTM_ALLOWED_DOMAINS,
+    TRACK_CORS_ORIGINS: process.env.TRACK_CORS_ORIGINS,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
-    NEXT_PUBLIC_WIDGET_PROJECT_URL: process.env.NEXT_PUBLIC_WIDGET_PROJECT_URL,
-    NEXT_PUBLIC_EARN_PROJECT_URL: process.env.NEXT_PUBLIC_EARN_PROJECT_URL,
-    NEXT_PUBLIC_WALLET_PROJECT_URL: process.env.NEXT_PUBLIC_WALLET_PROJECT_URL,
-    NEXT_PUBLIC_REMITTANCE_PROJECT_URL:
-      process.env.NEXT_PUBLIC_REMITTANCE_PROJECT_URL,
-    NEXT_PUBLIC_TRADE_PROJECT_URL:
-      process.env.NEXT_PUBLIC_TRADE_PROJECT_URL,
-    NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL:
-      process.env.NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL,
+    NEXT_PUBLIC_DEMO_URL_OVERRIDES:
+      process.env.NEXT_PUBLIC_DEMO_URL_OVERRIDES,
   },
 });

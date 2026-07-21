@@ -48,7 +48,7 @@ describe("getShareContext", () => {
     });
     const [url] = fetchSpy.mock.calls[0]!;
     expect(url).toBe(
-      "https://track.example.com/api/track/context?token=tok_123",
+      "https://track.example.com/api/share/context?token=tok_123",
     );
   });
 

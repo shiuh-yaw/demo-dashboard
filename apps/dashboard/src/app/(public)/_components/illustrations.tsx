@@ -259,6 +259,8 @@ export const DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
   flow: FlowIllustration,
   remittance: RemittanceIllustration,
   "stablecoin-card": StablecoinCardIllustration,
+  checkouts: FlowIllustration,
+  "visa-direct": StablecoinCardIllustration,
 };
 
 export function getDemoIllustration(slug: string): () => ReactElement {

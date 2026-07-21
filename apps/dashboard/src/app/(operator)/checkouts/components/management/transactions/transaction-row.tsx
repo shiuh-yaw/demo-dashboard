@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { CheckCircle, Clock, AlertCircle, ExternalLink } from "lucide-react";
 import { Status, type Transaction } from "@/lib/types/dashboard";
+import { Tooltip } from "@dynamic-demos/ui";
 import { getStatusBadge, formatAmount, calculateUsdValue } from "./utils";
 
 interface TransactionRowProps {
@@ -126,15 +128,17 @@ export function TransactionRow({
       {/* Actions */}
       <div className="flex justify-end items-center">
         {tx.explorerUrl && (
-          <a
-            href={tx.explorerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-            title="View on Explorer"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <Tooltip content="View on Explorer" position="top">
+            <a
+              href={tx.explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={ICON_ACTION}
+              aria-label="View on Explorer"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </Tooltip>
         )}
       </div>
     </div>

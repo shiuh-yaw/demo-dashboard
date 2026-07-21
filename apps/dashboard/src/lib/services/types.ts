@@ -934,6 +934,15 @@ export interface ShareLinkService {
    * share-link path must never 404 for prospects (GTM hard rule).
    */
   resolveByToken(token: string): Promise<ShareLinkWithContext | null>;
+  /** Raw lookup by id, any status. Used for ownership checks (e.g. revoke). */
+  get(id: string): Promise<ShareLink | null>;
+  /**
+   * Raw lookup by token, any status (unlike `resolveByToken`, never filters
+   * on active/expired). Lets `/s/[token]` tell "unknown token" (can't
+   * identify a demo, redirect `/`) apart from "known but inactive" (demo
+   * identified, degrade to its plain launch URL) - Phase 05.
+   */
+  findByToken(token: string): Promise<ShareLink | null>;
   /** Flips `status` to `"revoked"`. Idempotent - revoking twice is a no-op. */
   revoke(id: string): Promise<ShareLink>;
 }

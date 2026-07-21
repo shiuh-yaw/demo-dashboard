@@ -16,7 +16,7 @@ import {
   Check,
 } from "lucide-react";
 import type { User } from "@/lib/types/dashboard";
-import { Button } from "@dynamic-demos/ui";
+import { Button, Tooltip } from "@dynamic-demos/ui";
 
 interface UsersTabProps {
   checkoutId: string;
@@ -149,17 +149,19 @@ export function UsersTab({
                           {wallet.address.slice(0, 10)}...
                           {wallet.address.slice(-8)}
                         </code>
-                        <button
-                          onClick={() => copyAddress(wallet.address)}
-                          className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                          title="Copy address"
-                        >
-                          {copiedAddress === wallet.address ? (
-                            <Check className="w-3 h-3 text-emerald-500" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
-                        </button>
+                        <Tooltip content="Copy address" position="top">
+                          <button
+                            onClick={() => copyAddress(wallet.address)}
+                            className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                            aria-label="Copy address"
+                          >
+                            {copiedAddress === wallet.address ? (
+                              <Check className="w-3 h-3 text-emerald-500" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </Tooltip>
                       </div>
                       <div className="flex items-center gap-2">
                         {wallet.chainIds.map((chainId) => (

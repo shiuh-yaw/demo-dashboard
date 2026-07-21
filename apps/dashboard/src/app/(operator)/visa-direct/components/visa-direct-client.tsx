@@ -8,18 +8,18 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Settings, Trash2, ExternalLink, CreditCard } from "lucide-react";
 import type { StoredVisaDirectConfig } from "@/lib/types/dashboard";
 import { deleteVisaDirectConfig } from "@/lib/actions/visa-direct";
-import { Button } from "@dynamic-demos/ui";
+import { Button, Tooltip } from "@dynamic-demos/ui";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { ProspectIcon } from "@/components/shared/prospect-icon";
-import { env } from "@/env";
-
-const VISA_DIRECT_PROJECT_URL = env.NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL;
+import { ShareLinkButton } from "@/components/shared/share-link-button";
+import { demoThemeUrl } from "@/lib/share-links/launch-url";
 
 interface VisaDirectClientProps {
   initialConfigs: StoredVisaDirectConfig[];
@@ -214,37 +214,55 @@ export function VisaDirectClient({
                 </div>
 
                 <div className="px-4 py-3 flex items-center justify-end gap-0.5">
-                  <Link
-                    href={`/visa-direct/${config.id}`}
-                    onClick={(event) => event.stopPropagation()}
-                    className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-                    title="Edit"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                  </Link>
-                  <a
-                    href={`${VISA_DIRECT_PROJECT_URL}/?theme=${config.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                    className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-                    title="Open Demo"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setShowDeleteModal({
-                        id: config.id,
-                        name: config.name,
-                      });
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip content="Edit" position="top">
+                    <Link
+                      href={`/visa-direct/${config.id}`}
+                      onClick={(event) => event.stopPropagation()}
+                      className={ICON_ACTION}
+                      aria-label="Edit"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </Link>
+                  </Tooltip>
+                  <Tooltip content="Open Demo" position="top">
+                    <a
+                      href={demoThemeUrl("visa-direct", config.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                      className={ICON_ACTION}
+                      aria-label="Open Demo"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </Tooltip>
+                  <ShareLinkButton
+                    demoConfigId={config.id}
+                    boundProspect={
+                      config.prospectId && config.prospectName
+                        ? {
+                            id: config.prospectId,
+                            name: config.prospectName,
+                            domain: config.prospectDomain,
+                          }
+                        : null
+                    }
+                  />
+                  <Tooltip content="Delete" position="top">
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setShowDeleteModal({
+                          id: config.id,
+                          name: config.name,
+                        });
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             ))}

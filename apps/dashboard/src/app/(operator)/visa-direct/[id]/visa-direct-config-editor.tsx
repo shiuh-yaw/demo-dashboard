@@ -7,12 +7,13 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { updateVisaDirectConfig } from "@/lib/actions/visa-direct";
 import { Button } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
-import { env } from "@/env";
+import { demoThemeUrl } from "@/lib/share-links/launch-url";
 import {
   DEFAULT_VISA_DIRECT_CONFIG,
   type StoredVisaDirectConfig,
@@ -22,8 +23,6 @@ import {
 } from "@/lib/types/dashboard";
 import { VisaDirectForm } from "../components/visa-direct-form";
 import { ProspectPicker } from "@/components/shared/prospect-picker";
-
-const VISA_DIRECT_PROJECT_URL = env.NEXT_PUBLIC_VISA_DIRECT_PROJECT_URL;
 
 interface VisaDirectConfigEditorProps {
   config: StoredVisaDirectConfig;
@@ -48,7 +47,7 @@ export function VisaDirectConfigEditor({
     ...initialConfig.config.theme,
   });
 
-  const demoUrl = `${VISA_DIRECT_PROJECT_URL}/?theme=${initialConfig.id}`;
+  const demoUrl = demoThemeUrl("visa-direct", initialConfig.id);
 
   async function handleSave() {
     if (!name.trim()) {
@@ -86,7 +85,7 @@ export function VisaDirectConfigEditor({
         <div className="flex items-center gap-3">
           <Link
             href="/visa-direct"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className={ICON_ACTION}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>

@@ -27,7 +27,7 @@ Wave 2  ->  [Phase 03: GTM schema (User, ShareLink, VisitorSession, TrackEvent)]
             [Phase 04: Auth allowlist + roles]        (after 03 + 03.5 PR A)
 
 Wave 3  ->  [Phase 05: Share links + context endpoint]  ┐ parallel (05 after 03+04, 06 after 02+03)
-            [Phase 06: Ingest /api/track]               ┘
+            [Phase 06: Ingest /api/events]               ┘
 
 Wave 4  ->  [Phase 07: Dashboard IA relayout on droplet]   (after 01+04)
             [Phase 09: Wallet pilot instrumentation]       (after 02+05+06)
@@ -49,7 +49,7 @@ Dispatch rules are identical to the demo-meta-system plan: one agent per phase f
 | `phases/03.5-prospect-first-model.md` | 03.5 Prospect-first model (teams, identity, theme extraction; 2 PRs) - PR A (expand + backfill) folded into #151; PR B (cutover) remains | 3-4 days | 03 |
 | `phases/04-users-roles-sharing.md` | 04. Users, role enum, workspace sharing (team-scoped) | 1-2 days | 03, 03.5A |
 | `phases/05-share-links.md` | 05. Share links, `/s/[token]`, context endpoint | 2 days | 03, 04 |
-| `phases/06-ingest.md` | 06. Ingest pipeline `POST /api/track` | 2-3 days | 02, 03 |
+| `phases/06-ingest.md` | 06. Ingest pipeline `POST /api/events` | 2-3 days | 02, 03 |
 | `phases/07-ia-relayout.md` | 07. IA relayout (`/dashboard`, droplet-native surfaces) | 4-5 days | 01, 04 |
 | `phases/08-analytics-surfaces.md` | 08. Analytics drawer + org analytics page | 2-3 days | 06, 07 |
 | `phases/09-wallet-pilot.md` | 09. Wallet pilot instrumentation + CTA | 1-2 days | 02, 05, 06 |
@@ -260,8 +260,8 @@ Cookies (demo-domain scoped, set by the tracker): `dd_anon` (uuid, 1y), `dd_shar
 ### Dashboard endpoints
 
 - `GET /s/[token]` (Phase 05) - 302 to demo launch URL + `?share=<token>&theme=<prospectTheme>`; revoked/expired/unknown -> 302 to plain launch URL (or `/` if demo unknown).
-- `GET /api/track/context?token=` (Phase 05) - public, CORS; 200 `{ prospectName, cta }` for active tokens, 200 `{}` otherwise. Never errors to the client.
-- `POST /api/track` + `OPTIONS` (Phase 06) - public, CORS allowlist `TRACK_CORS_ORIGINS`, Zod-validated, rate-limited per `ipHash:token|anonId` on the existing Redis rails, event-UUID idempotent (`createMany({ skipDuplicates: true })`), 2xx on duplicates.
+- `GET /api/share/context?token=` (Phase 05) - public, CORS; 200 `{ prospectName, cta }` for active tokens, 200 `{}` otherwise. Never errors to the client.
+- `POST /api/events` + `OPTIONS` (Phase 06) - public, CORS allowlist `TRACK_CORS_ORIGINS`, Zod-validated, rate-limited per `ipHash:token|anonId` on the existing Redis rails, event-UUID idempotent (`createMany({ skipDuplicates: true })`), 2xx on duplicates.
 
 ### Services (dashboard `src/lib/services/`)
 
@@ -270,7 +270,7 @@ Cookies (demo-domain scoped, set by the tracker): `dd_anon` (uuid, 1y), `dd_shar
 - `services.users.claimLegacyRecords(user)` (Phase 03.5) - one-shot legacy `createdById` reconciliation for records whose `ownerId` matches the user's Dynamic sub; consumed by Phase 04's `getSessionUser`.
 - `services.teams.{create, list, addMember, removeMember, membershipsForUser}` (Phase 03.5).
 - `visibleProspectIds(user)` policy helper (Phase 04) - team-membership scoped; ADMIN+ unscoped.
-- `services.shareLinks.mint({ demoConfigId, prospectId, userId }): Promise<ShareLink>`, `.resolveByToken(token): Promise<ShareLinkWithContext | null>` (active + unexpired only; `ShareLinkWithContext` = `ShareLink & { user: User; prospect: Prospect }` - `ShareLink` has no Prisma relation to `Prospect`, so the service does a second lookup and stitches it in for Phase 05's context endpoint), `.revoke(id)` (Phase 03).
+- `services.shareLinks.mint({ demoConfigId, prospectId, userId }): Promise<ShareLink>`, `.resolveByToken(token): Promise<ShareLinkWithContext | null>` (active + unexpired only; `ShareLinkWithContext` = `ShareLink & { user: User; prospect: Prospect }` - `ShareLink` has no Prisma relation to `Prospect`, so the service does a second lookup and stitches it in for Phase 05's context endpoint), `.revoke(id)` (Phase 03). Amended (Phase 05, 2026-07-21): `.get(id): Promise<ShareLink | null>` and `.findByToken(token): Promise<ShareLink | null>` added - raw lookups regardless of status/expiry, distinct from `resolveByToken`'s active-only filter. `get` backs `revokeShareLink`'s ownership check; `findByToken` lets `/s/[token]` distinguish "unknown token" (redirect `/`) from "known but inactive" (degrade to the demo's plain launch URL) per the never-a-dead-link hard rule. Mint coherence (a `DemoConfig` bound to a prospect mints only for that prospect) is enforced in the action layer (`lib/actions/share-links.ts`), not the service.
 - `services.visitorSessions.upsertFromBatch(batch, { geo, ua, ipHash, shareLinkId, isInternal }): Promise<{ created: boolean }>` - `created` is true when the session row was newly inserted; Phase 10's enrichment hook keys off it (Phase 03 implements, Phase 06 consumes). `isInternal` was implicit in this line pre-Phase-03 but is spelled out in `phases/03-gtm-schema.md`'s meta shape and always required - `VisitorSession.isInternal` has no sane default derivable from `geo`/`ua`/`ipHash` alone, and the batch's own top-level `isInternal` hint is not authoritative (server-resolved, e.g. from the `dd_internal` cookie, is).
 - `services.analytics.demoSummary(demoConfigId)`, `.viewers(demoConfigId)`, `.sessions(demoConfigId)`, `.orgOverview()` (Phase 08).
 

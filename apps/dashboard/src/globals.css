@@ -150,3 +150,10 @@
   }
 }
 
+
+@layer base {
+  /* Enabled buttons are interactive affordances - always show the pointer. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}

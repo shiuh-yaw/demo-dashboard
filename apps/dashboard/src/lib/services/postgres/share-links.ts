@@ -196,6 +196,16 @@ export class PostgresShareLinkService implements ShareLinkService {
     };
   }
 
+  async get(id: string): Promise<ShareLink | null> {
+    const row = await this.client.shareLink.findUnique({ where: { id } });
+    return row ? toShareLink(row) : null;
+  }
+
+  async findByToken(token: string): Promise<ShareLink | null> {
+    const row = await this.client.shareLink.findUnique({ where: { token } });
+    return row ? toShareLink(row) : null;
+  }
+
   async revoke(id: string): Promise<ShareLink> {
     const updated = await this.client.shareLink.update({
       where: { id },

@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 import type { ProspectProfile } from "@/lib/types/dashboard";
 import { deleteProspectProfile } from "@/lib/actions/prospects";
-import { Button } from "@dynamic-demos/ui";
+import { Button, Tooltip } from "@dynamic-demos/ui";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { ProspectIcon } from "@/components/shared/prospect-icon";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
@@ -231,27 +232,31 @@ export function ProspectsClient({
 
                 {/* Actions */}
                 <div className="px-4 py-3 flex items-center justify-end gap-0.5">
-                  <Link
-                    href={`/prospects/${profile.id}`}
-                    onClick={(event) => event.stopPropagation()}
-                    className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
-                    title="Edit"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                  </Link>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setShowDeleteModal({
-                        id: profile.id,
-                        name: profile.name,
-                      });
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip content="Edit" position="top">
+                    <Link
+                      href={`/prospects/${profile.id}`}
+                      onClick={(event) => event.stopPropagation()}
+                      className={ICON_ACTION}
+                      aria-label="Edit"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </Link>
+                  </Tooltip>
+                  <Tooltip content="Delete" position="top">
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setShowDeleteModal({
+                          id: profile.id,
+                          name: profile.name,
+                        });
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             ))}

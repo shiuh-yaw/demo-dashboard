@@ -14,4 +14,5 @@ procEnv.COINBASE_API_SECRET ??= "test_coinbase_api_secret";
 procEnv.COINBASE_API_ENVIRONMENT ??= "sandbox";
 procEnv.LIFI_API_KEY ??= "test_lifi_api_key";
 procEnv.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID ??= "test_dynamic_env_id";
+procEnv.TRACK_CORS_ORIGINS ??= "https://wallet.dynamic.dev";
 procEnv.NODE_ENV ??= "test";

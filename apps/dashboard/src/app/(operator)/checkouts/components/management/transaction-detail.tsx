@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import type { Transaction } from "@/lib/types/dashboard";
 import { Status } from "@/lib/types/dashboard";
+import { Tooltip } from "@dynamic-demos/ui";
 
 interface TransactionDetailProps {
   transaction: Transaction;
@@ -116,15 +117,17 @@ export function TransactionDetail({
             </span>
           </div>
           {transaction.explorerUrl && (
-            <a
-              href={transaction.explorerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-              title="View on Block Explorer"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            <Tooltip content="View on Block Explorer" position="top">
+              <a
+                href={transaction.explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                aria-label="View on Block Explorer"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -147,17 +150,19 @@ export function TransactionDetail({
                   <code className="text-sm text-slate-900 bg-slate-50 px-2 py-1 rounded flex-1">
                     {transaction.id}
                   </code>
-                  <button
-                    onClick={() => copyToClipboard(transaction.id, "id")}
-                    className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                    title="Copy transaction ID"
-                  >
-                    {copied === "id" ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
+                  <Tooltip content="Copy transaction ID" position="top">
+                    <button
+                      onClick={() => copyToClipboard(transaction.id, "id")}
+                      className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                      aria-label="Copy transaction ID"
+                    >
+                      {copied === "id" ? (
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -170,19 +175,21 @@ export function TransactionDetail({
                     <code className="text-sm text-slate-900 bg-slate-50 px-2 py-1 rounded flex-1">
                       {transaction.externalId}
                     </code>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(transaction.externalId!, "externalId")
-                      }
-                      className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                      title="Copy external ID"
-                    >
-                      {copied === "externalId" ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
+                    <Tooltip content="Copy external ID" position="top">
+                      <button
+                        onClick={() =>
+                          copyToClipboard(transaction.externalId!, "externalId")
+                        }
+                        className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                        aria-label="Copy external ID"
+                      >
+                        {copied === "externalId" ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               )}
@@ -235,19 +242,21 @@ export function TransactionDetail({
                     <code className="text-sm text-slate-900 bg-slate-50 px-2 py-1 rounded flex-1 font-mono">
                       {transaction.walletAddress}
                     </code>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(transaction.walletAddress!, "wallet")
-                      }
-                      className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                      title="Copy wallet address"
-                    >
-                      {copied === "wallet" ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
+                    <Tooltip content="Copy wallet address" position="top">
+                      <button
+                        onClick={() =>
+                          copyToClipboard(transaction.walletAddress!, "wallet")
+                        }
+                        className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                        aria-label="Copy wallet address"
+                      >
+                        {copied === "wallet" ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               </div>
@@ -378,29 +387,33 @@ export function TransactionDetail({
                     </code>
                     <div className="flex items-center gap-1 shrink-0">
                       {transaction.explorerUrl && (
-                        <a
-                          href={transaction.explorerUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                          title="View on Explorer"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                        <Tooltip content="View on Explorer" position="top">
+                          <a
+                            href={transaction.explorerUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                            aria-label="View on Explorer"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </Tooltip>
                       )}
-                      <button
-                        onClick={() =>
-                          copyToClipboard(transaction.txHash!, "txHash")
-                        }
-                        className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                        title="Copy transaction hash"
-                      >
-                        {copied === "txHash" ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
+                      <Tooltip content="Copy transaction hash" position="top">
+                        <button
+                          onClick={() =>
+                            copyToClipboard(transaction.txHash!, "txHash")
+                          }
+                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                          aria-label="Copy transaction hash"
+                        >
+                          {copied === "txHash" ? (
+                            <CheckCircle className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>

@@ -128,4 +128,62 @@ describe("PostgresShareLinkService", () => {
     const revoked = await svc.revoke(minted.id);
     expect(revoked.status).toBe("revoked");
   });
+
+  describe("get", () => {
+    it("returns the raw link regardless of status", async () => {
+      const { svc } = buildService();
+      const minted = await svc.mint({
+        demoConfigId: "dc_1",
+        prospectId: "prospect_1",
+        userId: "user_1",
+      });
+      await svc.revoke(minted.id);
+      const found = await svc.get(minted.id);
+      expect(found).not.toBeNull();
+      expect(found!.status).toBe("revoked");
+    });
+
+    it("returns null for an unknown id", async () => {
+      const { svc } = buildService();
+      expect(await svc.get("does-not-exist")).toBeNull();
+    });
+  });
+
+  describe("findByToken", () => {
+    it("returns the raw link for a revoked token (unlike resolveByToken)", async () => {
+      const { svc } = buildService();
+      const minted = await svc.mint({
+        demoConfigId: "dc_1",
+        prospectId: "prospect_1",
+        userId: "user_1",
+      });
+      await svc.revoke(minted.id);
+      const found = await svc.findByToken(minted.token);
+      expect(found).not.toBeNull();
+      expect(found!.demoConfigId).toBe("dc_1");
+      expect(found!.status).toBe("revoked");
+    });
+
+    it("returns the raw link for an expired token", async () => {
+      const { svc, client } = buildService();
+      const minted = await svc.mint({
+        demoConfigId: "dc_1",
+        prospectId: "prospect_1",
+        userId: "user_1",
+      });
+      const row = client.__shareLinks.get(minted.id)!;
+      client.__shareLinks.set(minted.id, {
+        ...row,
+        expiresAt: new Date(Date.now() - 1000),
+      });
+      const found = await svc.findByToken(minted.token);
+      expect(found).not.toBeNull();
+      expect(found!.demoConfigId).toBe("dc_1");
+    });
+
+    it("returns null for an unknown token", async () => {
+      const { svc } = buildService();
+      expect(await svc.findByToken("unknown-token")).toBeNull();
+    });
+  });
 });

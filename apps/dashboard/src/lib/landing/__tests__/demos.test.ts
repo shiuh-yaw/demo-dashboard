@@ -7,14 +7,16 @@ import {
 import { DEMO_ILLUSTRATIONS } from "@/app/(public)/_components/illustrations";
 
 describe("LANDING_DEMOS config", () => {
-  it("contains exactly the six landing demos", () => {
+  it("contains exactly the catalog demos", () => {
     const slugs = LANDING_DEMOS.map((d) => d.slug).sort();
     expect(slugs).toEqual([
+      "checkouts",
       "earn",
       "flow",
       "remittance",
       "stablecoin-card",
       "trade",
+      "visa-direct",
       "wallet",
     ]);
   });
@@ -97,5 +99,20 @@ describe("getDemoBySlug", () => {
 
   it("returns undefined for an unknown slug", () => {
     expect(getDemoBySlug("nope")).toBeUndefined();
+  });
+});
+
+describe("showOnLanding", () => {
+  it("is declared explicitly on every catalog entry", () => {
+    for (const demo of LANDING_DEMOS) {
+      expect(typeof demo.showOnLanding).toBe("boolean");
+    }
+  });
+
+  it("hides non-landing demos from slug resolution", () => {
+    const hidden = LANDING_DEMOS.find((demo) => !demo.showOnLanding);
+    if (hidden) {
+      expect(getDemoBySlug(hidden.slug)).toBeUndefined();
+    }
   });
 });

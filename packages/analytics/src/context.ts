@@ -1,7 +1,7 @@
 /**
  * Fetches the public share context (prospect display name + book-a-call CTA)
  * for a `dd_share` token from the dashboard's context endpoint (Phase 05,
- * `GET /api/track/context`).
+ * `GET /api/share/context`).
  *
  * Fail-silent by construction: any failure - missing env, network error,
  * timeout, non-200, unparsable JSON - resolves to `{}`. Callers (the CTA
@@ -24,7 +24,7 @@ function resolveTrackBaseUrl(): string | undefined {
 }
 
 /**
- * `GET ${NEXT_PUBLIC_TRACK_URL}/api/track/context?token=...`. Resolves `{}`
+ * `GET ${NEXT_PUBLIC_TRACK_URL}/api/share/context?token=...`. Resolves `{}`
  * on any failure (no token, no configured base URL, network error, timeout,
  * non-200, or invalid JSON). Never throws.
  */
@@ -40,7 +40,7 @@ export async function getShareContext(
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      const url = `${baseUrl.replace(/\/$/, "")}/api/track/context?token=${encodeURIComponent(token)}`;
+      const url = `${baseUrl.replace(/\/$/, "")}/api/share/context?token=${encodeURIComponent(token)}`;
       const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) return {};
 

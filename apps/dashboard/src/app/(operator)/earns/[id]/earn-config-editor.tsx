@@ -7,6 +7,7 @@
  */
 
 import { useState } from "react";
+import { ICON_ACTION } from "@/components/shared/icon-action";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
 import Link from "next/link";
@@ -15,14 +16,12 @@ import { Button } from "@dynamic-demos/ui";
 import { Input } from "@dynamic-demos/ui";
 import { Toast } from "@/app/(operator)/checkouts/components/editor/toast";
 import { ProspectPicker } from "@/components/shared/prospect-picker";
-import { env } from "@/env";
+import { demoThemeUrl } from "@/lib/share-links/launch-url";
 import type {
   StoredEarnConfig,
   EarnBrand,
   EarnConfig,
 } from "@/lib/types/dashboard";
-
-const EARN_PROJECT_URL = env.NEXT_PUBLIC_EARN_PROJECT_URL;
 
 const BRAND_OPTIONS: { value: EarnBrand; label: string }[] = [
   { value: "dynamic", label: "Dynamic" },
@@ -80,7 +79,7 @@ export function EarnConfigEditor({
     initialConfig.config.layout?.showSidebar ?? false,
   );
 
-  const demoUrl = `${EARN_PROJECT_URL}/?theme=${initialConfig.id}`;
+  const demoUrl = demoThemeUrl("earn", initialConfig.id);
 
   async function handleSave() {
     if (!name.trim()) {
@@ -144,7 +143,7 @@ export function EarnConfigEditor({
         <div className="flex items-center gap-3">
           <Link
             href="/earns"
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+            className={ICON_ACTION}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
