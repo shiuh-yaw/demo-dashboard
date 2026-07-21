@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { headers } from "next/headers";
 import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
@@ -16,19 +17,9 @@ const roboto = Roboto({
   variable: "--font-roboto",
 });
 
-// Static (no branded variant): EarnBranding has no app-name field to
-// title the tab with - add one there before switching to generateMetadata.
-export const metadata: Metadata = buildDemoMetadata({
-  demoName: "Earn",
-  description:
-    "Stablecoin yield embedded in your product - users deposit USDC into curated vaults from a non-custodial MPC wallet, no wallet setup. Built on Dynamic.",
-});
-
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// React.cache dedupes the dashboard fetch across generateMetadata and
+// RootLayout within one request (fetchDemoConfig itself is no-store).
+const getEarnConfig = cache(async () => {
   const headersList = await headers();
   const configId = headersList.get("x-earn-config-id");
   const config = await fetchDemoConfig({
@@ -36,6 +27,25 @@ export default async function RootLayout({
     id: configId,
     fallback: DEFAULT_EARN_CONFIG,
   });
+  return { configId, config };
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { config } = await getEarnConfig();
+  return buildDemoMetadata({
+    demoName: "Earn",
+    appName: config.branding?.appName,
+    description:
+      "Stablecoin yield embedded in your product - users deposit USDC into curated vaults from a non-custodial MPC wallet, no wallet setup. Built on Dynamic.",
+  });
+}
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { configId, config } = await getEarnConfig();
 
   // SSR theme injection (D-008): emit `--brand-*` overrides ONLY for
   // branded configs (?theme= resolved an id). Unbranded, earn rides the

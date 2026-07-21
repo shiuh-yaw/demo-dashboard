@@ -107,6 +107,8 @@ export const tradeMapper: DemoConfigMapper<TradeConfig, StoredTradeConfig> = {
                 : prospect.logoUrl != null
                   ? { logoUrl: prospect.logoUrl }
                   : {}),
+              ...(config?.branding?.appName == null &&
+                prospect.name != null && { appName: prospect.name }),
             },
             theme: hydratedTheme,
           } as TradeConfig)

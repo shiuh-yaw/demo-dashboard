@@ -33,6 +33,7 @@ export default function NewEarnConfigPage() {
   const [prospectId, setProspectId] = useState<string | null>(null);
   const [brand, setBrand] = useState<EarnBrand>("dynamic");
   const [logoUrl, setLogoUrl] = useState("");
+  const [appName, setAppName] = useState("");
   const [tokenName, setTokenName] = useState("USDC");
   const [pageTitle, setPageTitle] = useState("Earn");
   const [pageDescription, setPageDescription] = useState(
@@ -57,6 +58,7 @@ export default function NewEarnConfigPage() {
         branding: {
           logo: brand,
           logoUrl: brand === "custom" ? logoUrl : undefined,
+          appName: appName.trim() || undefined,
           tokenName: tokenName || "USDC",
           pageTitle: pageTitle || "Earn",
           pageDescription:
@@ -116,8 +118,7 @@ export default function NewEarnConfigPage() {
               className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
-              Company name shown in browser tab (e.g., &quot;Name - Earn
-              Demo&quot;)
+              Internal config name (dashboard only)
             </p>
           </div>
 
@@ -232,6 +233,23 @@ export default function NewEarnConfigPage() {
             />
             <p className="text-xs text-slate-500 mt-1">
               Token symbol displayed in balances (e.g., USDC, PYUSD)
+            </p>
+          </div>
+
+          {/* App Name */}
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              App Name
+            </label>
+            <Input
+              value={appName}
+              onChange={(e) => setAppName(e.target.value)}
+              placeholder="Acme"
+              className="text-sm"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Browser-tab title (&quot;Acme - Earn&quot;). Defaults to the
+              prospect name.
             </p>
           </div>
         </div>

@@ -24,7 +24,10 @@ export interface SiteFooterProps {
   /**
    * Marketing CTAs (dynamic.xyz / Book a call / Get a free account).
    * On in-app surfaces the merged SiteHeader's trailing slot displaces
-   * these from the top bar - the footer picks them up instead.
+   * these from the top bar - the footer picks them up instead. Never
+   * pass true on a branded (?theme=) surface: a branded demo must not
+   * advertise "Get a free account" (gate on the config id, like earn's
+   * post-auth layout).
    */
   showCtas?: boolean;
   /**

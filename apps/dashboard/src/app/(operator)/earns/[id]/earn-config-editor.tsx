@@ -57,6 +57,9 @@ export function EarnConfigEditor({
   const [logoUrl, setLogoUrl] = useState(
     initialConfig.config.branding?.logoUrl || "",
   );
+  const [appName, setAppName] = useState(
+    initialConfig.config.branding?.appName || "",
+  );
   const [tokenName, setTokenName] = useState(
     initialConfig.config.branding?.tokenName || "USDC",
   );
@@ -92,6 +95,7 @@ export function EarnConfigEditor({
         branding: {
           logo: brand,
           logoUrl: brand === "custom" ? logoUrl : undefined,
+          appName: appName.trim() || undefined,
           tokenName: tokenName || "USDC",
           pageTitle: pageTitle || "Earn",
           pageDescription:
@@ -209,8 +213,7 @@ export function EarnConfigEditor({
               className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
-              Company name shown in browser tab (e.g., &quot;Name - Earn
-              Demo&quot;)
+              Internal config name (dashboard only)
             </p>
           </div>
 
@@ -320,6 +323,23 @@ export function EarnConfigEditor({
             />
             <p className="text-xs text-slate-500 mt-1">
               Token symbol displayed in balances (e.g., USDC, PYUSD)
+            </p>
+          </div>
+
+          {/* App Name */}
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              App Name
+            </label>
+            <Input
+              value={appName}
+              onChange={(e) => setAppName(e.target.value)}
+              placeholder="Acme"
+              className="text-sm"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Browser-tab title (&quot;Acme - Earn&quot;). Defaults to the
+              prospect name.
             </p>
           </div>
         </div>

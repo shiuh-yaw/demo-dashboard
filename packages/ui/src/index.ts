@@ -136,6 +136,15 @@ export {
   type PanelSectionApi,
 } from "./panel-section";
 export { ResetThemeButton } from "./reset-theme-button";
+export {
+  HeaderMenu,
+  HeaderMenuRow,
+  BookACallMenuRow,
+  useHeaderMenu,
+  headerMenuRowClassName,
+  type HeaderMenuProps,
+  type HeaderMenuRowProps,
+} from "./header-menu";
 
 // Branding components
 export { DynamicLogo, type DynamicLogoProps } from "./dynamic-logo";

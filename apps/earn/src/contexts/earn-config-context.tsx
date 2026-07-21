@@ -25,9 +25,14 @@ import {
   DEFAULT_EARN_LAYOUT,
 } from "@/lib/earn-config";
 
-/** Branding with required fields except logoUrl which is only needed for custom logos */
-type BrandingWithDefaults = Required<Omit<EarnBranding, "logoUrl">> &
-  Pick<EarnBranding, "logoUrl">;
+/**
+ * Branding with required fields except logoUrl (only needed for custom
+ * logos) and appName (no static default - it's prospect-derived upstream).
+ */
+type BrandingWithDefaults = Required<
+  Omit<EarnBranding, "logoUrl" | "appName">
+> &
+  Pick<EarnBranding, "logoUrl" | "appName">;
 
 interface EarnConfigContextValue {
   /** The full config */

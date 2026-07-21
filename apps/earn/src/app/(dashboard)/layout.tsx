@@ -70,8 +70,11 @@ export default async function DashboardLayout({
           </div>
           {/* Footer renders on branded views too - unlike the header,
               the Dynamic footer stays under every theme (same as the
-              scenario page, which always passes SiteFooter). */}
-          <SiteFooter fullWidth showCtas />
+              scenario page, which always passes SiteFooter). The
+              marketing CTAs do NOT: a branded demo never advertises
+              "Get a free account" (Book a call stays reachable via the
+              user menu). */}
+          <SiteFooter fullWidth showCtas={hasSiteChrome} />
         </div>
       </CreatorBalanceProvider>
     </PayoutDemoProvider>

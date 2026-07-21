@@ -123,6 +123,10 @@ export const earnMapper: DemoConfigMapper<EarnConfig, StoredEarnConfig> = {
           ...config?.branding,
           logo: (prospect?.logo ?? config?.branding?.logo ?? "dynamic") as import("@/lib/types/dashboard").EarnBrand,
           ...(logoUrl != null && { logoUrl }),
+          // Prospect name titles the tab when the config doesn't set one
+          // (matches the prospect-fallback synthesis path).
+          ...(config?.branding?.appName == null &&
+            prospect?.name != null && { appName: prospect.name }),
         },
         layout: config?.layout,
       },

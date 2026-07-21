@@ -118,6 +118,8 @@ export interface EarnBranding {
   logo: EarnBrand;
   /** URL to a hosted SVG logo (used when logo is "custom") */
   logoUrl?: string;
+  /** App name for the branded browser-tab title ("<appName> - Earn"). */
+  appName?: string;
   /** Token name displayed in balances (e.g., "USDC", "PYUSD") */
   tokenName?: string;
   /** Page title shown on the main earn page (defaults to "Earn") */
