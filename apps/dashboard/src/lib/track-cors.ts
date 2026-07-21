@@ -1,6 +1,6 @@
 /**
  * CORS for the public tracker-facing endpoints (`/api/share/context`, and
- * Phase GTM-06's `/api/track`). Distinct from the wildcard `src/lib/cors.ts`
+ * Phase GTM-06's `/api/events`). Distinct from the wildcard `src/lib/cors.ts`
  * used by operator-facing provider endpoints - these reflect only an allowed
  * origin, never `*`: https `dynamic.dev`/subdomains are built in, external
  * origins come from `TRACK_CORS_ORIGINS`. Non-allowed origins get no CORS
@@ -37,13 +37,20 @@ export function isBuiltinTrackOrigin(origin: string): boolean {
   return host === "dynamic.dev" || host.endsWith(".dynamic.dev");
 }
 
+/** Single origin policy for all tracker endpoints: builtin or env-allowlisted. */
+export function isAllowedTrackOrigin(
+  origin: string | null,
+  allowed: string[],
+): boolean {
+  if (!origin) return false;
+  return isBuiltinTrackOrigin(origin) || allowed.includes(origin.toLowerCase());
+}
+
 export function corsHeadersForOrigin(
   origin: string | null,
   allowed: string[],
 ): Record<string, string> | null {
-  if (!origin) return null;
-  if (!isBuiltinTrackOrigin(origin) && !allowed.includes(origin.toLowerCase()))
-    return null;
+  if (!origin || !isAllowedTrackOrigin(origin, allowed)) return null;
   return {
     "Access-Control-Allow-Origin": origin,
     Vary: "Origin",

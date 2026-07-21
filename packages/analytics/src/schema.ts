@@ -2,7 +2,7 @@
  * Wire schema for the GTM tracker.
  *
  * Single Zod source of truth shared by `packages/analytics` (client) and the
- * dashboard ingest endpoint (Phase 06, `POST /api/track`). Copied verbatim
+ * dashboard ingest endpoint (Phase 06, `POST /api/events`). Copied verbatim
  * from `docs/projects/gtm-platform/PLAN.md`'s "Shared contracts" section -
  * that document is binding; if this file must deviate, update PLAN.md in the
  * same PR.

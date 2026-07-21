@@ -57,7 +57,7 @@ describe("EventQueue", () => {
     // The fetch call itself is issued synchronously inside enqueue -> flush -> send.
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0]!;
-    expect(url).toBe("https://track.example.com/api/track");
+    expect(url).toBe("https://track.example.com/api/events");
     expect(init.keepalive).toBe(true);
     const body = JSON.parse(init.body);
     expect(body.events).toHaveLength(3);
@@ -183,7 +183,7 @@ describe("EventQueue", () => {
 
     expect(sendBeacon).toHaveBeenCalledTimes(1);
     const [url, blob] = sendBeacon.mock.calls[0]!;
-    expect(url).toBe("https://track.example.com/api/track");
+    expect(url).toBe("https://track.example.com/api/events");
     expect(blob).toBeInstanceOf(Blob);
     expect(fetchImpl).not.toHaveBeenCalled();
 

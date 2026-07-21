@@ -1,4 +1,4 @@
-# Phase 06 - Ingest pipeline: `POST /api/track`
+# Phase 06 - Ingest pipeline: `POST /api/events`
 
 > **Self-contained agent prompt.** Read this entire file, then `../DESIGN.md` (Ingest), `../PLAN.md` (Shared contracts - wire schema, endpoint behavior, `services.visitorSessions`).
 
@@ -23,7 +23,7 @@ One logical PR.
 - **Raw IPs never persisted or logged.** `ipHash = sha256(ip + IP_HASH_SALT)` computed in-request via node `crypto`; the raw IP variable's lifetime ends inside the handler.
 - Validation via the shared Zod schema imported from `@dynamic-demos/analytics` - do not redeclare it.
 - Duplicate events (existing `TrackEvent.id`) and duplicate batches are 2xx-acks, never errors.
-- Rate limiting on the existing Redis rails (reuse the webhook framework's limiter from `src/lib/webhooks/` if its shape fits; otherwise the same Upstash primitive with key `track:{ipHash}:{shareToken|anonId}`, ~120 req/min). 429 responses carry no body the tracker depends on (tracker drops silently by design).
+- Rate limiting on the existing Redis rails (reuse the webhook framework's limiter from `src/lib/webhooks/` if its shape fits; otherwise the same Upstash primitive with key `track:{ipHash}:{shareToken|anonId}`, ~120 req/min). 429 responses carry no body the tracker depends on (tracker drops silently by design). Amendment (review C1, 2026-07-21): `track:{ipHash}:{shareToken|anonId}` alone is bypassable by rotating the client-minted `anonId` every request, so implementations must add a second, coarser fixed-window limiter keyed on `ipHash` alone (no client-controlled fields) as a hard per-host ceiling, gating ahead of the finer per-session key.
 - Invalid share tokens are NOT errors: the session persists unattributed (`shareLinkId: null`).
 - One info log line per accepted batch, mirroring the webhook convention: `[track] batch session=<id> demo=<slug> events=<n> attributed=<bool> internal=<bool> durMs=<n>`. Event payloads at debug level only.
 
@@ -36,7 +36,7 @@ One logical PR.
 
 ## What needs to happen
 
-1. **`/api/track/route.ts`** (`POST` + `OPTIONS`):
+1. **`/api/events/route.ts`** (`POST` + `OPTIONS`):
    - CORS: allow origin only if in `TRACK_CORS_ORIGINS` (exact origin match); `OPTIONS` preflight returns the allow headers; `POST` from disallowed origins still processes `sendBeacon` payloads without an `Origin` match? No - beacons carry Origin; disallowed origin -> 403, no processing.
    - Parse JSON (also handle `text/plain` bodies - `sendBeacon` may send them), `trackBatchSchema.safeParse` -> 400 on failure.
    - Rate limit -> 429.
@@ -54,7 +54,7 @@ One logical PR.
 - [ ] Schema imported from `@dynamic-demos/analytics` (no local redeclaration).
 - [ ] Raw-IP assertion test passes; `rg 'x-forwarded-for' apps/dashboard/src` shows the value never leaves `src/lib/track/`.
 - [ ] Duplicate delivery is 2xx and row-idempotent.
-- [ ] AGENTS.md updated (`/api/track` under API namespaces). spark26 untouched.
+- [ ] AGENTS.md updated (`/api/events` under API namespaces). spark26 untouched.
 
 ## PR title
 

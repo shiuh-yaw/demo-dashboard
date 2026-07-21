@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.71.2",
+    "@dynamic-demos/analytics": "workspace:*",
     "@dynamic-demos/blindpay": "workspace:*",
     "@dynamic-demos/coinbase-onramp": "workspace:*",
     "@dynamic-demos/db": "workspace:*",

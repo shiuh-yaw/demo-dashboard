@@ -286,8 +286,18 @@ export const env = createEnv({
      */
     GTM_ALLOWED_DOMAINS: z.string().optional().default(""),
     /**
+     * Pepper mixed into `sha256(ip + IP_HASH_SALT)` before persisting
+     * `VisitorSession.ipHash` (Phase GTM-06). Raw IPs are never stored;
+     * this salt just keeps the hash from being a trivial rainbow-table
+     * lookup. Falls back to a fixed local-dev value for local runs; fails
+     * closed at startup when `NEXT_PUBLIC_APP_ENV=production` and this is
+     * unset (see the check below `createEnv` - the dev fallback is
+     * committed to the repo, so a real deployment must never use it).
+     */
+    IP_HASH_SALT: z.string().optional().default("local-dev-ip-hash-salt"),
+    /**
      * CORS allowlist for the public tracker-facing endpoints (`/s/[token]`'s
-     * context call, Phase GTM-06's `/api/track`): comma-separated demo
+     * context call, Phase GTM-06's `/api/events`): comma-separated demo
      * origins (e.g. `https://wallet.dynamic.dev`). Empty (default) allows
      * no origin - the endpoints still respond, just without CORS headers.
      */
@@ -363,6 +373,7 @@ export const env = createEnv({
     SUMSUB_ENVIRONMENT: process.env.SUMSUB_ENVIRONMENT,
     SUMSUB_LEVEL_NAME: process.env.SUMSUB_LEVEL_NAME,
     GTM_ALLOWED_DOMAINS: process.env.GTM_ALLOWED_DOMAINS,
+    IP_HASH_SALT: process.env.IP_HASH_SALT,
     TRACK_CORS_ORIGINS: process.env.TRACK_CORS_ORIGINS,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
@@ -370,3 +381,18 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_DEMO_URL_OVERRIDES,
   },
 });
+
+/**
+ * I1 - IP_HASH_SALT must fail closed in production. The zod default above
+ * is a fixed string committed to the repo; sha256(ip + known-salt) over
+ * the ~4.3B IPv4 space is a trivial precompute, so using it in a deployed
+ * environment would make VisitorSession.ipHash reversible - defeating the
+ * "raw IP never recoverable" privacy invariant. Dev/test keep the
+ * fallback (checked directly off process.env, not the parsed default, so
+ * an explicit empty string doesn't slip through as "set").
+ */
+if (process.env.NEXT_PUBLIC_APP_ENV === "production" && !process.env.IP_HASH_SALT) {
+  throw new Error(
+    "IP_HASH_SALT is required when NEXT_PUBLIC_APP_ENV=production - refusing to start with the public dev-fallback salt (see src/env.ts).",
+  );
+}

@@ -291,6 +291,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 0.71.2
         version: 0.71.2(zod@3.25.76)
+      '@dynamic-demos/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@dynamic-demos/blindpay':
         specifier: workspace:*
         version: link:../../packages/blindpay

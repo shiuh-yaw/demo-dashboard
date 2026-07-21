@@ -4,7 +4,7 @@
  * Behavior (binding, see `docs/projects/gtm-platform/phases/02-analytics-package.md`):
  *   - `enqueue(event)` batches events client-side.
  *   - Flush triggers on whichever comes first: 20 events queued, or 5s elapsed.
- *   - Flush POSTs a `TrackBatch` to `${trackUrl}/api/track` with `keepalive: true`.
+ *   - Flush POSTs a `TrackBatch` to `${trackUrl}/api/events` with `keepalive: true`.
  *   - On `visibilitychange -> hidden`, drains the buffer via `navigator.sendBeacon`
  *     (best-effort, no retry - the page may be closing).
  *   - A failed flush retries once, then the batch is dropped. Fail-silent:
@@ -157,7 +157,7 @@ export class EventQueue {
   private async send(batch: TrackBatch): Promise<boolean> {
     try {
       if (!this.trackUrl) return false;
-      const url = `${this.trackUrl.replace(/\/$/, "")}/api/track`;
+      const url = `${this.trackUrl.replace(/\/$/, "")}/api/events`;
       const response = await this.fetchImpl(url, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -179,7 +179,7 @@ export class EventQueue {
       this.clearTimer();
 
       const batch = this.buildBatch(events);
-      const url = `${this.trackUrl.replace(/\/$/, "")}/api/track`;
+      const url = `${this.trackUrl.replace(/\/$/, "")}/api/events`;
 
       if (
         typeof navigator === "undefined" ||
