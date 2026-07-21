@@ -16,6 +16,7 @@ import { services } from "@/lib/services";
 import { NotFoundError } from "@/lib/errors";
 import { parseWithSchema } from "@/lib/validation";
 import { demoConfigKindSchema } from "@/lib/services/demo-config-schemas";
+import { synthesizeProspectConfig } from "@/lib/services/demo-config-mappers/prospect-fallback";
 import { checkoutMapper } from "@/lib/services/demo-config-mappers/checkout";
 import { earnMapper } from "@/lib/services/demo-config-mappers/earn";
 import { remittanceMapper } from "@/lib/services/demo-config-mappers/remittance";
@@ -55,25 +56,35 @@ export async function handleGetDemoConfig(rawInput: unknown): Promise<unknown> {
   const { kind, id } = parseWithSchema(inputSchema, rawInput);
 
   const record = await services.demoConfigs.get(id);
-  // Kind-mismatch is a 404 rather than a 400: from the caller's
-  // `(kind, id)` perspective the resource doesn't exist. A 400 would leak
-  // the existence of an id under a different kind.
-  if (!record || record.kind !== kind) {
-    throw new NotFoundError("Demo config not found");
+
+  if (record && record.kind === kind) {
+    const prospect = record.prospectId
+      ? await services.prospects.get(record.prospectId)
+      : null;
+
+    // Return only the inner config payload (theme + branding + layout + …),
+    // not the `Stored<Kind>Config` wrapper. The wrapper's metadata (id, name,
+    // createdAt, ownerId) is dashboard-internal; apps only consume the
+    // visual config. Critically, `@dynamic-demos/theme/fetchDemoConfig`
+    // shallow-merges the response over a kind-shaped fallback — wrapper
+    // fields would corrupt that merge.
+    const stored = MAPPERS[kind].toStored(record, prospect) as {
+      config: unknown;
+    };
+    return stored.config;
   }
 
-  const prospect = record.prospectId
+  // Prospect fallback: `?theme=` accepts the brand in any of its
+  // identities. When the id isn't a config of this kind, resolve it as
+  // a Prospect id - or, for a config of a DIFFERENT kind, borrow its
+  // prospect - and synthesize this kind's payload from the prospect's
+  // visual fields. A prospect themes every demo the moment it exists;
+  // no per-kind DemoConfig row required.
+  const prospect = record?.prospectId
     ? await services.prospects.get(record.prospectId)
-    : null;
-
-  // Return only the inner config payload (theme + branding + layout + …),
-  // not the `Stored<Kind>Config` wrapper. The wrapper's metadata (id, name,
-  // createdAt, ownerId) is dashboard-internal; apps only consume the
-  // visual config. Critically, `@dynamic-demos/theme/fetchDemoConfig`
-  // shallow-merges the response over a kind-shaped fallback — wrapper
-  // fields would corrupt that merge.
-  const stored = MAPPERS[kind].toStored(record, prospect) as {
-    config: unknown;
-  };
-  return stored.config;
+    : await services.prospects.get(id);
+  if (!prospect) {
+    throw new NotFoundError("Demo config not found");
+  }
+  return synthesizeProspectConfig(kind, prospect);
 }

@@ -1,7 +1,7 @@
 {
   "name": "@dynamic-demos/flow",
   "version": "0.1.0",
-  "description": "Flow GTM enablement — standalone interactive demo for Dynamic's Flow product (accept any crypto, settle any stablecoin)",
+  "description": "Flow GTM enablement \u2014 standalone interactive demo for Dynamic's Flow product (accept any crypto, settle any stablecoin)",
   "private": true,
   "scripts": {
     "dev": "next dev -p 4012",
@@ -14,6 +14,7 @@
   "dependencies": {
     "@dynamic-demos/alchemy": "workspace:*",
     "@dynamic-demos/checkouts-widget": "workspace:*",
+    "@dynamic-demos/code-highlight": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/fireblocks": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
@@ -28,14 +29,13 @@
     "@t3-oss/env-nextjs": "0.13.8",
     "@tanstack/react-query": "catalog:",
     "clsx": "catalog:",
-    "lucide-react": "0.541.0",
     "fastestsmallesttextencoderdecoder": "catalog:",
+    "lucide-react": "0.541.0",
     "motion": "12.0.0",
     "next": "catalog:",
     "qrcode.react": "4.2.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "shiki": "1.24.0",
     "tailwind-merge": "3.4.0",
     "viem": "2.42.1",
     "ws": "catalog:",

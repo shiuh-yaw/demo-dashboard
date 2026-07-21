@@ -11,7 +11,7 @@
  * provisioning via dashboard, and settlement status polling.
  */
 
-import { highlight } from "./code-highlight";
+import { highlight } from "@dynamic-demos/code-highlight";
 import { WEBHOOK_DOCS_URL, WEBHOOK_EVENTS, WEBHOOK_HANDLER_CODE } from "./flow-helpers";
 import type {
   CodePanelProps,
@@ -269,26 +269,6 @@ const { token } = await sumsub.generateShareToken({
   },
 ];
 
-const KYC_DEPOSIT_AI: {
-  eyebrow: string;
-  title: string;
-  sub: string;
-  rawPrompt: string;
-} = {
-  eyebrow: "AI SCAFFOLD",
-  title: "Build a KYC-gated deposit flow",
-  sub: "Paste this into your AI assistant to scaffold a full KYC → deposit → settlement integration.",
-  rawPrompt: `Build a KYC-gated crypto deposit flow with these requirements:
-
-1. Wallet connection: Use Dynamic SDK \`connectAndVerifyWithWalletProvider\` for SIWE-style wallet verification.
-2. Identity verification: Integrate SumSub WebSDK for KYC. Server generates access tokens via the SumSub API.
-3. Deposit address: After KYC approval, provision a dedicated deposit address per user. Deposits to this address trigger off-ramp settlement.
-4. Settlement: Monitor USDC → fiat conversion status (confirming → converting → settled).
-
-Stack: Next.js (App Router), Dynamic SDK for auth, SumSub for KYC, USDC on Base Sepolia (testnet).
-Architecture: Demo app calls dashboard API for provider operations (apps don't hold provider secrets directly).`,
-};
-
 // ---------------------------------------------------------------------------
 // Builder
 // ---------------------------------------------------------------------------
@@ -359,7 +339,6 @@ export async function buildKycDepositCodePanelProps(): Promise<CodePanelProps> {
     sdkSteps,
     apiSteps,
     helpers,
-    ai: KYC_DEPOSIT_AI,
     webhookHandler,
     webhookEvents,
     webhookDocsUrl: WEBHOOK_DOCS_URL,

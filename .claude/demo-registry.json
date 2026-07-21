@@ -344,6 +344,13 @@
       "status": "stable"
     },
     {
+      "name": "@dynamic-demos/code-highlight",
+      "kind": "package",
+      "flow_role": "utility",
+      "custody": "n/a",
+      "status": "stable"
+    },
+    {
       "name": "@dynamic-demos/coinbase-onramp",
       "kind": "package",
       "flow_role": "onramp",

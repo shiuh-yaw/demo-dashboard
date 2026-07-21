@@ -16,14 +16,8 @@ import {
   TransactionDisclaimer,
 } from "@/components/disclaimer";
 import { CodePanel } from "@/components/code-panel";
-import {
-  ChipArrow,
-  RouteChip,
-  ScenarioEyebrow,
-  ScenarioSwitcher,
-  TopBar,
-  prettyChain,
-} from "@/components/scenario-chrome";
+import { ChipArrow, RouteChip, ScenarioHero } from "@dynamic-demos/ui";
+import { ScenarioSwitcher, prettyChain } from "@/components/scenario-chrome";
 import { CheckoutWidgetDemo } from "./components/widget-demo";
 
 /**
@@ -65,13 +59,14 @@ export default async function CheckoutPage({
   );
 
   return (
-    <div className="min-h-dvh bg-(--brand-page-bg)">
+    <div>
       <DynamicBootstrap />
       <main className="mx-auto max-w-6xl px-6 pt-8 pb-20">
-        <TopBar />
-        <ScenarioHero config={config} />
+        <CheckoutHero config={config} />
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-5 lg:sticky lg:top-6 self-start">
+          {/* Sticky offset clears the layout's h-20 sticky bar
+              (SiteHeader unbranded, the brand bar under ?theme=). */}
+          <div className="lg:col-span-5 lg:sticky lg:top-[104px] self-start">
             <CheckoutWidgetDemo />
             <TransactionDisclaimer />
           </div>
@@ -87,43 +82,41 @@ export default async function CheckoutPage({
 }
 
 // =============================================================================
-// Hero — eyebrow + sandbox badge, large headline, subtitle, scenario chips.
+// Hero
 // =============================================================================
 
-function ScenarioHero({ config }: { config: ParsedFlowConfig }) {
+function CheckoutHero({ config }: { config: ParsedFlowConfig }) {
   const assetLine = `${config.asset.symbol} on ${prettyChain(config.asset.chain)}`;
 
   return (
-    <section className="flex flex-col gap-5 max-w-3xl">
-      <ScenarioEyebrow num="01" name="Checkout" />
-
-      <h1 className="!text-[clamp(2rem,4vw,3rem)] !leading-[1.05] text-balance text-(--brand-fg) font-semibold tracking-[-0.02em]">
-        Accept any crypto.{" "}
-        <span className="text-(--brand-primary)">
-          Settle {config.asset.symbol} on {prettyChain(config.asset.chain)}.
-        </span>
-      </h1>
-      <p className="text-base lg:text-lg text-(--brand-fg-secondary) max-w-2xl">
-        The buyer pays with any token from any wallet. The merchant&apos;s
-        vault receives the configured stablecoin every time — Fireblocks
-        Flow provides the swap, settlement, and webhook infrastructure
-        <DisclaimerCite />.
-      </p>
-
-      <div className="flex items-center gap-3 pt-1">
-        <RouteChip
-          icon={<EthereumIcon className="h-5 w-5" />}
-          label="Buyer wallet"
-          detail="Any wallet, chain"
-        />
-        <ChipArrow />
-        <RouteChip
-          icon={<BaseChainIcon className="h-5 w-5" />}
-          label="Merchant vault"
-          detail={assetLine}
-        />
-      </div>
-    </section>
+    <ScenarioHero
+      eyebrow={{ num: "01", name: "Checkout" }}
+      title="Accept any crypto."
+      titleAccent={`Settle ${config.asset.symbol} on ${prettyChain(config.asset.chain)}.`}
+      pitch={
+        <>
+          The buyer pays with any token from any wallet. The merchant&apos;s
+          vault receives the configured stablecoin every time - Fireblocks
+          Flow provides the swap, settlement, and webhook infrastructure
+          <DisclaimerCite />.
+        </>
+      }
+      chips={
+        <>
+          <RouteChip
+            icon={<EthereumIcon className="h-5 w-5" />}
+            label="Buyer wallet"
+            detail="Any wallet, chain"
+          />
+          <ChipArrow />
+          <RouteChip
+            icon={<BaseChainIcon className="h-5 w-5" />}
+            label="Merchant vault"
+            detail={assetLine}
+          />
+        </>
+      }
+    />
   );
 }
 

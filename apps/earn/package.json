@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@dynamic-demos/alchemy": "workspace:*",
+    "@dynamic-demos/code-highlight": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/types": "workspace:*",
@@ -32,7 +33,6 @@
     "qrcode.react": "^4.2.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "shiki": "1.24.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "3.3.0",
     "viem": "2.37.2",

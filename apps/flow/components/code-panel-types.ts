@@ -1,25 +1,16 @@
 /**
- * Public types for the right-rail `<CodePanel />` and its panes.
- *
- * Lives in its own module so the pane components can consume the
- * types without importing from `code-panel.tsx` (which would create a
- * circular import: orchestrator → pane → orchestrator-types).
+ * Flow-specific types for the right-rail code panel. The step contract
+ * (`CodeStep`) and the panel shell live in @dynamic-demos/ui; only the
+ * card shapes for flow's Helpers and Webhooks panes are defined here.
  *
  * `code-panel.tsx` re-exports everything below so external call sites
  * (`apps/flow/lib/build-code-panel-props.ts`, the scenario pages)
  * continue to import from `@/components/code-panel` unchanged.
  */
 
-export interface CodeStep {
-  num: string;
-  title: string;
-  prose: string;
-  filename: string;
-  rawCode: string;
-  html: string;
-  /** Canonical Dynamic docs URL surfaced as a "Read the docs" link. */
-  docsUrl: string;
-}
+import type { CodeStep } from "@dynamic-demos/ui";
+
+export type { CodeStep };
 
 export interface HelperCard {
   id: string;
@@ -36,13 +27,6 @@ export interface HelperCard {
    * their own dedicated docs page (the card renders without the link).
    */
   docsUrl?: string;
-}
-
-export interface AiPromptContent {
-  eyebrow: string;
-  title: string;
-  sub: string;
-  rawPrompt: string;
 }
 
 export interface WebhookEventCard {
@@ -72,7 +56,6 @@ export interface CodePanelProps {
   sdkSteps: CodeStep[];
   apiSteps: CodeStep[];
   helpers: HelperCard[];
-  ai: AiPromptContent;
   webhookHandler: WebhookHandlerCard;
   webhookEvents: WebhookEventCard[];
   /**

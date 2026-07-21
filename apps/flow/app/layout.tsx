@@ -1,5 +1,23 @@
+import { cache } from "react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { DM_Sans } from "next/font/google";
+import {
+  buildDemoMetadata,
+  widgetThemeToBrandTheme,
+  type WidgetTheme,
+} from "@dynamic-demos/theme";
+import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
+import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
+import {
+  DynamicLogo,
+  ResetThemeButton,
+  ScenarioBrandImage,
+  ScenarioBrandRow,
+  SiteFooter,
+  SiteHeader,
+} from "@dynamic-demos/ui";
+import { FlowMark } from "@/components/scenario-chrome";
 import { Providers } from "./providers";
 
 import "./globals.css";
@@ -10,27 +28,117 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "Flow — Accept any crypto. Settle any stablecoin.",
-  description:
-    "An interactive demo of Dynamic's Flow product. Accept crypto deposits from any wallet, exchange, or embedded wallet — settle in any stablecoin at a Fireblocks vault, embedded wallet, or external address.",
-};
+/**
+ * Prospect theme payload. Flow has no DemoConfig kind of its own - it
+ * fetches with `demoType: "trade"` purely as a payload-shape selector
+ * (foregroundColor + branding.logoUrl/appName, what
+ * widgetThemeToBrandTheme and buildDemoMetadata consume). The
+ * dashboard's prospect fallback makes `?theme=<prospectId>` - or any
+ * config id, via its prospect - resolve regardless of the kind asked.
+ */
+interface FlowThemeConfig {
+  theme?: WidgetTheme;
+  branding?: { logoUrl?: string; appName?: string };
+}
+
+// React.cache dedupes the dashboard fetch across generateMetadata and
+// RootLayout within one request (fetchDemoConfig itself is no-store).
+const getFlowConfig = cache(async () => {
+  const headersList = await headers();
+  const configId = headersList.get("x-flow-config-id");
+  const config = await fetchDemoConfig<FlowThemeConfig>({
+    demoType: "trade",
+    id: configId,
+    // Flow's env contract names the dashboard origin DASHBOARD_API_URL;
+    // fetchDemoConfig's own env chain doesn't include that name.
+    dashboardUrl: process.env.DASHBOARD_URL ?? process.env.DASHBOARD_API_URL,
+    fallback: {},
+  });
+  return { configId, config };
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { config } = await getFlowConfig();
+  return buildDemoMetadata({
+    demoName: "Flow",
+    appName: config.branding?.appName,
+    description:
+      "Accept any crypto, settle any stablecoin - checkout, deposit, and withdraw flows on Fireblocks Flow infrastructure, run live beside the integration code.",
+  });
+}
 
 /**
- * Zero-chrome layout. No nav, no theme toggle, no footer. The page IS
- * the widget — matches the apps/checkouts pattern. Per-scenario branding
- * (primary color, brand) projects via `<ThemeStyleTag>` inside each
- * scenario page's `<ScenarioThemeWrapper>`.
+ * Shared Dynamic site chrome on every page (SiteHeader with the Flow
+ * wordmark as its logo - flow keeps its own product identity - and
+ * SiteFooter). The logo links to flow's internal landing; the Demos
+ * crumb + hover grid link back to the catalog.
+ *
+ * Prospect themes (D-008): the middleware forwards `?theme=` as
+ * `x-flow-config-id`; branded requests inject `--brand-*` overrides via
+ * <ThemeStyleTag overridesOnly> - flow's chrome is fully brand-token
+ * driven, so heroes, chips, and cards restyle while the SiteHeader
+ * (deliberately unthemed) keeps the Flow identity.
  */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { configId, config } = await getFlowConfig();
+
+  // Overrides ONLY for branded requests - unbranded, flow rides its own
+  // static palette in globals.css (no injected block at all).
+  const brandTheme = configId
+    ? widgetThemeToBrandTheme(config.theme ?? {})
+    : {};
+
   return (
     <html lang="en" suppressHydrationWarning className={dmSans.variable}>
+      <head>
+        <ThemeStyleTag theme={brandTheme} overridesOnly />
+      </head>
       <body className={`${dmSans.className} bg-(--brand-page-bg)`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="flex min-h-dvh flex-col">
+            {configId ? (
+              // Branded rule (wallet/earn/trade parity): the Dynamic
+              // site header hides and the shared brand bar takes its
+              // place - sticky with SiteHeader's geometry so the
+              // scenario pages' 104px widget offset holds.
+              <ScenarioBrandRow
+                variant="bar"
+                logoHref="/"
+                logo={
+                  config.branding?.logoUrl ? (
+                    <ScenarioBrandImage
+                      src={config.branding.logoUrl}
+                      alt={`${config.branding?.appName ?? "Brand"} logo`}
+                      align="bar"
+                    />
+                  ) : (
+                    // Logo-less prospects keep the Dynamic lockup - an
+                    // empty bar reads broken.
+                    <DynamicLogo wordmark className="h-[34px] w-auto" />
+                  )
+                }
+              />
+            ) : (
+              <SiteHeader
+                homeHref="https://dynamic.dev"
+                chip="Flow"
+                logo={<FlowMark />}
+                logoHref="/"
+              />
+            )}
+            <div className="flex-1">{children}</div>
+            {/* Branded requests get the clear affordance site-wide,
+                riding the footer's links row - flow has no single
+                widget column that owns it. */}
+            <SiteFooter
+              extraLinks={<ResetThemeButton active={!!configId} variant="link" />}
+            />
+          </div>
+        </Providers>
       </body>
     </html>
   );

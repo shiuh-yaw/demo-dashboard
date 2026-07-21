@@ -27,6 +27,12 @@ export interface SiteFooterProps {
    * these from the top bar - the footer picks them up instead.
    */
   showCtas?: boolean;
+  /**
+   * Optional extra entries rendered in the links row after
+   * Terms/Privacy (e.g. flow's Clear-theme button). Style children to
+   * match the links: text-sm slate-500 with the same hover.
+   */
+  extraLinks?: React.ReactNode;
 }
 
 const LINKS = [
@@ -38,6 +44,7 @@ export function SiteFooter({
   signInHref = "https://dynamic.dev/prospects",
   fullWidth = false,
   showCtas = false,
+  extraLinks,
 }: SiteFooterProps) {
   const heart = <Heart className="h-3.5 w-3.5 fill-current" />;
 
@@ -83,6 +90,7 @@ export function SiteFooter({
               {link.label}
             </a>
           ))}
+          {extraLinks}
         </nav>
         {showCtas ? (
           <nav className="flex items-center gap-2 text-sm sm:gap-3">

@@ -1,44 +1,13 @@
 /**
  * One-line callouts that frame the body of each CodePanel tab.
  *
- * Each notice rides on the shared `PanelNotice` shell so the four
- * tabs (SDK / API / Webhooks / Helpers) read as a series — same
- * gradient pill, same eyebrow + body rhythm — rather than ad-hoc
- * boxes per tab.
+ * Each notice rides the shared `PanelNotice` shell (packages/ui,
+ * generalized from this file) so the four tabs (SDK / API / Webhooks /
+ * Helpers) read as a series — same gradient pill, same eyebrow + body
+ * rhythm — rather than ad-hoc boxes per tab.
  */
 
-import type { ReactNode } from "react";
-
-interface PanelNoticeProps {
-  /** Primary uppercase eyebrow (brand-coloured). */
-  eyebrow: string;
-  /** Optional muted dot-separator suffix (e.g. "no testnets"). */
-  eyebrowSuffix?: string;
-  /** Body text under the eyebrow. */
-  children: ReactNode;
-}
-
-function PanelNotice({ eyebrow, eyebrowSuffix, children }: PanelNoticeProps) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-(--brand-border) bg-gradient-to-br from-(--brand-row-bg) via-(--brand-row-bg) to-(--brand-surface) p-4 sm:p-5">
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-(--brand-primary)">
-            {eyebrow}
-          </span>
-          {eyebrowSuffix ? (
-            <span className="text-[10px] uppercase tracking-[0.14em] font-medium text-(--brand-muted)">
-              · {eyebrowSuffix}
-            </span>
-          ) : null}
-        </div>
-        <p className="text-[13px] leading-relaxed text-(--brand-fg-secondary)">
-          {children}
-        </p>
-      </div>
-    </div>
-  );
-}
+import { PanelNotice } from "@dynamic-demos/ui";
 
 /**
  * SDK + REST tab notice. Flow runs against mainnet networks only —

@@ -12,7 +12,7 @@
  *                                 that event's payload section.
  */
 
-import { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
+import { CodeFrame, DocsLink, renderProse } from "@dynamic-demos/ui";
 import type { WebhookEventCard, WebhookHandlerCard } from "./code-panel-types";
 
 export function WebhooksPane({

@@ -70,6 +70,7 @@
 |---|---|---|---|
 | `alchemy` | Alchemy | n/a | stable |
 | `analytics` | — | n/a | experimental |
+| `code-highlight` | — | n/a | stable |
 | `coingecko` | CoinGecko | n/a | stable |
 | `db` | — | n/a | stable |
 | `fireblocks` | Fireblocks | custodial | stable |

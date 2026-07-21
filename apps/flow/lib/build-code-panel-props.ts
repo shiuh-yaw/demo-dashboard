@@ -12,7 +12,7 @@
  * spreads into `<CodePanel {...props} />`.
  */
 
-import { highlight } from "./code-highlight";
+import { highlight } from "@dynamic-demos/code-highlight";
 import {
   WEBHOOK_DOCS_URL,
   WEBHOOK_EVENTS,
@@ -41,8 +41,7 @@ import type {
  *
  * @param ctx     Snippet rendering context (FlowConfig + mode +
  *                destination/source address placeholders).
- * @param extras  Per-scenario helpers + AI prompt block (see
- *                `flow-helpers.ts`).
+ * @param extras  Per-scenario helpers (see `flow-helpers.ts`).
  * @param scenario The intent-named scenario id; used to look up the
  *                 5-step copy from `scenario-steps.ts`.
  */
@@ -103,7 +102,6 @@ export async function buildCodePanelProps(
     sdkSteps,
     apiSteps,
     helpers,
-    ai: extras.ai,
     webhookHandler,
     webhookEvents,
     webhookDocsUrl: WEBHOOK_DOCS_URL,

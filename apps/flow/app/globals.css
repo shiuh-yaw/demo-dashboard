@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@dynamic-labs-sdk/droplet/styles/globals.css";
+@import "@dynamic-demos/ui/code-panel.css";
 
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/ui/src/**/*.ts";
@@ -185,41 +186,5 @@
   }
 }
 
-/*
- * Shiki output container. Shiki emits `<pre class="shiki"><code><span
- * class="line">…</span>…</code></pre>` with inline styles for theme
- * colours; we layer line numbers (CSS counter) and frame padding on top
- * without touching the highlighter output.
- */
-.shiki-block pre.shiki {
-  margin: 0;
-  padding: 1rem 0;
-  font-size: 12.5px;
-  line-height: 1.65;
-  overflow-x: auto;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  background-color: transparent !important;
-}
-.shiki-block pre.shiki code {
-  counter-reset: shiki-line;
-  display: grid;
-  min-width: max-content;
-}
-.shiki-block pre.shiki .line {
-  counter-increment: shiki-line;
-  padding-right: 1.5rem;
-}
-.shiki-block pre.shiki .line::before {
-  content: counter(shiki-line);
-  display: inline-block;
-  width: 2.25em;
-  padding-right: 1.5em;
-  margin-left: 0.5em;
-  text-align: right;
-  color: rgba(255, 255, 255, 0.22);
-  user-select: none;
-  -webkit-user-select: none;
-}
-.shiki-block pre.shiki .line:empty::after {
-  content: "\200B";
-}
+/* Shiki code-block styling comes from @dynamic-demos/ui/code-panel.css
+   (imported at the top of this file - originated here, promoted). */

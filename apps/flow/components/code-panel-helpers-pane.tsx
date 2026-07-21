@@ -11,7 +11,7 @@
  * the boundary so the two integration paths read as distinct sections.
  */
 
-import { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
+import { CodeFrame, DocsLink, renderProse } from "@dynamic-demos/ui";
 import type { HelperCard } from "./code-panel-types";
 
 /** Tag values that get their own labelled section divider. */

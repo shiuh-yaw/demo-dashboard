@@ -52,6 +52,19 @@ export interface SiteHeaderProps {
    * the header itself stays a server component.
    */
   trailing?: ReactNode;
+  /**
+   * Optional mark replacing the Dynamic lockup - for demos whose
+   * identity is their own product wordmark (flow's Fireblocks Flow
+   * mark). The Demos crumb and hover grid stay, so the page still
+   * reads as part of the Dynamic demos site.
+   */
+  logo?: ReactNode;
+  /**
+   * Where the logo links. Defaults to homeHref; apps with an internal
+   * landing (flow) point the logo at "/" while the Demos crumb keeps
+   * homeHref (the catalog).
+   */
+  logoHref?: string;
 }
 
 export function SiteHeader({
@@ -61,6 +74,8 @@ export function SiteHeader({
   fullWidth = false,
   center,
   trailing,
+  logo,
+  logoHref,
 }: SiteHeaderProps) {
   // On the catalog the "Demos" pill IS the current location; on demo
   // pages it becomes the ancestor crumb with the demo name as the pill.
@@ -113,11 +128,19 @@ export function SiteHeader({
         }`}
       >
         <div className="flex items-center gap-2.5">
-          <a href={homeHref} className="flex items-center">
-            {/* Below sm the tagline collapses into sub-pixel fuzz -
-                render the tagline-less lockup there instead. */}
-            <DynamicLogo wordmark tagline={false} className="h-7 w-auto sm:hidden" />
-            <DynamicLogo wordmark className="hidden h-[34px] w-auto sm:block" />
+          <a href={logoHref ?? homeHref} className="flex items-center">
+            {logo ?? (
+              <>
+                {/* Below sm the tagline collapses into sub-pixel fuzz -
+                    render the tagline-less lockup there instead. */}
+                <DynamicLogo
+                  wordmark
+                  tagline={false}
+                  className="h-7 w-auto sm:hidden"
+                />
+                <DynamicLogo wordmark className="hidden h-[34px] w-auto sm:block" />
+              </>
+            )}
           </a>
           <div className="flex items-center gap-1.5 max-[380px]:hidden">
             {demosCrumb}

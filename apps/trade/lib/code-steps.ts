@@ -1,5 +1,5 @@
 import type { CodeStep } from "@dynamic-demos/ui";
-import { highlight, type HighlightLang } from "./code-highlight";
+import { highlight, type HighlightLang } from "@dynamic-demos/code-highlight";
 
 /**
  * Integration-panel content for trade's scenario page. Snippets teach the

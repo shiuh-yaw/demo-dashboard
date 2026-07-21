@@ -1,101 +1,15 @@
 import Link from "next/link";
 
 /**
- * Shared chrome for the /checkout, /deposit, /withdraw scenario pages:
- * top bar (Flow mark home link), per-scenario eyebrow + route chips,
- * and the "what's next" sibling-scenario switcher.
+ * Flow-specific chrome for the scenario pages: the "what's next"
+ * sibling-scenario switcher, the coming-soon placeholder, chain-name
+ * helpers, and the Flow wordmark (rendered by the root layout's
+ * SiteHeader `logo` slot).
  *
- * Hero copy itself (headline, subtitle, route-chip labels) is kept in
- * each page so per-scenario language reads naturally; the visual chrome
- * around it is shared here.
+ * The generic scenario primitives (ScenarioEyebrow, RouteChip,
+ * ChipArrow, ScenarioHero) live in @dynamic-demos/ui - they were
+ * generalized FROM this file; import them from there.
  */
-
-// =============================================================================
-// Top bar — home affordance, no nav chrome.
-// =============================================================================
-
-export function TopBar() {
-  return (
-    <div className="mb-8">
-      <Link
-        href="/"
-        aria-label="Flow — home"
-        className="inline-flex items-center self-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--brand-primary) focus-visible:ring-offset-2 rounded-md"
-      >
-        <FlowMark />
-      </Link>
-    </div>
-  );
-}
-
-// =============================================================================
-// Hero eyebrow — "01 · Checkout · DEMO" line above the headline.
-// =============================================================================
-
-export function ScenarioEyebrow({ num, name }: { num: string; name: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-(--brand-muted) font-medium">
-        {num} · {name}
-      </span>
-      <span className="inline-flex items-center h-5 px-2 rounded-full bg-(--brand-row-bg) text-(--brand-muted) border border-(--brand-border) text-[10px] font-medium uppercase tracking-[0.14em]">
-        Demo
-      </span>
-    </div>
-  );
-}
-
-// =============================================================================
-// Route chips — source → destination pills under the hero headline.
-// =============================================================================
-
-export function RouteChip({
-  icon,
-  label,
-  detail,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  detail: string;
-}) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-(--brand-surface) border border-(--brand-border) pl-2 pr-3 py-1.5">
-      <span
-        aria-hidden
-        className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-[6px]"
-      >
-        {icon}
-      </span>
-      <span className="flex flex-col leading-tight">
-        <span className="text-[11px] font-semibold text-(--brand-fg)">
-          {label}
-        </span>
-        <span className="text-[10px] text-(--brand-muted)">{detail}</span>
-      </span>
-    </div>
-  );
-}
-
-export function ChipArrow() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      className="text-(--brand-muted) shrink-0"
-      aria-hidden
-    >
-      <path
-        d="M2 7h10m0 0L8 3m4 4L8 11"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 // =============================================================================
 // Footer — "what's next" sibling-scenario cards + powered-by mark.

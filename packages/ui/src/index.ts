@@ -131,6 +131,11 @@ export { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
 export { Stepper } from "./code-panel-stepper";
 export { SdkStack, type SdkStackProps } from "./sdk-stack";
 export { PanelNotice, type PanelNoticeProps } from "./panel-notice";
+export {
+  createPanelSectionContext,
+  type PanelSectionApi,
+} from "./panel-section";
+export { ResetThemeButton } from "./reset-theme-button";
 
 // Branding components
 export { DynamicLogo, type DynamicLogoProps } from "./dynamic-logo";

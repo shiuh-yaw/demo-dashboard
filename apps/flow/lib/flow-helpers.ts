@@ -1,6 +1,6 @@
 /**
- * Helpers + AI prompts surfaced inside each scenario's right-rail
- * panel alongside the Integration walkthrough.
+ * Helpers surfaced inside each scenario's right-rail panel alongside
+ * the Integration walkthrough.
  *
  * Every scenario shares the same four helpers — all Dynamic SDK
  * imports, no project wrappers — so integrators see the *exact* call
@@ -8,10 +8,6 @@
  * the `getBalances` signature on `/withdraw` (it pins `networkId` and
  * sets `forceRefresh: true`, because reads against a fresh WaaS
  * wallet silently default to mainnet chainId 1 without it).
- *
- * The AI prompt is a single multi-line string per scenario, designed
- * to be pasted into Cursor / Claude Code / ChatGPT / Copilot from
- * the root of an existing project.
  */
 
 export type HelperTag =
@@ -48,20 +44,9 @@ export interface HelperDef {
   docsUrl?: string;
 }
 
-export interface AiPromptDef {
-  /** Small uppercase eyebrow above the dialog title. */
-  eyebrow: string;
-  /** Dialog headline (sentence-case, no terminal period). */
-  title: string;
-  /** One- or two-sentence subtitle explaining how to use the prompt. */
-  sub: string;
-  /** Full prompt text — pasted verbatim into the user's AI assistant. */
-  rawPrompt: string;
-}
 
 export interface ScenarioExtras {
   helpers: HelperDef[];
-  ai: AiPromptDef;
 }
 
 export interface WebhookEventDef {
@@ -449,30 +434,6 @@ export const CHECKOUT_EXTRAS: ScenarioExtras = {
     KRAKEN_WHITELISTING,
     KRAKEN_TRANSFER,
   ],
-  ai: {
-    eyebrow: "AI prompt · Checkout",
-    title: "Drop Flow Checkout into your merchant app",
-    sub: "Paste this into your AI assistant from the root of your existing project. Encodes the full integration sequence for accepting any-crypto payments and settling to your merchant vault.",
-    rawPrompt: `Integrate Dynamic Flow Checkout into this project to accept any-crypto payments and settle to a configured merchant vault address.
-
-Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK at v1.12.0+.
-
-Integration sequence:
-1. Server: create a flow via POST /server/{envId}/flow/payment using DYNAMIC_API_KEY (flow.write scope). Include amount, currency, settlementConfig, and destinationConfig. Store the returned flow.id.
-2. Client: pass flowId to the frontend after the buyer initiates checkout.
-3. Wallet connect: render a picker driven by getAvailableWalletProvidersData(). On selection, connectWithWalletProvider({ walletProviderKey }).
-4. Source-attach: attachFlowSource({ flowId, fromAddress, fromChainId, fromChainName, sourceType: "wallet" }). fromChainId MUST come from the picked source token, NOT getActiveNetworkData(). SDK stores the session token automatically.
-5. Quote: getFlowQuote({ flowId, fromTokenAddress, fromChainId }). 60s TTL; on 422 "Quote has expired", re-quote and retry once.
-6. submitFlowTransaction({ flowId, walletAccount }).
-7. Poll getFlow({ flowId }) at 3s intervals. Success: settlementState === "completed". Failure: executionState in ["failed","expired","cancelled"] or settlementState === "failed". Surface failure.message.
-8. Webhook endpoint at /api/webhooks/dynamic. Verify x-dynamic-signature-256 (HMAC-SHA256 over raw body using DYNAMIC_WEBHOOK_SECRET). React to eventName "flow.settlement.updated" when data.newState === "completed" (use data.flowId with getFlow if you need the full record).
-
-Constraints: mainnet networks only; secrets server-side; lockfile-pinned SDK versions.
-
-Deliverables: lib/dynamic/flow.ts, /api/flows POST route, /api/webhooks/dynamic POST route, tests covering the create → attach → quote → submit sequence.
-
-Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-js-sdk`,
-  },
 };
 
 export const DEPOSIT_EXTRAS: ScenarioExtras = {
@@ -498,30 +459,6 @@ export const DEPOSIT_EXTRAS: ScenarioExtras = {
     KRAKEN_WHITELISTING,
     KRAKEN_TRANSFER,
   ],
-  ai: {
-    eyebrow: "AI prompt · Deposit",
-    title: "Drop Flow Deposit into your platform",
-    sub: "Scaffolds the deposit funnel for any external wallet to your platform's embedded-wallet balance. Paste into your AI assistant from your project root.",
-    rawPrompt: `Integrate Dynamic Flow Deposit into this project as a funnel from external wallets to a user's platform-managed embedded wallet balance.
-
-Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK v1.12.0+.
-
-Integration sequence:
-1. After user authenticates, provision their embedded wallet ONCE: createWaasWalletAccounts({ chains: ["EVM"] }) unconditionally. Don't guard on accounts.length — the SDK's accounts list is stale immediately after auth.
-2. Server: create a flow via POST /server/{envId}/flow/deposit. Set destinationConfig to the user's embedded wallet address. Include amount and settlementConfig.
-3. Client: pass flowId to the frontend.
-4. External wallet: render a wallet picker. On selection, connectWithWalletProvider. THIS is the source wallet.
-5. List tokens: getBalances({ walletAccount: external, includePrices: true }) so the user picks which token to deposit.
-6. attachFlowSource({ flowId, fromAddress, fromChainId, fromChainName, sourceType: "wallet" }). fromChainId from the picked token, not getActiveNetworkData().
-7. Quote + submit + poll. getFlowQuote → submitFlowTransaction → poll getFlow. Same shape as Checkout (60s quote TTL; poll terminal at 3s).
-8. Webhook endpoint. React to eventName "flow.settlement.updated" when data.newState === "completed" to update UI balance and persist the credit.
-
-Constraints: mainnet only; secrets server-side; lockfile-pinned SDK versions.
-
-Deliverables: lib/dynamic/deposit.ts exposing ensureEmbeddedWallet, runDeposit, verifyWebhook. /api/flows POST route. /api/webhooks/dynamic POST route. Tests covering ensureEmbeddedWallet idempotency.
-
-Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-js-sdk`,
-  },
 };
 
 export const WITHDRAW_EXTRAS: ScenarioExtras = {
@@ -541,29 +478,4 @@ export const WITHDRAW_EXTRAS: ScenarioExtras = {
       // repeat what the snippet already shows.
     },
   ],
-  ai: {
-    eyebrow: "AI prompt · Withdraw",
-    title: "Drop Flow Withdraw into your platform",
-    sub: "Scaffolds the withdraw pipeline: convert the user's platform-balance stablecoin into whatever token+chain they request, send to their external address.",
-    rawPrompt: `Integrate Dynamic Flow Withdraw into this project as a pipeline from a user's platform-balance USDC to a user-specified external address (any chain, any token).
-
-Stack: TypeScript + Next.js (App Router) + Dynamic Flow SDK v1.12.0+.
-
-Integration sequence:
-1. The user MUST have a platform embedded wallet. Call ensureEmbeddedWallet("SOL") at session start.
-2. Read the platform balance: getBalances({ walletAccount: embedded, networkId: 101, forceRefresh: true }). Pin networkId to Solana mainnet (101).
-3. UI: user picks destination (chain + token) and external address; user picks amount (cap at platform balance with a 1% safety buffer to align with quote slippage).
-4. Server: create a per-withdraw flow via POST /server/{envId}/flow/withdraw with destinationAddress, settlementConfig, and amount.
-5. Client: pass flowId to the frontend.
-6. attachFlowSource with the embedded wallet as the source.
-7. Quote: getFlowQuote — 60s TTL, auto-retry on 422 "Quote has expired".
-8. submitFlowTransaction + poll getFlow. Terminal success: settlementState === "completed". Terminal failure: executionState in ["failed","expired","cancelled"] or settlementState === "failed".
-9. Webhook endpoint. React to eventName "flow.settlement.updated" when data.newState === "completed" → update user UI; on data.newState === "failed" → surface retry / refund path.
-
-Constraints: mainnet only; quote-expiry retry mandatory; pin networkId on getBalances; Max button safety multiplier.
-
-Deliverables: lib/dynamic/withdraw.ts, /api/flows POST route, /api/webhooks/dynamic POST route, hook for quote-expiry + terminal-failure surfacing.
-
-Reference: https://docs.dynamic.xyz/overview/fireblocks-flow-api`,
-  },
 };
