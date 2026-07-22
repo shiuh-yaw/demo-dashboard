@@ -133,6 +133,16 @@ export function createFakeShareLinkPrisma(
         }
         return { ...row };
       },
+      async findFirst({ where }) {
+        const row = Array.from(shareLinks.values()).find(
+          (r) =>
+            r.userId === where.userId &&
+            r.demoConfigId === where.demoConfigId &&
+            r.prospectId === where.prospectId &&
+            r.status === where.status,
+        );
+        return row ? { ...row } : null;
+      },
       async update({ where, data }) {
         const existing = shareLinks.get(where.id);
         if (!existing) {

@@ -9,10 +9,12 @@ import {
   Spinner,
   Tooltip,
 } from "@dynamic-demos/ui";
+import { useTrack } from "@dynamic-demos/analytics";
 import { truncateAddress } from "@dynamic-demos/utils";
 import { ErrorMessage } from "@/components/error-message";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useSocialAuth } from "@/hooks/use-mutations";
+import { trackedBackup } from "@/lib/analytics/flows";
 import {
   backupWaasKeySharesToGoogleDrive,
   exportWaasClientKeyshares,
@@ -57,6 +59,7 @@ type BackupState =
 export function SettingsScreen({ navigation }: SettingsScreenProps) {
   const { walletAccounts, isLoading } = useWalletAccounts();
   const socialAuth = useSocialAuth();
+  const { milestone } = useTrack();
   // Q-017: while settings is up, the code panel shows the backup steps.
   usePanelSectionEffect("settings");
 
@@ -102,7 +105,11 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         setNeedsGoogleLink(true);
         return;
       }
-      await backupWaasKeySharesToGoogleDrive({ walletAccount });
+      // GTM Phase 09: backup_completed fires only after the reshare/upload
+      // resolves - a throw below skips it.
+      await trackedBackup(milestone, () =>
+        backupWaasKeySharesToGoogleDrive({ walletAccount }),
+      );
       setBackup(address, { status: "done" });
       // Sticky session cache so remounts keep showing "Backed up".
       // Deliberately no user re-fetch here: the SDK's refresh returns a

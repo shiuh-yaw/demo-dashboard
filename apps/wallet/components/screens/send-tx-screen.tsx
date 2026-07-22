@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, CheckCircle, ArrowLeft, Send } from "lucide-react";
 import {
@@ -11,6 +11,7 @@ import {
   ErrorCard,
   CopyButton,
 } from "@dynamic-demos/ui";
+import { useTrack } from "@dynamic-demos/analytics";
 import { MfaCodeInput } from "@/components/ui/mfa-code-input";
 import { ErrorMessage } from "@/components/error-message";
 import { NetworkSelectorSection } from "@/components/wallet/network-selector-section";
@@ -21,6 +22,7 @@ import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useGasSponsorship } from "@/hooks/use-gas-sponsorship";
 import { use7702Authorization } from "@/hooks/use-7702-authorization";
+import { useMilestoneOnce } from "@/hooks/use-milestone-once";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import {
   type NetworkData,
@@ -35,6 +37,8 @@ import type { NavigationReturn } from "@/hooks/use-navigation";
 import { useMfaStatus, isMfaRequiredError } from "@/hooks/use-mfa-status";
 import { SetupMfaScreen } from "@/components/screens/setup-mfa-screen";
 import type { SignAuthorizationReturnType } from "@/lib/transactions/sign-7702-authorization";
+import { trackedSend } from "@/lib/analytics/flows";
+import { maybeTrackWalletFunded } from "@/lib/analytics/milestones";
 
 interface SendTxScreenProps {
   walletAddress: string;
@@ -222,6 +226,8 @@ export function SendTxScreen({
   // Hooks
   const { walletAccounts } = useWalletAccounts();
   const sendTx = useSendTransaction();
+  const { milestone } = useTrack();
+  const milestoneOnce = useMilestoneOnce();
   const {
     requiresMfa,
     isLoading: mfaLoading,
@@ -302,6 +308,15 @@ export function SendTxScreen({
     },
     enabled: !!walletAccount && !!networkData,
   });
+
+  // GTM Phase 09: `wallet_funded` - first balance > 0 observed after
+  // sign-in, session-deduped. Reuses this screen's existing balance fetch
+  // (the asset selector's data) rather than adding a new request.
+  useEffect(() => {
+    if (tokenBalances) {
+      maybeTrackWalletFunded(tokenBalances, (name) => milestoneOnce(name));
+    }
+  }, [tokenBalances, milestoneOnce]);
 
   // Derive the selected token from query data:
   // - If user picked one, find it by address
@@ -424,6 +439,13 @@ export function SendTxScreen({
     !isTokenTransfer ||
     (effectiveTokenAddress.trim() && effectiveTokenDecimals.trim());
 
+  // Asset symbol for send milestone props - never a raw address (hard
+  // rule); manual token entry has no symbol on hand, so it gets a fixed
+  // placeholder rather than the token contract address.
+  const assetSymbolForTracking = useManualEntry
+    ? "custom_token"
+    : (selectedToken?.symbol ?? networkData?.nativeCurrency?.symbol ?? "unknown");
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,21 +456,29 @@ export function SendTxScreen({
     if (requiresMfa && !mfaCode.trim()) return;
 
     try {
-      const txHash = await sendTx.mutateAsync({
-        walletAccount,
+      // GTM Phase 09: send_initiated fires before the send, send_completed
+      // only after it resolves - a throw below skips send_completed.
+      const txHash = await trackedSend(
+        milestone,
+        assetSymbolForTracking,
         amount,
-        recipient,
-        networkData,
-        mfaCode: requiresMfa ? mfaCode : undefined,
-        eip7702Auth: signedAuth ?? undefined,
-        tokenAddress: isTokenTransfer
-          ? effectiveTokenAddress.trim()
-          : undefined,
-        tokenDecimals: isTokenTransfer
-          ? parseInt(effectiveTokenDecimals, 10)
-          : undefined,
-        sponsored: svmSponsored || undefined,
-      });
+        () =>
+          sendTx.mutateAsync({
+            walletAccount,
+            amount,
+            recipient,
+            networkData,
+            mfaCode: requiresMfa ? mfaCode : undefined,
+            eip7702Auth: signedAuth ?? undefined,
+            tokenAddress: isTokenTransfer
+              ? effectiveTokenAddress.trim()
+              : undefined,
+            tokenDecimals: isTokenTransfer
+              ? parseInt(effectiveTokenDecimals, 10)
+              : undefined,
+            sponsored: svmSponsored || undefined,
+          }),
+      );
 
       // Clear signed auth after successful transaction
       setSignedAuth(null);

@@ -8,7 +8,19 @@ const CORS_HEADERS = {
   "Access-Control-Max-Age": "86400",
 };
 
+// Tracker endpoints own their CORS (exact-origin allowlist in track-cors.ts);
+// the wildcard below must never reach them.
+const EXACT_CORS_PATHS = ["/api/events", "/api/share/context"];
+
 export function middleware(request: NextRequest) {
+  if (
+    EXACT_CORS_PATHS.some((path) =>
+      request.nextUrl.pathname.startsWith(path),
+    )
+  ) {
+    return NextResponse.next();
+  }
+
   // Handle preflight OPTIONS requests
   if (request.method === "OPTIONS") {
     return new NextResponse(null, {

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@dynamic-demos/alchemy": "workspace:*",
+    "@dynamic-demos/analytics": "workspace:*",
     "@dynamic-demos/code-highlight": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",

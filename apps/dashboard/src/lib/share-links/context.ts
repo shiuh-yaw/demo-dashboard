@@ -21,6 +21,12 @@ export interface ShareContextCta {
   url: string;
 }
 
+/** Org-wide book-a-call fallback when the minting SE has no scheduling URL. */
+const DEFAULT_CTA: ShareContextCta = {
+  label: "Book a call",
+  url: "https://www.dynamic.xyz/book-a-call",
+};
+
 export interface ShareContextResponse {
   prospectName?: string;
   cta?: ShareContextCta | null;
@@ -44,7 +50,7 @@ export async function resolveShareContext(
     if (!link) return {};
 
     const schedulingUrl = link.user.schedulingUrl;
-    const cta: ShareContextCta | null =
+    const cta: ShareContextCta =
       schedulingUrl && isHttpsUrl(schedulingUrl)
         ? {
             label: link.user.displayName
@@ -52,7 +58,7 @@ export async function resolveShareContext(
               : "Book a call",
             url: schedulingUrl,
           }
-        : null;
+        : DEFAULT_CTA;
 
     return { prospectName: link.prospect.name, cta };
   } catch (err) {

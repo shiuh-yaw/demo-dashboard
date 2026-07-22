@@ -32,7 +32,9 @@ export function OtpVerifyScreen({
 
     try {
       await verifyOTP.mutateAsync({ otpVerification, otp });
-      // Auth successful - useNavigation will redirect to dashboard
+      // Auth successful - useNavigation redirects to dashboard. The
+      // `authenticated` email-capture milestone fires centrally in
+      // WalletApp (covers every auth method, not just email OTP).
     } catch {
       // Error handled by mutation
     }

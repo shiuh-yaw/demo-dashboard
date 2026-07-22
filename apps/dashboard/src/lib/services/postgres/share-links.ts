@@ -59,6 +59,14 @@ export interface ShareLinkPrismaClient {
       where: { id?: string; token?: string };
       include?: { user?: boolean };
     }): Promise<(ShareLinkRow & { user?: UserRow }) | null>;
+    findFirst(args: {
+      where: {
+        userId: string;
+        demoConfigId: string;
+        prospectId: string;
+        status: string;
+      };
+    }): Promise<ShareLinkRow | null>;
     update(args: {
       where: { id: string };
       data: { status: string };
@@ -160,6 +168,18 @@ export class PostgresShareLinkService implements ShareLinkService {
       where: { id: input.prospectId },
     });
     if (!prospect) throw new ShareLinkProspectNotFoundError(input.prospectId);
+
+    // Reuse-or-create: one stable link per (user, demoConfig, prospect) while
+    // active, so re-minting hands back the same URL instead of sprawling.
+    const existing = await this.client.shareLink.findFirst({
+      where: {
+        userId: input.userId,
+        demoConfigId: input.demoConfigId,
+        prospectId: input.prospectId,
+        status: "active",
+      },
+    });
+    if (existing) return toShareLink(existing);
 
     const token = nanoid(21);
     const created = await this.client.shareLink.create({

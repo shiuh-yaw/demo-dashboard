@@ -37,8 +37,23 @@ This app is one of the **non-consumers** of `@dynamic-demos/dynamic`'s middlewar
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` — workspace default.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox off (D-005).
 - `ALCHEMY_API_KEY` — server-only, optional. Backs `/api/balances` for Base Sepolia token balances (Dynamic's balances API doesn't cover 84532); without it the route 503s and the asset picker just omits Base Sepolia ERC-20s.
+- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`, Phase 09) - optional. Unset → `<GtmTracker>`/`useTrack()`/`<BookACallCta>` are total no-ops; the app builds and runs unchanged.
 
 - `shiki` (pinned 1.24.0, same as flow) — server-side code highlighting for the scenario page.
+
+## Analytics taxonomy
+
+GTM Phase 09 pilot - `apps/wallet` is the first demo instrumented with `@dynamic-demos/analytics`. `<GtmTracker demoSlug="wallet">` wraps the tree and `<BookACallCta />` renders alongside it in `app/layout.tsx`; both no-op with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned). `WalletMilestone` (`lib/analytics/milestones.ts`) is the single-source string-literal union backing every `milestone()` call below - renaming any of these is a breaking analytics change.
+
+| Milestone | Trigger | Props |
+|---|---|---|
+| `signed_in` | Dynamic auth success (`isLoggedIn` flips true), session-deduped via `useMilestoneOnce`. | none - no email; identity stays share-link-only. |
+| `authenticated` | Any auth method succeeds and the Dynamic user populates (`WalletApp`, read via `useAuthenticatedIdentity` - covers email OTP, social/Google). Additional scope beyond the base taxonomy: person-level join keys for enrichment. Session-deduped. | `{ dynamicUserId, email? }` - `email` present when the method verified one (OTP, Google); `dynamicUserId` always. |
+| `wallet_funded` | First balance > 0 observed in the send screen's existing token-balance fetch (no new request added for this), session-deduped. | none |
+| `send_initiated` | Send form submitted, before the transaction is sent (`trackedSend` in `lib/analytics/flows.ts`). | `{ asset, amount }` - `asset` is a symbol (`custom_token` for manual token entry), never a contract address. |
+| `send_completed` | Transaction send resolves successfully; does NOT fire if `sendFn` throws. | `{ asset, amount }` |
+| `backup_completed` | Google Drive key-share backup resolves successfully (`trackedBackup`); does NOT fire on failure. | none |
+| `receive_viewed` | Wallet-list (`DashboardScreen`) mount. This app has no dedicated receive/QR screen - the wallet list, where addresses are shown with a copy button to receive funds, stands in for it. | none |
 
 ## Theming
 
@@ -77,7 +92,7 @@ Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020) and rides the canon
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/analytics` (Phase 09).
 **Imported by:** none.
 
 ## Examples

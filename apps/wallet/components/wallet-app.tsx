@@ -18,9 +18,17 @@
  * - Screen components receive navigation object for screen transitions
  */
 
+import { useEffect } from "react";
+import { useTrack } from "@dynamic-demos/analytics";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthenticatedIdentity } from "@/hooks/use-authenticated-identity";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useClientInitialized } from "@/hooks/use-client-initialized";
+import { useMilestoneOnce } from "@/hooks/use-milestone-once";
+import {
+  hasFiredOnceThisSession,
+  markFiredThisSession,
+} from "@/lib/analytics/milestones";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { AuthScreen } from "@/components/screens/auth-screen";
 import { JwtGeneratorScreen } from "@/components/screens/jwt-generator-screen";
@@ -39,6 +47,31 @@ export function WalletApp() {
   const isLoggedIn = useAuth();
   const navigation = useNavigation(isLoggedIn);
   const { screen, isReady, isTransitioning } = navigation;
+  const milestoneOnce = useMilestoneOnce();
+  const { milestone } = useTrack();
+  const identity = useAuthenticatedIdentity();
+
+  // GTM Phase 09: `signed_in` milestone - no email in props (identity stays
+  // share-link-only). Session-deduped so it fires once per tab session even
+  // though this effect re-runs whenever isLoggedIn flips true again.
+  useEffect(() => {
+    if (isLoggedIn) milestoneOnce("signed_in");
+  }, [isLoggedIn, milestoneOnce]);
+
+  // GTM Phase 09: `authenticated` carries the person-level join keys - the
+  // Dynamic user id (always) plus the verified email when present - for any
+  // auth method. Read off the Dynamic user once it populates, which can lag
+  // the isLoggedIn flip (e.g. social login). Session-deduped here since
+  // milestoneOnce cannot carry props.
+  useEffect(() => {
+    if (!isLoggedIn || !identity) return;
+    if (hasFiredOnceThisSession("authenticated")) return;
+    markFiredThisSession("authenticated");
+    milestone("authenticated", {
+      dynamicUserId: identity.dynamicUserId,
+      ...(identity.email ? { email: identity.email } : {}),
+    });
+  }, [isLoggedIn, identity, milestone]);
 
   // Show loading until SDK initialized and screen matches auth state
   if (!isClientReady || !isReady) {

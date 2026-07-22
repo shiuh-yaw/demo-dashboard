@@ -94,11 +94,14 @@ describe("resolveShareContext", () => {
     expect(result).toEqual({});
   });
 
-  it("returns prospectName + no cta when the SE has no schedulingUrl", async () => {
+  it("falls back to the org default cta when the SE has no schedulingUrl", async () => {
     const link = makeLink(makeUser({ schedulingUrl: null }), makeProspect());
     const result = await resolveShareContext("tok_123", buildDeps(link));
     expect(result.prospectName).toBe("Acme");
-    expect(result.cta).toBeNull();
+    expect(result.cta).toEqual({
+      label: "Book a call",
+      url: "https://www.dynamic.xyz/book-a-call",
+    });
   });
 
   it("returns a labeled cta with the SE's display name when set", async () => {
@@ -125,13 +128,16 @@ describe("resolveShareContext", () => {
     expect(result.cta?.label).toBe("Book a call");
   });
 
-  it("drops the cta if schedulingUrl is not https (defense in depth)", async () => {
+  it("falls back to the org default if schedulingUrl is not https (defense in depth)", async () => {
     const link = makeLink(
       makeUser({ schedulingUrl: "http://cal.com/jane" }),
       makeProspect(),
     );
     const result = await resolveShareContext("tok_123", buildDeps(link));
-    expect(result.cta).toBeNull();
+    expect(result.cta).toEqual({
+      label: "Book a call",
+      url: "https://www.dynamic.xyz/book-a-call",
+    });
   });
 
   it("never leaks email, ids, or theme fields", async () => {

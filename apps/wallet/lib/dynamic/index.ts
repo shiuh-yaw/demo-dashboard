@@ -16,7 +16,8 @@
  */
 
 // Auth
-export { isSignedIn, logout } from "./auth";
+export { isSignedIn, logout, getAuthenticatedIdentity } from "./auth";
+export type { AuthenticatedIdentity } from "./auth";
 export { isEmailAuthEnabled, sendEmailOTP, verifyOTP } from "./auth-email";
 export {
   authenticateWithSocial,

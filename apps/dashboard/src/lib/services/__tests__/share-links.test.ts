@@ -45,6 +45,49 @@ describe("PostgresShareLinkService", () => {
     expect(link.userId).toBe("user_1");
   });
 
+  it("mint reuses the active link for the same user + demoConfig + prospect", async () => {
+    const { svc } = buildService();
+    const input = {
+      demoConfigId: "dc_1",
+      prospectId: "prospect_1",
+      userId: "user_1",
+    };
+    const first = await svc.mint(input);
+    const second = await svc.mint(input);
+    expect(second.id).toBe(first.id);
+    expect(second.token).toBe(first.token);
+  });
+
+  it("mint creates a fresh link once the prior one is revoked", async () => {
+    const { svc } = buildService();
+    const input = {
+      demoConfigId: "dc_1",
+      prospectId: "prospect_1",
+      userId: "user_1",
+    };
+    const first = await svc.mint(input);
+    await svc.revoke(first.id);
+    const second = await svc.mint(input);
+    expect(second.id).not.toBe(first.id);
+    expect(second.token).not.toBe(first.token);
+    expect(second.status).toBe("active");
+  });
+
+  it("mint keeps links distinct across different prospects", async () => {
+    const { svc } = buildService({ prospectIds: ["prospect_1", "prospect_2"] });
+    const a = await svc.mint({
+      demoConfigId: "dc_1",
+      prospectId: "prospect_1",
+      userId: "user_1",
+    });
+    const b = await svc.mint({
+      demoConfigId: "dc_1",
+      prospectId: "prospect_2",
+      userId: "user_1",
+    });
+    expect(b.id).not.toBe(a.id);
+  });
+
   it("mint throws DemoConfigNotFoundError when the demoConfig doesn't exist", async () => {
     const { svc } = buildService();
     await expect(

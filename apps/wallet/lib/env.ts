@@ -41,11 +41,19 @@ export const env = createEnv({
       .string()
       .url()
       .default("http://localhost:4000"),
+
+    /**
+     * GTM analytics tracker base URL (@dynamic-demos/analytics). Optional -
+     * unset means <GtmTracker> and useTrack() are total no-ops (Phase 02
+     * guarantee), so the app builds and runs without it.
+     */
+    NEXT_PUBLIC_TRACK_URL: z.string().url().optional(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_DASHBOARD_API_URL: process.env.NEXT_PUBLIC_DASHBOARD_API_URL,
+    NEXT_PUBLIC_TRACK_URL: process.env.NEXT_PUBLIC_TRACK_URL,
     NODE_ENV: process.env.NODE_ENV,
     ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
   },

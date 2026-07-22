@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { LogOut, Settings, Wallet } from "lucide-react";
 import {
   WidgetCard,
@@ -7,6 +8,7 @@ import {
   Button,
   Spinner,
 } from "@dynamic-demos/ui";
+import { useMilestoneOnce } from "@/hooks/use-milestone-once";
 import { ScrollableWalletList } from "@/components/wallet/scrollable-wallet-list";
 import { CreateWalletButtons } from "@/components/wallet/create-wallet-buttons";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
@@ -25,9 +27,18 @@ interface DashboardScreenProps {
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { walletAccounts, isLoading } = useWalletAccounts();
   const logoutMutation = useLogout();
+  const milestoneOnce = useMilestoneOnce();
   // Q-017: while the wallets screen is up, the scenario page's code
   // panel shows the wallet-management steps.
   usePanelSectionEffect("wallets");
+
+  // GTM Phase 09: `receive_viewed` - the wallet list stands in for a receive
+  // screen (addresses shown with copy); session-deduped so remounts don't
+  // inflate the signal. See AGENTS.md.
+  useEffect(() => {
+    milestoneOnce("receive_viewed");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const uniqueWallets = getUniqueWalletAddresses(walletAccounts);
 

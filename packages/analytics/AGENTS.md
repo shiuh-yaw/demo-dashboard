@@ -8,7 +8,7 @@ status: experimental
 
 # @dynamic-demos/analytics
 
-Client tracker demo apps mount to report sessions, pageviews, steps, and milestone events to the dashboard's GTM ingest endpoint, plus a book-a-call CTA component. This package only speaks HTTP to endpoints the dashboard provides (`POST /api/track`, `GET /api/share/context`) - it has no database code and does not know how those endpoints are implemented.
+Client tracker demo apps mount to report sessions, pageviews, steps, and milestone events to the dashboard's GTM ingest endpoint, plus a book-a-call CTA component. This package only speaks HTTP to endpoints the dashboard provides (`POST /api/events`, `GET /api/share/context`) - it has no database code and does not know how those endpoints are implemented.
 
 ## Capabilities
 
@@ -50,7 +50,7 @@ Client tracker demo apps mount to report sessions, pageviews, steps, and milesto
 ## Integration map
 
 **Imports:** none beyond `zod`, `react`, `next/navigation` (peer).
-**Imported by:** demo apps mounting `<GtmTracker>` in their root layout (Phase 09 pilots `apps/wallet`); dashboard's ingest route imports `trackEventSchema` / `trackBatchSchema` (Phase 06).
+**Imported by:** `apps/wallet` (Phase 09 pilot - `<GtmTracker demoSlug="wallet">` + `<BookACallCta />` in `app/layout.tsx`, taxonomy in `apps/wallet/AGENTS.md`); dashboard's ingest route imports `trackEventSchema` / `trackBatchSchema` (Phase 06).
 
 ## Examples
 
@@ -94,5 +94,4 @@ function SendButton() {
 ## Open questions / known gaps
 
 - Session-replay sidecar and enrichment-provider pixel wiring are post-v1; `pixelSlot?: ReactNode` on `<GtmTracker>` is the reserved extension point, currently unused.
-- No app is mounted against this package yet - `apps/wallet` pilot instrumentation lands in Phase 09.
-- The ingest (`POST /api/track`) and context (`GET /api/share/context`) endpoints don't exist yet (Phases 06, 05) - this package is built and tested against the contract only, via a mock fetch.
+- `apps/wallet` is mounted against this package (Phase 09 pilot) - see its AGENTS.md "Analytics taxonomy" section for the milestone list. Fleet-wide rollout to other apps is post-v1.

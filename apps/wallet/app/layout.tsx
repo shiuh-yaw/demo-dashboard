@@ -8,6 +8,7 @@ import {
 } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
+import { GtmTracker, BookACallCta } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { WalletConfigProvider } from "@/contexts/wallet-config-context";
 
@@ -72,11 +73,16 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        <Providers>
-          <WalletConfigProvider config={config}>
-            {children}
-          </WalletConfigProvider>
-        </Providers>
+        {/* GTM Phase 09: NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this
+            is safe to mount unconditionally (Phase 02 guarantee). */}
+        <GtmTracker demoSlug="wallet">
+          <Providers>
+            <WalletConfigProvider config={config}>
+              {children}
+            </WalletConfigProvider>
+          </Providers>
+          <BookACallCta />
+        </GtmTracker>
       </body>
     </html>
   );
