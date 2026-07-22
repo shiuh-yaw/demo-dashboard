@@ -138,3 +138,44 @@ describe("widgetThemeToBrandTheme", () => {
     expect(overlay.warning).toBeUndefined();
   });
 });
+
+describe("widgetThemeToBrandTheme deriveCardGradient", () => {
+  it("is byte-identical without the flag (no gradient derivation)", () => {
+    const theme = { primaryColor: "#005288", secondaryColor: "#A7A9AC" };
+    const out = widgetThemeToBrandTheme(theme);
+    expect(out.cardGradientStart).toBeUndefined();
+    expect(out.cardGradientEnd).toBeUndefined();
+  });
+
+  it("derives the gradient from secondaryColor when flagged", () => {
+    const out = widgetThemeToBrandTheme(
+      { primaryColor: "#005288", secondaryColor: "#A7A9AC" },
+      { deriveCardGradient: true },
+    );
+    expect(out.cardGradientStart).toBe("#A7A9AC");
+    expect(out.cardGradientEnd).toBe(darkenHex("#A7A9AC", 12));
+  });
+
+  it("derives from darkened primary when only primaryColor is set", () => {
+    const out = widgetThemeToBrandTheme(
+      { primaryColor: "#005288" },
+      { deriveCardGradient: true },
+    );
+    expect(out.cardGradientStart).toBe(darkenHex("#005288", 6));
+    expect(out.cardGradientEnd).toBe(darkenHex("#005288", 18));
+  });
+
+  it("explicit gradientFrom/To wins over derivation", () => {
+    const out = widgetThemeToBrandTheme(
+      {
+        primaryColor: "#005288",
+        secondaryColor: "#A7A9AC",
+        gradientFrom: "#111111",
+        gradientTo: "#222222",
+      },
+      { deriveCardGradient: true },
+    );
+    expect(out.cardGradientStart).toBe("#111111");
+    expect(out.cardGradientEnd).toBe("#222222");
+  });
+});

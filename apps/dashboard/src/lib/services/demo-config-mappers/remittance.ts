@@ -103,6 +103,10 @@ export const remittanceMapper: DemoConfigMapper<
         branding: {
           ...config?.branding,
           ...(logoUrl != null && { logoUrl }),
+          // Prospect name titles the tab when the config doesn't set one
+          // (matches the prospect-fallback synthesis path).
+          ...(config?.branding?.appName == null &&
+            prospect?.name != null && { appName: prospect.name }),
         },
       },
       createdAt: record.createdAt.toISOString(),

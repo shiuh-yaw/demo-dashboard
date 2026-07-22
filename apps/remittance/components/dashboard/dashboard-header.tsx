@@ -2,14 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Copy, Check } from "lucide-react";
-import { Button } from "@dynamic-demos/ui";
 import { AppLogo } from "@/components/ui/app-logo";
+import { UserMenu } from "@/components/ui/user-menu";
 import { useRemittanceConfig } from "@/contexts/remittance-config-context";
-import { useLogout } from "@/hooks/use-mutations";
-import { useCopyFeedback } from "@/hooks/use-copy-feedback";
-import { truncateAddress } from "@dynamic-demos/utils";
-import { getAppNavItems } from "@/lib/nav-items";
+import { APP_NAV_ITEMS, isNavItemActive } from "@/lib/nav-items";
 
 interface DashboardHeaderProps {
   navItems?: readonly { href: string; label: string }[];
@@ -18,6 +14,16 @@ interface DashboardHeaderProps {
   brandLabel?: string;
 }
 
+/**
+ * Branded-only now (post-Task-7): AppShell renders this only when a
+ * theme config is active, and it IS the brand bar - keeps its own
+ * brand-token styling rather than folding into the shared SiteHeader.
+ * Also used unconditionally by /admin (untouched territory), which
+ * passes its own navItems/brandHref/brandLabel regardless of theming -
+ * so the user menu's `branded` flag is gated on the actual `configId`
+ * rather than assumed true, or an unthemed admin session would get a
+ * live "Clear theme" row that full-navigates to "/?theme=" for nothing.
+ */
 export function DashboardHeader({
   navItems: navItemsProp,
   walletAddress,
@@ -25,12 +31,8 @@ export function DashboardHeader({
   brandLabel,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
-  const configMatch = pathname.match(/^\/r\/([^/]+)/);
-  const basePath = configMatch ? `/r/${configMatch[1]}` : "";
-  const navItems = navItemsProp ?? getAppNavItems(basePath);
-  const logoutMutation = useLogout();
-  const { copied, copy } = useCopyFeedback();
-  const { branding } = useRemittanceConfig();
+  const navItems = navItemsProp ?? APP_NAV_ITEMS;
+  const { branding, configId } = useRemittanceConfig();
 
   return (
     <header className="border-b border-(--brand-border) bg-(--brand-surface)/80 backdrop-blur-sm sticky top-0 z-40">
@@ -58,15 +60,10 @@ export function DashboardHeader({
             ) : null}
           </div>
 
-          {/* Nav links — hidden on small screens */}
-          <nav className="hidden sm:flex items-center gap-1">
+          {/* Nav links - menu rows carry them below md */}
+          <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : item.href === "/admin"
-                    ? pathname === "/admin"
-                    : pathname.startsWith(item.href);
+              const isActive = isNavItemActive(pathname, item.href);
               return (
                 <Link
                   key={item.href}
@@ -83,38 +80,14 @@ export function DashboardHeader({
             })}
           </nav>
 
-          {/* Right: address pill + sign out */}
+          {/* Right: user menu (address + copy, Book a call, Clear
+              theme, Sign out) */}
           <div className="flex items-center gap-3">
-            {walletAddress && (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-(--brand-row-bg) text-(--brand-muted) border border-(--brand-border)">
-                <span>{truncateAddress(walletAddress)}</span>
-                <button
-                  onClick={() => copy(walletAddress)}
-                  className="p-0.5 rounded hover:bg-(--brand-row-hover) text-(--brand-muted) hover:text-(--brand-fg) transition-colors cursor-pointer"
-                  aria-label="Copy address"
-                >
-                  {copied ? (
-                    <Check className="w-3 h-3 text-(--brand-success)" />
-                  ) : (
-                    <Copy className="w-3 h-3" />
-                  )}
-                </button>
-              </div>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              danger
-              onClick={() =>
-                logoutMutation.mutateAsync().then(() => {
-                  window.location.href = "/login";
-                })
-              }
-              loading={logoutMutation.isPending}
-            >
-              {!logoutMutation.isPending && <LogOut className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
+            <UserMenu
+              walletAddress={walletAddress}
+              branded={!!configId}
+              navItems={navItems}
+            />
           </div>
         </div>
       </div>

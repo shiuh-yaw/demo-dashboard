@@ -22,7 +22,7 @@ export function KycGatePage() {
           onClick={() =>
             logoutMutation.mutate(undefined, {
               onSuccess: () => {
-                window.location.href = "/login";
+                window.location.href = "/";
               },
             })
           }

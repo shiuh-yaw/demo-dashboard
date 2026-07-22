@@ -8,7 +8,6 @@ export const appConfig: AppAuthConfig = {
   },
   kyc: "required",
   walletSelection: false,
-  defaultReturnPath: "/r/[id]/dashboard", // Resolved per-request with configId
-  routePattern: "config",
-  configParam: "id",
+  defaultReturnPath: "/overview",
+  routePattern: "flat",
 };

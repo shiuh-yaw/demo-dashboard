@@ -7,6 +7,9 @@
  * persisted in the `remittance_config_id` cookie (factory default
  * `stickyConfigCookie: true`). Subsequent visits without `?theme=` reuse the
  * cookie and forward the resolved id as `x-remittance-config-id`.
+ *
+ * "/" is now the login surface (scenario front door) - it is public, and
+ * authenticated visitors there bounce to defaultReturnPath ("/overview").
  */
 
 import { describe, expect, test } from "vitest";
@@ -23,10 +26,12 @@ describe("remittance middleware — public route /login", () => {
     expect(isRedirect(res)).toBe(false);
   });
 
-  test("authenticated GET /login -> redirect to /", () => {
+  test("authenticated GET /login -> redirect to /overview (defaultReturnPath)", () => {
     const res = middleware(makeRequest({ url: "/login", cookies: AUTH }));
     expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location") as string).pathname).toBe("/");
+    expect(new URL(res.headers.get("location") as string).pathname).toBe(
+      "/overview",
+    );
   });
 
   test("authenticated GET /login?returnTo=/dashboard -> redirect to /dashboard", () => {
@@ -55,28 +60,35 @@ describe("remittance middleware — public route /login", () => {
   });
 });
 
-describe("remittance middleware — auth gate on protected routes", () => {
-  test("unauthenticated GET /dashboard -> redirect to /login with returnTo=/dashboard", () => {
+describe("remittance middleware - public route / (scenario front door)", () => {
+  test("unauthenticated GET / -> passthrough (scenario page)", () => {
+    const res = middleware(makeRequest({ url: "/" }));
+    expect(isRedirect(res)).toBe(false);
+  });
+
+  test("authenticated GET / -> redirect to /overview (signed-in users skip the front door)", () => {
+    const res = middleware(makeRequest({ url: "/", cookies: AUTH }));
+    expect(res.status).toBe(307);
+    expect(new URL(res.headers.get("location") as string).pathname).toBe(
+      "/overview",
+    );
+  });
+});
+
+describe("remittance middleware - auth gate on protected routes", () => {
+  test("unauthenticated GET /dashboard -> redirect to / with returnTo=/dashboard", () => {
     const res = middleware(makeRequest({ url: "/dashboard" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
-    expect(loc.pathname).toBe("/login");
+    expect(loc.pathname).toBe("/");
     expect(loc.searchParams.get("returnTo")).toBe("/dashboard");
-  });
-
-  test("unauthenticated GET / -> redirect to /login with returnTo=/", () => {
-    const res = middleware(makeRequest({ url: "/" }));
-    expect(res.status).toBe(307);
-    const loc = new URL(res.headers.get("location") as string);
-    expect(loc.pathname).toBe("/login");
-    expect(loc.searchParams.get("returnTo")).toBe("/");
   });
 
   test("unauthenticated GET /dashboard?theme=brandX -> returnTo carries the id query", () => {
     const res = middleware(makeRequest({ url: "/dashboard?theme=brandX" }));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location") as string);
-    expect(loc.pathname).toBe("/login");
+    expect(loc.pathname).toBe("/");
     expect(loc.searchParams.get("returnTo")).toBe("/dashboard?theme=brandX");
   });
 });

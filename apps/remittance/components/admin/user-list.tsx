@@ -410,7 +410,7 @@ export function UserList({ initialUsers, error }: UserListProps) {
           description="Manage wallets, vaults, and balances for all users."
           search={
             isMounted ? (
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-(--brand-muted) pointer-events-none" />
                 <input
                   type="text"
@@ -429,7 +429,7 @@ export function UserList({ initialUsers, error }: UserListProps) {
                 )}
               </div>
             ) : (
-              <div className="h-8 w-64 rounded-lg bg-(--brand-row-bg) animate-pulse" />
+              <div className="h-8 w-full rounded-lg bg-(--brand-row-bg) animate-pulse sm:w-64" />
             )
           }
           action={
@@ -1170,23 +1170,29 @@ function PageHeader({
 }) {
   return (
     <div className="mb-5">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-xl font-semibold">{title}</h1>
-          {typeof count === "number" && (
-            <span className="text-xs font-medium tabular-nums px-2 py-0.5 rounded-full bg-(--brand-row-bg) text-(--brand-muted) border border-(--brand-border)">
-              {count}
-            </span>
+      {/* Narrow viewports: title + subtitle stack first, then the
+          search + action row spans the full width (search grows, the
+          button keeps its size). Desktop: controls sit right of the
+          title block as before. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl font-semibold">{title}</h1>
+            {typeof count === "number" && (
+              <span className="text-xs font-medium tabular-nums px-2 py-0.5 rounded-full bg-(--brand-row-bg) text-(--brand-muted) border border-(--brand-border)">
+                {count}
+              </span>
+            )}
+          </div>
+          {description && (
+            <p className="text-sm text-(--brand-muted) mt-1">{description}</p>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          {search}
+        <div className="flex w-full items-center gap-3 sm:w-auto">
+          <div className="min-w-0 flex-1 sm:flex-initial">{search}</div>
           {action && <div className="shrink-0">{action}</div>}
         </div>
       </div>
-      {description && (
-        <p className="text-sm text-(--brand-muted) mt-1">{description}</p>
-      )}
     </div>
   );
 }

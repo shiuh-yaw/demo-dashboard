@@ -72,7 +72,10 @@ export function BalanceCard({
   const breakdown = breakdownParts.join(" · ");
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-(--brand-card-gradient-start) to-(--brand-card-gradient-end) p-6 text-white shadow-lg shadow-black/10">
+    // Solid primary underlay: stored brand themes may supply translucent
+    // gradient washes, so the gradient layers OVER the primary and the
+    // derived readable foreground keeps the text visible on any brand.
+    <div className="relative overflow-hidden rounded-2xl bg-(--brand-primary) bg-linear-to-br from-(--brand-card-gradient-start) to-(--brand-card-gradient-end) p-6 text-(--brand-primary-fg) shadow-lg shadow-black/10">
       {/* Subtle circle overlay */}
       <div
         className="absolute inset-0 opacity-[0.06] pointer-events-none"
@@ -83,7 +86,7 @@ export function BalanceCard({
       </div>
 
       <div className="relative">
-        <p className="text-sm text-white/70 tracking-wider mb-1">
+        <p className="text-sm text-(--brand-primary-fg)/70 tracking-wider mb-1">
           Total balance
         </p>
         {isLoading || isWalletPending ? (
@@ -95,14 +98,14 @@ export function BalanceCard({
             <p className="text-4xl font-bold tracking-tight">
               {formatCurrency(total, { symbol: true })}
             </p>
-            <p className="text-sm text-white/70 mt-2">{breakdown}</p>
+            <p className="text-sm text-(--brand-primary-fg)/70 mt-2">{breakdown}</p>
           </>
         )}
         {isWalletPending && (
           <div className="mt-4 flex flex-col gap-2">
             {showRefreshFallback ? (
               <>
-                <p className="text-sm text-white/60 mt-1">
+                <p className="text-sm text-(--brand-primary-fg)/60 mt-1">
                   Refresh to see if a wallet was created for you.
                 </p>
                 <Button
@@ -111,14 +114,14 @@ export function BalanceCard({
                   onClick={handleRefresh}
                   loading={isRefreshing}
                   disabled={isRefreshing}
-                  className="self-start border-white/40 text-white hover:bg-white/10 hover:border-white/60"
+                  className="self-start border-(--brand-primary-fg)/40 text-(--brand-primary-fg) hover:bg-(--brand-primary-fg)/10 hover:border-(--brand-primary-fg)/60"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   Refresh
                 </Button>
               </>
             ) : (
-              <p className="text-sm text-white/60 mt-1">
+              <p className="text-sm text-(--brand-primary-fg)/60 mt-1">
                 Setting up your wallet…
               </p>
             )}

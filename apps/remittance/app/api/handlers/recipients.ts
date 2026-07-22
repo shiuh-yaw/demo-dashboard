@@ -52,6 +52,23 @@ export async function handleAddRecipient(userId: string, body: unknown) {
   return { success: true, recipients: updated, address: wallet.address };
 }
 
+export async function handleRemoveRecipient(userId: string, body: unknown) {
+  const parsed = z.object({ email: emailSchema }).safeParse(body);
+  if (!parsed.success) {
+    const firstError = parsed.error.errors[0];
+    throw new ValidationError(firstError?.message ?? "Invalid email");
+  }
+  const email = parsed.data.email;
+
+  const user = await getUser(userId);
+  const existing = getKnownRecipientsFromUser(user);
+  const updated = existing.filter((r) => r.email !== email);
+  await updateUserMetadata(userId, {
+    [KNOWN_RECIPIENTS_METADATA_KEY]: updated,
+  });
+  return { success: true, recipients: updated };
+}
+
 export async function handleClearRecipients(userId: string) {
   await updateUserMetadata(userId, {
     [KNOWN_RECIPIENTS_METADATA_KEY]: [],

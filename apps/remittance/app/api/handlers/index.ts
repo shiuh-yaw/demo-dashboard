@@ -15,6 +15,7 @@ export {
   handleGetRecipients,
   handleAddRecipient,
   handleClearRecipients,
+  handleRemoveRecipient,
   handleResolveRecipient,
 } from "./recipients";
 export { handleCreateStubCard } from "./cards";

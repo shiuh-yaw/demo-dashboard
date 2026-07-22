@@ -18,6 +18,8 @@ import type {
 interface RemittanceConfigContextValue {
   config: RemittanceConfig;
   branding: RemittanceBranding;
+  /** Resolved config id (from `x-remittance-config-id`); undefined unbranded. */
+  configId?: string;
 }
 
 const RemittanceConfigContext =
@@ -26,17 +28,20 @@ const RemittanceConfigContext =
 interface RemittanceConfigProviderProps {
   children: ReactNode;
   config?: RemittanceConfig;
+  configId?: string;
 }
 
 export function RemittanceConfigProvider({
   children,
   config,
+  configId,
 }: RemittanceConfigProviderProps) {
   const branding: RemittanceBranding = config?.branding ?? {};
 
   const value: RemittanceConfigContextValue = {
     config: config ?? { branding },
     branding,
+    configId,
   };
 
   return (

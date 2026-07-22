@@ -3,6 +3,13 @@ import { ClientOnlySlot } from "@/components/ui/client-only-slot";
 
 interface DashboardLayoutProps {
   header?: React.ReactNode;
+  /**
+   * Footer slot; defaults to the package `PoweredByFooter` (admin's
+   * bar). AppShell overrides this with `SiteFooter` so the merged
+   * unbounded/branded post-auth surfaces can pick up the #157 footer
+   * CTA rule - admin doesn't pass this, so its footer is unchanged.
+   */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -11,7 +18,11 @@ const HEADER_PLACEHOLDER = (
   <div className="h-16 border-b border-(--brand-border) bg-(--brand-surface)/80" />
 );
 
-export function DashboardLayout({ header, children }: DashboardLayoutProps) {
+export function DashboardLayout({
+  header,
+  footer,
+  children,
+}: DashboardLayoutProps) {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-(--brand-page-bg)">
       {header && (
@@ -26,7 +37,7 @@ export function DashboardLayout({ header, children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
-      <PoweredByFooter className="shrink-0 pb-4" />
+      {footer ?? <PoweredByFooter className="shrink-0 pb-4" />}
     </div>
   );
 }

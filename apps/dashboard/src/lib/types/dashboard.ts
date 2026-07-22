@@ -405,6 +405,8 @@ export type RemittanceTheme = Partial<WidgetTheme> & {
  */
 export interface RemittanceBranding {
   logoUrl?: string;
+  /** App name for the branded browser-tab title ("<appName> - Remittance"). */
+  appName?: string;
 }
 
 /**

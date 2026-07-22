@@ -30,6 +30,8 @@ export interface WidgetTheme extends BaseTheme {
   gradientFrom: string;
   /** Gradient end color (for token cards) */
   gradientTo: string;
+  /** Optional secondary brand color - seeds card-gradient derivation (deriveCardGradient); remittance's config editor drives it. */
+  secondaryColor?: string;
 }
 
 /**
@@ -43,7 +45,8 @@ export interface WidgetBranding extends BaseBranding {
 /**
  * Default widget theme values (light mode)
  */
-export const DEFAULT_WIDGET_THEME: Required<WidgetTheme> = {
+// secondaryColor excluded - no default value by design, only present when gradient derivation is needed
+export const DEFAULT_WIDGET_THEME: Required<Omit<WidgetTheme, "secondaryColor">> = {
   ...DEFAULT_BASE_THEME,
   primaryColor: "#121212",
   primaryHoverColor: "#2a2a2a",
@@ -62,7 +65,8 @@ export const DEFAULT_WIDGET_THEME: Required<WidgetTheme> = {
 /**
  * Default dark mode widget theme values (used when isDark=true in widgetThemeToCssVars)
  */
-const DARK_WIDGET_THEME_DEFAULTS: Required<WidgetTheme> = {
+// secondaryColor excluded - no default value by design, only present when gradient derivation is needed
+const DARK_WIDGET_THEME_DEFAULTS: Required<Omit<WidgetTheme, "secondaryColor">> = {
   ...DEFAULT_BASE_THEME,
   primaryColor: "#ffffff",
   primaryHoverColor: "#e5e5e5",
@@ -162,6 +166,7 @@ export const DEFAULT_WIDGET_CONFIG: Required<WidgetConfig> = createWidgetConfig(
  */
 export function widgetThemeToBrandTheme(
   theme: Partial<WidgetTheme> = {},
+  opts?: { deriveCardGradient?: boolean },
 ): Partial<BrandTheme> {
   const overlay: Partial<BrandTheme> = {};
 
@@ -197,8 +202,28 @@ export function widgetThemeToBrandTheme(
   if (theme.borderColor) overlay.border = theme.borderColor;
   if (theme.rowBackground) overlay.rowBackground = theme.rowBackground;
   if (theme.rowHoverBackground) overlay.rowHover = theme.rowHoverBackground;
-  if (theme.gradientFrom) overlay.cardGradientStart = theme.gradientFrom;
-  if (theme.gradientTo) overlay.cardGradientEnd = theme.gradientTo;
+
+  // Card gradient: explicit gradientFrom/To always wins. With
+  // deriveCardGradient (remittance), fall back to secondaryColor or a
+  // darkened primary so brand cards get a gradient from one color.
+  if (theme.gradientFrom) {
+    overlay.cardGradientStart = theme.gradientFrom;
+  } else if (opts?.deriveCardGradient) {
+    if (theme.secondaryColor) {
+      overlay.cardGradientStart = theme.secondaryColor;
+    } else if (theme.primaryColor) {
+      overlay.cardGradientStart = darkenHex(theme.primaryColor, 6);
+    }
+  }
+  if (theme.gradientTo) {
+    overlay.cardGradientEnd = theme.gradientTo;
+  } else if (opts?.deriveCardGradient) {
+    if (theme.secondaryColor) {
+      overlay.cardGradientEnd = darkenHex(theme.secondaryColor, 12);
+    } else if (theme.primaryColor) {
+      overlay.cardGradientEnd = darkenHex(theme.primaryColor, 18);
+    }
+  }
 
   return overlay;
 }

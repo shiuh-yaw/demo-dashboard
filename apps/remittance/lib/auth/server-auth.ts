@@ -63,19 +63,19 @@ export async function getServerAuthState(): Promise<ServerAuthState | null> {
 export interface GetServerUserDataOptions {
   /** When true (default), redirects to login when not authenticated. */
   redirectToLogin?: boolean;
-  /** Custom login path (e.g. /r/[id]/login for config-based routes). */
+  /** Custom login path. Defaults to "/" - the scenario front door is the login surface. */
   loginPath?: string;
 }
 
 /**
  * Get full user data from server (auth, KYC, wallet address).
- * When redirectToLogin is true (default), redirects to /login when not authenticated.
+ * When redirectToLogin is true (default), redirects to / when not authenticated.
  * Cached per-request so layout + page share the same fetch.
  */
 export const getServerUserData = cache(async function getServerUserData(
   options?: GetServerUserDataOptions,
 ): Promise<ServerUserData | null> {
-  const { redirectToLogin = true, loginPath = "/login" } = options ?? {};
+  const { redirectToLogin = true, loginPath = "/" } = options ?? {};
   const cookieStore = await cookies();
   const authUser = await getAuthenticatedUserFromCookies(cookieStore);
 

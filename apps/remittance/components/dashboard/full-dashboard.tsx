@@ -9,6 +9,7 @@ import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useUsdcBalance } from "@/hooks/use-usdc-balance";
 import { parseNetworkId } from "@/lib/constants";
 import { useCardBalance } from "@/hooks/use-card-balance";
+import { useRemoveRecipient } from "@/hooks/use-recipients";
 import { BalanceCard } from "./balance-card";
 import { SaveBalanceCard } from "./save-balance-card";
 import { RecentTransactions } from "./recent-transactions";
@@ -72,6 +73,7 @@ export function FullDashboard({
 }: FullDashboardProps) {
   const router = useRouter();
   const [isCreatingCard, setIsCreatingCard] = useState(false);
+  const removeRecipient = useRemoveRecipient();
 
   const handleCreateCard = async () => {
     setIsCreatingCard(true);
@@ -184,6 +186,9 @@ export function FullDashboard({
             }
             onSendToRecipient={
               onOpenSendToRecipient ?? (() => onOpenModal("send"))
+            }
+            onRemoveRecipient={(recipient) =>
+              removeRecipient.mutate(recipient.email)
             }
           />
           <StableCoinDebitCard

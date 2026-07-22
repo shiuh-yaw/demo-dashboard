@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Send } from "lucide-react";
+import { User, Send, Trash2 } from "lucide-react";
 import { Card, CardHeader, CardContent, Button } from "@dynamic-demos/ui";
 import {
   getRecipientDisplayName,
@@ -8,11 +8,16 @@ import {
   type RecipientEntry,
 } from "@/lib/recipients";
 
+/** The card is a shortcut, not the address book - most recent first. */
+const MAX_RECENT_RECIPIENTS = 3;
+
 interface RecentRecipientsProps {
   recipients: RecipientEntry[];
   onAddRecipient?: () => void;
   /** Called when user clicks send icon - opens send modal with recipient pre-selected. */
   onSendToRecipient?: (recipient: RecipientEntry) => void;
+  /** Called when user clicks the remove icon - deletes from their own list. */
+  onRemoveRecipient?: (recipient: RecipientEntry) => void;
 }
 
 const AVATAR_COLORS: string[] = [
@@ -31,7 +36,10 @@ export function RecentRecipients({
   recipients,
   onAddRecipient,
   onSendToRecipient,
+  onRemoveRecipient,
 }: RecentRecipientsProps) {
+  const recentRecipients = recipients.slice(-MAX_RECENT_RECIPIENTS).reverse();
+
   return (
     <Card>
       <CardHeader
@@ -73,7 +81,7 @@ export function RecentRecipients({
           </div>
         ) : (
           <div className="divide-y divide-(--brand-border)">
-            {recipients.map((recipient, index) => (
+            {recentRecipients.map((recipient, index) => (
               <div
                 key={recipient.email}
                 className="flex items-center gap-3 px-4 py-3.5 sm:px-5"
@@ -100,19 +108,34 @@ export function RecentRecipients({
                     {recipient.email}
                   </p>
                 </div>
-                {onSendToRecipient && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSendToRecipient(recipient);
-                    }}
-                    className="shrink-0 p-2 rounded-lg cursor-pointer text-(--brand-muted) hover:text-(--brand-primary) hover:bg-(--brand-primary)/5 transition-colors"
-                    aria-label={`Send to ${getRecipientDisplayName(recipient)}`}
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                )}
+                <div className="flex shrink-0 items-center gap-0.5">
+                  {onSendToRecipient && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSendToRecipient(recipient);
+                      }}
+                      className="p-2 rounded-lg cursor-pointer text-(--brand-muted) hover:text-(--brand-primary) hover:bg-(--brand-primary)/5 transition-colors"
+                      aria-label={`Send to ${getRecipientDisplayName(recipient)}`}
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  )}
+                  {onRemoveRecipient && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveRecipient(recipient);
+                      }}
+                      className="p-2 rounded-lg cursor-pointer text-(--brand-muted) hover:text-(--brand-warning,#dc2626) hover:bg-(--brand-warning,#dc2626)/5 transition-colors"
+                      aria-label={`Remove ${getRecipientDisplayName(recipient)} from your contacts`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -29,6 +29,7 @@ Cross-border remittance demo. A US sender authenticates via Dynamic, receives on
 ## Capabilities
 
 - Email-OTP + social-provider login (Dynamic).
+- Scenario front door - `/` is a flow-style scenario page inside the shared Dynamic site chrome (`SiteHeader` with a "Remittance" chip, `SiteFooter`, `ScenarioHero`/`ScenarioLayout`/`CodePanel` from packages/ui): the live login card (same `AuthScreen`/`OtpVerifyScreen` the retired `/login` rendered, via `components/login-page.tsx`) sits beside an SDK integration panel (wallet creation, auth, sponsored sends); snippets are Shiki-highlighted server-side (shared `@dynamic-demos/code-highlight`) from remittance-owned content (`lib/code-steps.ts`). `/` IS the login surface: it sits first in `publicRoutes` (the derived loginPath), so unauthenticated users on protected routes land here with `?returnTo=` (flows into the login card) and authenticated visitors bounce to `/overview`; `/login` 307s here with its query preserved. The OTP screen drives the panel via `contexts/panel-section-context.tsx` (Q-017 pattern, sections `default | otp-verify`). Branded configs (`?theme=`) hide the Dynamic site header - the brand logo and a Book a call CTA render in the hero row instead (`ScenarioBrandRow`/`ScenarioBrandLogo`) - the `SiteFooter` stays under every theme. Post-auth (`AppShell`) follows the merged-header rule (matches trade/earn): unbranded, the shared `SiteHeader` (`fullWidth`, "Remittance" chip, nav in the center slot, `UserMenu` in `trailing`) IS the app bar; branded drops the Dynamic chrome and keeps remittance's own `DashboardHeader` brand bar (also used unconditionally by `/admin`, independent of theming). `UserMenu` rides the shared `HeaderMenu` shell (trigger = address + copy, rows = Book a call / Clear theme when branded / Sign out). The `SiteFooter`'s marketing CTAs show only when unbranded (`showCtas`) - a themed demo must not advertise sign-up.
 - Connected wallet balance + asset transfer history (Alchemy).
 - Recipient + corridor selection screen.
 - Offramp execution via dashboard `/api/orchestrate/offramp` (alfredPay or BlindPay depending on corridor).
@@ -40,10 +41,14 @@ Cross-border remittance demo. A US sender authenticates via Dynamic, receives on
 
 App routes:
 
-- `/(auth)/login` — auth.
-- `/(app)/...` — main authenticated surface (send, history).
-- `/admin` — operator inspector.
-- `/api/handlers/transactions-history` — server-only Alchemy proxy.
+- `/` - scenario page: Dynamic site chrome + live login card + SDK code panel (the login surface; authenticated visitors bounce to `/overview`; OAuth callbacks complete here).
+- `/(auth)/login` - legacy; 307s to `/` preserving the query string.
+- `/(app)/overview` - main dashboard (balance, send/receive/deposit/withdraw actions, recent activity).
+- `/(app)/history` - full transfer history.
+- `/(app)/settings` - account + recipient settings.
+- `/admin` (+ `/admin/vaults`, `/admin/assets`) - operator inspector.
+- `/api/transactions/history` - server-only Alchemy proxy.
+- `/api/...` - server-only handlers (Fireblocks vault ops, KYC, deposits, recipients, cards, webhooks, admin).
 
 URL contract (post-Phase-4-app simplification):
 
@@ -69,9 +74,11 @@ Sandbox-by-default (D-005).
 
 ## Theming
 
-Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020) — `app/globals.css` is now thin: it imports the shared defaults, declares the remittance-only `overflow-hidden` rule, the dark-variant override, and a small set of `--widget-*` → `--brand-*` compat aliases for shared `packages/ui` components (e.g. `AuthLayout`) that haven't migrated yet. The aliases retire when the brand cutover phase migrates `packages/ui` to read `--brand-*` directly. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020) - `app/globals.css` carries no local `--brand-*` value pins: remittance rides the canonical D-030 defaults (restyled 2026-07 alongside trade/earn; the pre-D-030 Apple-ish pin and the cool blue-grey overrides were removed together). `globals.css` is thin: it imports the shared defaults, declares the remittance-only `overflow-hidden` rule (with the `data-scenario-page` escape for the scroll front door), the dark-variant override, and a small set of `--widget-*` → `--brand-*` compat aliases for shared `packages/ui` components (e.g. `AuthLayout`) that haven't migrated yet. The aliases retire when the brand cutover phase migrates `packages/ui` to read `--brand-*` directly.
 
-Per-config theming is wired SSR via `<ThemeStyleTag>` (D-008): `createDemoMiddleware` (factory defaults — `configIdSource: "query"`, `stickyConfigCookie: true`) forwards `x-remittance-config-id` resolved from `?theme=` or the `remittance_config_id` cookie, the root layout fetches the config from the dashboard, projects it through `themeToBrandTheme(...)` (which derives `primaryHover`, `accent`, and the card gradient via HSL math from `primaryColor` + optional `secondaryColor`), and emits an `overridesOnly` `<style>` block in `<head>` so the operator's brand colors paint on first byte — zero FOUC, zero hydration mismatch. `ThemeWrapper` (client `useEffect` reapplying the same vars) remains as a safety net during client navigations.
+Per-config theming is wired SSR via `<ThemeStyleTag>` (D-008): `createDemoMiddleware` (factory defaults - `configIdSource: "query"`, `stickyConfigCookie: true`) forwards `x-remittance-config-id` resolved from `?theme=` or the `remittance_config_id` cookie, the root layout fetches the config from the dashboard, projects it through `widgetThemeToBrandTheme(..., { deriveCardGradient: true })` from `@dynamic-demos/theme` (which derives `primaryHover`, `accent`, and the card gradient via HSL math from `primaryColor` + optional `secondaryColor`), and emits an `overridesOnly` `<style>` block in `<head>` so the operator's brand colors paint on first byte - zero FOUC, zero hydration mismatch. `ThemeWrapper` (client `useEffect` reapplying the same vars) remains as a safety net during client navigations.
+
+Browser-tab title is branded via `generateMetadata` in `app/layout.tsx`: a `React.cache`-wrapped config getter dedupes the dashboard fetch across `generateMetadata` and `RootLayout` within one request, then `buildDemoMetadata({ appName: config.branding?.appName })` (`@dynamic-demos/theme`) renders `"<appName> - Remittance"` when set, else the generic default.
 
 ## Credentials
 
@@ -128,6 +135,8 @@ export const middleware = createDemoMiddleware({ demoType: "remittance" });
 ## Open questions / known gaps
 
 - Phase 4-app remittance completed: components consume `--brand-*`; `app/globals.css` keeps remittance-only chrome (overflow rule, dark override) plus `--widget-*` shims for shared `packages/ui` consumers. Shims retire in the brand cutover phase.
+- D-030 restyle completed (2026-07): the pre-D-030 Apple-ish pin and the cool blue-grey override were dropped from `app/globals.css`; remittance now rides the canonical D-030 tokens with no local `--brand-*` value pins, matching trade/earn. The dead `--widget-primary-hover` alias (zero remaining `packages/ui` consumers) was dropped in the same change; the other 8 `--widget-*` aliases stay - still read by `packages/ui` components used by remittance (`AuthLayout`, `WidgetCard`, `Button`, `LoginForm`, `Input`, `Select`, `Card`, `Dialog`, `ListRow`, `Spinner`, `CopyButton`, `PoweredByFooter`, `Skeleton`, `Tooltip`, `ScrollableWithFade`). Known pre-existing gap (not introduced by this change, not fixed by it): `packages/ui/src/kyc-gate.tsx` and `packages/ui/src/stable-coin-card.tsx` (both rendered by remittance) reference `--widget-radius`, `--widget-row-bg`, and `--widget-card-gradient-end`, which remittance has never aliased - those resolve to nothing here today.
 - Path-based config routing (`/r/[id]/*`) was removed in the Phase-4-app middleware-simplification follow-up — middleware uses cookie + query only. Legacy URLs redirect via `next.config.ts`.
 - The `/admin` surface predates the dashboard's operator UI; folds into dashboard once Phase 5C lands.
 - No real-network E2E tests in CI (D-023).
+- Panel snippets in `lib/code-steps.ts` teach the current docs APIs (`@dynamic-labs-sdk` 1.x + react-hooks + native EIP-7702 gas sponsorship) while the app internals remain on the catalog SDK plus ZeroDev for gas sponsorship - migrating this app to native EIP-7702 sponsorship is a tracked follow-up. Every TypeScript snippet must open with its import line (test-enforced in `__tests__/code-steps.test.ts`).

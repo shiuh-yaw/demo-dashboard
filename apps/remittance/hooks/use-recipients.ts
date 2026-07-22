@@ -61,6 +61,27 @@ export function useAddRecipient() {
   });
 }
 
+export function useRemoveRecipient() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (email: string) => {
+      const res = await fetchWithAuth("/api/recipients", {
+        method: "DELETE",
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to remove recipient");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: RECIPIENTS_QUERY_KEY });
+    },
+  });
+}
+
 export function useClearRecipients() {
   const queryClient = useQueryClient();
 

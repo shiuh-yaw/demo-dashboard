@@ -46,7 +46,7 @@ export interface SiteHeaderProps {
   center?: ReactNode;
   /**
    * Optional app content for the right side (e.g. the demo's user
-   * panel). When set it REPLACES the marketing nav (dynamic.xyz / Book
+   * panel). When set it REPLACES the marketing nav (Book
    * a call / Get a free account) - a signed-in demo bar carries the
    * app's controls, not the marketing CTAs. May be a client island;
    * the header itself stays a server component.
@@ -155,7 +155,10 @@ export function SiteHeader({
           </div>
         </div>
         {center ? (
-          <div className="hidden min-w-0 flex-1 items-center justify-center sm:flex">
+          // md, not sm: between those widths the logo + breadcrumb still
+          // reach into the center and a nav would overlap them. Apps
+          // provide a menu-row fallback below md (remittance's UserMenu).
+          <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
             {center}
           </div>
         ) : null}
@@ -163,14 +166,6 @@ export function SiteHeader({
           <div className="flex items-center gap-2 sm:gap-3">{trailing}</div>
         ) : (
         <nav className="flex items-center gap-2 text-sm sm:gap-3">
-          <a
-            href="https://www.dynamic.xyz"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden font-semibold text-slate-700 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white sm:inline"
-          >
-            dynamic.xyz
-          </a>
           <a
             href="https://www.dynamic.xyz/book-a-call"
             target="_blank"

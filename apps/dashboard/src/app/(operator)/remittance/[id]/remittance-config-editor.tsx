@@ -46,6 +46,9 @@ export function RemittanceConfigEditor({
   const [logoUrl, setLogoUrl] = useState(
     initialConfig.config.branding?.logoUrl ?? ""
   );
+  const [appName, setAppName] = useState(
+    initialConfig.config.branding?.appName ?? ""
+  );
 
   const demoUrl = demoThemeUrl("remittance", initialConfig.id);
 
@@ -65,6 +68,7 @@ export function RemittanceConfigEditor({
         },
         branding: {
           logoUrl: logoUrl.trim() || undefined,
+          appName: appName.trim() || undefined,
         },
       };
 
@@ -173,6 +177,17 @@ export function RemittanceConfigEditor({
               onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
             />
+          </Field>
+          <Field label="App Name">
+            <Input
+              value={appName}
+              onChange={(e) => setAppName(e.target.value)}
+              placeholder="Acme"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Browser-tab title (&quot;Acme - Remittance&quot;). Defaults to
+              the prospect name.
+            </p>
           </Field>
         </Section>
       </div>

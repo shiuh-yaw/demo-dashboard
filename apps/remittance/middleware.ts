@@ -11,13 +11,20 @@ import { createDemoMiddleware } from "@dynamic-demos/dynamic/demo-middleware";
  *   - There are no path-based config routes. Legacy `/r/[id]/*` URLs are
  *     redirected to `/?theme=[id]` via `next.config.ts` for back-compat.
  *
+ * "/" IS the login surface - the scenario front door (live login card +
+ * code panel). Listed first in publicRoutes so it becomes the derived
+ * loginPath: unauthenticated users on protected routes land on "/",
+ * authenticated visitors on "/" bounce to defaultReturnPath. The legacy
+ * /login route 307s to "/" (page-level, query preserved) but stays
+ * public so that redirect can run.
+ *
  * The factory's defaults handle everything else (`configIdSource: "query"`,
  * `oauthCallbackParams: ["dynamicOauthCode"]`, returnTo round-trip, etc.).
  */
 export const middleware = createDemoMiddleware({
   demoType: "remittance",
-  publicRoutes: ["/login"],
-  defaultReturnPath: "/",
+  publicRoutes: ["/", "/login"],
+  defaultReturnPath: "/overview",
 });
 
 export const config = {

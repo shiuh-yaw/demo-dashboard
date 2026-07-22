@@ -28,6 +28,7 @@ export default function NewRemittanceConfigPage() {
   const [primaryColor, setPrimaryColor] = useState("#1a56db");
   const [secondaryColor, setSecondaryColor] = useState("#1e40af");
   const [logoUrl, setLogoUrl] = useState("");
+  const [appName, setAppName] = useState("");
 
   async function handleCreate() {
     if (!name.trim()) {
@@ -45,6 +46,7 @@ export default function NewRemittanceConfigPage() {
         },
         branding: {
           logoUrl: logoUrl.trim() || undefined,
+          appName: appName.trim() || undefined,
         },
       };
       const result = await createRemittanceConfig(name.trim(), config, prospectId);
@@ -146,6 +148,17 @@ export default function NewRemittanceConfigPage() {
               onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
             />
+          </Field>
+          <Field label="App Name">
+            <Input
+              value={appName}
+              onChange={(e) => setAppName(e.target.value)}
+              placeholder="Acme"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Browser-tab title (&quot;Acme - Remittance&quot;). Defaults to
+              the prospect name.
+            </p>
           </Field>
         </Section>
       </div>

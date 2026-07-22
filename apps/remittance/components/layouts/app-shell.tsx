@@ -11,8 +11,8 @@ import {
 } from "@/lib/dynamic";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { WidgetLayout } from "@/components/ui/widget-layout";
-import { DashboardLayout } from "@/components/layouts/dashboard-layout";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { AppChrome } from "@/components/layouts/app-chrome";
+import { APP_NAV_ITEMS } from "@/lib/nav-items";
 
 export interface AppShellProps {
   /** Server-resolved wallet address from Dynamic user. */
@@ -23,7 +23,9 @@ export interface AppShellProps {
 
 /**
  * App shell: dashboard layout. Renders children when client is ready.
- * Auth and KYC are handled by route-level redirects in (app) and (auth) layouts.
+ * Auth and KYC are handled by route-level redirects in (app) and (auth)
+ * layouts. The header/footer branching (merged SiteHeader vs branded
+ * DashboardHeader) lives in AppChrome, shared with /admin.
  */
 export function AppShell({ initialWalletAddress, children }: AppShellProps) {
   const isClientReady = useClientInitialized();
@@ -71,8 +73,8 @@ export function AppShell({ initialWalletAddress, children }: AppShellProps) {
   }
 
   return (
-    <DashboardLayout header={<DashboardHeader walletAddress={walletAddress} />}>
+    <AppChrome walletAddress={walletAddress} navItems={APP_NAV_ITEMS}>
       {children}
-    </DashboardLayout>
+    </AppChrome>
   );
 }

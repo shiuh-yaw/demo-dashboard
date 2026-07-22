@@ -4,6 +4,7 @@ import {
   handleGetRecipients,
   handleAddRecipient,
   handleClearRecipients,
+  handleRemoveRecipient,
 } from "../handlers";
 
 /**
@@ -37,14 +38,19 @@ export async function POST(request: Request) {
 
 /**
  * DELETE /api/recipients
- * Clear all known recipients.
+ * With a JSON body ({ email }): remove that one recipient.
+ * Without a body: clear all known recipients.
  */
 export async function DELETE(request: Request) {
   try {
     const userId = await requireUserId(request);
-    const result = await handleClearRecipients(userId);
+    const body = await request.json().catch(() => null);
+    const result =
+      body && typeof body === "object" && "email" in body
+        ? await handleRemoveRecipient(userId, body)
+        : await handleClearRecipients(userId);
     return createResponse(result);
   } catch (error) {
-    return handleApiError(error, "recipients/clear");
+    return handleApiError(error, "recipients/delete");
   }
 }

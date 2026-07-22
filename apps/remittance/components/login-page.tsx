@@ -9,7 +9,7 @@ import { AuthScreen } from "@/components/screens/auth-screen";
 import { OtpVerifyScreen } from "@/components/screens/otp-verify-screen";
 
 interface LoginPageProps {
-  /** Override returnTo (e.g. for /r/[id]/login when returnTo not in URL) */
+  /** Override returnTo - the front-door page passes returnTo from its searchParams here. */
   returnToOverride?: string;
 }
 
