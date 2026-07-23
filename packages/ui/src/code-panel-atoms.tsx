@@ -15,7 +15,6 @@
  * flow globals.css for the canonical block.
  */
 
-import type { ReactNode } from "react";
 import { CopyButton } from "./copy-button";
 
 export function CodeFrame({
@@ -83,24 +82,4 @@ function DocsArrow() {
       />
     </svg>
   );
-}
-
-/**
- * Render a prose string with `backtick`-delimited spans as inline code
- * chips. Cheap markdown subset — inline code only.
- */
-export function renderProse(text: string): ReactNode[] {
-  return text.split(/(`[^`]+`)/).map((part, i) => {
-    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
-      return (
-        <code
-          key={i}
-          className="font-mono text-[12px] px-1.5 py-0.5 rounded-md bg-(--brand-row-bg) border border-(--brand-border) text-(--brand-fg)"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return part;
-  });
 }

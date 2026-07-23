@@ -7,7 +7,8 @@
  */
 
 import { cn } from "@dynamic-demos/utils";
-import { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
+import { CodeFrame, DocsLink } from "./code-panel-atoms";
+import { renderProse } from "./render-prose";
 import type { CodeStep } from "./code-panel-types";
 
 export function Stepper({ steps }: { steps: CodeStep[] }) {

@@ -295,7 +295,16 @@ await attachFlowSource({
   fromChainName: isSolanaChainId(fromToken.chainId) ? "SOL" : "EVM",
   sourceType: "wallet",
 });
-// 403 → source blocked by risk/sanctions screening.`;
+// 403 → source blocked by risk/sanctions screening.
+
+// No wallet? Attach a deposit_address source instead - the quote
+// returns flow.depositAddress for the user to send to (BTC/SOL/EVM/TRON):
+// await attachFlowSource({
+//   flowId,
+//   fromChainId: "1",      // Dynamic id: "1" BTC, "101" SOL
+//   fromChainName: "BTC",
+//   sourceType: "deposit_address",
+// });`;
 
   const step3 = `import { getFlowQuote } from "@dynamic-labs-sdk/client";
 

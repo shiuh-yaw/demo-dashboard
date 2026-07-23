@@ -21,6 +21,7 @@ import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import { TicketIllustration } from "./ticket-illustration";
 import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 import { logout } from "@/lib/dynamic/flow-sdk";
+import { DEPOSIT_ADDRESS_DESTINATION } from "@/lib/deposit-address";
 
 function isOAuthRedirectUrl(): boolean {
   if (typeof window === "undefined") return false;
@@ -112,6 +113,33 @@ function WidgetStage({
     [walletAddress, destinationChainName, settlementToken],
   );
 
+  // Deposit-address path: no wallet is connected, so the destination is
+  // the configured merchant address, not the connected wallet. Settles
+  // USDC on Base (Arb Sepolia in testnet mode). Row hidden when the
+  // env var is unset.
+  const createDepositAddressFlowCallback = useCallback(
+    ({ amount, currency }: { amount: string; currency: string }) => {
+      if (!DEPOSIT_ADDRESS_DESTINATION) {
+        return Promise.reject(
+          new Error("NEXT_PUBLIC_FLOW_DEPOSIT_DESTINATION is not configured"),
+        );
+      }
+      const token = isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE;
+      return createFlow({
+        mode: "payment",
+        amount,
+        currency,
+        settlementConfig: {
+          settlements: [settlementFromToken(token, "EVM")],
+        },
+        destinationConfig: {
+          destinations: [destination("EVM", DEPOSIT_ADDRESS_DESTINATION)],
+        },
+      });
+    },
+    [isTestnet],
+  );
+
   const tokenFilter = useCallback(
     (token: TokenAsset) =>
       isTestnet
@@ -153,6 +181,17 @@ function WidgetStage({
         exchangeDestinationAddress={walletAddress || undefined}
         exchangeSettlementChain={destinationChainName}
         exchangeSettlementChainId={settlementToken.chainId}
+        createDepositAddressFlow={
+          DEPOSIT_ADDRESS_DESTINATION
+            ? createDepositAddressFlowCallback
+            : undefined
+        }
+        depositAddressSettlement={{
+          symbol: "USDC",
+          decimals: 6,
+          iconUrl: (isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE).logoURI,
+        }}
+        sourceCategories
       />
     </div>
   );

@@ -52,7 +52,7 @@ const CHECKOUT_COPY: StepCopy = [
   {
     title: "Attach the buyer's source",
     prose:
-      "Declare the wallet and chain the buyer is paying from. Returns a session token (`dft_…`) that authenticates the rest of the lifecycle. Dynamic runs risk and sanctions screening here; a 403 means the source is blocked.",
+      "Declare the wallet and chain the buyer is paying from. Returns a session token (`dft_…`) that authenticates the rest of the lifecycle. Dynamic runs risk and sanctions screening here; a 403 means the source is blocked. Swap `sourceType` to `deposit_address` and the buyer gets a unique address to send to instead - no wallet connection or signing (BTC, SOL, EVM, TRON).",
   },
   {
     title: "Get a quote",
@@ -80,7 +80,7 @@ const DEPOSIT_COPY: StepCopy = [
   {
     title: "Attach the user's source wallet",
     prose:
-      "Declare the wallet and chain the user is depositing from. Returns a session token (`dft_…`) for subsequent calls. Dynamic runs risk + sanctions screening here; a 403 means the source is blocked.",
+      "Declare the wallet and chain the user is depositing from. Returns a session token (`dft_…`) for subsequent calls. Dynamic runs risk + sanctions screening here; a 403 means the source is blocked. Swap `sourceType` to `deposit_address` and the user gets a unique address to send to instead - no wallet connection or signing (BTC, SOL, EVM, TRON).",
   },
   {
     title: "Get a quote",

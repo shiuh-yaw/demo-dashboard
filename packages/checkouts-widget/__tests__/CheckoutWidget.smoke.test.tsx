@@ -133,4 +133,23 @@ describe("CheckoutWidget", () => {
     // Default copy should not render when a custom header is supplied.
     expect(screen.queryByText(/pick how you'll pay/i)).toBeNull();
   });
+
+  it("renders walletPickerOverride in place of the wallet list", () => {
+    render(
+      <CheckoutWidget
+        {...requiredProps}
+        amount="1.00"
+        walletPickerOverride={<div>CATEGORY ROWS</div>}
+      />,
+    );
+    expect(screen.getByText("CATEGORY ROWS")).toBeTruthy();
+    // Default picker header should NOT render when the override is supplied.
+    expect(screen.queryByText(/pick how you'll pay/i)).toBeNull();
+  });
+
+  it("renders the wallet list when walletPickerOverride is omitted", () => {
+    render(<CheckoutWidget {...requiredProps} amount="1.00" />);
+    expect(screen.queryByText("CATEGORY ROWS")).toBeNull();
+    expect(screen.getByText(/pick how you'll pay/i)).toBeDefined();
+  });
 });

@@ -432,9 +432,26 @@ export async function attachCheckoutTransactionSource(params: {
   return flow;
 }
 
+export async function attachDepositAddressSource(params: {
+  transactionId: string;
+  fromChainId: string;
+  fromChainName: Chain;
+  refundAddress?: string;
+}): Promise<Flow> {
+  const { flow } = await sdkAttachFlowSource({
+    flowId: params.transactionId,
+    fromChainId: params.fromChainId,
+    fromChainName: params.fromChainName,
+    refundAddress: params.refundAddress,
+    sourceType: "deposit_address",
+  });
+  return flow;
+}
+
 export async function getCheckoutTransactionQuote(params: {
   transactionId: string;
-  fromTokenAddress: string;
+  /** Omit for native assets - the quote defaults to the source chain's native token. */
+  fromTokenAddress?: string;
   fromChainId?: string;
   slippage?: number;
 }): Promise<Flow> {

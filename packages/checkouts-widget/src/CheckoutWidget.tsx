@@ -172,6 +172,13 @@ export interface CheckoutWidgetProps {
   walletPickerExtrasBefore?: ReactNode;
   /** Optional content below the installed list, above "Show more". */
   walletPickerExtrasAfter?: ReactNode;
+  /**
+   * Rendered in place of the wallet picker screen when provided.
+   * The host controls when to restore the real picker by passing
+   * undefined. Amount stage, asset selector, and payment lifecycle
+   * are unaffected.
+   */
+  walletPickerOverride?: ReactNode;
 
   // ---------------------------------------------------------------------------
   // Post-connect gate — optional screen between wallet connect and asset picker.
@@ -318,6 +325,7 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
     walletPickerHeader,
     walletPickerExtrasBefore,
     walletPickerExtrasAfter,
+    walletPickerOverride,
     postConnectScreen,
     minUsdValue = 0,
     skipMinUsdValueFilter = false,
@@ -559,26 +567,28 @@ export function CheckoutWidget(props: CheckoutWidgetProps): JSX.Element {
           />
         ) : !wallet ? (
           <div className="px-5 py-5">
-            <WalletPickerScreen
-              onConnected={handleWalletPicked}
-              preferredChain={preferredChain}
-              verifyOnConnect={verifyOnConnect}
-              selectedWalletForChain={initialChainSelectWallet}
-              onChainSelectChange={setInitialChainSelectWallet}
-              header={
-                initialChainSelectWallet ? (
-                  <DefaultChainConnectHeader
-                    chain=""
-                    walletName={initialChainSelectWallet.displayName}
-                    onBack={() => setInitialChainSelectWallet(null)}
-                  />
-                ) : (
-                  walletPickerHeader ?? <DefaultWalletPickerHeader />
-                )
-              }
-              extrasBefore={walletPickerExtrasBefore}
-              extrasAfter={walletPickerExtrasAfter}
-            />
+            {walletPickerOverride ?? (
+              <WalletPickerScreen
+                onConnected={handleWalletPicked}
+                preferredChain={preferredChain}
+                verifyOnConnect={verifyOnConnect}
+                selectedWalletForChain={initialChainSelectWallet}
+                onChainSelectChange={setInitialChainSelectWallet}
+                header={
+                  initialChainSelectWallet ? (
+                    <DefaultChainConnectHeader
+                      chain=""
+                      walletName={initialChainSelectWallet.displayName}
+                      onBack={() => setInitialChainSelectWallet(null)}
+                    />
+                  ) : (
+                    walletPickerHeader ?? <DefaultWalletPickerHeader />
+                  )
+                }
+                extrasBefore={walletPickerExtrasBefore}
+                extrasAfter={walletPickerExtrasAfter}
+              />
+            )}
           </div>
         ) : postConnectScreen && !postConnectCleared ? (
           postConnectScreen(wallet, () => setPostConnectCleared(true))

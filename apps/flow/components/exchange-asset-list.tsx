@@ -87,8 +87,8 @@ export function ExchangeAssetList({
           <button
             type="button"
             onClick={onChangeSource}
-            aria-label={`Change source (connected: ${adapter.name})`}
-            title="Change source"
+            aria-label={`Back to sources (connected: ${adapter.name})`}
+            title="Back to sources"
             className="inline-flex items-center gap-1.5 self-end rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] pl-2.5 pr-2 py-1 text-[11px] font-mono text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors [&_*]:pointer-events-none"
           >
             <span>{adapter.name}</span>

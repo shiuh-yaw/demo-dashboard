@@ -127,7 +127,8 @@ export {
   type CodeStep,
   type CodePanelProps,
 } from "./code-panel";
-export { CodeFrame, DocsLink, renderProse } from "./code-panel-atoms";
+export { CodeFrame, DocsLink } from "./code-panel-atoms";
+export { renderProse } from "./render-prose";
 export { Stepper } from "./code-panel-stepper";
 export { SdkStack, type SdkStackProps } from "./sdk-stack";
 export { PanelNotice, type PanelNoticeProps } from "./panel-notice";

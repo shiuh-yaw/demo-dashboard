@@ -29,7 +29,6 @@
  */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { QRCodeSVG } from "qrcode.react";
 import {
   connectAndVerifyWithWalletProvider,
   connectWithWalletProvider,
@@ -55,6 +54,7 @@ import {
   type CatalogGroup,
 } from "../lib/wallet-catalog";
 import { groupProviders, type WalletGroup } from "../lib/wallet-providers";
+import { QrSurface } from "./qr-surface";
 
 export interface WalletPickerScreenProps {
   /** Fires when a wallet successfully connects. */
@@ -736,47 +736,14 @@ function WalletConnectQrSurface({
   onCancel: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-4">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="inline-flex items-center gap-1.5 self-start cursor-pointer text-[11px] font-medium text-(--brand-muted) hover:text-(--brand-fg) transition-colors"
-      >
-        <BackArrowGlyph />
-        Back to wallets
-      </button>
-
-      <div className="flex flex-col items-center gap-3 rounded-2xl bg-(--brand-row-bg) px-5 py-6">
-        <div className="flex items-center gap-2.5">
-          {wallet.spriteUrl && (
-            <img
-              src={wallet.spriteUrl}
-              alt=""
-              className="h-7 w-7 rounded-lg object-contain bg-(--brand-surface)"
-            />
-          )}
-          <span className="text-[15px] font-semibold text-(--brand-fg)">
-            {wallet.name}
-          </span>
-        </div>
-
-        <div className="rounded-2xl bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
-          <QRCodeSVG
-            value={uri}
-            size={208}
-            level="M"
-            marginSize={0}
-            bgColor="#ffffff"
-            fgColor="#0E121B"
-          />
-        </div>
-
-        <p className="text-[13px] text-(--brand-fg-secondary) text-center max-w-[28ch]">
-          Open {wallet.name} on your phone and scan the QR code, or tap a
-          deeplink if your wallet is installed on this device.
-        </p>
-      </div>
-    </div>
+    <QrSurface
+      value={uri}
+      title={wallet.name}
+      iconUrl={wallet.spriteUrl}
+      caption={`Open ${wallet.name} on your phone and scan the QR code, or tap a deeplink if your wallet is installed on this device.`}
+      onBack={onCancel}
+      backLabel="Back to wallets"
+    />
   );
 }
 

@@ -81,6 +81,8 @@ export { default as TokenConversionCard } from "./components/token-conversion-ca
 export { default as ScreenHeader } from "./components/screen-header";
 export { default as InfoBox } from "./components/info-box";
 export { default as ErrorBanner } from "./components/error-banner";
+export { QrSurface } from "./components/qr-surface";
+export type { QrSurfaceProps } from "./components/qr-surface";
 
 export type { TokenInfo } from "./components/token-conversion-card";
 export type {
