@@ -6,6 +6,7 @@ import {
   mergeFlowConfig,
 } from "@/lib/flow-config/url-codec";
 import { parseFlowConfigSafely } from "@/lib/parse-flow-config";
+import { resolveDestinationOverride } from "@/lib/destination-override";
 import { buildCodePanelProps } from "@/lib/build-code-panel-props";
 import { DEPOSIT_EXTRAS } from "@/lib/flow-helpers";
 import type { FlowSnippetContext } from "@/lib/flow-snippets";
@@ -36,18 +37,29 @@ export default async function DepositPage({
 }) {
   const params = await searchParams;
   const overlay = decodeFlowConfigFromParams(params);
-  const config = parseFlowConfigSafely(
+  const baseConfig = parseFlowConfigSafely(
     mergeFlowConfig(DEFAULT_FLOW_CONFIGS.deposit, overlay),
     "deposit",
   );
+
+  const override = resolveDestinationOverride(params, baseConfig.asset.symbol);
+  const config = override
+    ? parseFlowConfigSafely(
+        mergeFlowConfig(baseConfig, {
+          destination: { ...baseConfig.destination, address: override.address },
+          asset: { ...baseConfig.asset, chain: override.networkKey },
+        }),
+        "deposit",
+      )
+    : baseConfig;
 
   const ctx: FlowSnippetContext = {
     config,
     mode: "deposit",
     // Destination is the user's platform-managed wallet (configured
     // server-side in the Checkout). Only thread an override when the
-    // URL overlay supplied one; otherwise the snippet renderer falls
-    // back to `DESTINATION_ADDRESS_PLACEHOLDER`.
+    // URL supplied one; otherwise the snippet renderer falls back to
+    // `DESTINATION_ADDRESS_PLACEHOLDER`.
     destinationAddress: config.destination.address,
     sourceFromAddress: "0xUSER_EXTERNAL_WALLET",
   };
@@ -67,7 +79,7 @@ export default async function DepositPage({
           {/* Sticky offset clears the layout's h-20 sticky bar
               (SiteHeader unbranded, the brand bar under ?theme=). */}
           <div className="lg:col-span-5 lg:sticky lg:top-[104px] self-start">
-            <DepositWidgetDemo />
+            <DepositWidgetDemo destinationOverride={override} />
             <TransactionDisclaimer />
           </div>
           <div className="lg:col-span-7">

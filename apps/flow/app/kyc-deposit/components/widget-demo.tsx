@@ -43,7 +43,11 @@ function getAuthHeaders(): Record<string, string> {
 const SETTLEMENT_TOKEN = USDC_BASE_SEPOLIA;
 const SETTLEMENT_CHAIN = chainFamilyForId(SETTLEMENT_TOKEN.chainId);
 
-export function KycDepositWidgetDemo() {
+export function KycDepositWidgetDemo({
+  destinationOverride,
+}: {
+  destinationOverride?: string | null;
+}) {
   const [started, setStarted] = useState(false);
   // Incremented on demo-reset; appended to the SumSub externalUserId so each
   // reset creates a fresh applicant and the full verification flow re-runs.
@@ -81,7 +85,11 @@ export function KycDepositWidgetDemo() {
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
       {started ? (
-        <WidgetStage onBack={handleBack} resetNonce={resetNonce} />
+        <WidgetStage
+          onBack={handleBack}
+          resetNonce={resetNonce}
+          destinationOverride={destinationOverride}
+        />
       ) : (
         <ScenarioCard
           eyebrow="Verified deposit"
@@ -111,9 +119,11 @@ export function KycDepositWidgetDemo() {
 function WidgetStage({
   onBack,
   resetNonce,
+  destinationOverride,
 }: {
   onBack: () => void;
   resetNonce: number;
+  destinationOverride?: string | null;
 }) {
   const [walletAddress, setWalletAddress] = useState("");
   const [depositAddress, setDepositAddress] = useState("");
@@ -143,11 +153,13 @@ function WidgetStage({
           settlements: [settlementFromToken(SETTLEMENT_TOKEN, SETTLEMENT_CHAIN)],
         },
         destinationConfig: {
-          destinations: [destination(SETTLEMENT_CHAIN, depositAddress)],
+          destinations: [
+            destination(SETTLEMENT_CHAIN, destinationOverride ?? depositAddress),
+          ],
         },
       });
     },
-    [depositAddress],
+    [depositAddress, destinationOverride],
   );
 
   // Lock the picker to exactly USDC on Base Sepolia so source === destination
@@ -244,7 +256,9 @@ function WidgetStage({
         fetchTokens={fetchTokens}
         skipMinUsdValueFilter
         onWalletConnected={handleWalletConnected}
-        destinationAddress={depositAddress || walletAddress}
+        destinationAddress={
+          destinationOverride ?? (depositAddress || walletAddress)
+        }
         destinationChain={SETTLEMENT_CHAIN}
         currency="USD"
         presetAmounts={[5, 25, 50, 100]}
@@ -281,7 +295,9 @@ function WidgetStage({
             }
           })();
         }}
-        exchangeDestinationAddress={depositAddress || walletAddress || undefined}
+        exchangeDestinationAddress={
+          destinationOverride ?? (depositAddress || walletAddress || undefined)
+        }
         exchangeSettlementChain={SETTLEMENT_CHAIN}
         exchangeSettlementChainId={SETTLEMENT_TOKEN.chainId}
         postConnectScreen={handlePostConnect}

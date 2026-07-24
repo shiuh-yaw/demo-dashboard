@@ -6,6 +6,7 @@ import {
   mergeFlowConfig,
 } from "@/lib/flow-config/url-codec";
 import { parseFlowConfigSafely } from "@/lib/parse-flow-config";
+import { resolveDestinationOverride } from "@/lib/destination-override";
 import { buildCodePanelProps } from "@/lib/build-code-panel-props";
 import { CHECKOUT_EXTRAS } from "@/lib/flow-helpers";
 import type { FlowSnippetContext } from "@/lib/flow-snippets";
@@ -37,17 +38,28 @@ export default async function CheckoutPage({
 }) {
   const params = await searchParams;
   const overlay = decodeFlowConfigFromParams(params);
-  const config = parseFlowConfigSafely(
+  const baseConfig = parseFlowConfigSafely(
     mergeFlowConfig(DEFAULT_FLOW_CONFIGS.checkout, overlay),
     "checkout",
   );
+
+  const override = resolveDestinationOverride(params, baseConfig.asset.symbol);
+  const config = override
+    ? parseFlowConfigSafely(
+        mergeFlowConfig(baseConfig, {
+          destination: { ...baseConfig.destination, address: override.address },
+          asset: { ...baseConfig.asset, chain: override.networkKey },
+        }),
+        "checkout",
+      )
+    : baseConfig;
 
   const ctx: FlowSnippetContext = {
     config,
     mode: "payment",
     // Destination is configured server-side in the Checkout; only thread
-    // an override when the URL overlay supplied one. Otherwise the
-    // snippet renderer falls back to `DESTINATION_ADDRESS_PLACEHOLDER`.
+    // an override when the URL supplied one. Otherwise the snippet
+    // renderer falls back to `DESTINATION_ADDRESS_PLACEHOLDER`.
     destinationAddress: config.destination.address,
     sourceFromAddress: "0xBUYER",
   };
@@ -67,7 +79,7 @@ export default async function CheckoutPage({
           {/* Sticky offset clears the layout's h-20 sticky bar
               (SiteHeader unbranded, the brand bar under ?theme=). */}
           <div className="lg:col-span-5 lg:sticky lg:top-[104px] self-start">
-            <CheckoutWidgetDemo />
+            <CheckoutWidgetDemo destinationOverride={override} />
             <TransactionDisclaimer />
           </div>
           <div className="lg:col-span-7">

@@ -10,6 +10,7 @@ import { ChipArrow, RouteChip, ScenarioHero } from "@dynamic-demos/ui";
 import { ScenarioSwitcher } from "@/components/scenario-chrome";
 import { DepositFeed } from "./components/deposit-feed";
 import { KycDepositWidgetDemo } from "./components/widget-demo";
+import { resolveAddressOverride } from "@/lib/destination-override";
 
 /**
  * /kyc-deposit — KYC-gated deposit scenario.
@@ -19,7 +20,16 @@ import { KycDepositWidgetDemo } from "./components/widget-demo";
  * merchant off-ramps the deposited amount via the backend provider
  * (invisible to the end user).
  */
-export default function KycDepositPage() {
+export default async function KycDepositPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  // KYC settlement is locked to USDC on Base Sepolia (EVM); network is
+  // not overridable here, only the destination address.
+  const destinationOverride = resolveAddressOverride(params, "EVM");
+
   return (
     <div>
       <DynamicBootstrap />
@@ -29,7 +39,7 @@ export default function KycDepositPage() {
           {/* Sticky offset clears the layout's h-20 sticky bar
               (SiteHeader unbranded, the brand bar under ?theme=). */}
           <div className="lg:col-span-5 lg:sticky lg:top-[104px] self-start">
-            <KycDepositWidgetDemo />
+            <KycDepositWidgetDemo destinationOverride={destinationOverride} />
             <TransactionDisclaimer />
           </div>
           <div className="lg:col-span-7">

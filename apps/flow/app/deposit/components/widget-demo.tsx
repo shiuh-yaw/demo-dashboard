@@ -23,6 +23,7 @@ import { BalanceIllustration } from "./balance-illustration";
 import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 import { logout } from "@/lib/dynamic/flow-sdk";
 import { DEPOSIT_ADDRESS_DESTINATION } from "@/lib/deposit-address";
+import type { DestinationOverride } from "@/lib/destination-override";
 
 function isOAuthRedirectUrl(): boolean {
   if (typeof window === "undefined") return false;
@@ -30,7 +31,11 @@ function isOAuthRedirectUrl(): boolean {
   return params.has("dynamicOauthCode");
 }
 
-export function DepositWidgetDemo() {
+export function DepositWidgetDemo({
+  destinationOverride,
+}: {
+  destinationOverride?: DestinationOverride | null;
+}) {
   const [depositing, setDepositing] = useState(false);
   const { isTestnet } = useTestnetMode();
 
@@ -43,7 +48,11 @@ export function DepositWidgetDemo() {
   return (
     <div className="w-full max-w-[440px] mx-auto lg:mx-0">
       {depositing ? (
-        <WidgetStage onBack={() => setDepositing(false)} isTestnet={isTestnet} />
+        <WidgetStage
+          onBack={() => setDepositing(false)}
+          isTestnet={isTestnet}
+          destinationOverride={destinationOverride}
+        />
       ) : (
         <ScenarioCard
           eyebrow="Platform balance"
@@ -61,22 +70,32 @@ export function DepositWidgetDemo() {
 function WidgetStage({
   onBack,
   isTestnet,
+  destinationOverride,
 }: {
   onBack: () => void;
   isTestnet: boolean;
+  destinationOverride?: DestinationOverride | null;
 }) {
   const [walletAddress, setWalletAddress] = useState("");
   const [walletChain, setWalletChain] = useState("EVM");
 
-  // Resolve settlement token from wallet chain.
-  // Testnet: always Arb Sepolia. Mainnet: match the wallet's chain.
-  const settlementToken = isTestnet
+  // URL override wins over the testnet toggle and the wallet-derived
+  // chain. Absent an override, behavior is unchanged.
+  const fallbackToken = isTestnet
     ? USDC_ARB_SEPOLIA
     : walletChain === "SOL"
       ? USDC_SOLANA
       : USDC_BASE;
-  // Testnet forces EVM (arb-sepolia); mainnet uses the wallet's chain.
-  const destinationChainName = isTestnet ? "EVM" : walletChain;
+  const settlementToken = destinationOverride?.token ?? fallbackToken;
+  const destinationChainName =
+    destinationOverride?.chainFamily ?? (isTestnet ? "EVM" : walletChain);
+
+  // Deposit-address destination: the URL to_address, else the env var.
+  const depositAddressToken =
+    destinationOverride?.token ?? (isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE);
+  const depositAddressFamily = destinationOverride?.chainFamily ?? "EVM";
+  const depositAddressDest =
+    destinationOverride?.address ?? DEPOSIT_ADDRESS_DESTINATION;
 
   const handleWalletConnected = useCallback((address: string, chain: string) => {
     setWalletAddress(address);
@@ -101,39 +120,44 @@ function WidgetStage({
         },
         destinationConfig: {
           destinations: [
-            destination(destinationChainName, walletAddress),
+            destination(
+              destinationChainName,
+              destinationOverride?.address ?? walletAddress,
+            ),
           ],
         },
       });
     },
-    [walletAddress, destinationChainName, settlementToken],
+    [walletAddress, destinationChainName, settlementToken, destinationOverride],
   );
 
   // Deposit-address path: no wallet is connected, so the destination is
-  // the configured platform address, not the connected wallet. Settles
-  // USDC on Base (Arb Sepolia in testnet mode). Row hidden when the
-  // env var is unset.
+  // the URL to_address or the configured platform address. Row hidden
+  // when neither is set.
   const createDepositAddressFlowCallback = useCallback(
     ({ amount, currency }: { amount: string; currency: string }) => {
-      if (!DEPOSIT_ADDRESS_DESTINATION) {
+      if (!depositAddressDest) {
         return Promise.reject(
-          new Error("NEXT_PUBLIC_FLOW_DEPOSIT_DESTINATION is not configured"),
+          new Error(
+            "No deposit-address destination (set to_address or NEXT_PUBLIC_FLOW_DEPOSIT_DESTINATION)",
+          ),
         );
       }
-      const token = isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE;
       return createFlow({
         mode: "deposit",
         amount,
         currency,
         settlementConfig: {
-          settlements: [settlementFromToken(token, "EVM")],
+          settlements: [
+            settlementFromToken(depositAddressToken, depositAddressFamily),
+          ],
         },
         destinationConfig: {
-          destinations: [destination("EVM", DEPOSIT_ADDRESS_DESTINATION)],
+          destinations: [destination(depositAddressFamily, depositAddressDest)],
         },
       });
     },
-    [isTestnet],
+    [depositAddressDest, depositAddressToken, depositAddressFamily],
   );
 
   const tokenFilter = useCallback(
@@ -165,7 +189,7 @@ function WidgetStage({
         tokenFilter={tokenFilter}
         skipMinUsdValueFilter={isTestnet}
         onWalletConnected={handleWalletConnected}
-        destinationAddress={walletAddress}
+        destinationAddress={destinationOverride?.address ?? walletAddress}
         destinationChain={destinationChainName}
         currency="USD"
         presetAmounts={[25, 50, 100, 250]}
@@ -174,18 +198,18 @@ function WidgetStage({
         mode="deposit"
         verifyOnConnect={false}
         onCancelled={onBack}
-        exchangeDestinationAddress={walletAddress || undefined}
+        exchangeDestinationAddress={
+          destinationOverride?.address ?? (walletAddress || undefined)
+        }
         exchangeSettlementChain={destinationChainName}
         exchangeSettlementChainId={settlementToken.chainId}
         createDepositAddressFlow={
-          DEPOSIT_ADDRESS_DESTINATION
-            ? createDepositAddressFlowCallback
-            : undefined
+          depositAddressDest ? createDepositAddressFlowCallback : undefined
         }
         depositAddressSettlement={{
-          symbol: "USDC",
-          decimals: 6,
-          iconUrl: (isTestnet ? USDC_ARB_SEPOLIA : USDC_BASE).logoURI,
+          symbol: depositAddressToken.symbol,
+          decimals: depositAddressToken.decimals,
+          iconUrl: depositAddressToken.logoURI,
         }}
         sourceCategories
       />
