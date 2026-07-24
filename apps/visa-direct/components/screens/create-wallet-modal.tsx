@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Check } from "lucide-react";
 import { Button } from "@dynamic-demos/ui";
+import { useTrack } from "@dynamic-demos/analytics";
 import {
   createWaasWalletAccounts,
   getChainsMissingWaasWalletAccounts,
@@ -75,6 +76,7 @@ interface CreateWalletModalProps {
  */
 export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
   const { setWallet } = usePayoutContext();
+  const { milestone } = useTrack();
   const { networkLabel } = useActiveNetwork();
   const [step, setStep] = useState<Step>("confirm");
   const [createdAddress, setCreatedAddress] = useState("");
@@ -123,6 +125,7 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
 
       setCreatedAddress(address);
       setWallet(address, "embedded");
+      milestone("wallet_created");
       setStep("done");
       // Auto-dismiss after a beat so the success card doesn't linger
       // on screen; users can still click Close to dismiss sooner.
@@ -141,7 +144,7 @@ export function CreateWalletModal({ isOpen, onClose }: CreateWalletModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-wallet-title"

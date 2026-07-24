@@ -81,7 +81,7 @@ export function YieldModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
+      <div className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">
           <div className="flex items-center gap-3">
@@ -142,7 +142,7 @@ export function YieldModal({
                   }}
                   className="w-full flex items-center gap-3 p-4 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) hover:bg-(--brand-row-hover) hover:border-(--brand-primary)/40 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-(--brand-bg) border border-(--brand-border) flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-(--brand-surface) border border-(--brand-border) flex items-center justify-center shrink-0">
                     <TrendingUp className="w-5 h-5 text-(--brand-primary)" />
                   </div>
                   <div className="flex-1 min-w-0">

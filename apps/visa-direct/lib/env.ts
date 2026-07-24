@@ -90,6 +90,9 @@ export const env = createEnv({
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string().min(1, {
       message: "NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID is required",
     }),
+
+    /** Dashboard ingest base URL for GTM analytics. Optional - no-op when unset. */
+    NEXT_PUBLIC_TRACK_URL: z.string().url().optional(),
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -104,5 +107,6 @@ export const env = createEnv({
     DASHBOARD_API_URL: process.env.DASHBOARD_API_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
+    NEXT_PUBLIC_TRACK_URL: process.env.NEXT_PUBLIC_TRACK_URL,
   },
 });

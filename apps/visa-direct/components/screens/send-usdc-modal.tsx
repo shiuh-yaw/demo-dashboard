@@ -111,7 +111,7 @@ export function SendUsdcModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
+      <div className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md">
         {/* Header */}
         {step === "form" && (
           <div className="flex items-center justify-between p-6 border-b border-(--brand-border)">

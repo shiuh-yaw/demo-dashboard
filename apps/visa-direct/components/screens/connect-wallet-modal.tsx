@@ -24,6 +24,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTrack } from "@dynamic-demos/analytics";
 import {
   X,
   Check,
@@ -140,6 +141,7 @@ export function ConnectWalletModal({
   clearLinkConflict,
 }: ConnectWalletModalProps) {
   const { setWallet } = usePayoutContext();
+  const { milestone } = useTrack();
   const [step, setStep] = useState<Step>("select");
   const [selectedExchangeKey, setSelectedExchangeKey] = useState<string | null>(
     null,
@@ -288,6 +290,7 @@ export function ConnectWalletModal({
   function handleConfirm() {
     if (!selectedExchangeKey) return;
     setWallet(address.trim(), selectedExchangeKey);
+    milestone("wallet_connected");
     setStep("done");
     // Auto-dismiss after the countdown ring drains.
     setTimeout(onClose, DONE_AUTOCLOSE_MS);
@@ -307,7 +310,7 @@ export function ConnectWalletModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="connect-wallet-title"

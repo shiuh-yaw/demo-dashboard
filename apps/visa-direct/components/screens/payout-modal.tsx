@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   X,
@@ -13,6 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button, Input } from "@dynamic-demos/ui";
+import { useTrack } from "@dynamic-demos/analytics";
 import { usePayoutContext } from "@/contexts/payout-context";
 import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useExternalWalletLabel } from "@/hooks/use-external-wallet-label";
@@ -88,6 +90,7 @@ interface PayoutModalProps {
 
 export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
   const { defaultMethod, walletAddress, walletProvider } = usePayoutContext();
+  const { milestone } = useTrack();
   const router = useRouter();
   const { networkLabel } = useActiveNetwork();
   const externalWalletLabel = useExternalWalletLabel(walletProvider);
@@ -151,6 +154,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
 
   // Called from confirm step — kicks off API + animation
   async function runPayout() {
+    milestone("payout_initiated");
     setCompletedSteps([]);
     setStep("processing");
 
@@ -188,6 +192,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
 
         setCompletedSteps(stepIds);
         setPayoutResult(result);
+        milestone("payout_completed");
 
         // Invalidate the Next.js Router Cache so the next navigation
         // to /transactions re-runs the server component and picks up
@@ -223,7 +228,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
         fireblocksId: defaultMethod === "bank" ? `ACH-${Date.now()}` : `PTC-${Date.now()}`,
         fireblocksStatus: "COMPLETED",
       });
-      // payout complete
+      milestone("payout_completed");
 
       setTimeout(() => {
         if (!cancelledRef.current) setStep("done");
@@ -233,10 +238,10 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
 
   const canClose = step !== "processing";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="payout-modal-title"
@@ -499,9 +504,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
               </div>
 
               <p className="text-xs text-(--brand-muted) text-center pt-2">
-                {isWalletPayout
-                  ? "Powered by Visa Direct × Fireblocks"
-                  : "Powered by Visa Direct"}
+                Powered by Fireblocks
               </p>
             </div>
           )}
@@ -549,12 +552,6 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
               </div>
 
               <div className="rounded-(--brand-radius) bg-(--brand-row-bg) border border-(--brand-border) divide-y divide-(--brand-border) text-xs">
-                <div className="flex justify-between px-3 py-2.5">
-                  <span className="text-(--brand-muted)">Visa Direct TX</span>
-                  <span className="font-mono text-(--brand-fg) text-right max-w-40 truncate">
-                    {payoutResult.visaDirectTxId}
-                  </span>
-                </div>
                 <div className="flex justify-between px-3 py-2.5">
                   <span className="text-(--brand-muted)">
                     {isWalletPayout ? "Fireblocks TX" : "Reference"}
@@ -606,6 +603,7 @@ export function PayoutModal({ isOpen, onClose }: PayoutModalProps) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

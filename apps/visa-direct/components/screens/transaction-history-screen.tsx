@@ -78,11 +78,6 @@ function TransactionRow({ tx, onViewPayload }: TransactionRowProps) {
 
       <div className="flex-1 min-w-0 hidden sm:block">
         <p className="text-xs text-(--brand-muted) truncate">
-          <span className="font-medium text-(--brand-fg)">VD</span>{" "}
-          {tx.visaDirectTxId}
-        </p>
-        <p className="text-xs text-(--brand-muted) truncate">
-          <span className="font-medium text-(--brand-fg)">FB</span>{" "}
           {truncateAddress(tx.fireblocksId)}
         </p>
       </div>
@@ -215,7 +210,7 @@ export function TransactionHistoryScreen({
 
         {/* Table */}
         {transactions.length > 0 && (
-          <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) overflow-hidden">
+          <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-surface) overflow-hidden">
             {/* Column headers */}
             <div className="flex items-center gap-4 px-4 py-2.5 border-b border-(--brand-border) bg-(--brand-row-bg)">
               <div className="w-28 shrink-0">

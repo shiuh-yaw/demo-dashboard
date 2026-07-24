@@ -30,7 +30,7 @@ const SECTION_LABELS: Record<string, string> = {
   remittance: "Remittance",
   trade: "Trade",
   widgets: "Widgets",
-  "visa-direct": "Visa Direct",
+  "visa-direct": "Fireblocks MTLco",
   documentation: "Documentation",
 };
 

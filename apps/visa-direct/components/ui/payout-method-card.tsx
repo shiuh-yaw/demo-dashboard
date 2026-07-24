@@ -42,7 +42,7 @@ export function PayoutMethodCard({
   return (
     <div
       className={cn(
-        "bg-(--brand-bg) rounded-(--brand-radius) border border-(--brand-border) p-5",
+        "bg-(--brand-surface) rounded-(--brand-radius) border border-(--brand-border) p-5",
         isDefault && "border-(--brand-primary)/40 shadow-sm",
         className,
       )}

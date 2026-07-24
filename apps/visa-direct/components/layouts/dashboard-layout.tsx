@@ -7,7 +7,7 @@ interface DashboardLayoutProps {
 }
 
 const HEADER_PLACEHOLDER = (
-  <div className="h-16 border-b border-(--brand-border) bg-(--brand-bg)/80" />
+  <div className="h-16 border-b border-(--brand-border) bg-(--brand-surface)/80" />
 );
 
 export function DashboardLayout({ header, children }: DashboardLayoutProps) {

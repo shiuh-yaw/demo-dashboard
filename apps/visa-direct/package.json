@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "0.13.8",
+    "@dynamic-demos/analytics": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",

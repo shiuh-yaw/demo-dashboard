@@ -138,7 +138,7 @@ export function ApiPayloadDrawer({ transaction, onClose }: ApiPayloadDrawerProps
 
       {/* Drawer */}
       <div
-        className="fixed inset-y-0 right-0 z-50 flex flex-col w-full max-w-3xl bg-(--brand-bg) shadow-2xl"
+        className="fixed inset-y-0 right-0 z-50 flex flex-col w-full max-w-3xl bg-(--brand-surface) shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="drawer-title"
@@ -168,7 +168,7 @@ export function ApiPayloadDrawer({ transaction, onClose }: ApiPayloadDrawerProps
         {/* Mapping label */}
         <div className="px-5 py-2.5 bg-(--brand-row-bg) border-b border-(--brand-border) shrink-0">
           <p className="text-xs text-(--brand-muted)">
-            <span className="font-medium text-(--brand-fg)">Visa Direct</span>
+            <span className="font-medium text-(--brand-fg)">MTLco</span>
             {" "}sendPayout  →  mapped to  → {" "}
             <span className="font-medium text-(--brand-fg)">Fireblocks</span>
             {" "}POST /v1/trading/orders
@@ -178,7 +178,7 @@ export function ApiPayloadDrawer({ transaction, onClose }: ApiPayloadDrawerProps
         {/* Side-by-side panels */}
         <div className="flex flex-col sm:flex-row flex-1 overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-(--brand-border)">
           <JsonPanel
-            title="Visa Direct"
+            title="MTLco"
             subtitle="sendPayout request"
             data={visaPayload}
             accentVar="--brand-panel-blue-bg"

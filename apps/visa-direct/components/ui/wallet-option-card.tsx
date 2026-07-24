@@ -36,7 +36,7 @@ export function WalletOptionCard({
           "w-8 h-8 flex items-center justify-center rounded-md border flex-shrink-0 mt-0.5 transition-colors",
           selected
             ? "bg-(--brand-primary)/10 border-(--brand-primary)/30 text-(--brand-primary)"
-            : "bg-(--brand-bg) border-(--brand-border) text-(--brand-muted)",
+            : "bg-(--brand-surface) border-(--brand-border) text-(--brand-muted)",
         )}
       >
         {icon}

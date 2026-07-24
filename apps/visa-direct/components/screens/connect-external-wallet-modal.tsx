@@ -22,6 +22,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTrack } from "@dynamic-demos/analytics";
 import {
   X,
   Check,
@@ -224,6 +225,7 @@ export function ConnectExternalWalletModal({
   onClose,
 }: ConnectExternalWalletModalProps) {
   const { setWallet } = usePayoutContext();
+  const { milestone } = useTrack();
   const [step, setStep] = useState<Step>("select");
   const [providers, setProviders] = useState<WalletGroup[]>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
@@ -333,6 +335,7 @@ export function ConnectExternalWalletModal({
           connectedAddress,
           `${EXTERNAL_WALLET_PROVIDER_PREFIX}${selected.key}`,
         );
+        milestone("wallet_connected");
         setStep("done");
         // Auto-close is intentionally scheduled by a *separate* effect
         // below (keyed on `step === "done"`) rather than pushed into
@@ -372,7 +375,7 @@ export function ConnectExternalWalletModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="bg-(--brand-bg) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
+        className="bg-(--brand-surface) rounded-(--brand-radius-lg) shadow-xl w-full max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="connect-external-wallet-title"
@@ -673,7 +676,7 @@ function WalletBadge({
     <div
       className={cn(
         sizeClass,
-        "flex items-center justify-center flex-shrink-0 bg-(--brand-bg) border border-(--brand-border) p-1 overflow-hidden",
+        "flex items-center justify-center flex-shrink-0 bg-(--brand-surface) border border-(--brand-border) p-1 overflow-hidden",
       )}
     >
       {group.iconUrl ? (

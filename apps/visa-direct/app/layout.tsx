@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { widgetThemeToBrandTheme } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
+import { GtmTracker, BookACallCta } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { VisaDirectConfigProvider } from "@/contexts/visa-direct-config-context";
 import { DEFAULT_VISA_DIRECT_CONFIG } from "@/lib/visa-direct-config";
@@ -46,11 +47,14 @@ export default async function RootLayout({
         <ThemeStyleTag theme={brandTheme} overridesOnly />
       </head>
       <body>
-        <Providers>
-          <VisaDirectConfigProvider config={resolvedConfig}>
-            {children}
-          </VisaDirectConfigProvider>
-        </Providers>
+        <GtmTracker demoSlug="visa-direct">
+          <Providers>
+            <VisaDirectConfigProvider config={resolvedConfig}>
+              {children}
+            </VisaDirectConfigProvider>
+          </Providers>
+          <BookACallCta />
+        </GtmTracker>
       </body>
     </html>
   );

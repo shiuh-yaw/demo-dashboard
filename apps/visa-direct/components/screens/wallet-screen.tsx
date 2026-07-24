@@ -153,7 +153,7 @@ export function WalletScreen() {
         </div>
 
         {/* Balance hero */}
-        <section className="relative overflow-hidden rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) p-6">
+        <section className="relative overflow-hidden rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-surface) p-6">
           <div
             aria-hidden="true"
             className="absolute -top-20 -right-24 w-72 h-72 rounded-full blur-3xl opacity-10 bg-(--brand-primary)"
@@ -248,7 +248,7 @@ export function WalletScreen() {
               onStart={() => setYieldOpen(true)}
             />
           ) : (
-            <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) divide-y divide-(--brand-border)">
+            <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-surface) divide-y divide-(--brand-border)">
               {positions.map((p) => {
                 const s = strategyById.get(p.strategyId);
                 if (!s) return null;
@@ -301,14 +301,14 @@ export function WalletScreen() {
         <section>
           <Link
             href="/transactions"
-            className="flex items-center justify-between p-4 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-bg) hover:bg-(--brand-row-hover) transition-colors"
+            className="flex items-center justify-between p-4 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-surface) hover:bg-(--brand-row-hover) transition-colors"
           >
             <div>
               <p className="text-sm font-semibold text-(--brand-fg)">
                 Recent payouts
               </p>
               <p className="text-xs text-(--brand-muted) mt-0.5">
-                See every Visa Direct push into this wallet
+                See every payout into this wallet
               </p>
             </div>
             <ArrowUpRight className="w-4 h-4 text-(--brand-muted)" />
@@ -367,7 +367,7 @@ function ActionTile({
         "group flex flex-col items-start gap-2 p-4 rounded-(--brand-radius) border text-left transition-all",
         disabled
           ? "border-(--brand-border) bg-(--brand-row-bg) opacity-60"
-          : "border-(--brand-border) bg-(--brand-bg) hover:bg-(--brand-row-hover) hover:border-(--brand-primary)/40 hover:-translate-y-0.5",
+          : "border-(--brand-border) bg-(--brand-surface) hover:bg-(--brand-row-hover) hover:border-(--brand-primary)/40 hover:-translate-y-0.5",
       )}
     >
       <div
@@ -397,7 +397,7 @@ function YieldPreview({
 }) {
   const bestApy = Math.max(...strategies.map((s) => s.apy));
   return (
-    <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-bg) p-5">
+    <div className="rounded-(--brand-radius-lg) border border-(--brand-border) bg-(--brand-surface) p-5">
       <div className="flex items-start gap-3">
         <div className="w-9 h-9 rounded-full bg-(--brand-primary)/10 flex items-center justify-center text-(--brand-primary) shrink-0">
           <Sparkles className="w-4 h-4" />

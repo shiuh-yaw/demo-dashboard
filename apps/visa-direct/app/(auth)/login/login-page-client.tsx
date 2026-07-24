@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useTrack } from "@dynamic-demos/analytics";
 import { useSearchParams } from "next/navigation";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { WidgetLayout } from "@/components/ui/widget-layout";
@@ -25,14 +26,16 @@ export function LoginPageClient() {
 
   const isClientReady = useClientInitialized();
   const { branding } = useVisaDirectConfig();
+  const { milestone } = useTrack();
 
   const goToApp = useCallback(() => {
+    milestone("signed_in");
     const destination = returnTo || "/payment-methods";
     const path = destination.startsWith("/")
       ? destination
       : `/${destination}`;
     window.location.href = path;
-  }, [returnTo]);
+  }, [returnTo, milestone]);
 
   const authNavigation = useMemo(
     () => ({
