@@ -8,12 +8,14 @@ import { describe, expect, it, vi } from "vitest";
 import {
   canMutateDemoConfig,
   canMutateProspect,
+  canReassignProspect,
   emailDomainAllowed,
   isDemoConfigVisible,
   isProspectVisible,
   parseAllowedDomains,
   resolveSessionUser,
   visibleProspectIds,
+  canViewProspect,
   type SessionUserDeps,
 } from "@/lib/auth/gtm";
 import { PostgresGtmUserService } from "@/lib/services/postgres/users";
@@ -227,16 +229,30 @@ function mkProspect(over: Partial<Prospect>): Prospect {
     rowHoverBackground: null,
     gradientFrom: null,
     gradientTo: null,
-    demoEarnId: null,
-    demoCheckoutsId: null,
-    demoWalletId: null,
-    demoRemittanceId: null,
     domain: null,
     notes: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...over,
   };
+}
+
+/** In-memory matcher for the where fragments `visibleProspectIds` builds -
+ * just OR/`{in}`/plain-equality, enough for the fixtures under test. */
+function matchesWhere(where: Record<string, unknown>, row: object): boolean {
+  const r = row as Record<string, unknown>;
+  for (const [key, cond] of Object.entries(where)) {
+    if (key === "OR") {
+      if (!(cond as Record<string, unknown>[]).some((c) => matchesWhere(c, r))) return false;
+      continue;
+    }
+    if (cond !== null && typeof cond === "object" && "in" in (cond as object)) {
+      if (!(cond as { in: unknown[] }).in.includes(r[key])) return false;
+      continue;
+    }
+    if (r[key] !== cond) return false;
+  }
+  return true;
 }
 
 describe("visibleProspectIds (progressive: own + team)", () => {
@@ -262,7 +278,13 @@ describe("visibleProspectIds (progressive: own + team)", () => {
           })),
         ),
       },
-      prospects: { list: vi.fn().mockResolvedValue(prospects), get: vi.fn() },
+      prospects: {
+        listIds: vi.fn((where: Record<string, unknown>) =>
+          Promise.resolve(
+            prospects.filter((p) => matchesWhere(where, p)).map((p) => p.id),
+          ),
+        ),
+      },
     };
   }
 
@@ -304,6 +326,64 @@ describe("visibleProspectIds (progressive: own + team)", () => {
   });
 });
 
+describe("canViewProspect (in-memory single-row sibling of visibleProspectIds)", () => {
+  const teamsDep = (memberships: { teamId: string; role: UserRole }[]) => ({
+    teams: {
+      membershipsForUser: vi.fn().mockResolvedValue(
+        memberships.map((m, i) => ({
+          id: `m${i}`,
+          userId: "u1",
+          teamId: m.teamId,
+          role: m.role,
+          createdAt: new Date(),
+        })),
+      ),
+    },
+  });
+  const pOwn = mkProspect({ id: "p-own", createdById: "u1", teamId: null });
+  const pLegacy = mkProspect({
+    id: "p-legacy",
+    createdById: null,
+    ownerId: "sub-1",
+    teamId: null,
+  });
+  const pTeam = mkProspect({ id: "p-team", createdById: "u2", teamId: "team-1" });
+  const pOther = mkProspect({ id: "p-other", createdById: "u3", teamId: "team-2" });
+
+  it("ADMIN/OWNER may view any prospect without a membership read", async () => {
+    const deps = teamsDep([]);
+    expect(await canViewProspect(mkUser("ADMIN"), pOther, deps)).toBe(true);
+    expect(await canViewProspect(mkUser("OWNER"), pOther, deps)).toBe(true);
+    expect(deps.teams.membershipsForUser).not.toHaveBeenCalled();
+  });
+
+  it("owner sees own rows (createdById, or legacy ownerId) without a membership read", async () => {
+    const deps = teamsDep([]);
+    expect(await canViewProspect(mkUser("MEMBER"), pOwn, deps)).toBe(true);
+    expect(await canViewProspect(mkUser("MEMBER"), pLegacy, deps)).toBe(true);
+    expect(deps.teams.membershipsForUser).not.toHaveBeenCalled();
+  });
+
+  it("team member sees the team's prospect; a non-member does not", async () => {
+    expect(
+      await canViewProspect(
+        mkUser("MEMBER"),
+        pTeam,
+        teamsDep([{ teamId: "team-1", role: "MEMBER" }]),
+      ),
+    ).toBe(true);
+    expect(await canViewProspect(mkUser("MEMBER"), pOther, teamsDep([]))).toBe(
+      false,
+    );
+  });
+
+  it("MEMBER cannot view another member's prospect", async () => {
+    const other = mkUser("MEMBER", { id: "u9", dynamicUserId: "sub-9" });
+    expect(await canViewProspect(other, pOwn, teamsDep([]))).toBe(false);
+    expect(await canViewProspect(other, pLegacy, teamsDep([]))).toBe(false);
+  });
+});
+
 describe("isProspectVisible / isDemoConfigVisible", () => {
   const u = mkUser("MEMBER");
 
@@ -313,6 +393,24 @@ describe("isProspectVisible / isDemoConfigVisible", () => {
     expect(isProspectVisible(new Set(["p1"]), "p1")).toBe(true);
     expect(isProspectVisible(new Set(["p1"]), "p2")).toBe(false);
     expect(isProspectVisible(new Set(), null)).toBe(false);
+  });
+
+  it("isDemoConfigVisible: an orphan row is never visible to a user with no dynamicUserId (no null===null match)", () => {
+    const noSub = mkUser("MEMBER", { dynamicUserId: null });
+    expect(
+      isDemoConfigVisible(noSub, new Set(), {
+        prospectId: null,
+        createdById: null,
+        ownerId: "",
+      }),
+    ).toBe(false);
+    expect(
+      isDemoConfigVisible(noSub, new Set(), {
+        prospectId: null,
+        createdById: null,
+        ownerId: null,
+      }),
+    ).toBe(false);
   });
 
   it("isDemoConfigVisible: bound, not-owned follows prospect visibility", () => {
@@ -496,6 +594,77 @@ describe("canMutateProspect / canMutateDemoConfig (progressive)", () => {
         mkUser("MEMBER"),
         { prospectId: null, createdById: "u2", ownerId: "sub-2" },
         deps,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("canReassignProspect (stricter than canMutateProspect - no team escalation)", () => {
+  it("the current owner may reassign their own prospect", () => {
+    expect(
+      canReassignProspect(
+        mkUser("MEMBER"),
+        mkProspect({ createdById: "u1", ownerId: "sub-1" }),
+      ),
+    ).toBe(true);
+  });
+
+  it("a non-owner MEMBER may not reassign another member's prospect", () => {
+    expect(
+      canReassignProspect(
+        mkUser("MEMBER"),
+        mkProspect({ createdById: "u2", ownerId: "sub-2" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("a team OWNER/ADMIN does NOT qualify - unlike canMutateProspect, team role never grants reassignment", () => {
+    // mkUser defaults role to the arg only (global role); team membership is
+    // irrelevant here since canReassignProspect takes no team deps at all -
+    // this test documents that a team-scoped elevation path doesn't exist.
+    expect(
+      canReassignProspect(
+        mkUser("MEMBER", { id: "team-lead" }),
+        mkProspect({ createdById: "u2", ownerId: "sub-2" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("global ADMIN/OWNER may reassign anything, including orphan rows", () => {
+    expect(
+      canReassignProspect(
+        mkUser("ADMIN"),
+        mkProspect({ createdById: "u2", ownerId: "sub-2" }),
+      ),
+    ).toBe(true);
+    expect(
+      canReassignProspect(
+        mkUser("OWNER"),
+        mkProspect({ createdById: null, ownerId: "" }),
+      ),
+    ).toBe(true);
+  });
+
+  it("a global VIEWER never reassigns, even a prospect they own", () => {
+    expect(
+      canReassignProspect(
+        mkUser("VIEWER"),
+        mkProspect({ createdById: "u1", ownerId: "sub-1" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("falls back to legacy ownerId (dynamicUserId match) when createdById is unset", () => {
+    expect(
+      canReassignProspect(
+        mkUser("MEMBER", { dynamicUserId: "sub-legacy" }),
+        mkProspect({ createdById: null, ownerId: "sub-legacy" }),
+      ),
+    ).toBe(true);
+    expect(
+      canReassignProspect(
+        mkUser("MEMBER", { dynamicUserId: "sub-legacy" }),
+        mkProspect({ createdById: null, ownerId: "sub-other" }),
       ),
     ).toBe(false);
   });

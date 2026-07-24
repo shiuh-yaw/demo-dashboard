@@ -170,11 +170,11 @@ export function OTPConfirmationView({
       <div>
         <label
           htmlFor="otp-input-0"
-          className="block text-base font-semibold text-slate-900 mb-2 text-center"
+          className="block text-base font-semibold text-[var(--widget-fg,#0f172a)] mb-2 text-center"
         >
           Verification Code
         </label>
-        <p className="text-xs text-slate-500 mb-4 text-center max-w-[280px] mx-auto">
+        <p className="text-xs text-[var(--widget-muted,#64748b)] mb-4 text-center max-w-[280px] mx-auto">
           We've sent a verification code to {email}
         </p>
         <div className="flex gap-2 justify-center">
@@ -196,12 +196,12 @@ export function OTPConfirmationView({
               maxLength={1}
               className={cn(
                 "w-11 h-12 p-0 text-center text-lg font-semibold",
-                "bg-slate-50 border border-slate-200 rounded-lg",
-                "text-slate-900",
-                "focus:outline-none focus:ring-2 focus:ring-[#4779FF]/20 focus:border-[#4779FF] focus:bg-white",
+                "bg-[var(--widget-row-bg,#f6f8f8)] border border-[var(--widget-border,#e1e4ea)] rounded-lg",
+                "text-[var(--widget-fg,#0f172a)]",
+                "focus:outline-none focus:ring-2 focus:ring-[var(--widget-primary,#335cff)]/20 focus:border-[var(--widget-primary,#335cff)] focus:bg-[var(--widget-bg,#ffffff)]",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 "transition-all",
-                error && "border-red-300"
+                error && "border-red-300 dark:border-red-900"
               )}
               aria-label={`Digit ${index + 1} of verification code`}
             />
@@ -214,7 +214,7 @@ export function OTPConfirmationView({
             onClick={handleResend}
             disabled={isResending || isLoading}
             className={cn(
-              "text-xs text-[#4779FF] hover:text-[#3968e8]",
+              "text-xs text-[var(--widget-accent,#4779ff)] hover:opacity-80",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors underline cursor-pointer"
             )}
@@ -232,7 +232,7 @@ export function OTPConfirmationView({
       {error && (
         <div
           role="alert"
-          className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
+          className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 dark:text-red-400 dark:bg-red-950/20 dark:border-red-900/50"
         >
           {error}
         </div>
@@ -249,17 +249,12 @@ export function OTPConfirmationView({
           className="w-11 h-11"
           title="Back to email"
         >
-          <ArrowLeft className="w-4 h-4 text-slate-600" />
+          <ArrowLeft className="w-4 h-4" />
         </Button>
         <Button
           type="submit"
           disabled={isLoading || otpString.length !== 6}
-          className={cn(
-            "flex-1 h-11 gap-2",
-            "bg-[#4779FF] hover:bg-[#3968e8] text-white text-sm font-medium",
-            "rounded-lg",
-            "focus:ring-2 focus:ring-[#4779FF]/50 focus:ring-offset-2"
-          )}
+          className={cn("flex-1 h-11 gap-2 text-sm font-medium")}
         >
           {isLoading ? (
             <>

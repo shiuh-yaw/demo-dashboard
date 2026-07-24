@@ -16,10 +16,14 @@ import {
   canMutateDemoConfig,
   visibleProspectIds,
   isDemoConfigVisible,
+  demoConfigActiveScopeWhere,
+  resolveActiveScope,
 } from "@/lib/auth/gtm";
 import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
+import { prospectsByIdFor } from "@/lib/actions/demo-config-prospects";
+import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
 import { walletMapper } from "@/lib/services/demo-config-mappers/wallet";
 import type { StoredWalletConfig, WalletConfig } from "@/lib/types/dashboard";
 
@@ -52,7 +56,6 @@ export async function createWalletConfig(
       ? await services.prospects.get(record.prospectId)
       : null;
     const stored = walletMapper.toStored(record, prospect);
-    revalidatePath("/");
     revalidatePath("/wallets");
     return { success: true, data: stored };
   } catch (err) {
@@ -121,7 +124,6 @@ export async function updateWalletConfig(
       ? await services.prospects.get(updated.prospectId)
       : null;
     const stored = walletMapper.toStored(updated, prospect);
-    revalidatePath("/");
     revalidatePath("/wallets");
     revalidatePath(`/wallets/${id}`);
     return { success: true, data: stored };
@@ -145,7 +147,6 @@ export async function deleteWalletConfig(
       return { success: false, error: "Access denied" };
     }
     await services.demoConfigs.delete(id);
-    revalidatePath("/");
     revalidatePath("/wallets");
     return { success: true, data: { deleted: true } };
   } catch (err) {
@@ -161,17 +162,22 @@ export async function getAllWalletConfigs(): Promise<{
   const user = await getSessionUser();
   if (!user) return { configs: [], orphaned: [] };
 
-  const visible = await visibleProspectIds(user);
-  const all = (await services.demoConfigs.list({ kind: "wallet" })).filter((r) =>
-    isDemoConfigVisible(user, visible, r),
-  );
-  const stored = await Promise.all(
-    all.map(async (record) => {
-      const prospect = record.prospectId
-        ? await services.prospects.get(record.prospectId)
-        : null;
-      return walletMapper.toStored(record, prospect);
-    }),
+  const scope = await resolveActiveScope(user);
+  // Scoped + kind-filtered in the DB query, not a full-list JS filter.
+  // Bounded join fetch (not a paginated list) - same idiom as earns.ts.
+  const all = (
+    await services.demoConfigs.list({
+      where: demoConfigActiveScopeWhere(user, scope),
+      kind: "wallet",
+      limit: MAX_PAGE_LIMIT,
+    })
+  ).items;
+  const prospectsById = await prospectsByIdFor(all);
+  const stored = all.map((record) =>
+    walletMapper.toStored(
+      record,
+      record.prospectId ? prospectsById.get(record.prospectId) ?? null : null,
+    ),
   );
   const userConfigs = stored.filter((c) => c.ownerId);
   const orphanedConfigs = stored.filter((c) => !c.ownerId);

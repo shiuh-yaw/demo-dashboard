@@ -154,58 +154,6 @@ export const env = createEnv({
      */
     DIRECT_URL: z.string().url().optional(),
     /**
-     * Phase 2-brands cutover flag.
-     * When "true", the dashboard reads/writes Prospect records via Postgres
-     * (`@dynamic-demos/db`). When "false" (default), the Redis-backed
-     * implementation handles them. The two implementations satisfy the
-     * same `ProspectService` contract (see lib/services/__tests__/prospects.parity.test.ts)
-     * so production can be flipped without code changes.
-     */
-    USE_POSTGRES_PROSPECTS: z
-      .enum(["true", "false"])
-      .optional()
-      .default("false")
-      .transform((v) => v === "true"),
-    /**
-     * Phase 2-transactions cutover flag.
-     * When "true", the dashboard reads/writes canonical TransactionRecord
-     * rows (the state-machine carrier from `@dynamic-demos/transactions`)
-     * via Postgres (`@dynamic-demos/db`). When "false" (default), the
-     * Redis-backed implementation handles them. Both implementations
-     * satisfy the same `TransactionRecordService` contract (see
-     * lib/services/__tests__/transactions.parity.test.ts) and call
-     * `assertValidTransition` at the boundary before every state mutation.
-     *
-     * The webhook event store is Postgres-only by design (D-011): when
-     * this flag is "false", `WebhookEventService` still resolves to the
-     * Postgres implementation. Phase 5A's webhook receiver framework
-     * therefore requires `DATABASE_URL` populated even when the rest of
-     * the dashboard is on Redis.
-     */
-    USE_POSTGRES_TRANSACTIONS: z
-      .enum(["true", "false"])
-      .optional()
-      .default("false")
-      .transform((v) => v === "true"),
-    /**
-     * Phase 2 unified `DemoConfig` cutover flag.
-     * When "true", the dashboard reads/writes `DemoConfig` records
-     * (every demo kind — earn, wallet, trade, visa-direct, checkout,
-     * remittance) via Postgres (`@dynamic-demos/db`). When "false"
-     * (default), the Redis-backed implementation handles them. Both
-     * implementations satisfy the same `DemoConfigService` contract
-     * (see lib/services/__tests__/demo-configs.parity.test.ts).
-     *
-     * The legacy `RemittanceConfig` table has been folded into
-     * `DemoConfig` with `kind="remittance"`; remittance rows now route
-     * through this flag too.
-     */
-    USE_POSTGRES_DEMO_CONFIGS: z
-      .enum(["true", "false"])
-      .optional()
-      .default("false")
-      .transform((v) => v === "true"),
-    /**
      * Magic-send vault private key (sandbox).
      * 0x-prefixed hex string. Drives the custodial EOA that funds the
      * embedded wallet leg of magic-send (Phase 7). Sandbox per D-005;
@@ -239,9 +187,9 @@ export const env = createEnv({
      */
     DYNAMIC_WEBHOOK_SECRET: z.string().optional(),
     /**
-     * Dynamic admin API bearer token (`dyn_...`). Server-only. Used solely
-     * by the `backfill:users` script to list environment users; no runtime
-     * request path reads it. Sandbox-by-default per D-005.
+     * Dynamic admin API bearer token (`dyn_...`). Server-only. Reserved for
+     * admin API access (e.g. listing environment users); no runtime request
+     * path reads it today. Sandbox-by-default per D-005.
      */
     DYNAMIC_API_TOKEN: z.string().optional(),
     /**
@@ -359,9 +307,6 @@ export const env = createEnv({
     IRON_MERCHANT_OFFRAMP_CURRENCY: process.env.IRON_MERCHANT_OFFRAMP_CURRENCY,
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
-    USE_POSTGRES_PROSPECTS: process.env.USE_POSTGRES_PROSPECTS,
-    USE_POSTGRES_TRANSACTIONS: process.env.USE_POSTGRES_TRANSACTIONS,
-    USE_POSTGRES_DEMO_CONFIGS: process.env.USE_POSTGRES_DEMO_CONFIGS,
     MAGIC_SEND_VAULT_PRIVATE_KEY: process.env.MAGIC_SEND_VAULT_PRIVATE_KEY,
     MAGIC_SEND_VAULT_CHAIN_ID: process.env.MAGIC_SEND_VAULT_CHAIN_ID,
     MAGIC_SEND_VAULT_RPC_URL: process.env.MAGIC_SEND_VAULT_RPC_URL,

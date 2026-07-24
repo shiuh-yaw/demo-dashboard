@@ -229,4 +229,40 @@ describe("PostgresShareLinkService", () => {
       expect(await svc.findByToken("unknown-token")).toBeNull();
     });
   });
+
+  describe("countByUser", () => {
+    it("counts every link ever minted by the user, regardless of status", async () => {
+      const { svc } = buildService({
+        prospectIds: ["prospect_1", "prospect_2"],
+      });
+      await svc.mint({
+        demoConfigId: "dc_1",
+        prospectId: "prospect_1",
+        userId: "user_1",
+      });
+      const second = await svc.mint({
+        demoConfigId: "dc_1",
+        prospectId: "prospect_2",
+        userId: "user_1",
+      });
+      await svc.revoke(second.id);
+
+      expect(await svc.countByUser("user_1")).toBe(2);
+    });
+
+    it("is 0 for a user who has never minted a link", async () => {
+      const { svc } = buildService();
+      expect(await svc.countByUser("user-with-no-links")).toBe(0);
+    });
+
+    it("does not count links minted by other users", async () => {
+      const { svc } = buildService({ userIds: ["user_1", "user_2"] });
+      await svc.mint({
+        demoConfigId: "dc_1",
+        prospectId: "prospect_1",
+        userId: "user_1",
+      });
+      expect(await svc.countByUser("user_2")).toBe(0);
+    });
+  });
 });

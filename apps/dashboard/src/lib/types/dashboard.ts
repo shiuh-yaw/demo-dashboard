@@ -8,6 +8,7 @@ import { TransactionState } from "@dynamic-demos/transactions";
 import type { WidgetTheme } from "@dynamic-demos/theme";
 
 import type { WidgetConfig } from "../widget-config";
+import type { DemoConfigKind } from "../services/types";
 
 // =============================================================================
 // Checkout Configuration
@@ -620,18 +621,13 @@ export interface ProspectSettings {
 }
 
 /**
- * Demo config references - IDs of auto-generated configs
+ * Demo config references - the resolved demo-config id per kind, one entry
+ * per DEMO_CONFIG_KINDS value the prospect has at least one built config
+ * for. Resolved via `resolveProspectDemos` from `DemoConfig.prospectId`
+ * grouped by kind (isPrimary wins, else most recently updated) - never
+ * stored on the Prospect row itself.
  */
-export interface ProspectDemos {
-  /** Earn demo config ID */
-  earn?: string;
-  /** Checkouts demo config ID */
-  checkouts?: string;
-  /** Wallet demo config ID */
-  wallet?: string;
-  /** Remittance demo config ID */
-  remittance?: string;
-}
+export type ProspectDemos = Partial<Record<DemoConfigKind, string>>;
 
 /**
  * Prospect Profile - unified branding across all demo types
@@ -652,6 +648,12 @@ export interface ProspectProfile {
   demos: ProspectDemos;
   /** Owner ID who created this profile */
   ownerId?: string;
+  /** Resolved owner (FK -> User.id); null/absent for legacy rows not yet reconciled - drives Ownership reassignment. */
+  createdById?: string | null;
+  /** Current owner as a User.id: createdById when set, else the User whose dynamicUserId matches legacy ownerId; null when neither resolves. Populated by getProspectProfile/updateProspectProfile/reassignProspectOwner/reassignProspectTeam for the Ownership select - other ProspectProfile producers leave it undefined. */
+  resolvedOwnerId?: string | null;
+  /** Owning team; null/absent until explicitly assigned - drives Ownership reassignment. */
+  teamId?: string | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

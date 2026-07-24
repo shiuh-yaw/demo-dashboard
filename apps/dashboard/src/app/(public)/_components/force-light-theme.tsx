@@ -13,6 +13,13 @@ export function ForceLightTheme() {
   useEffect(() => {
     document.documentElement.classList.remove("dark");
     document.documentElement.style.colorScheme = "light";
+    // The shell-less gate screens (GateSystemTheme) intentionally leave the
+    // operator surface + dark theme on <body> so gate->gate navigation does
+    // not flash; strip it here so a client-side nav into the public surface
+    // resets fully to light.
+    document.body.classList.remove("dark");
+    delete document.body.dataset.surface;
+    delete document.body.dataset.theme;
   }, []);
   return null;
 }

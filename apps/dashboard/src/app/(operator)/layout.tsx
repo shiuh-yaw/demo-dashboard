@@ -1,11 +1,20 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import Providers from "@/lib/providers";
 import { isDashboardAuthenticated } from "@/lib/auth/session";
 import { getSessionUser, GTM_DENIED_PATH } from "@/lib/auth/gtm";
+import { cookies, headers } from "next/headers";
 import DashboardLoginForm from "@/components/login-form";
-import { Sidebar } from "@/components/sidebar";
+import { BrandGateLayout } from "@/components/brand-gate-layout";
+import { OperatorShell } from "@/components/operator-shell";
+import { Toaster } from "@/components/droplet-client";
+import { getScopeContext } from "@/lib/actions/scope";
+import {
+  ONBOARDING_SEEN_COOKIE,
+  SIDEBAR_COOKIE,
+  THEME_COOKIE,
+  parseTheme,
+  shouldRedirectToOnboarding,
+} from "@/lib/operator-prefs";
 
 interface OperatorLayoutProps {
   children: React.ReactNode;
@@ -28,16 +37,9 @@ export default async function OperatorLayout({
   if (!hasSession) {
     return (
       <Providers>
-        <div className="relative min-h-screen bg-[#fafbfc] flex items-center justify-center p-6">
-          <Link
-            href="/"
-            className="absolute left-6 top-6 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to demos
-          </Link>
+        <BrandGateLayout backLink={{ href: "/", label: "Back to demos" }}>
           <DashboardLoginForm />
-        </div>
+        </BrandGateLayout>
       </Providers>
     );
   }
@@ -45,16 +47,53 @@ export default async function OperatorLayout({
   const user = await getSessionUser();
   if (!user) redirect(GTM_DENIED_PATH);
 
+  const [scope, cookieStore, requestHeaders] = await Promise.all([
+    getScopeContext(),
+    cookies(),
+    headers(),
+  ]);
+  const collapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
+  const theme = parseTheme(cookieStore.get(THEME_COOKIE)?.value);
+
+  // First-run gate (Phase 2): a not-yet-onboarded browser (cookie absent) is
+  // sent to the welcome route before it reaches anything else, unless it's
+  // already headed there (avoids a redirect loop). `x-pathname` is set by
+  // `middleware.ts` for every operator route.
+  if (
+    shouldRedirectToOnboarding(
+      cookieStore.get(ONBOARDING_SEEN_COOKIE)?.value,
+      requestHeaders.get("x-pathname"),
+    )
+  ) {
+    redirect("/dashboard/welcome");
+  }
+
+  // The onboarding gate owns the full screen: render it outside the operator
+  // shell (no sidebar / top bar), while the auth + allowlist checks above
+  // still apply. Its own chrome lives in `dashboard/welcome/layout.tsx`.
+  if (requestHeaders.get("x-pathname") === "/dashboard/welcome") {
+    return (
+      <Providers>
+        <div data-surface="operator">{children}</div>
+        <Toaster />
+      </Providers>
+    );
+  }
+
   return (
     <Providers>
-      <div className="min-h-screen bg-[#f8fafc] flex">
-        <Sidebar
-          user={{ sub: user.dynamicUserId ?? user.id, email: user.email }}
-        />
-        <main className="flex-1 ml-16 transition-all duration-200">
-          <div className="max-w-5xl mx-auto p-8">{children}</div>
-        </main>
-      </div>
+      <OperatorShell
+        role={user.role}
+        user={{ sub: user.dynamicUserId ?? user.id, email: user.email }}
+        teams={scope.teams}
+        isAdmin={scope.isAdmin}
+        activeCtx={scope.activeCtx}
+        initialCollapsed={collapsed}
+        initialTheme={theme}
+      >
+        {children}
+      </OperatorShell>
+      <Toaster />
     </Providers>
   );
 }

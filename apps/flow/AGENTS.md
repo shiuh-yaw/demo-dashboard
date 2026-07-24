@@ -116,6 +116,11 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 | `DASHBOARD_API_URL` | `/kyc-deposit` scenario — proxies SumSub calls to dashboard (D-003) | Yes |
 | `ALCHEMY_API_KEY` | `/api/kyc-deposit/balances` - Base Sepolia USDC balance reads (Alchemy is D-003-exempt like proceeds/remittance/trade; see `packages/alchemy/AGENTS.md`) | Yes |
 | `NEXT_PUBLIC_FLOW_DEPOSIT_DESTINATION` | Deposit-address funding source on `/deposit` + `/checkout` - EVM settlement destination for flows created with no connected wallet. Row hidden when unset, unless the `to_address` URL param supplies a destination (which overrides this value and enables the row per-link). | No (NEXT_PUBLIC; public address, not a secret) |
+| `NEXT_PUBLIC_TRACK_URL` | GTM ingest base URL for `@dynamic-demos/analytics` - optional. Unset -> `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged. | No (NEXT_PUBLIC) |
+
+## Analytics
+
+`<GtmTracker demoSlug="flow">` wraps the tree in `app/layout.tsx` (no-ops with `NEXT_PUBLIC_TRACK_URL` unset). Pageviews and heartbeats are automatic (package-owned) - no per-app milestone taxonomy is wired up yet.
 
 ## Architecture invariants
 

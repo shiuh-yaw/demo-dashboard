@@ -16,10 +16,14 @@ import {
   canMutateDemoConfig,
   visibleProspectIds,
   isDemoConfigVisible,
+  demoConfigActiveScopeWhere,
+  resolveActiveScope,
 } from "@/lib/auth/gtm";
 import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
+import { prospectsByIdFor } from "@/lib/actions/demo-config-prospects";
+import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
 import { visaDirectMapper } from "@/lib/services/demo-config-mappers/visa-direct";
 import type {
   StoredVisaDirectConfig,
@@ -54,7 +58,6 @@ export async function createVisaDirectConfig(
       ? await services.prospects.get(record.prospectId)
       : null;
     const stored = visaDirectMapper.toStored(record, prospect);
-    revalidatePath("/");
     revalidatePath("/visa-direct");
     return { success: true, data: stored };
   } catch (err) {
@@ -123,7 +126,6 @@ export async function updateVisaDirectConfig(
       ? await services.prospects.get(updated.prospectId)
       : null;
     const stored = visaDirectMapper.toStored(updated, prospect);
-    revalidatePath("/");
     revalidatePath("/visa-direct");
     revalidatePath(`/visa-direct/${id}`);
     return { success: true, data: stored };
@@ -147,7 +149,6 @@ export async function deleteVisaDirectConfig(
       return { success: false, error: "Access denied" };
     }
     await services.demoConfigs.delete(id);
-    revalidatePath("/");
     revalidatePath("/visa-direct");
     return { success: true, data: { deleted: true } };
   } catch (err) {
@@ -162,17 +163,22 @@ export async function getAllVisaDirectConfigs(): Promise<{
 }> {
   const user = await getSessionUser();
   if (!user) return { configs: [], orphaned: [] };
-  const visible = await visibleProspectIds(user);
-  const all = (await services.demoConfigs.list({ kind: "visa-direct" })).filter((r) =>
-    isDemoConfigVisible(user, visible, r),
-  );
-  const stored = await Promise.all(
-    all.map(async (record) => {
-      const prospect = record.prospectId
-        ? await services.prospects.get(record.prospectId)
-        : null;
-      return visaDirectMapper.toStored(record, prospect);
-    }),
+  const scope = await resolveActiveScope(user);
+  // Scoped + kind-filtered in the DB query, not a full-list JS filter.
+  // Bounded join fetch (not a paginated list) - same idiom as earns.ts.
+  const all = (
+    await services.demoConfigs.list({
+      where: demoConfigActiveScopeWhere(user, scope),
+      kind: "visa-direct",
+      limit: MAX_PAGE_LIMIT,
+    })
+  ).items;
+  const prospectsById = await prospectsByIdFor(all);
+  const stored = all.map((record) =>
+    visaDirectMapper.toStored(
+      record,
+      record.prospectId ? prospectsById.get(record.prospectId) ?? null : null,
+    ),
   );
   const userConfigs = stored.filter((c) => c.ownerId);
   const orphanedConfigs = stored.filter((c) => !c.ownerId);

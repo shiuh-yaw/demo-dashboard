@@ -1,19 +1,10 @@
 /**
- * Postgres service-layer implementations.
- *
- * Sibling of `../redis/`. Phase 2 scaffold — empty by design.
- *
- * As each per-demo-type migration lands, the corresponding Postgres-backed
- * service module appears here (e.g., `prospects.ts`, `remittance.ts`,
- * `transactions.ts`) implementing the contracts defined in
- * `../types.ts`. Until then there is nothing to export.
- *
- * Service-abstraction routing (Redis vs Postgres) lives in
- * `../index.ts` and gates on per-record feature flags (e.g.,
- * `USE_POSTGRES_PROSPECTS`) so a flip is reversible without code changes.
+ * Postgres service-layer implementations — the canonical backend for
+ * prospects, demo configs, transaction records, webhook events, and the
+ * GTM stores (users, teams, share links, visitor sessions, analytics).
+ * Instantiated in `../index.ts`.
  *
  * D-015: only `apps/dashboard` may import `@dynamic-demos/db`. Other apps
  * fetch via the dashboard HTTP API.
  */
 export { PostgresProspectService } from "./prospects";
-export type { ProspectPrismaClient } from "./prospects";

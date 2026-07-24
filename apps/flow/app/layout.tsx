@@ -17,6 +17,7 @@ import {
   SiteFooter,
   SiteHeader,
 } from "@dynamic-demos/ui";
+import { GtmTracker } from "@dynamic-demos/analytics";
 import { FlowMark } from "@/components/scenario-chrome";
 import { Providers } from "./providers";
 
@@ -98,47 +99,51 @@ export default async function RootLayout({
         <ThemeStyleTag theme={brandTheme} overridesOnly />
       </head>
       <body className={`${dmSans.className} bg-(--brand-page-bg)`}>
-        <Providers>
-          <div className="flex min-h-dvh flex-col">
-            {configId ? (
-              // Branded rule (wallet/earn/trade parity): the Dynamic
-              // site header hides and the shared brand bar takes its
-              // place - sticky with SiteHeader's geometry so the
-              // scenario pages' 104px widget offset holds.
-              <ScenarioBrandRow
-                variant="bar"
-                logoHref="/"
-                logo={
-                  config.branding?.logoUrl ? (
-                    <ScenarioBrandImage
-                      src={config.branding.logoUrl}
-                      alt={`${config.branding?.appName ?? "Brand"} logo`}
-                      align="bar"
-                    />
-                  ) : (
-                    // Logo-less prospects keep the Dynamic lockup - an
-                    // empty bar reads broken.
-                    <DynamicLogo wordmark className="h-[34px] w-auto" />
-                  )
-                }
+        {/* GTM: NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this is safe
+            to mount unconditionally (analytics package guarantee). */}
+        <GtmTracker demoSlug="flow">
+          <Providers>
+            <div className="flex min-h-dvh flex-col">
+              {configId ? (
+                // Branded rule (wallet/earn/trade parity): the Dynamic
+                // site header hides and the shared brand bar takes its
+                // place - sticky with SiteHeader's geometry so the
+                // scenario pages' 104px widget offset holds.
+                <ScenarioBrandRow
+                  variant="bar"
+                  logoHref="/"
+                  logo={
+                    config.branding?.logoUrl ? (
+                      <ScenarioBrandImage
+                        src={config.branding.logoUrl}
+                        alt={`${config.branding?.appName ?? "Brand"} logo`}
+                        align="bar"
+                      />
+                    ) : (
+                      // Logo-less prospects keep the Dynamic lockup - an
+                      // empty bar reads broken.
+                      <DynamicLogo wordmark className="h-[34px] w-auto" />
+                    )
+                  }
+                />
+              ) : (
+                <SiteHeader
+                  homeHref="https://dynamic.dev"
+                  chip="Flow"
+                  logo={<FlowMark />}
+                  logoHref="/"
+                />
+              )}
+              <div className="flex-1">{children}</div>
+              {/* Branded requests get the clear affordance site-wide,
+                  riding the footer's links row - flow has no single
+                  widget column that owns it. */}
+              <SiteFooter
+                extraLinks={<ResetThemeButton active={!!configId} variant="link" />}
               />
-            ) : (
-              <SiteHeader
-                homeHref="https://dynamic.dev"
-                chip="Flow"
-                logo={<FlowMark />}
-                logoHref="/"
-              />
-            )}
-            <div className="flex-1">{children}</div>
-            {/* Branded requests get the clear affordance site-wide,
-                riding the footer's links row - flow has no single
-                widget column that owns it. */}
-            <SiteFooter
-              extraLinks={<ResetThemeButton active={!!configId} variant="link" />}
-            />
-          </div>
-        </Providers>
+            </div>
+          </Providers>
+        </GtmTracker>
       </body>
     </html>
   );

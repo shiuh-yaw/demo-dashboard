@@ -11,7 +11,9 @@ const { services, gtm } = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/services", () => ({ services }));
 vi.mock("@/lib/auth/gtm", () => gtm);
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+import { revalidatePath } from "next/cache";
 import { setUserRole } from "@/lib/actions/users";
 
 const actor = (role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER") => ({
@@ -46,6 +48,8 @@ it("OWNER may promote a MEMBER to ADMIN", async () => {
   const res = await setUserRole("u2", "ADMIN");
   expect(res.success).toBe(true);
   expect(services.users.setRole).toHaveBeenCalledWith("u2", "ADMIN");
+  // Persisted change is revalidated so the admin surface reflects it.
+  expect(revalidatePath).toHaveBeenCalled();
 });
 
 it("ADMIN cannot touch an ADMIN target", async () => {

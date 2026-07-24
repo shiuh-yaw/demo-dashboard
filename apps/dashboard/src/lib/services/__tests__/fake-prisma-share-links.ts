@@ -48,10 +48,6 @@ function makeProspectRow(id: string): ProspectRow {
     rowHoverBackground: null,
     gradientFrom: null,
     gradientTo: null,
-    demoEarnId: null,
-    demoCheckoutsId: null,
-    demoWalletId: null,
-    demoRemittanceId: null,
     domain: null,
     notes: null,
     createdAt: ts,
@@ -151,6 +147,11 @@ export function createFakeShareLinkPrisma(
         const updated: ShareLinkRow = { ...existing, status: data.status };
         shareLinks.set(where.id, updated);
         return { ...updated };
+      },
+      async count({ where }) {
+        return Array.from(shareLinks.values()).filter(
+          (r) => r.userId === where.userId,
+        ).length;
       },
     },
     demoConfig: {

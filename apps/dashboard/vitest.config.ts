@@ -2,6 +2,8 @@ import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Match Next's automatic JSX runtime so .tsx component tests need no React import.
+  esbuild: { jsx: "automatic" },
   test: {
     globals: false,
     environment: "node",

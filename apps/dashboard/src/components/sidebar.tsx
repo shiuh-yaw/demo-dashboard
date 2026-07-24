@@ -3,181 +3,182 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowUpDown,
-  Wallet,
-  Building2,
-  Banknote,
-  Send,
-  LineChart,
-  CreditCard,
-} from "lucide-react";
-import { DynamicIcon } from "@/components/dynamic-icon";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/droplet-client";
 import { DynamicLogo } from "@/components/dynamic-logo";
-import { CoinbaseIcon } from "@/components/coinbase-icon";
-import { IronIcon } from "@/components/iron-icon";
-import { BlindPayIcon } from "@/components/blindpay-icon";
-import AuthMenu from "./auth-menu";
+import {
+  navGroupsForRole,
+  isNavItemActive,
+  type NavItem,
+} from "@/components/nav-items";
+import type { UserRole } from "@/lib/services";
 
-const navGroups = [
-  {
-    items: [
-      {
-        href: "/prospects",
-        label: "Prospects",
-        icon: Building2,
-      },
-    ],
-  },
-  {
-    label: "Demos",
-    items: [
-      {
-        href: "/checkouts",
-        label: "Checkouts",
-        icon: ArrowUpDown,
-        matchCheckouts: true,
-      },
-      {
-        href: "/earns",
-        label: "Earn",
-        icon: Banknote,
-      },
-      {
-        href: "/wallets",
-        label: "Wallets",
-        icon: Wallet,
-      },
-      {
-        href: "/remittance",
-        label: "Remittance",
-        icon: Send,
-      },
-      {
-        href: "/trade",
-        label: "Trade",
-        icon: LineChart,
-      },
-      {
-        href: "/visa-direct",
-        label: "Visa Direct",
-        icon: CreditCard,
-      },
-    ],
-  },
-  {
-    label: "Documentation",
-    items: [
-      {
-        href: "/documentation/checkouts",
-        label: "Checkouts",
-        icon: ArrowUpDown,
-      },
-      {
-        href: "/documentation/iron",
-        label: "Iron Finance",
-        icon: IronIcon,
-      },
-      {
-        href: "/documentation/onramp",
-        label: "Coinbase Onramp",
-        icon: CoinbaseIcon,
-      },
-      {
-        href: "/documentation/blindpay",
-        label: "BlindPay",
-        icon: BlindPayIcon,
-      },
-    ],
-  },
-];
+/**
+ * Grouped-section sidebar (Dynamic-console style). Fixed rail on desktop; can
+ * collapse to a centered icon-only rail. The collapse toggle lives in the top
+ * bar, not here. The `drawer` variant renders the same nav for the mobile
+ * off-canvas Sheet (always expanded). Role-gated groups are cosmetic; every
+ * action re-checks the role server-side.
+ *
+ * Collapse never reflows the item layout: the icon slot is fixed at `px-2` in
+ * both states so icons stay anchored, and only the label opacity (and the
+ * section-header title/dot cross-fade) animates while the aside width glides.
+ */
+
+// Console collapse feel: labels fade fast, width glides on the same ease.
+const FADE =
+  "transition-opacity duration-[130ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none";
 
 type SidebarProps = {
-  user: {
-    sub: string;
-    email?: string;
-  } | null;
+  role: UserRole;
+  variant?: "fixed" | "drawer";
+  collapsed?: boolean;
+  onNavigate?: () => void;
+  /** Extra classes for the fixed aside (e.g. responsive visibility). */
+  className?: string;
 };
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({
+  role,
+  variant = "fixed",
+  collapsed = false,
+  onNavigate,
+  className = "",
+}: SidebarProps) {
   const pathname = usePathname();
+  const groups = navGroupsForRole(role);
+  const isCollapsed = variant === "fixed" && collapsed;
 
-  const isActive = (href: string, matchCheckouts?: boolean) => {
-    if (matchCheckouts) {
-      return (
-        pathname.startsWith("/checkouts") || pathname.startsWith("/widgets")
-      );
-    }
-    return pathname === href || pathname.startsWith(href + "/");
+  const renderItem = (item: NavItem) => {
+    const active = isNavItemActive(item, pathname ?? "");
+    const link = (
+      <Link
+        href={item.href}
+        aria-current={active ? "page" : undefined}
+        onClick={onNavigate}
+        className={`flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+          active ? "bg-accent font-semibold" : "hover:bg-accent"
+        }`}
+      >
+        <item.icon
+          className={`h-[18px] w-[18px] shrink-0 ${
+            active ? "text-action" : "text-muted-foreground"
+          }`}
+        />
+        <span
+          className={`min-w-0 flex-1 truncate ${FADE} ${
+            active ? "text-foreground" : "text-muted-foreground"
+          } ${isCollapsed ? "opacity-0" : "opacity-100"}`}
+        >
+          {item.label}
+        </span>
+      </Link>
+    );
+
+    // Expanded shows the label inline - no tooltip. Collapsed swaps the native
+    // title (unstyled box) for a styled droplet Tooltip anchored to the right.
+    if (!isCollapsed) return <div key={item.href}>{link}</div>;
+    return (
+      <Tooltip key={item.href}>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right">{item.label}</TooltipContent>
+      </Tooltip>
+    );
   };
 
+  const nav = (
+    <TooltipProvider delayDuration={0}>
+    <nav className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-2 pt-2">
+      {groups.map((group) => (
+        <div key={group.label} className="space-y-0.5">
+          {variant === "fixed" ? (
+            // Fixed slot: title and collapsed-dot cross-fade in place, so the
+            // header never changes height and the items below never shift.
+            <div className="relative h-6">
+              <p
+                className={`absolute inset-0 flex items-center px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground ${FADE} ${
+                  isCollapsed ? "opacity-0" : "opacity-100"
+                }`}
+              >
+                {group.label}
+              </p>
+              <div
+                aria-hidden
+                className={`absolute inset-0 flex items-center justify-center ${FADE} ${
+                  isCollapsed ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <div className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+              </div>
+            </div>
+          ) : (
+            <p className="px-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              {group.label}
+            </p>
+          )}
+          {group.items.map(renderItem)}
+        </div>
+      ))}
+    </nav>
+    </TooltipProvider>
+  );
+
+  if (variant === "drawer") {
+    return (
+      <div className="flex h-full flex-col bg-muted">
+        <div className="flex h-12 items-center px-4">
+          <Link href="/dashboard" aria-label="GTM home" onClick={onNavigate}>
+            <DynamicLogo
+              width={104}
+              height={20}
+              wordmarkOnly
+              className="text-foreground dark:text-white"
+            />
+          </Link>
+        </div>
+        {nav}
+      </div>
+    );
+  }
+
   return (
-    <aside className="group bg-white border-r border-slate-100 flex flex-col fixed h-full w-16 hover:w-56 transition-all duration-200 z-40">
-      {/* Logo */}
-      <div className="h-16 flex items-center justify-center">
-        <Link href="/prospects">
-          <DynamicIcon width={28} height={28} className="group-hover:hidden" />
+    <aside
+      className={`fixed z-40 flex h-full flex-col overflow-hidden bg-muted transition-[width] duration-[180ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none ${
+        isCollapsed ? "w-12" : "w-60"
+      } ${className}`}
+    >
+      {/* mt-[7px] = 6px canvas gap + 1px card border, so the logo row shares
+          the top bar's centerline. The mark stays anchored at px-4/left. */}
+      <div className="mt-[7px] flex h-12 shrink-0 items-center px-4">
+        <Link
+          href="/dashboard"
+          aria-label="GTM home"
+          className="relative inline-flex h-5 items-center"
+        >
           <DynamicLogo
-            width={110}
-            height={25}
-            className="hidden group-hover:block"
+            width={22}
+            height={22}
+            markOnly
+            className={`${FADE} ${isCollapsed ? "opacity-100" : "opacity-0"}`}
           />
+          <span
+            className={`absolute left-0 ${FADE} ${
+              isCollapsed ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <DynamicLogo
+              width={104}
+              height={20}
+              wordmarkOnly
+              className="text-foreground dark:text-white"
+            />
+          </span>
         </Link>
       </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-2 pt-2">
-        {navGroups.map((group, groupIndex) => (
-          <div key={groupIndex}>
-            {groupIndex > 0 && (
-              <div className="border-t border-slate-100 my-2" />
-            )}
-            {group.label && (
-              <div className="px-3 pt-2 pb-1 hidden group-hover:block">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {group.label}
-                </span>
-              </div>
-            )}
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const active = isActive(
-                  item.href,
-                  "matchCheckouts" in item ? item.matchCheckouts : undefined,
-                );
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 pl-3 pr-3 py-2.5 rounded-lg transition-colors ${
-                      active
-                        ? "text-[#4779FF]"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                    }`}
-                    title={item.label}
-                  >
-                    <item.icon
-                      className={`w-[20px] h-[20px] shrink-0 ${
-                        active ? "text-[#4779FF]" : "text-slate-400"
-                      }`}
-                      strokeWidth={active ? 2 : 1.5}
-                    />
-                    <span className="text-[13px] font-normal whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                      {item.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      {/* User Menu - Bottom */}
-      {user && (
-        <div className="px-2 py-2 border-t border-slate-100">
-          <AuthMenu user={user} />
-        </div>
-      )}
+      {nav}
     </aside>
   );
 }

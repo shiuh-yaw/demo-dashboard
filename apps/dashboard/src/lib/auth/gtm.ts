@@ -5,18 +5,28 @@
  * team context those pure functions need.
  */
 
+import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { Prisma } from "@dynamic-demos/db";
 import { env } from "@/env";
 import { getCurrentUser } from "@/lib/auth/session";
 import { services, DynamicUserIdConflictError } from "@/lib/services";
 import type {
+  AnalyticsReadScope,
   GtmUser,
   GtmUserService,
   Prospect,
   ProspectService,
   TeamService,
 } from "@/lib/services";
+import {
+  resolveProspectScope,
+  TEAM_CTX_COOKIE,
+  PROSPECT_FILTER_COOKIE,
+  type ProspectScope,
+} from "@/lib/prospect-scope";
 import {
   canAccessOperations,
   canMutateRecord,
@@ -131,15 +141,19 @@ function warnMismatch(info: {
   );
 }
 
-/** Verified Dynamic session -> allowlist -> User (null on any failure). */
-export async function getSessionUser(): Promise<GtmUser | null> {
+/**
+ * Verified Dynamic session -> allowlist -> User (null on any failure).
+ * `React.cache()`-memoized per request only - never cache identity across
+ * requests, this must re-resolve on every new render tree.
+ */
+export const getSessionUser = cache(async (): Promise<GtmUser | null> => {
   return resolveSessionUser({
     getCurrentUser,
     users: services.users,
     allowedDomains: parseAllowedDomains(env.GTM_ALLOWED_DOMAINS),
     onMismatch: warnMismatch,
   });
-}
+});
 
 /** Route/layout guard: redirect to the denied page when unauthenticated. */
 export async function requireUser(): Promise<GtmUser> {
@@ -161,11 +175,21 @@ export async function requireAdmin(): Promise<GtmUser> {
 
 export interface VisibilityDeps {
   teams: Pick<TeamService, "membershipsForUser">;
-  prospects: Pick<ProspectService, "list" | "get">;
+  prospects: Pick<ProspectService, "listIds">;
 }
 
+/** Request-memoized team memberships; never cache across requests (authz must not leak). */
+export const membershipsForUserCached = cache((userId: string) =>
+  services.teams.membershipsForUser(userId),
+);
+
+/** Shared teams dep whose membership read is request-deduped across every caller. */
+const cachedTeamsDep: Pick<TeamService, "membershipsForUser"> = {
+  membershipsForUser: membershipsForUserCached,
+};
+
 const defaultVisibilityDeps: VisibilityDeps = {
-  teams: services.teams,
+  teams: cachedTeamsDep,
   prospects: services.prospects,
 };
 
@@ -173,25 +197,67 @@ const defaultVisibilityDeps: VisibilityDeps = {
  * Prospect ids visible to a user: ADMIN/OWNER are unscoped ("all"); everyone
  * else sees prospects they own (createdById, or ownerId for unclaimed rows)
  * plus prospects of teams they belong to. With zero memberships this is
- * mine-only.
+ * mine-only. Queried as a single scoped id-only projection - never a
+ * full-table list filtered in JS. `React.cache()`-memoized per request only
+ * (keyed on the `user` reference, which is stable for one request since
+ * callers pass `getSessionUser()`'s own cached result) - never cache across
+ * requests.
  */
-export async function visibleProspectIds(
+export const visibleProspectIds = cache(async function visibleProspectIds(
   user: GtmUser,
   deps: VisibilityDeps = defaultVisibilityDeps,
 ): Promise<"all" | Set<string>> {
   if (user.role === "OWNER" || user.role === "ADMIN") return "all";
   const memberships = await deps.teams.membershipsForUser(user.id);
-  const teamIds = new Set(memberships.map((m) => m.teamId));
-  const all = await deps.prospects.list();
-  const ids = new Set<string>();
-  for (const p of all) {
-    const owns = p.createdById
-      ? p.createdById === user.id
-      : p.ownerId === user.dynamicUserId;
-    const inTeam = p.teamId != null && teamIds.has(p.teamId);
-    if (owns || inTeam) ids.add(p.id);
-  }
-  return ids;
+  const teamIds = memberships.map((m) => m.teamId);
+  const ids = await deps.prospects.listIds({
+    OR: [ownWhere(user), { teamId: { in: teamIds } }],
+  });
+  return new Set(ids);
+});
+
+/**
+ * Active My/Team/All scope (team switcher x filter) for a session user,
+ * re-derived from cookies every call - the single resolver every list action
+ * shares so cookie reads + membership lookups never get duplicated. Distinct
+ * from `visibleProspectIds`: that is broad (own + every team) authorization
+ * for single-record `get()`; this is the narrow, user-facing filter for lists.
+ */
+export async function resolveActiveScope(
+  user: GtmUser,
+  deps: Pick<VisibilityDeps, "teams"> = defaultVisibilityDeps,
+): Promise<ProspectScope> {
+  const memberships = await deps.teams.membershipsForUser(user.id);
+  const memberTeamIds = new Set(memberships.map((m) => m.teamId));
+  const store = await cookies();
+  return resolveProspectScope({
+    ctx: store.get(TEAM_CTX_COOKIE)?.value,
+    filter: store.get(PROSPECT_FILTER_COOKIE)?.value,
+    isAdmin: isAdminRole(user),
+    memberTeamIds,
+  });
+}
+
+/**
+ * `AnalyticsReadScope` for an already-resolved active `ProspectScope` - the
+ * analytics-read-layer sibling of `prospectScopeWhere`, for `AnalyticsService`
+ * methods (e.g. `listAllContacts`) that take the counts-style
+ * `"all" | Set<string>` shape instead of a raw Prisma where fragment.
+ * Callers resolve `ProspectScope` once via `resolveActiveScope` (they
+ * typically need it anyway, e.g. for a client cache key) and pass it in here
+ * rather than this re-deriving it and re-querying team memberships. "all"
+ * only when the user is actually admin (mirrors `prospectScopeWhere`
+ * returning `{}` only in that case) - never widens what `resolveActiveScope`
+ * already fail-closed to.
+ */
+export async function resolveAnalyticsReadScope(
+  user: Pick<GtmUser, "id" | "dynamicUserId" | "role">,
+  scope: ProspectScope,
+  deps: Pick<VisibilityDeps, "prospects"> = defaultVisibilityDeps,
+): Promise<AnalyticsReadScope> {
+  if (scope.kind === "all" && isAdminRole(user)) return "all";
+  const ids = await deps.prospects.listIds(prospectScopeWhere(user, scope));
+  return new Set(ids);
 }
 
 /** Prospect-scoped visibility for a resolved prospect id. */
@@ -202,6 +268,46 @@ export function isProspectVisible(
   if (visible === "all") return true;
   if (prospectId == null) return false;
   return visible.has(prospectId);
+}
+
+/**
+ * Whether a user may VIEW an already-fetched prospect row - the in-memory,
+ * single-row sibling of `visibleProspectIds`, for callers that already hold
+ * the row (via a request-cached read) and only need to authorize that one id,
+ * instead of scanning the full visible-id set. Mirrors `visibleProspectIds`
+ * exactly: ADMIN/OWNER unscoped; everyone else sees prospects they own
+ * (createdById, or the ownerId fallback for unclaimed rows) plus prospects of
+ * any team they belong to. Reuses the request-cached membership read, so it
+ * adds no query when memberships were already resolved this request - and none
+ * at all for own/admin.
+ */
+export async function canViewProspect(
+  user: Pick<GtmUser, "id" | "dynamicUserId" | "role">,
+  prospect: Pick<Prospect, "teamId" | "createdById" | "ownerId">,
+  deps: Pick<VisibilityDeps, "teams"> = defaultVisibilityDeps,
+): Promise<boolean> {
+  if (isAdminRole(user)) return true;
+  // Own record - mirrors `ownWhere`: createdById wins outright when set; the
+  // ownerId(dynamicUserId) fallback applies only to unclaimed rows.
+  const owns = prospect.createdById
+    ? prospect.createdById === user.id
+    : !!user.dynamicUserId && prospect.ownerId === user.dynamicUserId;
+  if (owns) return true;
+  if (!prospect.teamId) return false;
+  const memberships = await deps.teams.membershipsForUser(user.id);
+  return memberships.some((m) => m.teamId === prospect.teamId);
+}
+
+/**
+ * Where-fragment for a resolved visibility set - the DB-query sibling of
+ * `isProspectVisible`. Used by callers that need full prospect rows (not
+ * just ids) scoped to what `visibleProspectIds` already computed, e.g. the
+ * prospect picker and the demos-table join.
+ */
+export function prospectVisibilityWhere(
+  visible: "all" | Set<string>,
+): Prisma.ProspectWhereInput {
+  return visible === "all" ? {} : { id: { in: Array.from(visible) } };
 }
 
 /**
@@ -219,10 +325,127 @@ export function isDemoConfigVisible(
   if (visible === "all") return true;
   const owns = record.createdById
     ? record.createdById === user.id
-    : record.ownerId === user.dynamicUserId;
+    : !!record.ownerId && record.ownerId === user.dynamicUserId;
   if (owns) return true;
   if (record.prospectId != null) return visible.has(record.prospectId);
   return false;
+}
+
+// =============================================================================
+// Scope -> Prisma WHERE builders (pure, no IO; mirrors visibleProspectIds /
+// isDemoConfigVisible exactly, just expressed as a where fragment instead of
+// a post-fetch JS filter)
+// =============================================================================
+
+/** Fail-closed: matches no row. Used whenever scope is missing or invalid. */
+const NONE_WHERE = { id: { in: [] as string[] } };
+
+function isAdminRole(user: Pick<GtmUser, "role">): boolean {
+  return user.role === "OWNER" || user.role === "ADMIN";
+}
+
+type OwnClause = { createdById: string } | { createdById: null; ownerId: string };
+
+/**
+ * Own-record where fragment: createdById match, else legacy ownerId
+ * (dynamicUserId) fallback for a still-unclaimed row. Exactly mirrors
+ * `ownsProspect`'s ternary (createdById wins outright when set; the ownerId
+ * fallback only ever applies to unclaimed rows) - not a plain
+ * `ownerId=X OR createdById=Y`, which would incorrectly re-admit a row
+ * reassigned away from this user (legacy `ownerId` is never rewritten on
+ * reassignment, see `canReassignProspect`).
+ */
+function ownWhere(user: Pick<GtmUser, "id" | "dynamicUserId">): { OR: OwnClause[] } {
+  const clauses: OwnClause[] = [{ createdById: user.id }];
+  if (user.dynamicUserId) {
+    clauses.push({ createdById: null, ownerId: user.dynamicUserId });
+  }
+  return { OR: clauses };
+}
+
+/**
+ * Prospect visibility as a Prisma where fragment, given an already-enforced
+ * `ProspectScope` (see `enforceScope` in lib/actions/prospects.ts, which
+ * downgrades a non-admin "all" or a non-member "team" request to "mine"
+ * before scope ever reaches here). Fails closed defensively on top of that:
+ * a missing/invalid scope, or "all" from a caller that skipped enforcement,
+ * never falls through to unscoped access.
+ */
+export function prospectScopeWhere(
+  user: Pick<GtmUser, "id" | "dynamicUserId" | "role">,
+  scope: ProspectScope | undefined | null,
+): Prisma.ProspectWhereInput {
+  if (!scope) return NONE_WHERE;
+  switch (scope.kind) {
+    case "all":
+      return isAdminRole(user) ? {} : NONE_WHERE;
+    case "team":
+      return scope.teamId ? { teamId: scope.teamId } : NONE_WHERE;
+    case "mine":
+      return scope.teamId
+        ? { AND: [ownWhere(user), { teamId: scope.teamId }] }
+        : ownWhere(user);
+    default:
+      return NONE_WHERE;
+  }
+}
+
+/**
+ * DemoConfig visibility as a Prisma where fragment for an already-resolved
+ * `visibleProspectIds` set - the DB-query sibling of `isDemoConfigVisible`,
+ * exactly like `prospectVisibilityWhere` is the sibling of `isProspectVisible`.
+ * Own records match unconditionally; a bound non-owned record follows the
+ * resolved visible set; an unbound non-owned record never matches outside
+ * `"all"`. Takes a resolved `visible` set (own + every team the user belongs
+ * to); a `ProspectScope` "team" value only ever covers one team, so it cannot
+ * reproduce `visibleProspectIds`' multi-team union.
+ */
+export function demoConfigVisibilityWhere(
+  user: Pick<GtmUser, "id" | "dynamicUserId">,
+  visible: "all" | Set<string>,
+): Prisma.DemoConfigWhereInput {
+  if (visible === "all") return {};
+  return { OR: [ownWhere(user), { prospectId: { in: Array.from(visible) } }] };
+}
+
+/**
+ * DemoConfig where-fragment for the ACTIVE My/Team/All scope (team switcher x
+ * filter) - the list-filtering sibling of `demoConfigVisibilityWhere`, which
+ * stays broad (own + every team) for single-record `get()` authorization only.
+ * "team" here is team-bound configs only
+ * (personal/unbound configs never appear under a team view); "mine" with no
+ * active team is every own config (incl. unbound) plus configs on prospects
+ * the user owns; "mine" narrowed to a team is configs on the user's OWN
+ * prospects within that team only - a personal/unbound config never appears
+ * under a team-scoped "mine", even though it is still the user's own config.
+ */
+export function demoConfigActiveScopeWhere(
+  user: Pick<GtmUser, "id" | "dynamicUserId" | "role">,
+  scope: ProspectScope | undefined | null,
+): Prisma.DemoConfigWhereInput {
+  if (!scope) return NONE_WHERE;
+  switch (scope.kind) {
+    case "all":
+      return isAdminRole(user) ? {} : NONE_WHERE;
+    case "team":
+      return scope.teamId ? { prospect: { teamId: scope.teamId } } : NONE_WHERE;
+    case "mine":
+      if (scope.teamId) {
+        return {
+          OR: [
+            { AND: [ownWhere(user), { prospect: { teamId: scope.teamId } }] },
+            {
+              prospect: {
+                AND: [prospectScopeWhere(user, { kind: "mine" }), { teamId: scope.teamId }],
+              },
+            },
+          ],
+        };
+      }
+      return { OR: [ownWhere(user), { prospect: prospectScopeWhere(user, scope) }] };
+    default:
+      return NONE_WHERE;
+  }
 }
 
 // =============================================================================
@@ -235,7 +458,7 @@ export interface MutateDeps {
 }
 
 const defaultMutateDeps: MutateDeps = {
-  teams: services.teams,
+  teams: cachedTeamsDep,
   prospects: services.prospects,
 };
 
@@ -260,6 +483,27 @@ export async function canMutateProspect(
     ? await membershipForTeam(user, prospect.teamId, deps)
     : null;
   return canMutateRecord(user, membership, prospect as PolicyRecord);
+}
+
+/**
+ * Guard for Prospect owner/team reassignment. Stricter than `canMutateProspect`:
+ * team OWNER/ADMIN does NOT qualify here - only the current owner or a global
+ * ADMIN/OWNER may reassign. These fields drive two-tier visibility
+ * (`visibleProspectIds`), so a team lead widening their own team's reach by
+ * reassigning a peer's prospect is exactly the escalation this guard exists
+ * to block. Pure - no team-membership lookup needed.
+ */
+export function canReassignProspect(
+  user: Pick<GtmUser, "id" | "dynamicUserId" | "role">,
+  /** `ownerId` widened past `Prospect`'s (required) column - the legacy
+   * `ProspectProfile` aggregate surfaces it as optional. */
+  prospect: { createdById: string | null; ownerId: string | null | undefined },
+): boolean {
+  if (user.role === "OWNER" || user.role === "ADMIN") return true;
+  if (user.role === "VIEWER") return false;
+  return prospect.createdById
+    ? prospect.createdById === user.id
+    : !!prospect.ownerId && prospect.ownerId === user.dynamicUserId;
 }
 
 /**

@@ -1,12 +1,11 @@
 /**
- * Edit Earn Config Page
- *
- * Page for editing an existing Earn configuration.
+ * Edit Earn Config Page. Thin wrapper over the unified DemoConfigEditor;
+ * prospect-bound configs redirect to the one canonical in-context edit path.
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getEarnConfig } from "@/lib/actions/earns";
-import { EarnConfigEditor } from "./earn-config-editor";
+import { DemoConfigEditor } from "@/components/shared/demo-config-editor";
 
 interface EditEarnConfigPageProps {
   params: Promise<{ id: string }>;
@@ -22,5 +21,9 @@ export default async function EditEarnConfigPage({
     notFound();
   }
 
-  return <EarnConfigEditor config={result.data} />;
+  if (result.data.prospectId) {
+    redirect(`/dashboard/prospects/${result.data.prospectId}/demos/${id}`);
+  }
+
+  return <DemoConfigEditor kind="earn" config={result.data} />;
 }

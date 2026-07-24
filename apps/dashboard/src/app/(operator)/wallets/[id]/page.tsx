@@ -1,12 +1,11 @@
 /**
- * Edit Wallet Config Page
- *
- * Page for editing an existing Wallet configuration.
+ * Edit Wallet Config Page. Thin wrapper over the unified DemoConfigEditor;
+ * prospect-bound configs redirect to the one canonical in-context edit path.
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getWalletConfig } from "@/lib/actions/wallets";
-import { WalletConfigEditor } from "./wallet-config-editor";
+import { DemoConfigEditor } from "@/components/shared/demo-config-editor";
 
 interface EditWalletConfigPageProps {
   params: Promise<{ id: string }>;
@@ -22,5 +21,9 @@ export default async function EditWalletConfigPage({
     notFound();
   }
 
-  return <WalletConfigEditor config={result.data} />;
+  if (result.data.prospectId) {
+    redirect(`/dashboard/prospects/${result.data.prospectId}/demos/${id}`);
+  }
+
+  return <DemoConfigEditor kind="wallet" config={result.data} />;
 }

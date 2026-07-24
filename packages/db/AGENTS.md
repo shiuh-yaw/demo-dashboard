@@ -33,12 +33,15 @@ Redis. If a demo app needs data, add an endpoint under
 ### Models at a glance
 
 - `Prospect` - first-class prospect record: identity (`name`, nullable
-  `domain`, `notes`), flat palette columns, logo discriminator, linked
-  demo-config ids, `teamId` (nullable FK, no default - a prospect belongs to
-  no team until explicitly assigned), `createdById` (nullable FK to `User`),
-  `status ProspectStatus`. Partial unique index on
-  `(teamId, lower(domain))` lives in raw SQL and is Prisma-invisible.
-  Service: `postgres/prospects.ts`, flag `USE_POSTGRES_PROSPECTS`.
+  `domain`, `notes`), flat palette columns, logo discriminator, `teamId`
+  (nullable FK, no default - a prospect belongs to no team until explicitly
+  assigned), `createdById` (nullable FK to `User`), `status ProspectStatus`.
+  No demo-config ids on this model - `DemoConfig.prospectId` is the only
+  binding representation (see `DemoConfig` below); the four legacy reverse-FK
+  columns are Prisma-schema-dropped but not yet physically dropped. Partial
+  unique index on `(teamId, lower(domain))` lives in raw SQL and is
+  Prisma-invisible. Service: `postgres/prospects.ts` (`services.prospects`,
+  Postgres-only).
   Dual-write rule: every create/update writes BOTH the flat palette columns
   and the `ProspectTheme` row (create prospect-first for the FK; update
   theme-first so a crash never leaves a stale theme readable). Reads let an
@@ -48,24 +51,32 @@ Redis. If a demo app needs data, add an endpoint under
   seeded default team and no auto-join. Service: `postgres/teams.ts` as
   `services.teams`.
 - `ProspectTheme` - 1:1 palette for a `Prospect` (`prospectId` unique FK,
-  `ON DELETE CASCADE`); identity stays on `Prospect`. Populated by
-  `backfill:prospect-themes` and kept in sync by every prospect write.
+  `ON DELETE CASCADE`); identity stays on `Prospect`. Kept in sync by
+  every prospect write.
 - `DemoConfig` - unified per-instance config carrier for every demo type
-  (earn, wallet, trade, visa-direct, checkout, remittance). `kind` is a
+  (earn, wallet, trade, visa-direct, checkout, remittance, flow). `kind` is a
   TEXT discriminator validated app-side via a Zod discriminated union, NOT
   a Prisma enum - a new demo type is a Zod/type edit, not a migration
   (D-013). `prospectId` is a nullable FK to `Prospect` (D-028): `null`
   means unbound/showcase; mappers never hash-resolve or auto-create a
   Prospect on write. `createdById` (nullable FK) is stamped on create.
+  `isPrimary` (default `false`) marks the canonical config per
+  `(prospectId, kind)`; `ProspectProfile.demos` resolves from
+  `DemoConfig.prospectId` grouped by kind (isPrimary wins, else most
+  recently updated) - the four legacy `Prospect.demoEarnId`/
+  `demoCheckoutsId`/`demoWalletId`/`demoRemittanceId` reverse-FK columns
+  are no longer read or written by the Prisma schema/service layer (the
+  physical columns still exist pending the contract-migration drop).
   Optional `themeOverrides Json?` merges on top of the prospect theme at
   the service boundary. Indexed on `ownerId`, `prospectId`, `kind`,
-  `(ownerId, kind)`. Service: `postgres/demo-configs.ts`, flag
-  `USE_POSTGRES_DEMO_CONFIGS`.
+  `(ownerId, kind)`, `(prospectId, kind)`. Service: `postgres/demo-configs.ts`
+  (`services.demoConfigs`, Postgres-only).
 - `Transaction` - canonical "money in flight" record (D-010). State is
   validated by `assertValidTransition` at the service boundary; the DB
   stores it verbatim. Self-FK for multi-leg flows. Indexed on
   `demoInstanceId`, `prospectId`, `state`, `parentTransactionId`.
-  Service: `postgres/transactions.ts`, flag `USE_POSTGRES_TRANSACTIONS`.
+  Service: `postgres/transactions.ts` (`services.transactionRecords`,
+  Postgres-only).
 - `WebhookEvent` - audit row per received webhook (D-011). Unique on
   `(provider, providerEventId)` for dedup. Optional FK to `Transaction`
   with `ON DELETE SET NULL`. Postgres-only.
@@ -155,11 +166,6 @@ export async function listDemoConfigs(ownerId: string, kind: string) {
 - Contract phase pending: the flat palette columns on `Prospect` duplicate
   `ProspectTheme` until a follow-up drops them (three-deploy rule: remove
   deprecated Prisma fields first, drop columns after).
-- `USE_POSTGRES_TRANSACTIONS` is not yet enabled anywhere; the
-  `Transaction` cutover is unfinished.
-- Backfills (`backfill:prospects`, `backfill:demo-configs`,
-  `backfill:prospect-themes`, `backfill:users`) are idempotent and safe to
-  re-run.
 - RLS is enabled on every table in the migration that creates it. Prisma
   connects as superuser and bypasses it; service-layer ownership checks
   remain the trust boundary. `packages/db/scripts/replay-check.sh`

@@ -250,4 +250,41 @@ describe("PostgresGtmUserService", () => {
       expect(client.__prospects.get("p1")!.createdById).toBeNull();
     });
   });
+
+  describe("list", () => {
+    it("returns a page (default limit, no cursor) with nextCursor: null when under the page size", async () => {
+      await svc.getOrCreateByEmail("a@example.com");
+      await svc.getOrCreateByEmail("b@example.com");
+      const page = await svc.list();
+      expect(page.items.map((u) => u.email).sort()).toEqual([
+        "a@example.com",
+        "b@example.com",
+      ]);
+      expect(page.nextCursor).toBeNull();
+    });
+
+    it("clamps an over-large limit to MAX_PAGE_LIMIT", async () => {
+      await svc.getOrCreateByEmail("a@example.com");
+      await svc.getOrCreateByEmail("b@example.com");
+      const page = await svc.list({ limit: 1000 });
+      expect(page.items).toHaveLength(2);
+      expect(page.nextCursor).toBeNull();
+    });
+
+    it("a full page sets nextCursor; the next call resumes after it, newest-updated first", async () => {
+      const a = await svc.getOrCreateByEmail("a@example.com");
+      await new Promise((r) => setTimeout(r, 5));
+      const b = await svc.getOrCreateByEmail("b@example.com");
+      await new Promise((r) => setTimeout(r, 5));
+      const c = await svc.getOrCreateByEmail("c@example.com");
+
+      const page1 = await svc.list({ limit: 2 });
+      expect(page1.items.map((u) => u.id)).toEqual([c.id, b.id]);
+      expect(page1.nextCursor).not.toBeNull();
+
+      const page2 = await svc.list({ limit: 2, cursor: page1.nextCursor });
+      expect(page2.items.map((u) => u.id)).toEqual([a.id]);
+      expect(page2.nextCursor).toBeNull();
+    });
+  });
 });

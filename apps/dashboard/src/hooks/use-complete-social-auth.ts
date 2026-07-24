@@ -42,6 +42,29 @@ function hasOAuthParams(): boolean {
   );
 }
 
+// Drop the (sensitive-ish) OAuth params from the address bar once consumed, so
+// they do not persist in the URL or browser history. No reload - replaceState.
+function stripOAuthParams(): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  let changed = false;
+  for (const key of [
+    "dynamicOauthCode",
+    "dynamicOauthState",
+    "code",
+    "state",
+  ]) {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  const query = url.searchParams.toString();
+  const clean = `${url.pathname}${query ? `?${query}` : ""}${url.hash}`;
+  window.history.replaceState(null, "", clean);
+}
+
 export function useCompleteSocialAuth(
   options: UseCompleteSocialAuthOptions = {},
 ): UseCompleteSocialAuthResult {
@@ -73,6 +96,14 @@ export function useCompleteSocialAuth(
           if (jwt) {
             await setDynamicJWT(jwt);
           }
+          // Clear the OAuth code/state from the URL BEFORE the caller's
+          // refresh/redirect. onSuccess typically triggers a router.refresh()
+          // that redirects a first-run user to the welcome gate; if the params
+          // are still in the URL, a remount during that transition re-detects
+          // the (now consumed) code and re-runs completion - an intermittent
+          // refresh loop on first sign-in. Stripping first makes hasOAuthParams
+          // false on any remount, so completion cannot re-fire.
+          stripOAuthParams();
           onSuccess?.();
         };
 
@@ -138,6 +169,9 @@ export function useCompleteSocialAuth(
         setError(error);
         onError?.(error);
         setIsLoading(false);
+      } finally {
+        // Whatever the outcome, don't leave the OAuth code/state in the URL.
+        if (oauthParams) stripOAuthParams();
       }
     }
 

@@ -1,27 +1,43 @@
 import Link from "next/link";
 import { Home, Search } from "lucide-react";
+import { BrandGateLayout } from "@/components/brand-gate-layout";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/droplet-client";
 
+/**
+ * Dashboard-side 404. Renders shell-less (no operator sidebar/top bar), so it
+ * shares `BrandGateLayout` with the auth/denied/welcome gates instead of
+ * hardcoding a light-only card. The (public) route group has its own
+ * `not-found.tsx` for the marketing surface - not touched here.
+ */
 export default function DashboardNotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] p-6">
-      <div className="bg-white rounded-xl border border-[#e1e4ea] p-8 max-w-md w-full text-center">
-        <div className="w-12 h-12 rounded-full bg-[#f5f7fa] flex items-center justify-center mx-auto mb-4">
-          <Search className="w-6 h-6 text-[#99a0ae]" />
-        </div>
-        <h2 className="text-lg font-semibold text-[#0e121b] mb-2">
-          Page not found
-        </h2>
-        <p className="text-sm text-[#525866] mb-6">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 bg-[#335cff] hover:bg-[#2850e8] text-white font-medium text-sm py-2 px-4 rounded-md transition-colors"
-        >
-          <Home className="w-4 h-4" />
-          Back to home
-        </Link>
-      </div>
-    </div>
+    <BrandGateLayout hideLogo>
+      <Card className="w-full max-w-md text-center">
+        <CardHeader>
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Search className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <CardTitle>Page not found</CardTitle>
+          <CardDescription>
+            The page you're looking for doesn't exist or has been moved.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild className="w-full gap-2">
+            <Link href="/">
+              <Home className="w-4 h-4" />
+              Back to home
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </BrandGateLayout>
   );
 }

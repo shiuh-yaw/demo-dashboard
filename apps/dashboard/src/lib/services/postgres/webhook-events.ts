@@ -1,11 +1,8 @@
 /**
  * Postgres-backed WebhookEventService (Prisma + Supabase via @dynamic-demos/db).
  *
- * Postgres-only by design: Redis never had a webhook events store, and the
- * audit trail must be durable from day one (D-011). When
- * `USE_POSTGRES_TRANSACTIONS=false` the dashboard simply has no webhook
- * persistence; Phase 5A's receiver framework requires the flag flipped on
- * before it can run.
+ * Postgres-only by design: the webhook audit trail must be durable from
+ * day one (D-011). Requires `DATABASE_URL` populated.
  *
  * Dedup primitive: a unique index on `(provider, providerEventId)` lets
  * the receiver call `create` blindly and catch `DuplicateWebhookEventError`

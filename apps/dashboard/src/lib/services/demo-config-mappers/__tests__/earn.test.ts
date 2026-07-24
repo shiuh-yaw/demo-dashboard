@@ -10,8 +10,8 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { RedisProspectService } from "@/lib/services/redis/prospects";
-import { RedisDemoConfigService } from "@/lib/services/redis/demo-configs";
+import { PostgresProspectService } from "@/lib/services/postgres/prospects";
+import { PostgresDemoConfigService } from "@/lib/services/postgres/demo-configs";
 import type {
   ProspectService,
   DemoConfigService,
@@ -19,18 +19,16 @@ import type {
 import { DEFAULT_EARN_CONFIG } from "@/lib/types/dashboard";
 
 import { earnMapper } from "../earn";
-import { createFakeRedis } from "../../__tests__/fake-redis";
+import { makePrismock } from "../../__tests__/make-prismock";
+import { createFakeDemoConfigPrisma } from "../../__tests__/fake-prisma-demo-configs";
 
 describe("earnMapper", () => {
   let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("kind is 'earn'", () => {
@@ -256,6 +254,7 @@ describe("earnMapper", () => {
       name: "Legacy",
       description: null,
       prospectId: null,
+      isPrimary: false,
       themeOverrides: null,
       config: {
         theme: { primaryColor: "#deadbe" },

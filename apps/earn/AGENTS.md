@@ -40,10 +40,15 @@ Legacy `/e/<id>/...` deep-links 307-redirect to `/?theme=<id>` via `next.config.
 - `NEXT_PUBLIC_DASHBOARD_URL` — dashboard origin for config fetch.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox off.
 - `ALCHEMY_API_KEY` - server-only; `/api/balance` reads the Dynamic USDC balance on Base Sepolia via Alchemy (Dynamic's balances API doesn't cover Base Sepolia). Alchemy is D-003-exempt like proceeds/remittance/trade - see `packages/alchemy/AGENTS.md`.
+- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`, Phase 09) - optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
 
 No other provider keys — vault contracts are onchain; deposits are user-signed.
 
 - `shiki` (pinned 1.24.0, same as flow/wallet) — server-side code highlighting for the scenario page.
+
+## Analytics
+
+`<GtmTracker demoSlug="earn">` wraps the tree in `app/layout.tsx` and no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned); there are no per-app `useTrack()` milestones wired up yet.
 
 ## Theming
 
@@ -95,7 +100,7 @@ Unified theme injection per D-008:
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`, `@dynamic-demos/analytics` (Phase 09).
 **Imported by:** none.
 
 ## Examples

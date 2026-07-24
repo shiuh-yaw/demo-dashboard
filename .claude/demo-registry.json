@@ -337,6 +337,13 @@
       }
     },
     {
+      "name": "@dynamic-demos/charts",
+      "kind": "package",
+      "flow_role": "shared-ui",
+      "custody": "n/a",
+      "status": "experimental"
+    },
+    {
       "name": "@dynamic-demos/checkouts-widget",
       "kind": "package",
       "flow_role": "checkout",

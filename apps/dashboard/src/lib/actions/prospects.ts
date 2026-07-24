@@ -9,32 +9,46 @@
  * Prospect profiles store unified branding settings that are applied
  * across all demo types (Earn, Checkouts, Wallet, Remittance).
  *
- * Phase 2-brand-cutover (2026-05-06): prospect-row persistence routes
- * through `services.prospects.*` (Postgres when USE_POSTGRES_PROSPECTS=true,
- * Redis otherwise). The demo-config side-effects (auto-create /
- * update-theme / delete-with-prospect) also route through
- * `services.demoConfigs.*` (Postgres when USE_POSTGRES_DEMO_CONFIGS=true,
- * Redis otherwise) as of the prospect-auto-demo-write-postgres fix — the
- * deferred "PR 2-others" work from the original cutover comment. Without
- * this, prospect-created demos landed in the legacy per-type Redis keyspace
- * while the public widget read path (post-PR #101) only checked the
- * unified store, producing 404s for every prospect-auto-created demo.
+ * Prospect-row persistence routes through `services.prospects.*`; the
+ * demo-config side-effects (auto-create / update-theme /
+ * delete-with-prospect) route through `services.demoConfigs.*`. Both are
+ * Postgres-backed. `demos` is never stored on the Prospect row - it is
+ * resolved from `DemoConfig.prospectId` via `resolveProspectDemos` /
+ * `resolveProspectDemosBatch` (see `@/lib/services/prospect-demos`).
  */
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { type ProspectScope } from "@/lib/prospect-scope";
 import {
   getSessionUser,
   canMutateProspect,
+  canReassignProspect,
+  canViewProspect,
   visibleProspectIds,
-  isProspectVisible,
+  prospectScopeWhere,
+  prospectVisibilityWhere,
+  resolveActiveScope,
+  membershipsForUserCached,
 } from "@/lib/auth/gtm";
 import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeLogoUrl } from "@/lib/normalize-logo";
+import { extractThemeFromUrl } from "@/lib/actions/extract-theme";
 import { prospectService, services } from "@/lib/services";
+import type { GtmUser, Page, Prospect, Team } from "@/lib/services";
+import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
+import type { UpdateProspectInput } from "@/lib/services/types";
+import {
+  resolveProspectDemos,
+  resolveProspectDemosBatch,
+  type ProspectDemoMap,
+} from "@/lib/services/prospect-demos";
+import type { AdminUserView } from "@/lib/actions/team-views";
+import type { WidgetTheme, WidgetBranding } from "@/lib/widget-config";
 import {
   prospectToProfile,
   createRequestToInput,
-  demosToUpdateInput,
   updateRequestToInput,
 } from "@/lib/services/prospect-mapper";
 import type {
@@ -49,6 +63,8 @@ import {
   DEFAULT_EARN_CONFIG,
   DEFAULT_WALLET_CONFIG,
   DEFAULT_REMITTANCE_CONFIG,
+  DEFAULT_TRADE_CONFIG,
+  DEFAULT_FLOW_CONFIG,
 } from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG } from "@/lib/widget-config";
 
@@ -67,29 +83,23 @@ async function createProspectDemoConfigs(
   ownerId: string,
   options?: {
     earn?: boolean;
-    checkouts?: boolean;
+    checkout?: boolean;
     wallet?: boolean;
     remittance?: boolean;
+    trade?: boolean;
+    flow?: boolean;
   },
-): Promise<{
-  earn?: string;
-  checkouts?: string;
-  wallet?: string;
-  remittance?: string;
-}> {
-  const demos: {
-    earn?: string;
-    checkouts?: string;
-    wallet?: string;
-    remittance?: string;
-  } = {};
+): Promise<ProspectDemoMap> {
+  const demos: ProspectDemoMap = {};
 
   // Create demos only if explicitly requested (or all if no options provided)
   const createAll = !options || Object.keys(options).length === 0;
   const createEarn = createAll || options?.earn === true;
-  const createCheckouts = createAll || options?.checkouts === true;
+  const createCheckouts = createAll || options?.checkout === true;
   const createWallet = createAll || options?.wallet === true;
   const createRemittance = createAll || options?.remittance === true;
+  const createTrade = createAll || options?.trade === true;
+  const createFlow = createAll || options?.flow === true;
 
   // Create Earn config with prospect settings
   if (createEarn) {
@@ -126,6 +136,7 @@ async function createProspectDemoConfigs(
       name: `${prospectName} - Earn`,
       description: `Auto-generated from prospect profile: ${prospectId}`,
       prospectId,
+      isPrimary: true,
       themeOverrides: null,
       config: earnConfigPayload as unknown as Record<string, unknown>,
     });
@@ -179,10 +190,11 @@ async function createProspectDemoConfigs(
       name: `${prospectName} - Checkouts`,
       description: `Auto-generated from prospect profile: ${prospectId}`,
       prospectId,
+      isPrimary: true,
       themeOverrides: null,
       config: checkoutConfigPayload as unknown as Record<string, unknown>,
     });
-    demos.checkouts = record.id;
+    demos.checkout = record.id;
   }
 
   // Create Wallet config with prospect settings
@@ -230,6 +242,7 @@ async function createProspectDemoConfigs(
       name: `${prospectName} - Wallet`,
       description: `Auto-generated from prospect profile: ${prospectId}`,
       prospectId,
+      isPrimary: true,
       themeOverrides: null,
       config: walletConfigPayload as unknown as Record<string, unknown>,
     });
@@ -271,25 +284,83 @@ async function createProspectDemoConfigs(
       name: `${prospectName} - Remittance`,
       description: `Auto-generated from prospect profile: ${prospectId}`,
       prospectId,
+      isPrimary: true,
       themeOverrides: null,
       config: remittanceConfigPayload as unknown as Record<string, unknown>,
     });
     demos.remittance = record.id;
   }
 
+  // Create Trade config with prospect branding (no theme editor for trade)
+  if (createTrade) {
+    const tradeConfigPayload = {
+      ...DEFAULT_TRADE_CONFIG,
+      branding: {
+        ...DEFAULT_TRADE_CONFIG.branding,
+        appName: prospectName,
+        logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "trade",
+      ownerId,
+      name: `${prospectName} - Trade`,
+      description: `Auto-generated from prospect profile: ${prospectId}`,
+      prospectId,
+      isPrimary: true,
+      themeOverrides: null,
+      config: tradeConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.trade = record.id;
+  }
+
+  // Create Flow config with prospect theme + branding
+  if (createFlow) {
+    const flowTheme: Partial<ProspectTheme> = prospect.theme || {};
+    const flowConfigPayload = {
+      ...DEFAULT_FLOW_CONFIG,
+      theme: {
+        ...DEFAULT_FLOW_CONFIG.theme,
+        primaryColor: prospect.primaryColor,
+        primaryHoverColor:
+          flowTheme.primaryHoverColor ||
+          DEFAULT_FLOW_CONFIG.theme?.primaryHoverColor,
+        accentColor: prospect.accentColor || prospect.primaryColor,
+      },
+      branding: {
+        ...DEFAULT_FLOW_CONFIG.branding,
+        appName: prospectName,
+        logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "flow",
+      ownerId,
+      name: `${prospectName} - Flow`,
+      description: `Auto-generated from prospect profile: ${prospectId}`,
+      prospectId,
+      isPrimary: true,
+      themeOverrides: null,
+      config: flowConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.flow = record.id;
+  }
+
   return demos;
 }
 
 /**
- * Update demo configs when prospect settings change
+ * Update demo configs when prospect settings change. `demos` is the
+ * caller's fresh `resolveProspectDemos` read, not a stored column - only
+ * the four kinds with theme-sync logic below are consulted.
  */
 async function updateProspectDemoConfigs(
-  profile: ProspectProfile,
+  demos: ProspectDemoMap,
   prospect: ProspectSettings,
 ): Promise<void> {
   // Update Earn config if it exists
-  if (profile.demos.earn) {
-    const record = await services.demoConfigs.get(profile.demos.earn);
+  if (demos.earn) {
+    const record = await services.demoConfigs.get(demos.earn);
     if (record && record.kind === "earn") {
       const existingConfig = (record.config ?? {}) as Record<string, unknown>;
       const existingTheme = (existingConfig.theme ?? {}) as Record<
@@ -326,15 +397,15 @@ async function updateProspectDemoConfigs(
           logoUrl: prospect.logoUrl,
         },
       };
-      await services.demoConfigs.update(profile.demos.earn, {
+      await services.demoConfigs.update(demos.earn, {
         config: updatedConfig as unknown as Record<string, unknown>,
       });
     }
   }
 
   // Update Checkouts config if it exists
-  if (profile.demos.checkouts) {
-    const record = await services.demoConfigs.get(profile.demos.checkouts);
+  if (demos.checkout) {
+    const record = await services.demoConfigs.get(demos.checkout);
     if (record && record.kind === "checkout") {
       const existingConfig = (record.config ?? {}) as Record<string, unknown>;
       const existingTheme = (existingConfig.theme ?? {}) as Record<
@@ -376,15 +447,15 @@ async function updateProspectDemoConfigs(
           logo: prospect.logo === "custom" ? prospect.logoUrl : undefined,
         },
       };
-      await services.demoConfigs.update(profile.demos.checkouts, {
+      await services.demoConfigs.update(demos.checkout, {
         config: updatedConfig as unknown as Record<string, unknown>,
       });
     }
   }
 
   // Update Wallet config if it exists
-  if (profile.demos.wallet) {
-    const record = await services.demoConfigs.get(profile.demos.wallet);
+  if (demos.wallet) {
+    const record = await services.demoConfigs.get(demos.wallet);
     if (record && record.kind === "wallet") {
       const existingConfig = (record.config ?? {}) as Record<string, unknown>;
       const existingTheme = (existingConfig.theme ?? {}) as Record<
@@ -429,7 +500,7 @@ async function updateProspectDemoConfigs(
           logo: prospect.logo === "custom" ? prospect.logoUrl : undefined,
         },
       };
-      await services.demoConfigs.update(profile.demos.wallet, {
+      await services.demoConfigs.update(demos.wallet, {
         config: updatedConfig as unknown as Record<string, unknown>,
       });
     }
@@ -439,8 +510,8 @@ async function updateProspectDemoConfigs(
   // through so the remittance app receives pageBackground / surface /
   // foreground / muted / border / row* / gradient* — not just primary
   // + secondary like it used to.
-  if (profile.demos.remittance) {
-    const record = await services.demoConfigs.get(profile.demos.remittance);
+  if (demos.remittance) {
+    const record = await services.demoConfigs.get(demos.remittance);
     if (record && record.kind === "remittance") {
       const existingConfig = (record.config ?? {}) as Record<string, unknown>;
       const existingTheme = (existingConfig.theme ?? {}) as Record<
@@ -469,7 +540,7 @@ async function updateProspectDemoConfigs(
           logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
         },
       };
-      await services.demoConfigs.update(profile.demos.remittance, {
+      await services.demoConfigs.update(demos.remittance, {
         config: updatedConfig as unknown as Record<string, unknown>,
       });
     }
@@ -477,27 +548,20 @@ async function updateProspectDemoConfigs(
 }
 
 /**
- * Delete demo configs associated with a prospect profile.
+ * Delete every resolved demo config for a prospect - every kind, not just
+ * the four legacy auto-generated ones. `DemoConfig.prospectId` already
+ * cascades on Prospect delete at the DB level; this explicit pass runs
+ * first so this function stays idempotent (re-runnable) and callers that
+ * only remove a subset of demos (`deleteProspectDemo`) share the same
+ * existence-checked deletion path.
  *
- * Prospect rows can point at demo ids that no longer exist in
- * `services.demoConfigs` — e.g. records written via the pre-PR-#104
- * legacy Redis path that never made it into Postgres, or demos already
- * deleted out-of-band. The service's `delete` contract throws on
- * missing ids (see `demo-configs.parity.test.ts`), so we existence-check
- * here to keep prospect deletion idempotent.
- *
- * We deliberately don't kind-check — if a stale id somehow points at a
- * different kind, the prospect row was already misconfigured and cleaning
- * up the orphan reference is the desired end state.
+ * Ids can point at demo configs that no longer exist (already deleted
+ * out-of-band). The service's `delete` contract throws on missing ids
+ * (see `demo-configs.postgres.test.ts`), so we existence-check here to
+ * keep deletion idempotent.
  */
-async function deleteProspectDemoConfigs(demos: {
-  earn?: string;
-  checkouts?: string;
-  wallet?: string;
-  remittance?: string;
-}): Promise<void> {
-  const ids = [demos.earn, demos.checkouts, demos.wallet, demos.remittance]
-    .filter((id): id is string => Boolean(id));
+async function deleteProspectDemoConfigs(demos: ProspectDemoMap): Promise<void> {
+  const ids = Object.values(demos).filter((id): id is string => Boolean(id));
   for (const id of ids) {
     const existing = await services.demoConfigs.get(id);
     if (existing) await services.demoConfigs.delete(id);
@@ -519,56 +583,161 @@ export async function createProspectProfile(
   }
 
   try {
-    // 0) Normalize the custom logo at intake (trim padding, re-encode as a
-    //    data URI) so every demo config derived from this prospect renders a
-    //    consistently-sized mark. Best-effort — falls back to the raw URL.
-    if (request.prospect?.logoUrl) {
-      request = {
-        ...request,
-        prospect: {
-          ...request.prospect,
-          logoUrl: await normalizeLogoUrl(request.prospect.logoUrl),
-        },
-      };
-    }
-
-    // 1) Create the canonical Prospect row first so the id is stable.
+    // Persist name + website immediately; branding is derived in the
+    // background so the row appears at once. Demos are added later from the
+    // prospect hub, never at create time.
     const ownerId = user.dynamicUserId ?? "";
+    const website = request.companyUrl?.trim();
     const created = await prospectService.create(
       createRequestToInput(ownerId, user.id, request),
     );
 
-    // 2) Build the ProspectSettings the demo-config orchestration expects.
-    const merged: ProspectSettings = {
-      ...DEFAULT_PROSPECT_SETTINGS,
-      ...request.prospect,
-    };
+    // Best-effort branding import off the website, non-blocking (Next
+    // `after()`). Failure is swallowed - the prospect stays valid without
+    // branding. Skipped entirely when no website was supplied.
+    if (website) {
+      after(async () => {
+        try {
+          const res = await extractThemeFromUrl(website);
+          if (!res.success || !res.data) return;
+          const update = await extractedToProspectUpdate(res.data);
+          if (Object.keys(update).length === 0) return;
+          await prospectService.update(created.id, update);
+          revalidatePath("/dashboard");
+          revalidatePath("/dashboard/prospects");
+          revalidatePath(`/dashboard/prospects/${created.id}`);
+        } catch (err) {
+          console.error(
+            "[prospect-create:theme-import] background import failed",
+            err,
+          );
+        }
+      });
+    }
 
-    // 3) Spin up the demo configs in Redis (unchanged orchestration).
-    const demos = await createProspectDemoConfigs(
-      created.id,
-      created.name,
-      merged,
-      ownerId,
-      request.generateDemos,
-    );
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/prospects");
 
-    // 4) Persist the demo-config ids back onto the prospect row so the
-    //    ProspectProfile aggregate stays self-contained.
-    const finalRow = await prospectService.update(
-      created.id,
-      demosToUpdateInput(demos),
-    );
-
-    revalidatePath("/");
-    revalidatePath("/prospects");
-
-    return { success: true, data: prospectToProfile(finalRow) };
+    return { success: true, data: prospectToProfile(created) };
   } catch (err) {
     console.error("Failed to create prospect profile:", err);
     return { success: false, error: "Failed to create prospect profile" };
   }
 }
+
+/**
+ * Map an `extractThemeFromUrl` result onto a prospect-row update: derived
+ * logo (normalized, best-effort) plus every color/radius token the extractor
+ * returned. Only defined fields are written so a partial extraction never
+ * blanks existing columns.
+ */
+async function extractedToProspectUpdate(data: {
+  theme: Partial<WidgetTheme>;
+  branding: Partial<WidgetBranding>;
+}): Promise<UpdateProspectInput> {
+  const t = data.theme;
+  const update: UpdateProspectInput = {};
+  const logo = data.branding.logo;
+  if (logo) {
+    update.logo = "custom";
+    update.logoUrl = await normalizeLogoUrl(logo);
+  }
+  const set = (key: keyof UpdateProspectInput, value: string | undefined) => {
+    if (value) (update as Record<string, unknown>)[key] = value;
+  };
+  set("primaryColor", t.primaryColor);
+  set("primaryHoverColor", t.primaryHoverColor);
+  set("accentColor", t.accentColor);
+  set("pageBackground", t.pageBackground);
+  set("background", t.background);
+  set("foreground", t.foreground);
+  set("mutedTextColor", t.mutedTextColor);
+  set("borderColor", t.borderColor);
+  set("rowBackground", t.rowBackground);
+  set("rowHoverBackground", t.rowHoverBackground);
+  set("gradientFrom", t.gradientFrom);
+  set("gradientTo", t.gradientTo);
+  set("borderRadius", t.borderRadius);
+  return update;
+}
+
+/**
+ * Request-scoped memoization of the prospect row read - the hub layout and
+ * every segment page under it call `getProspectProfile` for the same id in
+ * one request. Not exported (this file is "use server"): a private helper
+ * here is a plain function, never a server action. Per-request only, via
+ * React `cache()` - never a cross-request cache.
+ */
+const getCachedProspectRecord = cache((id: string) => prospectService.get(id));
+
+/**
+ * Raw prospect row for a resolved id, request-memoized - exposes
+ * `getCachedProspectRecord` to callers outside this module (e.g. the hub
+ * layout guard) that need raw columns `ProspectProfile` doesn't carry
+ * (`status`, `domain`), so they hit the same cached read instead of issuing
+ * their own `prospectService.get(id)` call for a row this module already
+ * fetched this request.
+ */
+export async function getCachedProspect(id: string): Promise<Prospect | null> {
+  return getCachedProspectRecord(id);
+}
+
+/**
+ * Resolves the prospect's current owner as a User.id for the Ownership
+ * select: `createdById` when set, else the User whose `dynamicUserId`
+ * matches the legacy `ownerId` (unclaimed rows). Null when neither resolves
+ * (e.g. an orphaned row with `ownerId: ""`, or a sub with no matching User).
+ */
+async function resolveOwnerId(
+  prospect: Pick<Prospect, "createdById" | "ownerId">,
+): Promise<string | null> {
+  if (prospect.createdById) return prospect.createdById;
+  if (!prospect.ownerId) return null;
+  const resolved = await services.users.resolveByDynamicIds([prospect.ownerId]);
+  return resolved.get(prospect.ownerId)?.id ?? null;
+}
+
+/**
+ * `prospectToProfile` plus the resolved current-owner id (see
+ * `resolveOwnerId`) and the resolved per-kind demo map (see
+ * `resolveProspectDemos`) - demos are never a row column.
+ */
+async function toResolvedProfile(prospect: Prospect): Promise<ProspectProfile> {
+  const [resolvedOwnerId, demos] = await Promise.all([
+    resolveOwnerId(prospect),
+    resolveProspectDemos(prospect.id),
+  ]);
+  return {
+    ...prospectToProfile(prospect),
+    demos,
+    resolvedOwnerId,
+  };
+}
+
+/**
+ * Full profile resolution (auth + visibility + owner/demos resolve),
+ * request-memoized via `React.cache()` so the hub layout and every segment
+ * page under it - each of which calls `getProspectProfile` for the same id -
+ * resolve it exactly once per request instead of re-running the auth check,
+ * visibility query, and owner/demos resolve per segment. Per-request only -
+ * never a cross-request cache. Returns null for "not found" and "not
+ * visible" alike (same not-found shape, no existence oracle); throws on
+ * unexpected errors, which `getProspectProfile` below catches into the
+ * ActionResult shape.
+ */
+const getResolvedProspectProfile = cache(
+  async (id: string): Promise<ProspectProfile | null> => {
+    const user = await getSessionUser();
+    if (!user) return null;
+    const prospect = await getCachedProspectRecord(id);
+    if (!prospect) return null;
+    // Authorize the single row in memory (own + team, admin unscoped) against
+    // the already-fetched record + request-cached memberships - no full
+    // visible-id scan just to check one prospect.
+    if (!(await canViewProspect(user, prospect))) return null;
+    return toResolvedProfile(prospect);
+  },
+);
 
 /**
  * Get a prospect profile by ID
@@ -582,16 +751,11 @@ export async function getProspectProfile(
   }
 
   try {
-    const prospect = await prospectService.get(id);
-    if (!prospect) {
+    const profile = await getResolvedProspectProfile(id);
+    if (!profile) {
       return { success: false, error: "Prospect profile not found" };
     }
-    const visible = await visibleProspectIds(user);
-    if (!isProspectVisible(visible, prospect.id)) {
-      // Same not-found shape as a missing id - no existence oracle.
-      return { success: false, error: "Prospect profile not found" };
-    }
-    return { success: true, data: prospectToProfile(prospect) };
+    return { success: true, data: profile };
   } catch (err) {
     console.error("Failed to get prospect profile:", err);
     return { success: false, error: "Failed to get prospect profile" };
@@ -642,16 +806,172 @@ export async function updateProspectProfile(
       ...DEFAULT_PROSPECT_SETTINGS,
       ...request.prospect,
     };
-    await updateProspectDemoConfigs(prospectToProfile(updated), merged);
+    await updateProspectDemoConfigs(await resolveProspectDemos(id), merged);
 
-    revalidatePath("/");
-    revalidatePath("/prospects");
-    revalidatePath(`/prospects/${id}`);
+    revalidatePath("/dashboard/prospects");
+    // "layout" so the hub header + breadcrumb (rendered in the hub layout)
+    // and every sub-tab under this id refresh, not just the settings page.
+    revalidatePath(`/dashboard/prospects/${id}`, "layout");
 
-    return { success: true, data: prospectToProfile(updated) };
+    return { success: true, data: await toResolvedProfile(updated) };
   } catch (err) {
     console.error("Failed to update prospect profile:", err);
     return { success: false, error: "Failed to update prospect profile" };
+  }
+}
+
+/** Shown when a denied reassignment reaches the server - mirrors the disabled-state copy in ProspectSettings. */
+const REASSIGN_DENIED_MESSAGE =
+  "Only the current owner or an admin can reassign this prospect";
+
+/**
+ * Reassign a prospect's owner (GTM-08F Ownership section). Authorization is
+ * enforced here, server-side, regardless of what the client sent: only the
+ * CURRENT owner or a global ADMIN/OWNER may reassign - `createdById` drives
+ * two-tier visibility (`visibleProspectIds`), so a wrong reassignment is a
+ * visibility leak, not just a UI bug. The target must be an active
+ * (non-deactivated) workspace user. `getSessionUser` is called inside the
+ * try block (not before it) so a transient session-resolution failure
+ * surfaces as this action's own specific error instead of an unhandled
+ * rejection reaching the client as a generic thrown-exception toast.
+ */
+export async function reassignProspectOwner(
+  id: string,
+  userId: string,
+): Promise<ActionResult<ProspectProfile>> {
+  try {
+    const actor = await getSessionUser();
+    if (!actor) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    const prospect = await prospectService.get(id);
+    if (!prospect) {
+      return { success: false, error: "Prospect profile not found" };
+    }
+    if (!canReassignProspect(actor, prospect)) {
+      return { success: false, error: REASSIGN_DENIED_MESSAGE };
+    }
+
+    const target = await services.users.get(userId);
+    if (!target || target.deactivatedAt) {
+      return { success: false, error: "Selected user is not available" };
+    }
+
+    const updated = await prospectService.update(id, { createdById: target.id });
+
+    // Owner changes reshape visibility everywhere (switcher, lists, scope) -
+    // revalidate the operator layout, plus the hub layout for this id.
+    revalidatePath("/", "layout");
+    revalidatePath(`/dashboard/prospects/${id}`, "layout");
+
+    return { success: true, data: await toResolvedProfile(updated) };
+  } catch (err) {
+    console.error("Failed to reassign prospect owner:", err);
+    return { success: false, error: "Failed to reassign prospect owner" };
+  }
+}
+
+/**
+ * Reassign a prospect's team (GTM-08F Ownership section), or clear it with
+ * `teamId: null`. Same authorization as `reassignProspectOwner` - only the
+ * current owner or a global ADMIN/OWNER may reassign.
+ */
+export async function reassignProspectTeam(
+  id: string,
+  teamId: string | null,
+): Promise<ActionResult<ProspectProfile>> {
+  try {
+    const actor = await getSessionUser();
+    if (!actor) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    const prospect = await prospectService.get(id);
+    if (!prospect) {
+      return { success: false, error: "Prospect profile not found" };
+    }
+    if (!canReassignProspect(actor, prospect)) {
+      return { success: false, error: REASSIGN_DENIED_MESSAGE };
+    }
+
+    if (teamId !== null) {
+      const teamsPage = await services.teams.list();
+      const exists = teamsPage.items.some((t) => t.id === teamId);
+      if (!exists) {
+        return { success: false, error: "Selected team is not available" };
+      }
+    }
+
+    const updated = await prospectService.update(id, { teamId });
+
+    // Team changes reshape team-scoped visibility for every member of the
+    // old and new team - revalidate the operator layout, plus the hub layout.
+    revalidatePath("/", "layout");
+    revalidatePath(`/dashboard/prospects/${id}`, "layout");
+
+    return { success: true, data: await toResolvedProfile(updated) };
+  } catch (err) {
+    console.error("Failed to reassign prospect team:", err);
+    return { success: false, error: "Failed to reassign prospect team" };
+  }
+}
+
+/**
+ * List active workspace users eligible to become a prospect's owner. Any
+ * authenticated caller (not admin-gated) - a non-admin owner still needs to
+ * browse candidates to hand a prospect off. Deactivated users are excluded,
+ * except `currentOwnerId` (the prospect's resolved current owner, see
+ * `resolveOwnerId`) - it's always included, deactivated or not, so the Owner
+ * select always has an option to display the current owner rather than
+ * falling back to the placeholder.
+ */
+export async function listAssignableUsers(
+  currentOwnerId?: string | null,
+): Promise<ActionResult<AdminUserView[]>> {
+  const user = await getSessionUser();
+  if (!user) return { success: false, error: "Authentication required" };
+
+  try {
+    const usersPage = await services.users.list();
+    const all = usersPage.items;
+    const active = all.filter((u) => !u.deactivatedAt);
+    const missingCurrentOwner =
+      currentOwnerId && !active.some((u) => u.id === currentOwnerId)
+        ? all.find((u) => u.id === currentOwnerId)
+        : undefined;
+    const candidates = missingCurrentOwner
+      ? [...active, missingCurrentOwner]
+      : active;
+    const data = candidates
+      .map((u) => ({
+        id: u.id,
+        email: u.email,
+        displayName: u.displayName,
+        role: u.role,
+        deactivated: Boolean(u.deactivatedAt),
+      }))
+      .sort((a, b) => (a.displayName ?? a.email).localeCompare(b.displayName ?? b.email));
+    return { success: true, data };
+  } catch (err) {
+    console.error("Failed to list assignable users:", err);
+    return { success: false, error: "Failed to list assignable users" };
+  }
+}
+
+/**
+ * List teams eligible to own a prospect. Any authenticated caller.
+ */
+export async function listAssignableTeams(): Promise<ActionResult<Team[]>> {
+  const user = await getSessionUser();
+  if (!user) return { success: false, error: "Authentication required" };
+
+  try {
+    const teamsPage = await services.teams.list();
+    return { success: true, data: teamsPage.items };
+  } catch (err) {
+    console.error("Failed to list assignable teams:", err);
+    return { success: false, error: "Failed to list assignable teams" };
   }
 }
 
@@ -675,16 +995,10 @@ export async function deleteProspectProfile(
       return { success: false, error: "Access denied" };
     }
 
-    await deleteProspectDemoConfigs({
-      earn: prospect.demoEarnId ?? undefined,
-      checkouts: prospect.demoCheckoutsId ?? undefined,
-      wallet: prospect.demoWalletId ?? undefined,
-      remittance: prospect.demoRemittanceId ?? undefined,
-    });
+    await deleteProspectDemoConfigs(await resolveProspectDemos(id));
     await prospectService.delete(id);
 
-    revalidatePath("/");
-    revalidatePath("/prospects");
+    revalidatePath("/dashboard/prospects");
 
     return { success: true, data: { deleted: true } };
   } catch (err) {
@@ -694,36 +1008,108 @@ export async function deleteProspectProfile(
 }
 
 /**
- * Fetches all prospect profiles for the current user and orphaned profiles
- *
- * @returns Object with user's profiles and orphaned profiles, sorted by updatedAt descending
+ * Enforce a requested scope server-side. Fails closed: "all" only for admins,
+ * "team" only for a team the user belongs to (admins bypass). Everything else
+ * collapses to "mine". When no scope is passed, the scope is re-derived from
+ * the persisted cookies so the UI controls are convenience only.
  */
-export async function getAllProspectProfiles(): Promise<{
-  profiles: ProspectProfile[];
+async function enforceScope(
+  user: GtmUser,
+  requested: ProspectScope | undefined,
+): Promise<ProspectScope> {
+  if (!requested) return resolveActiveScope(user);
+
+  const isAdmin = user.role === "OWNER" || user.role === "ADMIN";
+  const memberships = await membershipsForUserCached(user.id);
+  const memberTeamIds = new Set(memberships.map((m) => m.teamId));
+  const isPermittedTeam = (teamId: string) =>
+    isAdmin || memberTeamIds.has(teamId);
+
+  if (requested.kind === "all") {
+    return isAdmin ? { kind: "all" } : { kind: "mine" };
+  }
+  if (requested.kind === "team") {
+    return isPermittedTeam(requested.teamId) ? requested : { kind: "mine" };
+  }
+  if (requested.kind === "mine" && requested.teamId) {
+    return isPermittedTeam(requested.teamId) ? requested : { kind: "mine" };
+  }
+  return { kind: "mine" };
+}
+
+/**
+ * Fetches prospect profiles visible to the current user under the given
+ * scope. Scope is always re-enforced server-side (see `enforceScope`) and
+ * translated straight into a DB where-fragment - no full-list JS filter.
+ * `cursor` requests the page after a previous call's `profiles.nextCursor`
+ * (the infinite-scroll list's "Load more"); omit it for the first page.
+ *
+ * @returns `profiles`, the requested page of the scope's list (newest-updated
+ *   first); `scope`, the enforced scope actually applied (echoed back so a
+ *   caller can key a cache off it without re-deriving it); `orphaned`, a
+ *   separate bounded (non-paginated) fetch of legacy no-owner rows,
+ *   ADMIN/OWNER only, on the first page only - `cursor` pages skip it, since
+ *   it never changes across a single scope's pagination.
+ */
+export async function getAllProspectProfiles(
+  requestedScope?: ProspectScope,
+  cursor?: string | null,
+): Promise<{
+  profiles: Page<ProspectProfile>;
   orphaned: ProspectProfile[];
+  scope: ProspectScope;
 }> {
   const user = await getSessionUser();
-  if (!user) return { profiles: [], orphaned: [] };
+  if (!user) {
+    return {
+      profiles: { items: [], nextCursor: null },
+      orphaned: [],
+      scope: { kind: "mine" },
+    };
+  }
 
-  const visible = await visibleProspectIds(user);
-  const all = (await prospectService.list()).filter((b) =>
-    isProspectVisible(visible, b.id),
-  );
-  const sortByUpdated = (a: ProspectProfile, b: ProspectProfile) =>
-    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  const scope = await enforceScope(user, requestedScope);
+  const page = await prospectService.list({
+    where: prospectScopeWhere(user, scope),
+    cursor: cursor ?? undefined,
+  });
 
-  // profiles carries every visible prospect with an owner; orphaned carries
-  // legacy rows with no owner (visible to ADMIN/OWNER only).
-  const userProfiles = all
-    .filter((b) => b.ownerId)
-    .map(prospectToProfile)
-    .sort(sortByUpdated);
-  const orphanedProfiles = all
-    .filter((b) => !b.ownerId)
-    .map(prospectToProfile)
-    .sort(sortByUpdated);
+  const isAdmin = user.role === "OWNER" || user.role === "ADMIN";
+  const orphaned = !cursor && isAdmin
+    ? (await prospectService.list({ where: { ownerId: "" }, limit: MAX_PAGE_LIMIT })).items
+    : [];
 
-  return { profiles: userProfiles, orphaned: orphanedProfiles };
+  // Batch-resolve every listed prospect's demo map in one query - avoids an
+  // N+1 `resolveProspectDemos` call per row on this list page.
+  const demosByProspectId = await resolveProspectDemosBatch([
+    ...page.items.map((p) => p.id),
+    ...orphaned.map((p) => p.id),
+  ]);
+  const withDemos = (prospect: Prospect): ProspectProfile => ({
+    ...prospectToProfile(prospect),
+    demos: demosByProspectId.get(prospect.id) ?? {},
+  });
+
+  return {
+    profiles: { items: page.items.map(withDemos), nextCursor: page.nextCursor },
+    orphaned: orphaned.map(withDemos),
+    scope,
+  };
+}
+
+/**
+ * `fetchPage` shape for `useInfiniteList` - unwraps `getAllProspectProfiles`
+ * to the bare `Page<ProspectProfile>` the hook expects, always under the
+ * same enforced `scope` the SSR-seeded first page used (never re-derived
+ * from cookies mid-scroll, so a "Load more" click can't silently drift onto
+ * whatever scope happens to be active by the time it fires).
+ */
+export async function listProspectsPage(
+  scope: ProspectScope,
+  cursor: string | null,
+): Promise<Page<ProspectProfile>> {
+  const { profiles } = await getAllProspectProfiles(scope, cursor);
+  return profiles;
 }
 
 /**
@@ -762,7 +1148,10 @@ export interface ProspectOption {
 /**
  * List prospects for the config-form prospect picker. Progressive visibility:
  * a scoped user sees only their own prospects plus their teams'; ADMIN/OWNER
- * see all. `isMine` drives the picker grouping.
+ * see all. `isMine` drives the picker grouping. Bounded to a single page at
+ * `MAX_PAGE_LIMIT` (a combobox, not a paginated list, so this is an
+ * intentional cap rather than the service's default page size) - Phase 07's
+ * full curation UX gets "load more" if this ever proves too narrow.
  */
 export async function listProspectOptions(): Promise<
   ActionResult<ProspectOption[]>
@@ -771,10 +1160,11 @@ export async function listProspectOptions(): Promise<
   if (!user) return { success: false, error: "Authentication required" };
   try {
     const visible = await visibleProspectIds(user);
-    const all = (await prospectService.list()).filter((p) =>
-      isProspectVisible(visible, p.id),
-    );
-    const options = all
+    const page = await prospectService.list({
+      where: prospectVisibilityWhere(visible),
+      limit: MAX_PAGE_LIMIT,
+    });
+    const options = page.items
       .map((p) => ({
         id: p.id,
         name: p.name,
@@ -828,7 +1218,7 @@ export async function getProspectProfilePublic(
  */
 export async function deleteProspectDemo(
   id: string,
-  demoType: "earn" | "checkouts" | "wallet" | "remittance",
+  demoType: "earn" | "checkout" | "wallet" | "remittance",
 ): Promise<ActionResult<ProspectProfile>> {
   const user = await getSessionUser();
   if (!user) {
@@ -844,25 +1234,18 @@ export async function deleteProspectDemo(
       return { success: false, error: "Access denied" };
     }
 
-    const demoColumn = ({
-      earn: "demoEarnId",
-      checkouts: "demoCheckoutsId",
-      wallet: "demoWalletId",
-      remittance: "demoRemittanceId",
-    } as const)[demoType];
-    const demoId = prospect[demoColumn];
+    const demos = await resolveProspectDemos(id);
+    const demoId = demos[demoType];
     if (!demoId) {
       return { success: false, error: `${demoType} demo not found` };
     }
 
     await deleteProspectDemoConfigs({ [demoType]: demoId });
-    const updated = await prospectService.update(id, { [demoColumn]: null });
 
-    revalidatePath("/");
-    revalidatePath("/prospects");
-    revalidatePath(`/prospects/${id}`);
+    revalidatePath("/dashboard/prospects");
+    revalidatePath(`/dashboard/prospects/${id}`);
 
-    return { success: true, data: prospectToProfile(updated) };
+    return { success: true, data: await toResolvedProfile(prospect) };
   } catch (err) {
     console.error("Failed to delete demo:", err);
     return { success: false, error: "Failed to delete demo" };
@@ -877,9 +1260,11 @@ export async function createMissingDemos(
   id: string,
   demoTypes: {
     earn?: boolean;
-    checkouts?: boolean;
+    checkout?: boolean;
     wallet?: boolean;
     remittance?: boolean;
+    trade?: boolean;
+    flow?: boolean;
   },
 ): Promise<ActionResult<ProspectProfile>> {
   const user = await getSessionUser();
@@ -897,14 +1282,17 @@ export async function createMissingDemos(
     }
 
     const profile = prospectToProfile(prospect);
+    const existingDemos = await resolveProspectDemos(id);
     const createOptions = {
-      earn: demoTypes.earn && !profile.demos.earn,
-      checkouts: demoTypes.checkouts && !profile.demos.checkouts,
-      wallet: demoTypes.wallet && !profile.demos.wallet,
-      remittance: demoTypes.remittance && !profile.demos.remittance,
+      earn: demoTypes.earn && !existingDemos.earn,
+      checkout: demoTypes.checkout && !existingDemos.checkout,
+      wallet: demoTypes.wallet && !existingDemos.wallet,
+      remittance: demoTypes.remittance && !existingDemos.remittance,
+      trade: demoTypes.trade && !existingDemos.trade,
+      flow: demoTypes.flow && !existingDemos.flow,
     };
 
-    const createdDemos = await createProspectDemoConfigs(
+    await createProspectDemoConfigs(
       profile.id,
       profile.name,
       profile.prospect,
@@ -912,19 +1300,13 @@ export async function createMissingDemos(
       createOptions,
     );
 
-    const merged = { ...profile.demos, ...createdDemos };
-    const updated = await prospectService.update(
-      id,
-      demosToUpdateInput(merged),
-    );
+    revalidatePath("/dashboard/prospects");
+    revalidatePath(`/dashboard/prospects/${id}`);
 
-    revalidatePath("/");
-    revalidatePath("/prospects");
-    revalidatePath(`/prospects/${id}`);
-
-    return { success: true, data: prospectToProfile(updated) };
+    return { success: true, data: await toResolvedProfile(prospect) };
   } catch (err) {
-    console.error("Failed to create missing demos:", err);
-    return { success: false, error: "Failed to create missing demos" };
+    // Log the real error server-side; never return raw messages to the client.
+    console.error("Failed to create demo:", err);
+    return { success: false, error: "Failed to create demo" };
   }
 }

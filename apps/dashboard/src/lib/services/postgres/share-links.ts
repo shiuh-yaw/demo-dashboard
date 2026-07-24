@@ -71,6 +71,7 @@ export interface ShareLinkPrismaClient {
       where: { id: string };
       data: { status: string };
     }): Promise<ShareLinkRow>;
+    count(args: { where: { userId: string } }): Promise<number>;
   };
   demoConfig: {
     findUnique(args: { where: { id: string } }): Promise<{ id: string } | null>;
@@ -139,10 +140,6 @@ function toProspect(row: ProspectRow): Prospect {
     rowHoverBackground: row.rowHoverBackground,
     gradientFrom: row.gradientFrom,
     gradientTo: row.gradientTo,
-    demoEarnId: row.demoEarnId,
-    demoCheckoutsId: row.demoCheckoutsId,
-    demoWalletId: row.demoWalletId,
-    demoRemittanceId: row.demoRemittanceId,
     domain: row.domain,
     notes: row.notes,
     createdAt: row.createdAt,
@@ -232,5 +229,9 @@ export class PostgresShareLinkService implements ShareLinkService {
       data: { status: "revoked" },
     });
     return toShareLink(updated);
+  }
+
+  async countByUser(userId: string): Promise<number> {
+    return this.client.shareLink.count({ where: { userId } });
   }
 }

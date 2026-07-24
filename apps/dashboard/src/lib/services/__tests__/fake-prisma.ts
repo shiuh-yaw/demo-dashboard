@@ -3,10 +3,11 @@
  *
  * Why a hand-rolled fake instead of the real PrismaClient?
  *   The Postgres ProspectService depends on a small slice of the delegate:
- *   create, findUnique, findMany (with optional `where.ownerId`), update,
- *   delete, upsert. Mocking that surface is a few dozen lines and avoids
- *   pulling Prisma + Postgres into a unit test. Real-database integration
- *   tests belong in a separate suite (out of scope for this PR).
+ *   create, findUnique, findMany (where incl. nested OR/AND/`{in}`, orderBy,
+ *   take, skip, cursor), update, delete, upsert. Mocking that surface is a
+ *   few dozen lines and avoids pulling Prisma + Postgres into a unit test.
+ *   Real-database integration tests belong in a separate suite (out of
+ *   scope for this PR).
  *
  * The shape here exactly matches the `ProspectPrismaClient` interface the
  * service expects, so structural typing keeps the fake honest.
@@ -46,10 +47,6 @@ interface ProspectWritable {
   rowHoverBackground: string | null;
   gradientFrom: string | null;
   gradientTo: string | null;
-  demoEarnId: string | null;
-  demoCheckoutsId: string | null;
-  demoWalletId: string | null;
-  demoRemittanceId: string | null;
   domain: string | null;
   notes: string | null;
 }
@@ -66,9 +63,54 @@ interface FindUniqueArgs {
   where: { id: string };
 }
 
+/** Loose where-fragment shape: enough of Prisma's operators for these tests
+ * (OR/AND, plain equality incl. null/"", `{ in: [...] }`) - not a full emulation. */
+type FakeWhere = Record<string, unknown>;
+
 interface FindManyArgs {
-  where?: { ownerId?: string };
-  orderBy?: { createdAt?: "asc" | "desc" };
+  where?: FakeWhere;
+  orderBy?: Array<Record<string, "asc" | "desc">>;
+  take?: number;
+  skip?: number;
+  cursor?: { id: string };
+}
+
+/** Recursively matches a row against a where-fragment: OR/AND, equality, `{in}`. */
+function matchesWhere(row: Prospect, where?: FakeWhere): boolean {
+  if (!where) return true;
+  return Object.entries(where).every(([key, value]) => {
+    if (key === "OR") {
+      return (value as FakeWhere[]).some((clause) => matchesWhere(row, clause));
+    }
+    if (key === "AND") {
+      return (value as FakeWhere[]).every((clause) => matchesWhere(row, clause));
+    }
+    const rowValue = (row as unknown as Record<string, unknown>)[key];
+    if (value !== null && typeof value === "object" && "in" in (value as object)) {
+      return (value as { in: unknown[] }).in.includes(rowValue);
+    }
+    return rowValue === value;
+  });
+}
+
+/** Multi-key comparator matching Prisma's `orderBy: [{a:"desc"},{b:"desc"}]` shape. */
+function compareByOrderBy(
+  a: Prospect,
+  b: Prospect,
+  orderBy: Array<Record<string, "asc" | "desc">>,
+): number {
+  for (const clause of orderBy) {
+    for (const [key, dir] of Object.entries(clause)) {
+      const av = (a as unknown as Record<string, unknown>)[key];
+      const bv = (b as unknown as Record<string, unknown>)[key];
+      let cmp = 0;
+      if (av instanceof Date && bv instanceof Date) cmp = av.getTime() - bv.getTime();
+      else if (av! > bv!) cmp = 1;
+      else if (av! < bv!) cmp = -1;
+      if (cmp !== 0) return dir === "desc" ? -cmp : cmp;
+    }
+  }
+  return 0;
 }
 
 interface UpdateArgs {
@@ -170,10 +212,6 @@ function applyNullDefaults(
     rowHoverBackground: data.rowHoverBackground ?? null,
     gradientFrom: data.gradientFrom ?? null,
     gradientTo: data.gradientTo ?? null,
-    demoEarnId: data.demoEarnId ?? null,
-    demoCheckoutsId: data.demoCheckoutsId ?? null,
-    demoWalletId: data.demoWalletId ?? null,
-    demoRemittanceId: data.demoRemittanceId ?? null,
     domain: data.domain ?? null,
     notes: data.notes ?? null,
   };
@@ -228,15 +266,17 @@ export function createFakePrisma(): FakePrismaClient {
         return row ? { ...row } : null;
       },
       async findMany(args) {
-        let rows = Array.from(store.values());
-        if (args?.where?.ownerId) {
-          const ownerId = args.where.ownerId;
-          rows = rows.filter((b) => b.ownerId === ownerId);
-        }
-        rows.sort(
-          (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+        let rows = Array.from(store.values()).filter((row) =>
+          matchesWhere(row, args?.where),
         );
-        if (args?.orderBy?.createdAt === "desc") rows.reverse();
+        if (args?.orderBy && args.orderBy.length > 0) {
+          rows.sort((a, b) => compareByOrderBy(a, b, args.orderBy!));
+        }
+        if (args?.cursor?.id) {
+          const idx = rows.findIndex((r) => r.id === args.cursor!.id);
+          rows = idx === -1 ? [] : rows.slice(idx + (args.skip ?? 0));
+        }
+        if (typeof args?.take === "number") rows = rows.slice(0, args.take);
         return rows.map((r) => ({ ...r }));
       },
       async update({ where, data }) {

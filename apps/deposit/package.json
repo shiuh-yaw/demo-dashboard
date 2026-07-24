@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dynamic-demos/analytics": "workspace:*",
     "@dynamic-demos/dynamic": "workspace:*",
     "@dynamic-demos/fireblocks": "workspace:*",
     "@dynamic-demos/theme": "workspace:*",

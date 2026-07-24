@@ -1,12 +1,11 @@
 /**
- * Edit Visa Direct Config Page
- *
- * Page for editing an existing Visa Direct configuration.
+ * Edit Visa Direct Config Page. Thin wrapper over the unified DemoConfigEditor;
+ * prospect-bound configs redirect to the one canonical in-context edit path.
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getVisaDirectConfig } from "@/lib/actions/visa-direct";
-import { VisaDirectConfigEditor } from "./visa-direct-config-editor";
+import { DemoConfigEditor } from "@/components/shared/demo-config-editor";
 
 interface EditVisaDirectConfigPageProps {
   params: Promise<{ id: string }>;
@@ -22,5 +21,9 @@ export default async function EditVisaDirectConfigPage({
     notFound();
   }
 
-  return <VisaDirectConfigEditor config={result.data} />;
+  if (result.data.prospectId) {
+    redirect(`/dashboard/prospects/${result.data.prospectId}/demos/${id}`);
+  }
+
+  return <DemoConfigEditor kind="visa-direct" config={result.data} />;
 }

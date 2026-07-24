@@ -43,7 +43,10 @@ interface ReadMapper {
   toStored(record: DemoConfigRecord, prospect: Prospect | null): { ownerId?: string };
 }
 
-const MAPPERS: Record<DemoConfigKind, ReadMapper> = {
+// Partial - "flow" has no mapper here; apps/flow owns its config directly
+// and a "flow" kind lookup falls through to the prospect-fallback branch
+// below.
+const MAPPERS: Partial<Record<DemoConfigKind, ReadMapper>> = {
   earn: earnMapper,
   wallet: walletMapper,
   trade: tradeMapper,
@@ -56,8 +59,9 @@ export async function handleGetDemoConfig(rawInput: unknown): Promise<unknown> {
   const { kind, id } = parseWithSchema(inputSchema, rawInput);
 
   const record = await services.demoConfigs.get(id);
+  const mapper = MAPPERS[kind];
 
-  if (record && record.kind === kind) {
+  if (record && record.kind === kind && mapper) {
     const prospect = record.prospectId
       ? await services.prospects.get(record.prospectId)
       : null;
@@ -68,7 +72,7 @@ export async function handleGetDemoConfig(rawInput: unknown): Promise<unknown> {
     // visual config. Critically, `@dynamic-demos/theme/fetchDemoConfig`
     // shallow-merges the response over a kind-shaped fallback — wrapper
     // fields would corrupt that merge.
-    const stored = MAPPERS[kind].toStored(record, prospect) as {
+    const stored = mapper.toStored(record, prospect) as {
       config: unknown;
     };
     return stored.config;

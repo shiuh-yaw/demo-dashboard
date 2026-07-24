@@ -65,22 +65,22 @@ const TYPE_STYLES: Record<
   { bg: string; border: string; text: string; icon: string }
 > = {
   error: {
-    bg: "bg-red-50",
-    border: "border-red-200",
-    text: "text-red-800",
-    icon: "text-red-500",
+    bg: "bg-red-50 dark:bg-red-950/20",
+    border: "border-red-200 dark:border-red-900/50",
+    text: "text-red-800 dark:text-red-400",
+    icon: "text-red-500 dark:text-red-400",
   },
   warning: {
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    text: "text-amber-800",
-    icon: "text-amber-500",
+    bg: "bg-amber-50 dark:bg-amber-950/20",
+    border: "border-amber-200 dark:border-amber-900/50",
+    text: "text-amber-800 dark:text-amber-400",
+    icon: "text-amber-500 dark:text-amber-400",
   },
   info: {
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    text: "text-blue-800",
-    icon: "text-blue-500",
+    bg: "bg-blue-50 dark:bg-blue-950/20",
+    border: "border-blue-200 dark:border-blue-900/50",
+    text: "text-blue-800 dark:text-blue-400",
+    icon: "text-blue-500 dark:text-blue-400",
   },
 };
 

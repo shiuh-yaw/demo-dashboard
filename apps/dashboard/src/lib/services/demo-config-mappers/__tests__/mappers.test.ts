@@ -12,8 +12,8 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { RedisProspectService } from "@/lib/services/redis/prospects";
-import { RedisDemoConfigService } from "@/lib/services/redis/demo-configs";
+import { PostgresProspectService } from "@/lib/services/postgres/prospects";
+import { PostgresDemoConfigService } from "@/lib/services/postgres/demo-configs";
 import type {
   ProspectService,
   DemoConfigService,
@@ -24,18 +24,16 @@ import { tradeMapper } from "../trade";
 import { visaDirectMapper } from "../visa-direct";
 import { checkoutMapper } from "../checkout";
 import { remittanceMapper } from "../remittance";
-import { createFakeRedis } from "../../__tests__/fake-redis";
+import { makePrismock } from "../../__tests__/make-prismock";
+import { createFakeDemoConfigPrisma } from "../../__tests__/fake-prisma-demo-configs";
 
 describe("walletMapper round-trip", () => {
   let prospects: ProspectService;
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("creates + reads back a wallet config bound to an explicit prospect", async () => {
@@ -88,11 +86,8 @@ describe("tradeMapper round-trip", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("creates + reads back a trade config (no embedded theme)", async () => {
@@ -131,11 +126,8 @@ describe("visaDirectMapper round-trip", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("creates + reads back a visa-direct config", async () => {
@@ -179,11 +171,8 @@ describe("checkoutMapper round-trip", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("creates + reads back a checkout config, preserving mode", async () => {
@@ -227,11 +216,8 @@ describe("remittanceMapper round-trip", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("creates + reads back a remittance config bound to an explicit prospect", async () => {
@@ -290,11 +276,8 @@ describe("walletMapper prospect theme hydration", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("hydrates all extended prospect palette fields", async () => {
@@ -372,11 +355,8 @@ describe("visaDirectMapper prospect theme hydration", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("hydrates extended prospect fields and logoUrl", async () => {
@@ -413,11 +393,8 @@ describe("remittanceMapper prospect theme hydration", () => {
   let demoConfigs: DemoConfigService;
 
   beforeEach(() => {
-    const redis = createFakeRedis();
-    prospects = new RedisProspectService(redis);
-    demoConfigs = new RedisDemoConfigService(redis, {
-      enableLegacyFallback: false,
-    });
+    prospects = new PostgresProspectService(makePrismock());
+    demoConfigs = new PostgresDemoConfigService(createFakeDemoConfigPrisma());
   });
 
   it("hydrates secondaryColor from prospect alongside extended palette", async () => {
@@ -457,7 +434,7 @@ describe("mappers never resolve or create a Prospect", () => {
   let prospects: ProspectService;
 
   beforeEach(() => {
-    prospects = new RedisProspectService(createFakeRedis());
+    prospects = new PostgresProspectService(makePrismock());
   });
 
   it("two demos created with the same theme but no explicit prospectId stay unbound (no hash convergence)", async () => {
@@ -489,6 +466,6 @@ describe("mappers never resolve or create a Prospect", () => {
     });
     expect(earnInput.prospectId).toBeNull();
     expect(walletInput.prospectId).toBeNull();
-    expect(await prospects.list()).toHaveLength(0);
+    expect((await prospects.list()).items).toHaveLength(0);
   });
 });

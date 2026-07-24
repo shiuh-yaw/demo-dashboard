@@ -8,6 +8,7 @@ import {
 } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
+import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { TradeConfigProvider } from "@/contexts/trade-config-context";
 import type { TradeConfig } from "@/lib/trade-config";
@@ -73,11 +74,15 @@ export default async function RootLayout({
         <ThemeStyleTag theme={brandTheme} overridesOnly />
       </head>
       <body className="bg-trade-bg text-trade-text-primary font-sans antialiased">
-        <Providers>
-          <TradeConfigProvider config={config} configId={configId ?? undefined}>
-            {children}
-          </TradeConfigProvider>
-        </Providers>
+        {/* GTM Phase 09: NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this
+            is safe to mount unconditionally (Phase 02 guarantee). */}
+        <GtmTracker demoSlug="trade">
+          <Providers>
+            <TradeConfigProvider config={config} configId={configId ?? undefined}>
+              {children}
+            </TradeConfigProvider>
+          </Providers>
+        </GtmTracker>
       </body>
     </html>
   );

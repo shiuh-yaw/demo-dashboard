@@ -69,8 +69,13 @@ URL contract (post-Phase-4-app simplification):
 - `FIREBLOCKS_API_KEY` / `FIREBLOCKS_API_SECRET` / `FIREBLOCKS_VAULT_ACCOUNT_ID` — required for the prefund vault.
 - `NEXT_PUBLIC_DASHBOARD_URL` — dashboard origin for orchestration calls.
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox off.
+- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`) - optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
 
 Sandbox-by-default (D-005).
+
+## Analytics
+
+`<GtmTracker demoSlug="remittance">` wraps the tree in `app/layout.tsx`; no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned) - no per-app milestones wired yet.
 
 ## Theming
 
@@ -114,7 +119,7 @@ Browser-tab title is branded via `generateMetadata` in `app/layout.tsx`: a `Reac
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`, `@dynamic-demos/fireblocks`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`, `@dynamic-demos/fireblocks`, `@dynamic-demos/analytics`.
 **Imported by:** none.
 
 ## Examples

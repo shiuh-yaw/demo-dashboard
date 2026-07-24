@@ -96,11 +96,6 @@ model Prospect {
   rowHoverBackground String?
   gradientFrom       String?
   gradientTo         String?
-  /// @deprecated Dropped in the contract migration; query DemoConfig.prospectId instead.
-  demoEarnId         String?
-  demoCheckoutsId    String?
-  demoWalletId       String?
-  demoRemittanceId   String?
   domain             String?
   notes              String?
   createdAt          DateTime       @default(now())
@@ -182,6 +177,9 @@ model DemoConfig {
   prospectId     String?
   prospect       Prospect? @relation(fields: [prospectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdBy      User?     @relation("DemoConfigCreatedBy", fields: [createdById], references: [id])
+  /// Marks the canonical config for its (prospectId, kind) pair. Resolution
+  /// picks the isPrimary row first, else the most recently updated row.
+  isPrimary      Boolean   @default(false)
   themeOverrides Json?
   config         Json
   createdAt      DateTime  @default(now())
@@ -191,6 +189,7 @@ model DemoConfig {
   @@index([prospectId])
   @@index([kind])
   @@index([ownerId, kind])
+  @@index([prospectId, kind])
   @@index([createdById])
 }
 
@@ -232,6 +231,9 @@ model ShareLink {
   createdAt    DateTime         @default(now())
   user         User             @relation(fields: [userId], references: [id])
   sessions     VisitorSession[]
+
+  @@index([prospectId])
+  @@index([demoConfigId])
 }
 
 /// One visitor's session on a live demo. Geo/UA are derived server-side,
@@ -257,6 +259,7 @@ model VisitorSession {
 
   @@index([shareLinkId])
   @@index([demoSlug, startedAt])
+  @@index([isInternal, startedAt])
 }
 
 /// One tracked event in a session. "heartbeat"-named events advance the

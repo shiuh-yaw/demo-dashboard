@@ -12,8 +12,11 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createEarnConfig } from "@/lib/actions/earns";
-import { Button } from "@dynamic-demos/ui";
-import { Input } from "@dynamic-demos/ui";
+import { Button, Input } from "@dynamic-demos/ui";
+import {
+  Section,
+  Field,
+} from "@/app/(operator)/checkouts/components/editor/form-components";
 import { ProspectPicker } from "@/components/shared/prospect-picker";
 import type { EarnBrand, EarnConfig } from "@/lib/types/dashboard";
 
@@ -93,10 +96,7 @@ export default function NewEarnConfigPage() {
     <div className="max-w-xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/earns"
-          className={ICON_ACTION}
-        >
+        <Link href="/earns" className={ICON_ACTION}>
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <h1 className="text-xl font-semibold text-slate-900">
@@ -105,74 +105,48 @@ export default function NewEarnConfigPage() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          {/* Name */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              Name *
-            </label>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <Section title="Basic Info">
+          <Field label="Name *">
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Config"
-              className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
               Internal config name (dashboard only)
             </p>
-          </div>
-
-          {/* Prospect */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              Prospect
-            </label>
+          </Field>
+          <Field label="Prospect">
             <ProspectPicker value={prospectId} onChange={setProspectId} />
-          </div>
+          </Field>
+        </Section>
 
-          {/* Page Title */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              Page Title
-            </label>
+        <Section title="Content">
+          <Field label="Page Title">
             <Input
               value={pageTitle}
               onChange={(e) => setPageTitle(e.target.value)}
               placeholder="Earn"
-              className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
               Title shown on the main page header
             </p>
-          </div>
-
-          {/* Page Description */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              Page Description
-            </label>
+          </Field>
+          <Field label="Page Description">
             <Input
               value={pageDescription}
               onChange={(e) => setPageDescription(e.target.value)}
               placeholder="Manage your earnings, balance, and payouts."
-              className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
               Description shown below the page title
             </p>
-          </div>
-        </div>
+          </Field>
+        </Section>
 
-        {/* Branding */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-900">Branding</h2>
-
-          {/* Logo */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              Logo
-            </label>
+        <Section title="Branding">
+          <Field label="Logo">
             <div className="flex flex-wrap gap-2">
               {BRAND_OPTIONS.map((option) => (
                 <button
@@ -198,7 +172,6 @@ export default function NewEarnConfigPage() {
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder="https://example.com/logo.svg"
-                  className="text-sm"
                 />
                 <p className="text-xs text-slate-500 mt-1">
                   Enter a URL to a hosted SVG or image file
@@ -219,46 +192,33 @@ export default function NewEarnConfigPage() {
                 )}
               </div>
             )}
-          </div>
+          </Field>
 
-          {/* Token Name */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              Token Name
-            </label>
+          <Field label="Token Name">
             <Input
               value={tokenName}
               onChange={(e) => setTokenName(e.target.value)}
               placeholder="USDC"
-              className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
               Token symbol displayed in balances (e.g., USDC, PYUSD)
             </p>
-          </div>
+          </Field>
 
-          {/* App Name */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              App Name
-            </label>
+          <Field label="App Name">
             <Input
               value={appName}
               onChange={(e) => setAppName(e.target.value)}
               placeholder="Acme"
-              className="text-sm"
             />
             <p className="text-xs text-slate-500 mt-1">
               Browser-tab title (&quot;Acme - Earn&quot;). Defaults to the
               prospect name.
             </p>
-          </div>
-        </div>
+          </Field>
+        </Section>
 
-        {/* Layout */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-900">Layout</h2>
-
+        <Section title="Layout">
           <div className="flex items-center justify-between">
             <div>
               <label className="block text-xs font-medium text-slate-700">
@@ -282,18 +242,11 @@ export default function NewEarnConfigPage() {
               />
             </button>
           </div>
-        </div>
+        </Section>
 
-        {/* Theme */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-900">Theme Colors</h2>
-
+        <Section title="Theme Colors">
           <div className="grid grid-cols-2 gap-4">
-            {/* Primary Color */}
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                Primary Color
-              </label>
+            <Field label="Primary Color">
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -304,16 +257,12 @@ export default function NewEarnConfigPage() {
                 <Input
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="text-sm flex-1"
+                  className="flex-1"
                 />
               </div>
-            </div>
+            </Field>
 
-            {/* Accent Color */}
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                Accent Color
-              </label>
+            <Field label="Accent Color">
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -324,12 +273,12 @@ export default function NewEarnConfigPage() {
                 <Input
                   value={accentColor}
                   onChange={(e) => setAccentColor(e.target.value)}
-                  className="text-sm flex-1"
+                  className="flex-1"
                 />
               </div>
-            </div>
+            </Field>
           </div>
-        </div>
+        </Section>
 
         {/* Error */}
         {error && (

@@ -17,13 +17,15 @@ const { services, gtm, policy } = vi.hoisted(() => ({
       delete: vi.fn(),
       list: vi.fn(),
     },
-    prospects: { get: vi.fn() },
+    prospects: { get: vi.fn(), list: vi.fn().mockResolvedValue({ items: [], nextCursor: null }) },
   },
   gtm: {
     getSessionUser: vi.fn(),
     canMutateDemoConfig: vi.fn(),
     visibleProspectIds: vi.fn(),
     isDemoConfigVisible: vi.fn(),
+    demoConfigActiveScopeWhere: vi.fn(),
+    resolveActiveScope: vi.fn(),
   },
   policy: { canCreateRecord: vi.fn() },
 }));
@@ -155,20 +157,54 @@ describe("updateWalletConfig", () => {
   });
 });
 
-describe("getAllWalletConfigs (list wiring, ADMIN 'all' visibility)", () => {
-  it("returns other owners' visible rows in configs and null-owner rows in orphaned", async () => {
+describe("getAllWalletConfigs (list wiring, active My/Team/All scope not broad visibility)", () => {
+  it("resolves the active scope and scopes the DB query via demoConfigActiveScopeWhere + kind", async () => {
     gtm.getSessionUser.mockResolvedValue(MEMBER);
-    gtm.visibleProspectIds.mockResolvedValue("all");
-    gtm.isDemoConfigVisible.mockReturnValue(true);
-    services.demoConfigs.list.mockResolvedValue([
-      { id: "mine", ownerId: "sub-1", prospectId: null, updatedAt: new Date() },
-      { id: "theirs", ownerId: "sub-2", prospectId: null, updatedAt: new Date() },
-      { id: "orphan", ownerId: "", prospectId: null, updatedAt: new Date() },
-    ]);
+    gtm.resolveActiveScope.mockResolvedValue({ kind: "all" });
+    gtm.demoConfigActiveScopeWhere.mockReturnValue({ __scoped: true });
+    // DB-side scoping already narrowed this to what the active scope grants -
+    // the action no longer re-filters with isDemoConfigVisible in JS.
+    services.demoConfigs.list.mockResolvedValue({
+      items: [
+        { id: "mine", ownerId: "sub-1", prospectId: null, updatedAt: new Date() },
+        { id: "theirs", ownerId: "sub-2", prospectId: null, updatedAt: new Date() },
+        { id: "orphan", ownerId: "", prospectId: null, updatedAt: new Date() },
+      ],
+      nextCursor: null,
+    });
     services.prospects.get.mockResolvedValue(null);
     const { configs, orphaned } = await getAllWalletConfigs();
+    expect(gtm.resolveActiveScope).toHaveBeenCalledWith(MEMBER);
+    expect(gtm.demoConfigActiveScopeWhere).toHaveBeenCalledWith(MEMBER, { kind: "all" });
+    expect(services.demoConfigs.list).toHaveBeenCalledWith({
+      where: { __scoped: true },
+      kind: "wallet",
+      limit: expect.any(Number),
+    });
     const configIds = configs.map((c) => (c as { id: string }).id).sort();
     expect(configIds).toEqual(["mine", "theirs"]);
     expect(orphaned.map((c) => (c as { id: string }).id)).toEqual(["orphan"]);
+  });
+
+  it("narrows to the caller's own prospects when the active scope is mine+teamId (team-switcher x My filter)", async () => {
+    gtm.getSessionUser.mockResolvedValue(MEMBER);
+    gtm.resolveActiveScope.mockResolvedValue({ kind: "mine", teamId: "team-1" });
+    gtm.demoConfigActiveScopeWhere.mockReturnValue({ __scoped: "mine-team-1" });
+    services.demoConfigs.list.mockResolvedValue({
+      items: [{ id: "mine-in-team", ownerId: "sub-1", prospectId: "p1", updatedAt: new Date() }],
+      nextCursor: null,
+    });
+    services.prospects.get.mockResolvedValue(null);
+    const { configs } = await getAllWalletConfigs();
+    expect(gtm.demoConfigActiveScopeWhere).toHaveBeenCalledWith(MEMBER, {
+      kind: "mine",
+      teamId: "team-1",
+    });
+    expect(services.demoConfigs.list).toHaveBeenCalledWith({
+      where: { __scoped: "mine-team-1" },
+      kind: "wallet",
+      limit: expect.any(Number),
+    });
+    expect(configs.map((c) => (c as { id: string }).id)).toEqual(["mine-in-team"]);
   });
 });

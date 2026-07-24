@@ -23,10 +23,13 @@ import {
   InvalidSchedulingUrlError,
   type ClaimLegacyRecordsResult,
   type GtmUser,
+  type Page,
+  type PageOptions,
   type UserRole,
   type GtmUserService,
   type UpdateGtmUserInput,
 } from "../types";
+import { clampLimit, pageArgs, toPage, type PageArgs } from "./pagination";
 import type { UserRow } from "./row-types";
 
 /**
@@ -54,9 +57,11 @@ export interface UserPrismaClient {
     findUnique(
       args: { where: { id: string } } | { where: { email: string } },
     ): Promise<UserRow | null>;
-    findMany(args: {
-      where: { dynamicUserId: { in: string[] } };
-    }): Promise<UserRow[]>;
+    findMany(
+      args?: { where?: { dynamicUserId?: { in: string[] } } } & Partial<
+        PageArgs
+      >,
+    ): Promise<UserRow[]>;
     create(args: {
       data: {
         email: string;
@@ -134,6 +139,13 @@ export class PostgresGtmUserService implements GtmUserService {
 
   async getOrCreateByEmail(email: string): Promise<GtmUser> {
     const normalized = email.trim().toLowerCase();
+    // Read-first: the common case (an existing user, i.e. every request after
+    // first login) is a single SELECT with no failing INSERT. Create only runs
+    // on genuine first login.
+    const existing = await this.client.user.findUnique({
+      where: { email: normalized },
+    });
+    if (existing) return toGtmUser(existing);
     try {
       // `role` is intentionally omitted - the schema default (`MEMBER`)
       // applies. Role seeding (OWNER/ADMIN allowlists) happens elsewhere.
@@ -143,24 +155,25 @@ export class PostgresGtmUserService implements GtmUserService {
       return toGtmUser(created);
     } catch (err) {
       if (!isUniqueConstraintError(err)) throw err;
-      // Lost the create race to a concurrent getOrCreateByEmail for the
-      // same email (unique `email` collision, P2002) - the winner's row
-      // now exists; read and return it instead of throwing.
-      const existing = await this.client.user.findUnique({
+      // Lost the create race to a concurrent first-login for the same email
+      // (unique `email` collision, P2002) - the winner's row now exists.
+      const raced = await this.client.user.findUnique({
         where: { email: normalized },
       });
-      if (!existing) {
-        // Pathological: the winning row should be visible by now.
-        // Re-throw the original error rather than fabricate a user.
-        throw err;
-      }
-      return toGtmUser(existing);
+      if (!raced) throw err;
+      return toGtmUser(raced);
     }
   }
 
   async get(id: string): Promise<GtmUser | null> {
     const row = await this.client.user.findUnique({ where: { id } });
     return row ? toGtmUser(row) : null;
+  }
+
+  async list(options: PageOptions = {}): Promise<Page<GtmUser>> {
+    const limit = clampLimit(options.limit);
+    const rows = await this.client.user.findMany(pageArgs(options));
+    return toPage(rows.map(toGtmUser), limit);
   }
 
   async findByEmail(email: string): Promise<GtmUser | null> {

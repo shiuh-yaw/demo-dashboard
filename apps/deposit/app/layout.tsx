@@ -6,6 +6,7 @@ import {
 } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
+import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { NetworkBar } from "./network-bar";
 import { DepositConfigProvider } from "@/contexts/deposit-config-context";
@@ -47,16 +48,20 @@ export default async function RootLayout({
         <ThemeStyleTag theme={brandTheme} overridesOnly />
       </head>
       <body>
-        <div className="min-h-screen flex items-center justify-center p-6">
-          <div className="w-full max-w-[400px]">
-            <Providers>
-              <DepositConfigProvider config={config}>
-                <NetworkBar />
-                {children}
-              </DepositConfigProvider>
-            </Providers>
+        {/* NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this is safe to
+            mount unconditionally (packages/analytics Phase 02 guarantee). */}
+        <GtmTracker demoSlug="deposit">
+          <div className="min-h-screen flex items-center justify-center p-6">
+            <div className="w-full max-w-[400px]">
+              <Providers>
+                <DepositConfigProvider config={config}>
+                  <NetworkBar />
+                  {children}
+                </DepositConfigProvider>
+              </Providers>
+            </div>
           </div>
-        </div>
+        </GtmTracker>
       </body>
     </html>
   );

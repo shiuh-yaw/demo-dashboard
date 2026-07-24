@@ -9,9 +9,7 @@
  * TD-002: routes through `services.demoConfigs.*` (unified `DemoConfig`
  * row, discriminated by `kind`) via the `earnMapper`. `prospectId` is
  * caller-supplied (GTM-03.5B) - the form passes it explicitly, `null` means
- * unbound. The Redis backend stays canonical until ops flips
- * `USE_POSTGRES_DEMO_CONFIGS=true`; the legacy per-kind Redis keyspace
- * is still readable via the service's read-fallback path.
+ * unbound. `services.demoConfigs` is Postgres-backed.
  */
 
 import { revalidatePath } from "next/cache";
@@ -20,10 +18,14 @@ import {
   canMutateDemoConfig,
   visibleProspectIds,
   isDemoConfigVisible,
+  demoConfigActiveScopeWhere,
+  resolveActiveScope,
 } from "@/lib/auth/gtm";
 import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeBrandingLogos } from "@/lib/normalize-logo";
 import { services } from "@/lib/services";
+import { prospectsByIdFor } from "@/lib/actions/demo-config-prospects";
+import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
 import { earnMapper } from "@/lib/services/demo-config-mappers/earn";
 import type { EarnConfig, StoredEarnConfig } from "@/lib/types/dashboard";
 
@@ -62,7 +64,6 @@ export async function createEarnConfig(
       : null;
     const stored = earnMapper.toStored(record, prospect);
 
-    revalidatePath("/");
     revalidatePath("/earns");
 
     return { success: true, data: stored };
@@ -146,7 +147,6 @@ export async function updateEarnConfig(
       : null;
     const stored = earnMapper.toStored(updated, prospect);
 
-    revalidatePath("/");
     revalidatePath("/earns");
     revalidatePath(`/earns/${id}`);
 
@@ -178,7 +178,6 @@ export async function deleteEarnConfig(
     }
     await services.demoConfigs.delete(id);
 
-    revalidatePath("/");
     revalidatePath("/earns");
 
     return { success: true, data: { deleted: true } };
@@ -200,19 +199,25 @@ export async function getAllEarnConfigs(): Promise<{
   const user = await getSessionUser();
   if (!user) return { configs: [], orphaned: [] };
 
-  const visible = await visibleProspectIds(user);
-  const all = (await services.demoConfigs.list({ kind: "earn" })).filter((r) =>
-    isDemoConfigVisible(user, visible, r),
-  );
-  // Hydrate each row's Prospect. List sizes are small (per-owner index makes
-  // owner-scoped lists O(N owned)) so a per-row prospect lookup is fine.
-  const stored = await Promise.all(
-    all.map(async (record) => {
-      const prospect = record.prospectId
-        ? await services.prospects.get(record.prospectId)
-        : null;
-      return earnMapper.toStored(record, prospect);
-    }),
+  const scope = await resolveActiveScope(user);
+  // Scoped + kind-filtered in the DB query, not a full-list JS filter.
+  // Bounded join fetch (not a paginated list) - every earn config in the
+  // active scope, capped at MAX_PAGE_LIMIT, same idiom as the prospect join
+  // fetches elsewhere (demos-table.ts, org-scope.ts) - list sizes here are
+  // small (per-owner index makes owner-scoped lists O(N owned)).
+  const all = (
+    await services.demoConfigs.list({
+      where: demoConfigActiveScopeWhere(user, scope),
+      kind: "earn",
+      limit: MAX_PAGE_LIMIT,
+    })
+  ).items;
+  const prospectsById = await prospectsByIdFor(all);
+  const stored = all.map((record) =>
+    earnMapper.toStored(
+      record,
+      record.prospectId ? prospectsById.get(record.prospectId) ?? null : null,
+    ),
   );
 
   const userConfigs = stored.filter((c) => c.ownerId);

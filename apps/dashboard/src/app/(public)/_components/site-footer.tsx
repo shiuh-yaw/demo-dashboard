@@ -7,5 +7,5 @@
 import { SiteFooter as SharedSiteFooter } from "@dynamic-demos/ui";
 
 export function SiteFooter() {
-  return <SharedSiteFooter signInHref="/prospects" />;
+  return <SharedSiteFooter signInHref="/dashboard" />;
 }

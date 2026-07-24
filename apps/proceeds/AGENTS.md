@@ -62,10 +62,15 @@ Cookie / header contract (D-008):
 - `IRON_API_KEY` — server-only Iron key — required (D-003: this app holds Iron creds today; Phase 5B routes via dashboard).
 - `IRON_ENVIRONMENT` — `sandbox` | `production` — defaults to sandbox (D-005).
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox flags off.
+- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`) - optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
 
 ## Theming
 
 Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; proceeds-specific tokens (`--proceeds-navy`, `--proceeds-blue`, `--proceeds-grey*`, `--proceeds-gold`, `--proceeds-teal`, `--max-width-content`) remain in `app/globals.css` since they're consumed by app-only chrome (`dashboard-header`, `app-shell`). The app uses `createDemoMiddleware` with `configIdSource: 'none'` — there's no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if proceeds ever gains per-tenant theming. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+
+## Analytics
+
+`<GtmTracker demoSlug="proceeds">` wraps the tree in `app/layout.tsx`, no-op with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned); no per-app milestones are wired yet.
 
 ## Credentials
 
@@ -103,7 +108,7 @@ Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--bran
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/alchemy`, `@dynamic-demos/iron`, `@dynamic-demos/fireblocks`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/alchemy`, `@dynamic-demos/iron`, `@dynamic-demos/fireblocks`, `@dynamic-demos/analytics`.
 **Imported by:** none.
 
 ## Examples

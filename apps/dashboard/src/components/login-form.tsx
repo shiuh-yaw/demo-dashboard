@@ -1,31 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LoginForm, Spinner, WidgetCard } from "@dynamic-demos/ui";
 import {
   getJWTToken,
   sendEmailOTP,
+  signInWithGoogle,
   type OTPVerification,
 } from "@/lib/dynamicClient";
-import { DynamicLogo } from "@/components/dynamic-logo";
 import { setDynamicJWT } from "@/lib/auth/session";
-import { SendOTPFormSection } from "./auth/SendOTPFormSection";
-import { OTPConfirmationView } from "./auth/OTPConfirmationView";
-import { GoogleLoginButton } from "./auth/GoogleLoginButton";
 import { useCompleteSocialAuth } from "@/hooks/use-complete-social-auth";
+import { OTPConfirmationView } from "./auth/OTPConfirmationView";
 
 /**
  * Dashboard Login Form
  *
- * Google OAuth + Email OTP authentication using Dynamic SDK.
- * Supports both social login and email verification.
+ * Google OAuth + Email OTP authentication using Dynamic SDK, standardized on
+ * the shared `LoginForm` (@dynamic-demos/ui) - the same component every demo
+ * app (e.g. apps/wallet/components/screens/auth-screen.tsx) uses to drive
+ * Dynamic auth. The shared component only sends the email code; OTP entry is
+ * a separate step the app owns (same split wallet uses between its
+ * auth-screen and otp-verify-screen), reusing this app's existing
+ * `OTPConfirmationView`.
  *
+ * OAuth redirect completion stays on `useCompleteSocialAuth` (unchanged) -
+ * it already owns the cookie sync (`setDynamicJWT`) + `router.refresh()`
+ * dance for this app's server-checked session, so it is driven directly
+ * here instead of through `LoginForm`'s own `onHandleOAuthRedirect` prop.
  */
 export default function DashboardLoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [otpVerification, setOtpVerification] =
     useState<OTPVerification | null>(null);
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [sendOTPError, setSendOTPError] = useState<unknown>(null);
+  const [socialAuthError, setSocialAuthError] = useState<unknown>(null);
 
   // Handle OAuth redirects (Google sign-in completion)
   const { isLoading: isOAuthLoading, error: oAuthError } =
@@ -35,15 +46,30 @@ export default function DashboardLoginForm() {
       },
     });
 
-  /**
-   * Handles successful OTP verification from SendOTPFormSection
-   * @param verification - The OTP verification object returned from sendEmailOTP
-   * @param email - The email address used for authentication
-   */
-  function handleOtpVerification(verification: OTPVerification, email: string) {
-    setEmail(email);
-    setOtpVerification(verification);
-  }
+  const handleSendEmailOTP = useCallback(async (emailInput: string) => {
+    setIsSendingOTP(true);
+    setSendOTPError(null);
+    try {
+      const verification = await sendEmailOTP({ email: emailInput });
+      setEmail(emailInput);
+      setOtpVerification(verification);
+    } catch (error) {
+      setSendOTPError(error);
+    } finally {
+      setIsSendingOTP(false);
+    }
+  }, []);
+
+  const handleSocialSignIn = useCallback(async () => {
+    setSocialAuthError(null);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      // Silently handle errors - user will see login page again
+      console.error("Google sign-in failed:", error);
+      setSocialAuthError(error);
+    }
+  }, []);
 
   /**
    * Handles OTP resend - creates a new verification object
@@ -90,32 +116,24 @@ export default function DashboardLoginForm() {
     }
   }
 
-  // Show loading state during OAuth completion
+  // Show loading state during OAuth completion - same footprint as the form
+  // card below so it doesn't render as a tiny box.
   if (isOAuthLoading) {
     return (
-      <div className="w-full max-w-sm mx-auto">
-        <div className="flex flex-col items-center mb-8">
-          <DynamicLogo width={200} height={45} className="mb-2" />
+      <WidgetCard className="w-full max-w-sm">
+        <div className="flex flex-col items-center gap-4 px-6 py-14">
+          <Spinner size="lg" />
+          <p className="text-sm text-[var(--widget-muted,#9a9a9a)]">
+            Completing sign in...
+          </p>
         </div>
-        <div className="bg-white rounded-lg border border-[#e1e4ea] shadow-[0px_8px_8px_-4px_rgba(10,13,18,0.03),0px_3px_3px_-1.5px_rgba(10,13,18,0.04)] p-8">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-gray-300 border-t-[#5166EE] rounded-full animate-spin" />
-            <p className="text-sm text-gray-500">Completing sign in...</p>
-          </div>
-        </div>
-      </div>
+      </WidgetCard>
     );
   }
 
   return (
-    <div className="w-full max-w-sm mx-auto">
-      {/* Header */}
-      <div className="flex flex-col items-center mb-8">
-        <DynamicLogo width={200} height={45} className="mb-2" />
-      </div>
-
-      {/* Login Card */}
-      <div className="bg-white rounded-lg border border-[#e1e4ea] shadow-[0px_8px_8px_-4px_rgba(10,13,18,0.03),0px_3px_3px_-1.5px_rgba(10,13,18,0.04)] p-4">
+    <WidgetCard className="w-full max-w-sm">
+      <div className="p-4">
         {otpVerification ? (
           <OTPConfirmationView
             email={email}
@@ -125,34 +143,24 @@ export default function DashboardLoginForm() {
             onResend={handleResendOtp}
           />
         ) : (
-          <div className="space-y-4">
-            {/* OAuth Error */}
+          <>
             {oAuthError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400">
                 {oAuthError.message}
               </div>
             )}
-
-            {/* Google Sign In */}
-            <GoogleLoginButton />
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-2 bg-white text-gray-500">
-                  or continue with email
-                </span>
-              </div>
-            </div>
-
-            {/* Email OTP */}
-            <SendOTPFormSection onOtpVerification={handleOtpVerification} />
-          </div>
+            <LoginForm
+              emailEnabled
+              onSendEmailOTP={handleSendEmailOTP}
+              isSendingOTP={isSendingOTP}
+              sendOTPError={sendOTPError}
+              socialProviders={["google"]}
+              onSocialSignIn={handleSocialSignIn}
+              socialAuthError={socialAuthError}
+            />
+          </>
         )}
       </div>
-    </div>
+    </WidgetCard>
   );
 }

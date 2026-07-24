@@ -26,8 +26,9 @@ describe("PostgresTeamService", () => {
     expect(team.createdAt).toBeInstanceOf(Date);
 
     const all = await svc.list();
-    expect(all).toHaveLength(1);
-    expect(all[0]!.slug).toBe("acme");
+    expect(all.items).toHaveLength(1);
+    expect(all.items[0]!.slug).toBe("acme");
+    expect(all.nextCursor).toBeNull();
   });
 
   it("rejects a duplicate slug (unique constraint)", async () => {
@@ -94,5 +95,54 @@ describe("PostgresTeamService", () => {
     expect(await svc.membershipsForUser("u1")).toHaveLength(0);
     // Second remove is a no-op (idempotent), does not throw.
     await expect(svc.removeMember("u1", team.id)).resolves.toBeUndefined();
+  });
+
+  it("lists every membership of a team via membershipsForTeam", async () => {
+    const team = await svc.create({ name: "Acme", slug: "acme" });
+    const other = await svc.create({ name: "Globex", slug: "globex" });
+    await svc.addMember("u1", team.id, "ADMIN");
+    await svc.addMember("u2", team.id, "MEMBER");
+    await svc.addMember("u3", other.id, "MEMBER");
+
+    const members = await svc.membershipsForTeam(team.id);
+    expect(members.map((m) => m.userId).sort()).toEqual(["u1", "u2"]);
+    expect(members.find((m) => m.userId === "u1")!.role).toBe("ADMIN");
+  });
+
+  describe("list pagination", () => {
+    it("defaults to DEFAULT_PAGE_LIMIT and returns nextCursor: null for a partial page", async () => {
+      await svc.create({ name: "A", slug: "a" });
+      await svc.create({ name: "B", slug: "b" });
+      const page = await svc.list();
+      expect(page.items).toHaveLength(2);
+      expect(page.nextCursor).toBeNull();
+    });
+
+    it("clamps an over-large limit to MAX_PAGE_LIMIT", async () => {
+      for (let i = 0; i < 5; i++) {
+        await svc.create({ name: `T${i}`, slug: `t${i}` });
+      }
+      const page = await svc.list({ limit: 1000 });
+      // All 5 rows fit under the clamped ceiling - still a full read, no
+      // truncation from the (irrelevant, small) test fixture size.
+      expect(page.items).toHaveLength(5);
+      expect(page.nextCursor).toBeNull();
+    });
+
+    it("a full page sets nextCursor; the next call resumes after it, newest-created first", async () => {
+      const first = await svc.create({ name: "A", slug: "a" });
+      await new Promise((r) => setTimeout(r, 5));
+      const second = await svc.create({ name: "B", slug: "b" });
+      await new Promise((r) => setTimeout(r, 5));
+      const third = await svc.create({ name: "C", slug: "c" });
+
+      const page1 = await svc.list({ limit: 2 });
+      expect(page1.items.map((t) => t.id)).toEqual([third.id, second.id]);
+      expect(page1.nextCursor).not.toBeNull();
+
+      const page2 = await svc.list({ limit: 2, cursor: page1.nextCursor });
+      expect(page2.items.map((t) => t.id)).toEqual([first.id]);
+      expect(page2.nextCursor).toBeNull();
+    });
   });
 });

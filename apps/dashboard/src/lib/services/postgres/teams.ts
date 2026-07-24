@@ -11,11 +11,14 @@ import { prisma as defaultPrisma } from "@dynamic-demos/db";
 import {
   TeamMembershipNotFoundError,
   type CreateTeamInput,
+  type Page,
+  type PageOptions,
   type UserRole,
   type Team,
   type TeamMembership,
   type TeamService,
 } from "../types";
+import { clampLimit, pageArgs, toPage, type PageArgs } from "./pagination";
 import type { TeamMembershipRow, TeamRow } from "./row-types";
 
 /**
@@ -26,9 +29,8 @@ import type { TeamMembershipRow, TeamRow } from "./row-types";
 export interface TeamPrismaClient {
   team: {
     create(args: { data: { name: string; slug: string } }): Promise<TeamRow>;
-    findMany(args?: {
-      orderBy?: { createdAt?: "asc" | "desc" };
-    }): Promise<TeamRow[]>;
+    /** `Team` has no `updatedAt` column - paged by `(createdAt desc, id desc)`. */
+    findMany(args?: Partial<PageArgs<"createdAt">>): Promise<TeamRow[]>;
     findUnique(args: { where: { slug: string } }): Promise<TeamRow | null>;
   };
   teamMembership: {
@@ -39,7 +41,7 @@ export interface TeamPrismaClient {
       where: { userId_teamId: { userId: string; teamId: string } };
     }): Promise<TeamMembershipRow | null>;
     findMany(args: {
-      where: { userId: string };
+      where: { userId?: string; teamId?: string };
       orderBy?: { createdAt?: "asc" | "desc" };
     }): Promise<TeamMembershipRow[]>;
     update(args: {
@@ -85,11 +87,12 @@ export class PostgresTeamService implements TeamService {
     return toTeam(row);
   }
 
-  async list(): Promise<Team[]> {
-    const rows = await this.client.team.findMany({
-      orderBy: { createdAt: "asc" },
-    });
-    return rows.map(toTeam);
+  async list(options: PageOptions = {}): Promise<Page<Team>> {
+    const limit = clampLimit(options.limit);
+    const rows = await this.client.team.findMany(
+      pageArgs(options, "createdAt"),
+    );
+    return toPage(rows.map(toTeam), limit);
   }
 
   async addMember(
@@ -137,6 +140,14 @@ export class PostgresTeamService implements TeamService {
   async membershipsForUser(userId: string): Promise<TeamMembership[]> {
     const rows = await this.client.teamMembership.findMany({
       where: { userId },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map(toMembership);
+  }
+
+  async membershipsForTeam(teamId: string): Promise<TeamMembership[]> {
+    const rows = await this.client.teamMembership.findMany({
+      where: { teamId },
       orderBy: { createdAt: "asc" },
     });
     return rows.map(toMembership);

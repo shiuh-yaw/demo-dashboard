@@ -1,24 +1,10 @@
 /**
- * Prospects Dashboard Page (Server Component)
- *
- * Fetches Prospect Profiles from Redis on the server and passes them
- * to the client component.
+ * Legacy path. Prospects now live under `/dashboard/prospects`; this keeps
+ * old bookmarks and out-of-repo links resolving instead of 404ing.
  */
 
-import { getAllProspectProfiles } from "@/lib/actions/prospects";
-import { getCurrentUser } from "@/lib/auth/session";
-import { ProspectsClient } from "./components/prospects-client";
+import { redirect } from "next/navigation";
 
-export default async function ProspectsPage() {
-  // Fetch profiles from Redis (user's profiles and orphaned profiles)
-  const { profiles, orphaned } = await getAllProspectProfiles();
-  const user = await getCurrentUser();
-
-  return (
-    <ProspectsClient
-      initialProfiles={profiles}
-      orphanedProfiles={orphaned}
-      currentUserId={user?.sub}
-    />
-  );
+export default function LegacyProspectsRedirect() {
+  redirect("/dashboard");
 }

@@ -7,16 +7,15 @@
  * discriminated union in `../demo-config-schemas.ts`. Replaces what
  * would otherwise be one service-per-table.
  *
- * Routed in via `USE_POSTGRES_DEMO_CONFIGS` (see services/index.ts).
- * Both this and `RedisDemoConfigService` satisfy the same parity test
- * suite at `../__tests__/demo-configs.parity.test.ts`.
+ * The sole DemoConfigService implementation (see services/index.ts);
+ * behavioural coverage at `../__tests__/demo-configs.postgres.test.ts`.
  *
  * D-013: this module never opens its own connection — it relies on the
  * `prisma` singleton from `@dynamic-demos/db`.
  * D-015: only `apps/dashboard` imports `@dynamic-demos/db`.
  */
 
-import { prisma as defaultPrisma } from "@dynamic-demos/db";
+import { prisma as defaultPrisma, type Prisma } from "@dynamic-demos/db";
 
 import { parseDemoConfigPayload } from "../demo-config-schemas";
 import type {
@@ -25,8 +24,10 @@ import type {
   DemoConfigListOptions,
   DemoConfigRecord,
   DemoConfigService,
+  Page,
   UpdateDemoConfigInput,
 } from "../types";
+import { clampLimit, pageArgs, toPage, type PageArgs } from "./pagination";
 
 /**
  * Internal row shape returned by Prisma. Mirrors the `DemoConfig` model
@@ -42,6 +43,7 @@ interface DemoConfigRow {
   name: string | null;
   description: string | null;
   prospectId: string | null;
+  isPrimary: boolean;
   themeOverrides: unknown | null;
   config: unknown;
   createdAt: Date;
@@ -64,15 +66,15 @@ export interface DemoConfigPrismaClient {
         name?: string | null;
         description?: string | null;
         prospectId: string | null;
+        isPrimary?: boolean;
         themeOverrides?: unknown | null;
         config: unknown;
       };
     }): Promise<DemoConfigRow>;
     findUnique(args: { where: { id: string } }): Promise<DemoConfigRow | null>;
-    findMany(args?: {
-      where?: { ownerId?: string; kind?: string; prospectId?: string };
-      orderBy?: { createdAt?: "asc" | "desc" };
-    }): Promise<DemoConfigRow[]>;
+    findMany(
+      args?: { where?: Prisma.DemoConfigWhereInput } & Partial<PageArgs>,
+    ): Promise<DemoConfigRow[]>;
     update(args: {
       where: { id: string };
       data: Partial<{
@@ -80,6 +82,7 @@ export interface DemoConfigPrismaClient {
         name: string | null;
         description: string | null;
         prospectId: string | null;
+        isPrimary: boolean;
         themeOverrides: unknown | null;
         config: unknown;
       }>;
@@ -95,6 +98,7 @@ export interface DemoConfigPrismaClient {
         name?: string | null;
         description?: string | null;
         prospectId: string | null;
+        isPrimary?: boolean;
         themeOverrides?: unknown | null;
         config: unknown;
       };
@@ -104,11 +108,23 @@ export interface DemoConfigPrismaClient {
         name: string | null;
         description: string | null;
         prospectId: string | null;
+        isPrimary: boolean;
         themeOverrides: unknown | null;
         config: unknown;
       }>;
     }): Promise<DemoConfigRow>;
   };
+}
+
+/** ANDs scope `where` + `kind` + `prospectId` without clobbering a nested OR/AND on `where`. */
+function buildListWhere(options: DemoConfigListOptions): Prisma.DemoConfigWhereInput {
+  const clauses: Prisma.DemoConfigWhereInput[] = [];
+  if (options.where) clauses.push(options.where);
+  if (options.kind) clauses.push({ kind: options.kind });
+  if (options.prospectId) clauses.push({ prospectId: options.prospectId });
+  if (clauses.length === 0) return {};
+  if (clauses.length === 1) return clauses[0]!;
+  return { AND: clauses };
 }
 
 function toRecord(row: DemoConfigRow): DemoConfigRecord {
@@ -123,6 +139,7 @@ function toRecord(row: DemoConfigRow): DemoConfigRecord {
     name: row.name,
     description: row.description,
     prospectId: row.prospectId,
+    isPrimary: row.isPrimary,
     themeOverrides: row.themeOverrides ?? null,
     config: row.config,
     createdAt: row.createdAt,
@@ -150,6 +167,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         name: input.name ?? null,
         description: input.description ?? null,
         prospectId: input.prospectId,
+        isPrimary: input.isPrimary ?? false,
         themeOverrides: input.themeOverrides ?? null,
         config: input.config,
       },
@@ -162,18 +180,33 @@ export class PostgresDemoConfigService implements DemoConfigService {
     return row ? toRecord(row) : null;
   }
 
-  async list(
-    options: DemoConfigListOptions = {},
-  ): Promise<DemoConfigRecord[]> {
-    const where: { ownerId?: string; kind?: string; prospectId?: string } = {};
-    if (options.ownerId) where.ownerId = options.ownerId;
-    if (options.kind) where.kind = options.kind;
-    if (options.prospectId) where.prospectId = options.prospectId;
+  async list(options: DemoConfigListOptions = {}): Promise<Page<DemoConfigRecord>> {
+    const limit = clampLimit(options.limit);
     const rows = await this.client.demoConfig.findMany({
-      where: Object.keys(where).length > 0 ? where : undefined,
-      orderBy: { createdAt: "asc" },
+      where: buildListWhere(options),
+      ...pageArgs(options),
     });
-    return rows.map(toRecord);
+    return toPage(rows.map(toRecord), limit);
+  }
+
+  /** Unpaginated projection - see `DemoConfigService.listIdKinds`. */
+  async listIdKinds(where: Prisma.DemoConfigWhereInput): Promise<
+    {
+      id: string;
+      kind: DemoConfigKind;
+      prospectId: string | null;
+      isPrimary: boolean;
+      updatedAt: Date;
+    }[]
+  > {
+    const rows = await this.client.demoConfig.findMany({ where });
+    return rows.map((row) => ({
+      id: row.id,
+      kind: row.kind as DemoConfigKind,
+      prospectId: row.prospectId,
+      isPrimary: row.isPrimary,
+      updatedAt: row.updatedAt,
+    }));
   }
 
   async update(
@@ -182,7 +215,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
   ): Promise<DemoConfigRecord> {
     // If `config` is being changed, re-validate against the current
     // record's `kind`. `kind` itself is immutable at the service
-    // boundary — there's no UpdateDemoConfigInput.kind field.
+    // boundary - there's no UpdateDemoConfigInput.kind field.
     if (input.config !== undefined) {
       const existing = await this.client.demoConfig.findUnique({
         where: { id },
@@ -199,6 +232,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
     if (input.name !== undefined) data.name = input.name;
     if (input.description !== undefined) data.description = input.description;
     if (input.prospectId !== undefined) data.prospectId = input.prospectId;
+    if (input.isPrimary !== undefined) data.isPrimary = input.isPrimary;
     if (input.themeOverrides !== undefined)
       data.themeOverrides = input.themeOverrides;
     if (input.config !== undefined) data.config = input.config;
@@ -228,6 +262,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         name: input.name ?? null,
         description: input.description ?? null,
         prospectId: input.prospectId,
+        isPrimary: input.isPrimary ?? false,
         themeOverrides: input.themeOverrides ?? null,
         config: input.config,
       },
@@ -237,6 +272,7 @@ export class PostgresDemoConfigService implements DemoConfigService {
         name: input.name ?? null,
         description: input.description ?? null,
         prospectId: input.prospectId,
+        isPrimary: input.isPrimary ?? false,
         themeOverrides: input.themeOverrides ?? null,
         config: input.config,
       },

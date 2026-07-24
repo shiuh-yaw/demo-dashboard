@@ -33,9 +33,17 @@ export async function GET(
       return createErrorResponse("Prospect profile not found", 404, "NOT_FOUND");
     }
 
-    // Return profile without ownerId for security
-    const { ownerId, ...result } = profile;
-    return createResponse(result);
+    // Allowlist the public fields; internal org data (ownerId, createdById,
+    // resolvedOwnerId, teamId) never crosses this unauthenticated boundary.
+    return createResponse({
+      id: profile.id,
+      name: profile.name,
+      companyUrl: profile.companyUrl,
+      prospect: profile.prospect,
+      demos: profile.demos,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+    });
   } catch (error) {
     console.error("[prospects/get]", error);
     const message =

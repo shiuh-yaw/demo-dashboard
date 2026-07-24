@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { Button } from "./droplet-client";
+import { Button } from "@/components/droplet-client";
 import type { LandingDemo } from "@/lib/landing/demos";
 import { getDemoIllustration } from "./illustrations";
 

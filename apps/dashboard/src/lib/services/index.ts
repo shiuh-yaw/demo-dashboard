@@ -3,28 +3,20 @@
  *
  * Exports service instances for use throughout the application.
  *
- * Most services still resolve to their Redis implementations. Cutover
- * flags flip record types onto Postgres one at a time:
- *   - USE_POSTGRES_PROSPECTS         → ProspectService
- *   - USE_POSTGRES_TRANSACTIONS   → TransactionRecordService
- *   - USE_POSTGRES_DEMO_CONFIGS   → DemoConfigService (unified table —
- *                                  every demo kind, including remittance)
- * Default is Redis so production stays unchanged until each explicit
- * cutover.
+ * Prospect, DemoConfig, and TransactionRecord records are Postgres-only
+ * (`@dynamic-demos/db`); the legacy Redis implementations and their
+ * cutover flags were removed. `WebhookEventService` and the GTM stores
+ * (users, teams, share links, visitor sessions, analytics) are likewise
+ * Postgres-only. A populated `DATABASE_URL` is therefore required.
  *
- * `WebhookEventService` is Postgres-only by design (D-011): the audit
- * trail must be durable from day one and Redis never had this store.
- * Phase 5A's webhook receiver framework therefore requires `DATABASE_URL`
- * populated even when the rest of the dashboard is on Redis.
+ * `RedisTransactionService`, `RedisUserService`, and `RedisCheckoutService`
+ * remain Redis-backed: they carry transient/legacy state with no Postgres
+ * equivalent.
  */
 
-import { env } from "@/env";
 import { RedisTransactionService } from "./redis/transactions";
 import { RedisUserService } from "./redis/users";
 import { RedisCheckoutService } from "./redis/checkouts";
-import { RedisProspectService } from "./redis/prospects";
-import { RedisTransactionRecordService } from "./redis/transactions-record";
-import { RedisDemoConfigService } from "./redis/demo-configs";
 import { PostgresProspectService } from "./postgres/prospects";
 import { PostgresTransactionRecordService } from "./postgres/transactions";
 import { PostgresWebhookEventService } from "./postgres/webhook-events";
@@ -33,6 +25,7 @@ import { PostgresGtmUserService } from "./postgres/users";
 import { PostgresTeamService } from "./postgres/teams";
 import { PostgresShareLinkService } from "./postgres/share-links";
 import { PostgresVisitorSessionService } from "./postgres/visitor-sessions";
+import { PostgresAnalyticsService } from "./postgres/analytics";
 import type {
   ProspectService,
   DemoConfigService,
@@ -43,24 +36,20 @@ import type {
   TeamService,
   ShareLinkService,
   VisitorSessionService,
+  AnalyticsService,
 } from "./types";
 
 // Export service instances
 export const transactionService = new RedisTransactionService();
 export const userService = new RedisUserService();
 export const checkoutService = new RedisCheckoutService();
-export const prospectService: ProspectService = env.USE_POSTGRES_PROSPECTS
-  ? new PostgresProspectService()
-  : new RedisProspectService();
+export const prospectService: ProspectService = new PostgresProspectService();
 export const transactionRecordService: TransactionRecordService =
-  env.USE_POSTGRES_TRANSACTIONS
-    ? new PostgresTransactionRecordService()
-    : new RedisTransactionRecordService();
+  new PostgresTransactionRecordService();
 export const webhookEventService: WebhookEventService =
   new PostgresWebhookEventService();
-export const demoConfigService: DemoConfigService = env.USE_POSTGRES_DEMO_CONFIGS
-  ? new PostgresDemoConfigService()
-  : new RedisDemoConfigService();
+export const demoConfigService: DemoConfigService =
+  new PostgresDemoConfigService();
 // Postgres-only, no cutover flag - no legacy Redis equivalent for any of
 // these three (same rationale as WebhookEventService above).
 export const gtmUserService: GtmUserService = new PostgresGtmUserService();
@@ -68,6 +57,10 @@ export const teamService: TeamService = new PostgresTeamService();
 export const shareLinkService: ShareLinkService = new PostgresShareLinkService();
 export const visitorSessionService: VisitorSessionService =
   new PostgresVisitorSessionService();
+// Postgres-only read model over VisitorSession/TrackEvent (no cutover flag -
+// same rationale as the other Postgres-only stores). `StubAnalyticsService`
+// (./analytics) stays as a zeroed fallback behind the same interface.
+export const analyticsService: AnalyticsService = new PostgresAnalyticsService();
 
 // Export as combined services object
 export const services: Services = {
@@ -82,10 +75,13 @@ export const services: Services = {
   teams: teamService,
   shareLinks: shareLinkService,
   visitorSessions: visitorSessionService,
+  analytics: analyticsService,
 };
 
 // Re-export types
 export type {
+  Page,
+  PageOptions,
   TransactionService,
   UserService,
   CheckoutService,
@@ -136,7 +132,16 @@ export type {
   TrackBatchInput,
   VisitorSessionMeta,
   UpsertVisitorSessionResult,
+  AnalyticsService,
+  AnalyticsReadScope,
+  DemoSummary,
+  ProspectSummary,
+  ContactView,
+  OrgContactView,
+  ContactCompany,
+  VisitorSessionView,
 } from "./types";
+export { isProspectInReadScope } from "./types";
 export {
   DuplicateWebhookEventError,
   InvalidSchedulingUrlError,

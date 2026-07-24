@@ -17,6 +17,26 @@ class FakeUniqueViolation extends Error {
   }
 }
 
+/** Multi-key comparator matching Prisma's `orderBy: [{a:"desc"},{b:"desc"}]` shape. */
+function compareByOrderBy(
+  a: TeamRow,
+  b: TeamRow,
+  orderBy: Array<Record<string, "asc" | "desc">>,
+): number {
+  for (const clause of orderBy) {
+    for (const [key, dir] of Object.entries(clause)) {
+      const av = (a as unknown as Record<string, unknown>)[key];
+      const bv = (b as unknown as Record<string, unknown>)[key];
+      let cmp = 0;
+      if (av instanceof Date && bv instanceof Date) cmp = av.getTime() - bv.getTime();
+      else if (av! > bv!) cmp = 1;
+      else if (av! < bv!) cmp = -1;
+      if (cmp !== 0) return dir === "desc" ? -cmp : cmp;
+    }
+  }
+  return 0;
+}
+
 export function createFakeTeamPrisma(): TeamPrismaClient & {
   __teams: Map<string, TeamRow>;
   __memberships: Map<string, TeamMembershipRow>;
@@ -44,10 +64,19 @@ export function createFakeTeamPrisma(): TeamPrismaClient & {
         teams.set(row.id, row);
         return { ...row };
       },
-      async findMany() {
-        return Array.from(teams.values())
-          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-          .map((r) => ({ ...r }));
+      async findMany(args) {
+        let rows = Array.from(teams.values());
+        if (args?.orderBy && args.orderBy.length > 0) {
+          rows.sort((a, b) => compareByOrderBy(a, b, args.orderBy!));
+        } else {
+          rows.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        }
+        if (args?.cursor?.id) {
+          const idx = rows.findIndex((r) => r.id === args.cursor!.id);
+          rows = idx === -1 ? [] : rows.slice(idx + (args.skip ?? 0));
+        }
+        if (typeof args?.take === "number") rows = rows.slice(0, args.take);
+        return rows.map((r) => ({ ...r }));
       },
       async findUnique({ where }) {
         for (const t of teams.values()) {
@@ -83,7 +112,11 @@ export function createFakeTeamPrisma(): TeamPrismaClient & {
       },
       async findMany({ where }) {
         return Array.from(memberships.values())
-          .filter((m) => m.userId === where.userId)
+          .filter((m) => {
+            if (where.userId !== undefined && m.userId !== where.userId) return false;
+            if (where.teamId !== undefined && m.teamId !== where.teamId) return false;
+            return true;
+          })
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
           .map((m) => ({ ...m }));
       },

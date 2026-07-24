@@ -7,9 +7,19 @@
  * is Phase 07's; this is a combobox fed by `services.prospects.list()` via
  * the `listProspectOptions` action.
  *
- * Hand-rolled: the repo has no Combobox/Popover/Command primitive to build
- * on (checked packages/ui, apps/dashboard/src/components, and the droplet
- * SDK exports) - ARIA combobox/listbox/option roles are wired manually.
+ * The dropdown renders inside droplet's Radix `Popover` (`PopoverTrigger` /
+ * `PopoverContent`), not a hand-rolled absolute or body-portaled panel.
+ * Two prior attempts: (1) `absolute` positioning got clipped by droplet
+ * `Dialog`'s `overflow-hidden`; (2) a manual `createPortal` to `document.body`
+ * fixed the clipping but broke focus/scroll, because droplet `Dialog` (Radix)
+ * applies `pointer-events: none` / `aria-hidden` to everything outside the
+ * dialog content and traps focus - a raw body-portaled node is dead to
+ * pointer/focus. Radix `Popover` content is a recognized layer in that same
+ * stack, so it stays interactive and dismissable even nested inside a Radix
+ * `Dialog`, and isn't clipped by the dialog's overflow. ARIA
+ * combobox/listbox/option roles inside `PopoverContent` are still wired
+ * manually - droplet has no combobox primitive that exposes grouped
+ * "mine vs others" rows.
  */
 
 import {
@@ -20,13 +30,28 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/droplet-client";
 import {
   listProspectOptions,
   type ProspectOption,
 } from "@/lib/actions/prospects";
+import { keys } from "@/lib/query/keys";
 import { ProspectIcon } from "@/components/shared/prospect-icon";
+
+/** Unwraps the `listProspectOptions` action result for `useQuery` - a
+ * failure surfaces as a query error rather than a silently empty list. */
+async function fetchProspectOptions(): Promise<ProspectOption[]> {
+  const result = await listProspectOptions();
+  if (!result.success) throw new Error(result.error);
+  return result.data;
+}
 
 export interface ProspectPickerProps {
   value: string | null;
@@ -37,6 +62,13 @@ export interface ProspectPickerProps {
    * Null when "Unbound" is selected.
    */
   onSelectOption?: (option: ProspectOption | null) => void;
+  /**
+   * Server-fetched options, seeding the query cache with no initial client
+   * fetch (see `configure-for-prospect.tsx`'s parent page). Reopening the
+   * picker after the first mount is instant regardless, since the cache
+   * lives above the Dialog/Popover that mounts/unmounts this component.
+   */
+  initialData?: ProspectOption[];
   disabled?: boolean;
   className?: string;
 }
@@ -65,51 +97,29 @@ export function ProspectPicker({
   value,
   onChange,
   onSelectOption,
+  initialData,
   disabled,
   className,
 }: ProspectPickerProps) {
-  const [options, setOptions] = useState<ProspectOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: options = [], isLoading } = useQuery({
+    queryKey: keys.prospectOptions,
+    queryFn: fetchProspectOptions,
+    initialData,
+  });
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listboxId = useId();
 
-  useEffect(() => {
-    let active = true;
-    listProspectOptions().then((result) => {
-      if (!active) return;
-      if (result.success) setOptions(result.data);
-      setLoading(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Close on outside click.
-  useEffect(() => {
-    if (!open) return;
-    function handlePointerDown(event: MouseEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [open]);
-
-  // Reset search state and focus the search input each time the panel opens.
+  // Reset search state each time the panel opens; initial focus is handled
+  // by PopoverContent's onOpenAutoFocus below.
   useEffect(() => {
     if (!open) return;
     setQuery("");
     setActiveIndex(0);
-    const frame = requestAnimationFrame(() => inputRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
   }, [open]);
 
   function handleChange(prospectId: string | null) {
@@ -134,7 +144,8 @@ export function ProspectPicker({
   const filteredMine = mine.filter((option) => matchesQuery(option, query));
   const filteredOthers = others.filter((option) => matchesQuery(option, query));
   const showUnbound =
-    query.length === 0 || UNBOUND_LABEL.toLowerCase().includes(query.toLowerCase());
+    query.length === 0 ||
+    UNBOUND_LABEL.toLowerCase().includes(query.toLowerCase());
 
   const rows: Row[] = [
     ...(showUnbound ? [{ kind: "unbound", group: "unbound" } as Row] : []),
@@ -178,131 +189,140 @@ export function ProspectPicker({
   const activeId = activeRow ? `${listboxId}-${rowKey(activeRow)}` : undefined;
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled || loading}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        onClick={() => setOpen((isOpen) => !isOpen)}
-        className={cn(
-          "w-full flex items-center justify-between gap-2 pl-2.5 pr-2 py-1.5 rounded-md text-sm bg-white cursor-pointer transition-colors",
-          "border border-[var(--widget-border,#e1e4ea)]",
-          "text-slate-900",
-          "focus:outline-none focus:ring-1",
-          "focus:ring-[var(--widget-primary,#335cff)]",
-          "focus:border-[var(--widget-primary,#335cff)]",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-        )}
-      >
-        <span className="flex items-center gap-2 min-w-0">
-          {selected ? (
-            <>
-              <ProspectIcon domain={selected.domain} name={selected.name} size={18} />
-              <span className="truncate">{selected.name}</span>
-            </>
-          ) : (
-            <span className="text-slate-500 truncate">{UNBOUND_LABEL}</span>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled || isLoading}
+          className={cn(
+            "w-full min-w-0 flex items-center justify-between gap-2 pl-2.5 pr-2 py-1.5 rounded-md text-sm bg-background cursor-pointer transition-colors",
+            "border border-border",
+            "text-foreground",
+            "focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+            className,
           )}
-        </span>
-        <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-      </button>
-
-      {open && (
-        <div className="absolute z-20 mt-1 w-full rounded-md border border-slate-200 bg-white shadow-lg">
-          <div className="p-1.5 border-b border-slate-100">
-            <input
-              ref={inputRef}
-              role="combobox"
-              aria-expanded={open}
-              aria-controls={listboxId}
-              aria-activedescendant={activeId}
-              aria-autocomplete="list"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setActiveIndex(0);
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Search prospects..."
-              className={cn(
-                "w-full px-2 py-1 text-sm rounded border border-slate-200 bg-white text-slate-900",
-                "focus:outline-none focus:ring-1 focus:ring-[var(--widget-primary,#335cff)]",
-              )}
-            />
-          </div>
-          <ul
-            role="listbox"
-            id={listboxId}
-            className="max-h-64 overflow-auto py-1"
-          >
-            {rows.length === 0 && (
-              <li className="px-3 py-2 text-xs text-slate-500">
-                No prospects match
-              </li>
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            {selected ? (
+              <>
+                <ProspectIcon
+                  domain={selected.domain}
+                  name={selected.name}
+                  size={18}
+                />
+                <span className="truncate">{selected.name}</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground truncate">
+                {UNBOUND_LABEL}
+              </span>
             )}
-            {rows.map((row, index) => {
-              const previousGroup = index > 0 ? rows[index - 1].group : null;
-              const header =
-                row.group === "mine" && previousGroup !== "mine"
-                  ? "My prospects"
-                  : row.group === "others" && previousGroup !== "others"
-                    ? "All prospects"
-                    : null;
-              const id = `${listboxId}-${rowKey(row)}`;
-              const isActive = index === activeIndex;
-              const isSelected =
-                row.kind === "unbound"
-                  ? value === null
-                  : value === row.option.id;
-              const label =
-                row.kind === "unbound" ? UNBOUND_LABEL : row.option.name;
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        </button>
+      </PopoverTrigger>
 
-              return (
-                <Fragment key={id}>
-                  {header && (
-                    <li
-                      role="presentation"
-                      className="px-3 pt-2 pb-1 text-[11px] font-medium text-slate-500 uppercase tracking-wide"
-                    >
-                      {header}
-                    </li>
-                  )}
-                  <li
-                    id={id}
-                    role="option"
-                    aria-selected={isSelected}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onClick={() => commit(row)}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer",
-                      isActive ? "bg-slate-100" : "hover:bg-slate-50",
-                    )}
-                  >
-                    {row.kind === "unbound" ? (
-                      <span className="w-[18px] h-[18px] shrink-0" />
-                    ) : (
-                      <ProspectIcon
-                        domain={row.option.domain}
-                        name={row.option.name}
-                        size={18}
-                      />
-                    )}
-                    <span className="flex-1 truncate text-slate-900">
-                      {label}
-                    </span>
-                    {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-[#4779FF] shrink-0" />
-                    )}
-                  </li>
-                </Fragment>
-              );
-            })}
-          </ul>
+      <PopoverContent
+        align="start"
+        sideOffset={4}
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          inputRef.current?.focus();
+        }}
+      >
+        <div className="p-1.5 border-b border-border-divider">
+          <input
+            ref={inputRef}
+            role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Search prospects..."
+            className={cn(
+              "w-full min-w-0 box-border px-2 py-1 text-sm rounded border border-border bg-background text-foreground",
+              "focus:outline-none focus:ring-1 focus:ring-ring",
+            )}
+          />
         </div>
-      )}
-    </div>
+        <ul
+          role="listbox"
+          id={listboxId}
+          className="max-h-64 overflow-auto py-1"
+        >
+          {rows.length === 0 && (
+            <li className="px-3 py-2 text-xs text-muted-foreground">
+              No prospects match
+            </li>
+          )}
+          {rows.map((row, index) => {
+            const previousGroup = index > 0 ? rows[index - 1].group : null;
+            const header =
+              row.group === "mine" && previousGroup !== "mine"
+                ? "My prospects"
+                : row.group === "others" && previousGroup !== "others"
+                  ? "All prospects"
+                  : null;
+            const id = `${listboxId}-${rowKey(row)}`;
+            const isActive = index === activeIndex;
+            const isSelected =
+              row.kind === "unbound"
+                ? value === null
+                : value === row.option.id;
+            const label =
+              row.kind === "unbound" ? UNBOUND_LABEL : row.option.name;
+
+            return (
+              <Fragment key={id}>
+                {header && (
+                  <li
+                    role="presentation"
+                    className="px-3 pt-2 pb-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide"
+                  >
+                    {header}
+                  </li>
+                )}
+                <li
+                  id={id}
+                  role="option"
+                  aria-selected={isSelected}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => commit(row)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer",
+                    isActive ? "bg-accent" : "hover:bg-accent",
+                  )}
+                >
+                  {row.kind === "unbound" ? (
+                    <span className="w-[18px] h-[18px] shrink-0" />
+                  ) : (
+                    <ProspectIcon
+                      domain={row.option.domain}
+                      name={row.option.name}
+                      size={18}
+                    />
+                  )}
+                  <span className="flex-1 truncate text-foreground">
+                    {label}
+                  </span>
+                  {isSelected && (
+                    <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                  )}
+                </li>
+              </Fragment>
+            );
+          })}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }

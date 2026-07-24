@@ -1,10 +1,8 @@
 /**
  * Postgres-backed TransactionRecordService (Prisma + Supabase via @dynamic-demos/db).
  *
- * Routed in via the USE_POSTGRES_TRANSACTIONS flag (see services/index.ts).
- * The Redis equivalent (`../redis/transactions-record.ts`) satisfies the
- * same contract; both pass the parity test suite at
- * `__tests__/transactions.parity.test.ts`.
+ * The sole TransactionRecordService implementation (see services/index.ts);
+ * behavioural coverage at `__tests__/transactions.postgres.test.ts`.
  *
  * State validation lives at this boundary: `assertValidTransition` from
  * `@dynamic-demos/transactions` runs before every state-mutating write

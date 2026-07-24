@@ -23,6 +23,26 @@ class FakePrismaUniqueViolation extends Error {
   }
 }
 
+/** Multi-key comparator matching Prisma's `orderBy: [{a:"desc"},{b:"desc"}]` shape. */
+function compareByOrderBy(
+  a: UserRow,
+  b: UserRow,
+  orderBy: Array<Record<string, "asc" | "desc">>,
+): number {
+  for (const clause of orderBy) {
+    for (const [key, dir] of Object.entries(clause)) {
+      const av = (a as unknown as Record<string, unknown>)[key];
+      const bv = (b as unknown as Record<string, unknown>)[key];
+      let cmp = 0;
+      if (av instanceof Date && bv instanceof Date) cmp = av.getTime() - bv.getTime();
+      else if (av! > bv!) cmp = 1;
+      else if (av! < bv!) cmp = -1;
+      if (cmp !== 0) return dir === "desc" ? -cmp : cmp;
+    }
+  }
+  return 0;
+}
+
 /** Minimal legacy-owned row the claimLegacyRecords updateMany fakes filter on. */
 interface OwnedRow {
   id: string;
@@ -82,11 +102,22 @@ export function createFakeUserPrisma(): UserPrismaClient & {
         }
         return null;
       },
-      async findMany({ where }) {
-        const subs = new Set(where.dynamicUserId.in);
-        return Array.from(store.values())
-          .filter((row) => row.dynamicUserId && subs.has(row.dynamicUserId))
-          .map((row) => ({ ...row }));
+      async findMany(args) {
+        const subs = args?.where?.dynamicUserId?.in;
+        let rows = Array.from(store.values()).filter((row) =>
+          subs ? row.dynamicUserId && subs.includes(row.dynamicUserId) : true,
+        );
+        if (args?.orderBy && args.orderBy.length > 0) {
+          rows.sort((a, b) => compareByOrderBy(a, b, args.orderBy!));
+        } else {
+          rows.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        }
+        if (args?.cursor?.id) {
+          const idx = rows.findIndex((r) => r.id === args.cursor!.id);
+          rows = idx === -1 ? [] : rows.slice(idx + (args.skip ?? 0));
+        }
+        if (typeof args?.take === "number") rows = rows.slice(0, args.take);
+        return rows.map((row) => ({ ...row }));
       },
       async create({ data }) {
         // Enforce the `User.email` unique constraint, mirroring

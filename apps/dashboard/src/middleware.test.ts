@@ -29,3 +29,24 @@ describe("api CORS middleware", () => {
     expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
   });
 });
+
+describe("operator pathname forwarding (onboarding gate)", () => {
+  it("forwards x-pathname for the welcome route so the layout can exempt it", () => {
+    const res = middleware(req("/dashboard/welcome"));
+    expect(res.headers.get("x-middleware-request-x-pathname")).toBe(
+      "/dashboard/welcome",
+    );
+  });
+
+  it("forwards x-pathname for other operator routes", () => {
+    const res = middleware(req("/prospects/abc123"));
+    expect(res.headers.get("x-middleware-request-x-pathname")).toBe(
+      "/prospects/abc123",
+    );
+  });
+
+  it("does not add CORS headers to operator page routes", () => {
+    const res = middleware(req("/dashboard"));
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  });
+});

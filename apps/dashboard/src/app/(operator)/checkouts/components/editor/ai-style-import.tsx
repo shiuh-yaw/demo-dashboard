@@ -69,16 +69,18 @@ export function AiStyleImport({
   // Simplified UI when company URL is provided
   if (companyUrl) {
     return (
-      <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
+      <div className="flex items-center justify-between bg-slate-50 dark:bg-muted border border-slate-200 dark:border-border rounded-xl p-4 mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-slate-600" />
+          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-background flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-slate-600 dark:text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-700">
-              Import styles from company website
+            <p className="text-sm font-medium text-slate-700 dark:text-foreground">
+              Import brand theme colors
             </p>
-            <p className="text-xs text-slate-500">{companyUrl}</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground">
+              From {companyUrl}
+            </p>
           </div>
         </div>
         <Button
@@ -101,19 +103,19 @@ export function AiStyleImport({
 
   // Full URL input form when no company URL
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
-      <p className="text-sm font-medium text-slate-600 mb-3">
+    <div className="bg-slate-50 dark:bg-muted border border-slate-200 dark:border-border rounded-xl p-4 mb-4">
+      <p className="text-sm font-medium text-slate-600 dark:text-foreground mb-3">
         Import colors and branding from a website using AI
       </p>
       <form onSubmit={handleImportFromUrl} className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-muted-foreground" />
           <Input
             type="url"
             value={importUrl}
             onChange={(e) => setImportUrl(e.target.value)}
             placeholder="example.com"
-            className="h-11 pl-10"
+            className="h-11 pl-10 dark:bg-background dark:text-foreground dark:border-border dark:placeholder:text-muted-foreground"
             disabled={isImporting}
           />
         </div>

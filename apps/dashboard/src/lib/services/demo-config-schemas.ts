@@ -32,6 +32,7 @@ export const DEMO_CONFIG_KINDS = [
   "visa-direct",
   "checkout",
   "remittance",
+  "flow",
 ] as const satisfies readonly DemoConfigKind[];
 
 export const demoConfigKindSchema = z.enum(DEMO_CONFIG_KINDS);
@@ -74,14 +75,18 @@ const remittanceConfigSchema = z.object({
   config: permissiveConfig,
 });
 
+const flowConfigSchema = z.object({
+  kind: z.literal("flow"),
+  config: permissiveConfig,
+});
+
 /**
  * Discriminated union routing by `kind`. Used by the service layer's
  * write paths (`create`, `update`, `upsertWithId`) to validate the
- * payload shape per demo kind before it lands in Postgres or Redis.
+ * payload shape per demo kind before it lands in Postgres.
  *
- * Both backends call `parseDemoConfigPayload` so parity tests see the
- * same error surface for invalid input regardless of which backend is
- * active.
+ * Every consumer calls `parseDemoConfigPayload` so parity tests see the
+ * same error surface for invalid input.
  */
 export const demoConfigPayloadSchema = z.discriminatedUnion("kind", [
   earnConfigSchema,
@@ -90,6 +95,7 @@ export const demoConfigPayloadSchema = z.discriminatedUnion("kind", [
   visaDirectConfigSchema,
   checkoutConfigSchema,
   remittanceConfigSchema,
+  flowConfigSchema,
 ]);
 
 /**

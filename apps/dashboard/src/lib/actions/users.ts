@@ -7,6 +7,7 @@
  * VIEWER. The first OWNER is bootstrapped by the set-role CLI, never here.
  */
 
+import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/gtm";
 import { canSetRole } from "@/lib/auth/policy";
 import { services } from "@/lib/services";
@@ -33,6 +34,8 @@ export async function setUserRole(
 
   try {
     const updated = await services.users.setRole(targetUserId, newRole);
+    // Purge the server cache for the admin surface so the new role reflects.
+    revalidatePath("/dashboard/operations");
     return { success: true, data: updated };
   } catch (err) {
     console.error("Failed to set user role:", err);

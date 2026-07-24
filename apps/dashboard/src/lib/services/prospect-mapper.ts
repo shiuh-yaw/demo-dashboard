@@ -1,13 +1,13 @@
 /**
  * Bidirectional mapping between the legacy `ProspectProfile` aggregate
- * (Redis-only shape exposed to the dashboard's server actions and to
- * `/api/prospects/[id]`) and the canonical `Prospect` row that
- * `ProspectService` returns.
+ * (exposed to the dashboard's server actions and to `/api/prospects/[id]`)
+ * and the canonical `Prospect` row that `ProspectService` returns.
  *
- * Phase 2-brand-cutover (2026-05-06): the legacy aggregate now derives
- * from `ProspectService` reads; the demos sub-object continues to
- * reference Redis-resident demo configs (Earn, Wallet, Checkout,
- * Remittance) that haven't migrated to Postgres yet.
+ * Demo-config ids are no longer carried on the `Prospect` row - they are
+ * resolved from `DemoConfig.prospectId` (see `./prospect-demos.ts`,
+ * `resolveProspectDemos` / `resolveProspectDemosBatch`). `prospectToProfile`
+ * only projects the row's own columns; callers that need `demos` populated
+ * merge the resolver's result in afterward.
  *
  * The two shapes are field-for-field equivalent on the prospect row
  * itself; only the nested vs flat layout differs. This module is the
@@ -15,7 +15,6 @@
  */
 
 import type {
-  ProspectDemos,
   ProspectProfile,
   ProspectSettings,
   ProspectTheme,
@@ -32,10 +31,10 @@ import type {
 } from "./types";
 
 /**
- * Project a Prospect row into the legacy ProspectProfile aggregate. Demo-
- * config ids stay on the row; we surface them through `demos` so
- * consumers (ProspectEditor, ProspectsClient, /api/prospects/[id]) keep the
- * same shape they had before the cutover.
+ * Project a Prospect row into the legacy ProspectProfile aggregate.
+ * `demos` is always empty here - it is not a row column. Callers that
+ * need it populated call `resolveProspectDemos`/`resolveProspectDemosBatch`
+ * and merge the result onto the returned profile.
  */
 export function prospectToProfile(prospect: Prospect): ProspectProfile {
   const theme: ProspectTheme = {
@@ -61,18 +60,15 @@ export function prospectToProfile(prospect: Prospect): ProspectProfile {
     borderRadius: prospect.borderRadius ?? undefined,
     theme,
   };
-  const demos: ProspectDemos = {};
-  if (prospect.demoEarnId) demos.earn = prospect.demoEarnId;
-  if (prospect.demoCheckoutsId) demos.checkouts = prospect.demoCheckoutsId;
-  if (prospect.demoWalletId) demos.wallet = prospect.demoWalletId;
-  if (prospect.demoRemittanceId) demos.remittance = prospect.demoRemittanceId;
   return {
     id: prospect.id,
     name: prospect.name,
     companyUrl: prospect.companyUrl ?? undefined,
     prospect: settings,
-    demos,
+    demos: {},
     ownerId: prospect.ownerId,
+    createdById: prospect.createdById,
+    teamId: prospect.teamId,
     createdAt: prospect.createdAt.toISOString(),
     updatedAt: prospect.updatedAt.toISOString(),
   };
@@ -119,10 +115,6 @@ export function createRequestToInput(
     rowHoverBackground: theme.rowHoverBackground ?? null,
     gradientFrom: theme.gradientFrom ?? null,
     gradientTo: theme.gradientTo ?? null,
-    demoEarnId: null,
-    demoCheckoutsId: null,
-    demoWalletId: null,
-    demoRemittanceId: null,
   };
 }
 
@@ -200,14 +192,4 @@ export function updateRequestToInput(
     }
   }
   return data;
-}
-
-/** Build the demo-id slice of an `UpdateProspectInput` from a `ProspectDemos`. */
-export function demosToUpdateInput(demos: ProspectDemos): UpdateProspectInput {
-  return {
-    demoEarnId: demos.earn ?? null,
-    demoCheckoutsId: demos.checkouts ?? null,
-    demoWalletId: demos.wallet ?? null,
-    demoRemittanceId: demos.remittance ?? null,
-  };
 }

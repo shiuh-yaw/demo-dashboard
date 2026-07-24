@@ -30,7 +30,7 @@ Design spec + execution plan landed in [#145](https://github.com/dynamic-labs-os
 
 | Phase | Status | PR | Notes |
 |---|---|---|---|
-| 07. IA relayout on droplet | ⚪️ pending | - | - |
+| 07. IA relayout on droplet | 🟡 in progress | - | Branch `gtm/07-ia-relayout`. Shipped: droplet shim promoted to `components/droplet-client.ts`; `services.analytics.demoSummary` stub; `lib/demos-table.ts` (scoped cross-kind query); new IA nav (`components/nav-items.ts`) + surfaces `/dashboard` (Demos home), `/dashboard/templates`, `/dashboard/profile`, `/dashboard/analytics` shell, `/dashboard/operations` (+ `/teams` admin), `/dashboard/prospects` (redirects to `/prospects`); footer heart -> `/dashboard`; team scoping activated + team/role admin UI (`membershipsForTeam`, `users.list`). Deferred: prospects droplet rebuild (list/detail/theme + per-prospect share-link management), checkouts ProspectPicker, legacy breadcrumbs. |
 | 09. Wallet pilot instrumentation | ⚪️ pending | - | - |
 | 10. Enrichment adapter | ⚪️ pending | - | - |
 

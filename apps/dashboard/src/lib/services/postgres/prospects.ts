@@ -1,95 +1,40 @@
 /**
  * Postgres-backed ProspectService (Prisma + Supabase via @dynamic-demos/db).
  *
- * Routed in via the USE_POSTGRES_PROSPECTS flag (see services/index.ts).
- * Both this and RedisProspectService satisfy the same parity test suite at
- * `../__tests__/prospects.parity.test.ts`.
+ * The sole ProspectService implementation (see services/index.ts);
+ * behavioural coverage at `../__tests__/prospects.postgres.test.ts`.
  *
- * Phase 2-brand-cutover (2026-05-06): the row carries every field the
- * legacy `ProspectProfile` aggregate carried (visual theme, logo
- * discriminator, demo-config id mirrors). See types.ts for the full
- * shape and lib/services/prospect-mapper.ts for the projection back to
- * the ProspectProfile aggregate consumers expect.
+ * The row carries every field the ProspectProfile aggregate needs (visual
+ * theme, logo discriminator). The palette also lives 1:1 in `ProspectTheme`;
+ * every write dual-writes the flat columns on `Prospect` (rollback safety)
+ * and the `ProspectTheme` row, and every read loads `ProspectTheme` via a
+ * single `include` and overlays it onto the flat columns, falling back to the
+ * flat columns when no theme row exists (rows written before this path).
  *
- * GTM-03.5B: the palette also lives in `ProspectTheme` (1:1). Every write
- * here dual-writes both the flat columns on `Prospect` (rollback safety
- * until the contract phase drops them) and the `ProspectTheme` row; every
- * read joins `ProspectTheme` and overlays it onto the flat columns, falling
- * back to the flat columns untouched when no theme row exists yet (rows
- * written before this deploy, or written by a path that bypasses this
- * service). Consumers keep reading `Prospect.primaryColor` etc. unchanged -
- * only the internal source of truth moved.
- *
- * D-013: this module never opens its own connection — it relies on the
- * `prisma` singleton from @dynamic-demos/db so pool usage stays correct.
- * D-015: only apps/dashboard imports @dynamic-demos/db.
+ * D-013: relies on the `prisma` singleton from @dynamic-demos/db so pool usage
+ * stays correct. D-015: only apps/dashboard imports @dynamic-demos/db.
  */
 
-import { prisma as defaultPrisma } from "@dynamic-demos/db";
 import {
+  prisma as defaultPrisma,
+  type Prisma,
+  type PrismaClient,
+} from "@dynamic-demos/db";
+import {
+  type Page,
   type Prospect,
-  type ProspectBorderRadius,
   type ProspectListOptions,
-  type ProspectLogoKind,
   type ProspectService,
-  type ProspectStatus,
   type CreateProspectInput,
   type UpdateProspectInput,
 } from "../types";
+import { clampLimit, pageArgs, toPage } from "./pagination";
 
-/** Fields that flow identically through create/update/upsert. */
-type ProspectWritable = {
-  ownerId: string;
-  teamId: string | null;
-  createdById: string | null;
-  status: ProspectStatus;
-  name: string;
-  description: string | null;
-  companyUrl: string | null;
-  logo: ProspectLogoKind;
-  logoUrl: string | null;
-  borderRadius: ProspectBorderRadius | null;
-  primaryColor: string;
-  primaryHoverColor: string | null;
-  secondaryColor: string | null;
-  accentColor: string | null;
-  pageBackground: string | null;
-  background: string | null;
-  foreground: string | null;
-  mutedTextColor: string | null;
-  borderColor: string | null;
-  rowBackground: string | null;
-  rowHoverBackground: string | null;
-  gradientFrom: string | null;
-  gradientTo: string | null;
-  demoEarnId: string | null;
-  demoCheckoutsId: string | null;
-  demoWalletId: string | null;
-  demoRemittanceId: string | null;
-  domain: string | null;
-  notes: string | null;
-};
+/** Prospect row with its theme relation, as returned by every read here. */
+type ProspectRow = Prisma.ProspectGetPayload<{ include: { theme: true } }>;
 
-/** The subset of `ProspectWritable` that also lives on `ProspectTheme`. */
-type ProspectThemeFields = Pick<
-  ProspectWritable,
-  | "borderRadius"
-  | "primaryColor"
-  | "primaryHoverColor"
-  | "secondaryColor"
-  | "accentColor"
-  | "pageBackground"
-  | "background"
-  | "foreground"
-  | "mutedTextColor"
-  | "borderColor"
-  | "rowBackground"
-  | "rowHoverBackground"
-  | "gradientFrom"
-  | "gradientTo"
->;
-
-const THEME_FIELD_KEYS: ReadonlyArray<keyof ProspectThemeFields> = [
+/** Palette columns mirrored 1:1 between `Prospect` (flat) and `ProspectTheme`. */
+const THEME_FIELD_KEYS = [
   "borderRadius",
   "primaryColor",
   "primaryHoverColor",
@@ -104,87 +49,34 @@ const THEME_FIELD_KEYS: ReadonlyArray<keyof ProspectThemeFields> = [
   "rowHoverBackground",
   "gradientFrom",
   "gradientTo",
-];
+] as const satisfies ReadonlyArray<keyof Prisma.ProspectThemeCreateManyInput>;
 
-type ProspectThemeRow = { prospectId: string } & ProspectThemeFields;
-
-function themeFieldsOf(data: ProspectWritable): ProspectThemeFields {
-  const theme = {} as ProspectThemeFields;
-  for (const key of THEME_FIELD_KEYS) {
-    (theme as Record<string, unknown>)[key] = data[key];
+/**
+ * Map a Prisma prospect row (+ theme) to the domain `Prospect`. The theme row
+ * wins wholesale when present (canonical palette); an absent row leaves the
+ * flat columns untouched. The flat columns are 1:1 with the domain shape, so
+ * the only mapping is the theme overlay plus the string->union narrowing the
+ * DB columns don't carry.
+ */
+function toProspect(row: ProspectRow): Prospect {
+  const { theme, ...flat } = row;
+  const merged: Record<string, unknown> = { ...flat };
+  if (theme) {
+    for (const key of THEME_FIELD_KEYS) {
+      merged[key] = theme[key];
+    }
   }
-  return theme;
-}
-
-/** Theme row wins wholesale when present; absent row means unmigrated. */
-function overlayTheme(prospect: Prospect, theme: ProspectThemeRow | null): Prospect {
-  if (!theme) return prospect;
-  const merged = { ...prospect };
-  for (const key of THEME_FIELD_KEYS) {
-    (merged as Record<string, unknown>)[key] = theme[key];
-  }
-  return merged;
+  return merged as unknown as Prospect;
 }
 
 /**
- * Minimal subset of the Prisma client used by PostgresProspectService.
- * Lets unit tests inject an in-memory fake without dragging
- * @prisma/client into the test environment. The real `PrismaClient`
- * from @dynamic-demos/db structurally satisfies this interface.
+ * Normalise a `CreateProspectInput` into Prisma create data. `undefined` is
+ * widened to `null` for nullable columns so the row always has explicit
+ * values; `logo` defaults to "dynamic" and `status` to "ACTIVE".
  */
-export interface ProspectPrismaClient {
-  prospect: {
-    create(args: {
-      data: Partial<ProspectWritable> & {
-        ownerId: string;
-        name: string;
-        primaryColor: string;
-      };
-    }): Promise<Prospect>;
-    findUnique(args: { where: { id: string } }): Promise<Prospect | null>;
-    findMany(args?: {
-      where?: { ownerId?: string };
-      orderBy?: { createdAt?: "asc" | "desc" };
-    }): Promise<Prospect[]>;
-    update(args: {
-      where: { id: string };
-      data: Partial<ProspectWritable>;
-    }): Promise<Prospect>;
-    delete(args: { where: { id: string } }): Promise<Prospect>;
-    upsert(args: {
-      where: { id: string };
-      create: Partial<ProspectWritable> & {
-        id: string;
-        ownerId: string;
-        name: string;
-        primaryColor: string;
-      };
-      update: Partial<ProspectWritable>;
-    }): Promise<Prospect>;
-  };
-  prospectTheme: {
-    findUnique(args: {
-      where: { prospectId: string };
-    }): Promise<ProspectThemeRow | null>;
-    findMany(args: {
-      where: { prospectId: { in: string[] } };
-    }): Promise<ProspectThemeRow[]>;
-    upsert(args: {
-      where: { prospectId: string };
-      create: { prospectId: string } & ProspectThemeFields;
-      update: ProspectThemeFields;
-    }): Promise<ProspectThemeRow>;
-  };
-}
-
-/**
- * Normalise a `CreateProspectInput` into the fields the Prisma delegate
- * accepts. `undefined` is widened to `null` for the columns that accept
- * null so the row always has explicit values; `logo` defaults to
- * "dynamic" so callers that don't care about the discriminator still
- * land a valid row.
- */
-function fromCreateInput(input: CreateProspectInput): ProspectWritable {
+function fromCreateInput(
+  input: CreateProspectInput,
+): Prisma.ProspectUncheckedCreateInput {
   return {
     ownerId: input.ownerId,
     teamId: input.teamId ?? null,
@@ -209,23 +101,20 @@ function fromCreateInput(input: CreateProspectInput): ProspectWritable {
     rowHoverBackground: input.rowHoverBackground ?? null,
     gradientFrom: input.gradientFrom ?? null,
     gradientTo: input.gradientTo ?? null,
-    demoEarnId: input.demoEarnId ?? null,
-    demoCheckoutsId: input.demoCheckoutsId ?? null,
-    demoWalletId: input.demoWalletId ?? null,
-    demoRemittanceId: input.demoRemittanceId ?? null,
     domain: input.domain ?? null,
     notes: input.notes ?? null,
   };
 }
 
 /**
- * Reduce an `UpdateProspectInput` to only the fields the caller set. Each
- * `undefined` is dropped so the Prisma update only touches the columns
- * the caller explicitly named — including allowing explicit `null` to
- * clear a column.
+ * Reduce an `UpdateProspectInput` to only the fields the caller set - each
+ * `undefined` is dropped so the update touches only the named columns
+ * (explicit `null` still clears a column).
  */
-function fromUpdateInput(input: UpdateProspectInput): Partial<ProspectWritable> {
-  const data: Partial<ProspectWritable> = {};
+function fromUpdateInput(
+  input: UpdateProspectInput,
+): Prisma.ProspectUncheckedUpdateInput {
+  const data: Prisma.ProspectUncheckedUpdateInput = {};
   const keys: ReadonlyArray<keyof UpdateProspectInput> = [
     "teamId",
     "createdById",
@@ -249,10 +138,6 @@ function fromUpdateInput(input: UpdateProspectInput): Partial<ProspectWritable> 
     "rowHoverBackground",
     "gradientFrom",
     "gradientTo",
-    "demoEarnId",
-    "demoCheckoutsId",
-    "demoWalletId",
-    "demoRemittanceId",
     "domain",
     "notes",
   ];
@@ -264,72 +149,86 @@ function fromUpdateInput(input: UpdateProspectInput): Partial<ProspectWritable> 
   return data;
 }
 
-export class PostgresProspectService implements ProspectService {
-  private readonly client: ProspectPrismaClient;
-
-  constructor(client?: ProspectPrismaClient) {
-    this.client = client ?? (defaultPrisma as unknown as ProspectPrismaClient);
+/** Pick the `ProspectTheme` palette subset from any source carrying the keys. */
+function paletteOf(
+  source: Record<string, unknown>,
+): Prisma.ProspectThemeCreateWithoutProspectInput {
+  const theme = {} as Record<string, unknown>;
+  for (const key of THEME_FIELD_KEYS) {
+    theme[key] = source[key];
   }
+  return theme as Prisma.ProspectThemeCreateWithoutProspectInput;
+}
 
-  /** Upserts the ProspectTheme row so it never drifts from the flat columns. */
-  private async writeTheme(
-    prospectId: string,
-    data: ProspectWritable,
-  ): Promise<void> {
-    const theme = themeFieldsOf(data);
-    await this.client.prospectTheme.upsert({
-      where: { prospectId },
-      create: { prospectId, ...theme },
-      update: theme,
-    });
+export class PostgresProspectService implements ProspectService {
+  private readonly client: PrismaClient;
+
+  constructor(client: PrismaClient = defaultPrisma) {
+    this.client = client;
   }
 
   async create(input: CreateProspectInput): Promise<Prospect> {
     const data = fromCreateInput(input);
-    const row = await this.client.prospect.create({ data });
-    await this.writeTheme(row.id, data);
-    return row;
+    // Nested create writes the prospect and its theme row atomically in one
+    // statement; `include` returns both so the read overlay stays trivial.
+    const row = await this.client.prospect.create({
+      data: { ...data, theme: { create: paletteOf(data) } },
+      include: { theme: true },
+    });
+    return toProspect(row);
   }
 
   async get(id: string): Promise<Prospect | null> {
-    const row = await this.client.prospect.findUnique({ where: { id } });
-    if (!row) return null;
-    const theme = await this.client.prospectTheme.findUnique({
-      where: { prospectId: id },
+    const row = await this.client.prospect.findUnique({
+      where: { id },
+      include: { theme: true },
     });
-    return overlayTheme(row, theme);
+    return row ? toProspect(row) : null;
   }
 
-  async list(options: ProspectListOptions = {}): Promise<Prospect[]> {
+  async list(options: ProspectListOptions = {}): Promise<Page<Prospect>> {
+    const limit = clampLimit(options.limit);
     const rows = await this.client.prospect.findMany({
-      where: options.ownerId ? { ownerId: options.ownerId } : undefined,
-      orderBy: { createdAt: "asc" },
+      where: options.where ?? {},
+      include: { theme: true },
+      ...pageArgs(options),
     });
-    if (rows.length === 0) return [];
-    const themes = await this.client.prospectTheme.findMany({
-      where: { prospectId: { in: rows.map((r) => r.id) } },
+    return toPage(rows.map(toProspect), limit);
+  }
+
+  /** Unpaginated id-only projection - see `ProspectService.listIds`. */
+  async listIds(where: Prisma.ProspectWhereInput): Promise<string[]> {
+    const rows = await this.client.prospect.findMany({
+      where,
+      select: { id: true },
     });
-    const byProspectId = new Map(themes.map((t) => [t.prospectId, t]));
-    return rows.map((row) => overlayTheme(row, byProspectId.get(row.id) ?? null));
+    return rows.map((row) => row.id);
   }
 
   async update(id: string, input: UpdateProspectInput): Promise<Prospect> {
     const updateData = fromUpdateInput(input);
-    const existing = await this.client.prospect.findUnique({ where: { id } });
+    const existing = await this.client.prospect.findUnique({
+      where: { id },
+      include: { theme: true },
+    });
     if (!existing) {
       throw new Error(`Prospect not found: ${id}`);
     }
-    const merged: ProspectWritable = { ...existing, ...updateData };
-    // Theme must land before the flat columns on update - reads let the
-    // ProspectTheme row win wholesale, so a crash between the two writes
-    // must never leave a stale theme readable (create keeps prospect-first
-    // for the FK ProspectTheme.prospectId depends on).
-    await this.writeTheme(id, merged);
+    // The theme row is written wholesale, so merge the caller's changes over
+    // the prospect's current effective palette - this preserves the palette
+    // of a prospect whose theme row is being created for the first time.
+    const theme = paletteOf({ ...toProspect(existing), ...updateData });
+    // Nested upsert keeps the theme row in lockstep with the flat columns in a
+    // single atomic statement.
     const row = await this.client.prospect.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        theme: { upsert: { create: theme, update: theme } },
+      },
+      include: { theme: true },
     });
-    return row;
+    return toProspect(row);
   }
 
   async delete(id: string): Promise<void> {
@@ -339,12 +238,13 @@ export class PostgresProspectService implements ProspectService {
 
   async upsertWithId(id: string, input: CreateProspectInput): Promise<Prospect> {
     const data = fromCreateInput(input);
+    const theme = paletteOf(data);
     const row = await this.client.prospect.upsert({
       where: { id },
-      create: { id, ...data },
-      update: data,
+      create: { id, ...data, theme: { create: theme } },
+      update: { ...data, theme: { upsert: { create: theme, update: theme } } },
+      include: { theme: true },
     });
-    await this.writeTheme(row.id, data);
-    return row;
+    return toProspect(row);
   }
 }

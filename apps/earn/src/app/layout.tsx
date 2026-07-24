@@ -5,6 +5,7 @@ import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeStyleTag, buildDemoMetadata } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
+import { GtmTracker } from "@dynamic-demos/analytics";
 import { DynamicInit } from "@/components/dynamic-init";
 import { EarnConfigProvider } from "@/contexts/earn-config-context";
 import { DEFAULT_EARN_CONFIG } from "@/lib/earn-config";
@@ -61,11 +62,15 @@ export default async function RootLayout({
         <ThemeStyleTag theme={brandTheme} overridesOnly />
       </head>
       <body className={`${roboto.variable} font-sans antialiased`}>
-        <EarnConfigProvider config={config} configId={configId ?? undefined}>
-          <DynamicInit />
-          {children}
-          <Toaster position="bottom-right" richColors closeButton />
-        </EarnConfigProvider>
+        {/* GTM Phase 09: NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this
+            is safe to mount unconditionally (Phase 02 guarantee). */}
+        <GtmTracker demoSlug="earn">
+          <EarnConfigProvider config={config} configId={configId ?? undefined}>
+            <DynamicInit />
+            {children}
+            <Toaster position="bottom-right" richColors closeButton />
+          </EarnConfigProvider>
+        </GtmTracker>
       </body>
     </html>
   );

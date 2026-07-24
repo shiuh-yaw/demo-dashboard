@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Check } from "lucide-react";
-import { Button } from "../../_components/droplet-client";
+import { Button } from "@/components/droplet-client";
 import {
   LANDING_DEMOS,
   getDemoBySlug,

@@ -69,10 +69,6 @@ export interface ProspectRow {
   rowHoverBackground: string | null;
   gradientFrom: string | null;
   gradientTo: string | null;
-  demoEarnId: string | null;
-  demoCheckoutsId: string | null;
-  demoWalletId: string | null;
-  demoRemittanceId: string | null;
   domain: string | null;
   notes: string | null;
   createdAt: Date;

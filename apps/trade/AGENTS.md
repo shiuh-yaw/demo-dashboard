@@ -41,8 +41,13 @@ Cookie / header contract (D-008): `?theme=<configId>` → cookie `trade_config_i
 - `COIN_GECKO_API_KEY` — server-only — optional but recommended.
 - `NEXT_PUBLIC_DASHBOARD_URL` — dashboard origin (for swap orchestration).
 - `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox off.
+- `NEXT_PUBLIC_TRACK_URL` — dashboard base URL that `@dynamic-demos/analytics` posts session/step/milestone events to — optional, unset means `<GtmTracker>`/`useTrack()` are total no-ops.
 
 Polymarket public API needs no key.
+
+## Analytics
+
+`<GtmTracker demoSlug="trade">` wraps the app tree in `app/layout.tsx`, giving automatic pageview + heartbeat tracking. No per-app `useTrack()` milestones are wired yet.
 
 ## Theming
 
@@ -101,7 +106,7 @@ This pattern is **the reference** for any future demo that needs a metadata-back
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`, `@dynamic-demos/coingecko`, `@dynamic-demos/polymarket`, `@dynamic-demos/fireblocks`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/theme`, `@dynamic-demos/types`, `@dynamic-demos/alchemy`, `@dynamic-demos/analytics`, `@dynamic-demos/coingecko`, `@dynamic-demos/polymarket`, `@dynamic-demos/fireblocks`.
 **Imported by:** none.
 
 ## Examples

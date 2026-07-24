@@ -36,6 +36,11 @@ Phase 1D consolidated client-singleton helpers; Phase 4 added `middleware.ts` (m
 - `FIREBLOCKS_API_BASE_URL` — defaults to sandbox (D-005).
 - `FIREBLOCKS_VAULT_ACCOUNT_ID` — root vault id used for sub-account allocation.
 - `NEXT_PUBLIC_DASHBOARD_API_URL` — base URL for dashboard wallet config API (defaults to `http://localhost:4000` in dev).
+- `NEXT_PUBLIC_TRACK_URL` — dashboard GTM ingest base URL (`@dynamic-demos/analytics`) — optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
+
+## Analytics
+
+`<GtmTracker demoSlug="deposit">` wraps the tree in `app/layout.tsx`; no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned) — no per-app milestones instrumented yet.
 
 ## Theming
 
@@ -74,7 +79,7 @@ Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?t
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/fireblocks`.
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/fireblocks`, `@dynamic-demos/analytics`.
 **Imported by:** none.
 
 ## Examples

@@ -62,6 +62,7 @@
 
 | Package | Provider | custody | status |
 |---|---|---|---|
+| `charts` | — | n/a | experimental |
 | `ui` | — | n/a | stable |
 
 ## Utilities

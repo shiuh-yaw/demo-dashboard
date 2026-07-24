@@ -120,6 +120,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "flow",
+    kind: "flow",
     showOnLanding: true,
     name: "Flow",
     tagline: "Accept any crypto from any source, settle in stablecoins anywhere.",
@@ -246,6 +247,11 @@ export const LANDING_DEMOS: LandingDemo[] = [
 
 export function getDemoByKind(kind: DemoConfigKind): LandingDemo | undefined {
   return LANDING_DEMOS.find((demo) => demo.kind === kind);
+}
+
+/** Internal operator demo-detail route id - kind when present, else the slug. */
+export function demoDetailId(demo: LandingDemo): string {
+  return demo.kind ?? demo.slug;
 }
 
 export function getDemoBySlug(slug: string): LandingDemo | undefined {

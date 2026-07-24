@@ -4,8 +4,7 @@
  * Trade's TS type has no `theme` field on `TradeConfig` — the legacy
  * stored shape only carries `branding`. But the dashboard's
  * trade-config form has historically allowed setting theme fields and
- * stored them inside the opaque `config` field (see
- * `scripts/backfill-demo-configs/run.ts` for the equivalent fallback).
+ * stored them inside the opaque `config` field.
  */
 
 import {

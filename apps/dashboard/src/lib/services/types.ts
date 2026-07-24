@@ -6,6 +6,7 @@
  */
 
 import type { TransactionState } from "@dynamic-demos/transactions";
+import type { Prisma } from "@dynamic-demos/db";
 
 import type {
   Transaction,
@@ -18,6 +19,29 @@ import type {
   StoredCheckoutConfig,
   PaginatedResponse,
 } from "@/lib/types/dashboard";
+
+// =============================================================================
+// Shared Pagination Contract
+// =============================================================================
+//
+// Cursor-based keyset pagination used by every scoped `list` method added in
+// the data-layer rewrite. Ordering is fixed at (updatedAt desc, id desc); the
+// cursor is opaque - callers never decode it themselves. See
+// `postgres/pagination.ts` for the codec + Prisma args builder.
+
+/** One page of a cursor-paginated list. `nextCursor` is null on the last page. */
+export interface Page<T> {
+  items: T[];
+  nextCursor: string | null;
+}
+
+/** Common paging inputs accepted by scoped `list` methods. */
+export interface PageOptions {
+  /** Clamped server-side to [1, MAX_PAGE_LIMIT]; defaults to DEFAULT_PAGE_LIMIT. */
+  limit?: number;
+  /** Opaque cursor from a previous page's `nextCursor`; omit for the first page. */
+  cursor?: string | null;
+}
 
 // =============================================================================
 // Transaction Service
@@ -283,10 +307,6 @@ export interface Prospect {
   rowHoverBackground: string | null;
   gradientFrom: string | null;
   gradientTo: string | null;
-  demoEarnId: string | null;
-  demoCheckoutsId: string | null;
-  demoWalletId: string | null;
-  demoRemittanceId: string | null;
   /** Identity fields added in Phase GTM-01. Both nullable. */
   domain: string | null;
   notes: string | null;
@@ -320,10 +340,6 @@ export interface CreateProspectInput {
   rowHoverBackground?: string | null;
   gradientFrom?: string | null;
   gradientTo?: string | null;
-  demoEarnId?: string | null;
-  demoCheckoutsId?: string | null;
-  demoWalletId?: string | null;
-  demoRemittanceId?: string | null;
   domain?: string | null;
   notes?: string | null;
 }
@@ -351,35 +367,34 @@ export interface UpdateProspectInput {
   rowHoverBackground?: string | null;
   gradientFrom?: string | null;
   gradientTo?: string | null;
-  demoEarnId?: string | null;
-  demoCheckoutsId?: string | null;
-  demoWalletId?: string | null;
-  demoRemittanceId?: string | null;
   domain?: string | null;
   notes?: string | null;
 }
 
-export interface ProspectListOptions {
-  /** When set, restrict results to prospects owned by this user. */
-  ownerId?: string;
+export interface ProspectListOptions extends PageOptions {
+  /** Scope + filter where-fragment; callers build this via `prospectScopeWhere` /
+   * `prospectVisibilityWhere` - the service never derives scope itself. */
+  where?: Prisma.ProspectWhereInput;
 }
 
 export interface ProspectService {
   create(input: CreateProspectInput): Promise<Prospect>;
   get(id: string): Promise<Prospect | null>;
-  list(options?: ProspectListOptions): Promise<Prospect[]>;
+  list(options?: ProspectListOptions): Promise<Page<Prospect>>;
   update(id: string, input: UpdateProspectInput): Promise<Prospect>;
   delete(id: string): Promise<void>;
   /**
-   * Idempotent create-or-update by caller-supplied id. Used by the
-   * Phase 2-brands backfill so re-runs don't duplicate rows. The
-   * caller supplies a deterministic id derived from the prospect's
-   * stable shape (see scripts/backfill-prospects/hash.ts).
-   *
-   * If the row exists, all fields are overwritten with the new input
-   * and `updatedAt` bumps. `createdAt` is preserved on update.
+   * Idempotent create-or-update by caller-supplied id. If the row exists,
+   * all fields are overwritten with the new input and `updatedAt` bumps.
+   * `createdAt` is preserved on update.
    */
   upsertWithId(id: string, input: CreateProspectInput): Promise<Prospect>;
+  /**
+   * Id-only projection for a where fragment - unpaginated, returns every
+   * matching id (not a page). Used by `visibleProspectIds`, which needs the
+   * full bounded (own + team) visible set, never just one page of it.
+   */
+  listIds(where: Prisma.ProspectWhereInput): Promise<string[]>;
 }
 
 // =============================================================================
@@ -618,12 +633,13 @@ export type DemoConfigKind =
   | "trade"
   | "visa-direct"
   | "checkout"
-  | "remittance";
+  | "remittance"
+  | "flow";
 
 /**
  * Demo config row as it lives in Postgres (mirrors the Prisma `DemoConfig`
  * model). The dashboard service layer surfaces this shape regardless of
- * backend. `themeOverrides` is optional per D-028 — `Prospect` is the source
+ * backend. `themeOverrides` is optional per D-028 - `Prospect` is the source
  * of truth for visual theme; demos may carry per-config overrides.
  */
 export interface DemoConfigRecord {
@@ -638,6 +654,12 @@ export interface DemoConfigRecord {
   /// to a Prospect. Set explicitly by the caller; never hash-derived.
   prospectId: string | null;
   /**
+   * Marks the canonical config for its (prospectId, kind) pair. Resolution
+   * (`resolveProspectDemos`) picks the isPrimary row first, else the most
+   * recently updated row for that kind.
+   */
+  isPrimary: boolean;
+  /**
    * Optional per-config theme overrides merged on top of the linked
    * Prospect's theme at the service boundary. Null means "render prospect
    * theme as-is" (D-028).
@@ -646,7 +668,7 @@ export interface DemoConfigRecord {
   /**
    * Kind-specific payload. The Zod discriminated union narrows on
    * `kind` at the service write boundary; consumers can re-narrow.
-   * Kept permissive for this PR — strict per-kind schemas land
+   * Kept permissive for this PR - strict per-kind schemas land
    * alongside the action-layer wiring follow-up.
    */
   config: unknown;
@@ -661,6 +683,8 @@ export interface CreateDemoConfigInput {
   name?: string | null;
   description?: string | null;
   prospectId: string | null;
+  /** Defaults to false when omitted. */
+  isPrimary?: boolean;
   themeOverrides?: unknown | null;
   config: unknown;
 }
@@ -670,13 +694,17 @@ export interface UpdateDemoConfigInput {
   name?: string | null;
   description?: string | null;
   prospectId?: string | null;
+  isPrimary?: boolean;
   themeOverrides?: unknown | null;
   config?: unknown;
 }
 
-export interface DemoConfigListOptions {
-  /** When set, restrict results to configs owned by this user. */
-  ownerId?: string;
+export interface DemoConfigListOptions extends PageOptions {
+  /** Scope + filter where-fragment; callers build this via
+   * `demoConfigVisibilityWhere` / `demoConfigActiveScopeWhere` - the service
+   * never derives scope itself. ANDed with `kind` / `prospectId` below - never
+   * clobbered by them, even when `where` itself carries a nested OR/AND. */
+  where?: Prisma.DemoConfigWhereInput;
   /** When set, restrict results to configs of this kind. */
   kind?: DemoConfigKind;
   /** When set, restrict results to configs that reference this Prospect. */
@@ -686,22 +714,40 @@ export interface DemoConfigListOptions {
 export interface DemoConfigService {
   create(input: CreateDemoConfigInput): Promise<DemoConfigRecord>;
   get(id: string): Promise<DemoConfigRecord | null>;
-  list(options?: DemoConfigListOptions): Promise<DemoConfigRecord[]>;
+  list(options?: DemoConfigListOptions): Promise<Page<DemoConfigRecord>>;
   update(
     id: string,
     input: UpdateDemoConfigInput,
   ): Promise<DemoConfigRecord>;
   delete(id: string): Promise<void>;
   /**
-   * Idempotent create-or-update by caller-supplied id. Used by the
-   * backfill so re-runs don't duplicate rows and the existing demo
-   * URLs (which embed the legacy id) keep working unchanged (Q-014).
-   * Preserves `createdAt` on update; bumps `updatedAt`.
+   * Idempotent create-or-update by caller-supplied id. Preserves the
+   * caller's id so existing demo URLs that embed it keep working
+   * unchanged (Q-014). Preserves `createdAt` on update; bumps `updatedAt`.
    */
   upsertWithId(
     id: string,
     input: CreateDemoConfigInput,
   ): Promise<DemoConfigRecord>;
+  /**
+   * Unpaginated projection for a where fragment - every matching row,
+   * never just one page. Used by callers that need the complete scoped
+   * kind-lookup (analytics `kindByConfigId`, per-kind demo-config id
+   * resolution for `demoKindSummary`/`demoKindTimeseries`/
+   * `demoKindFunnel`) as well as batch prospect-demo resolution
+   * (`resolveProspectDemosBatch`, which needs `prospectId`/`isPrimary`/
+   * `updatedAt` to pick the primary-or-latest config per kind without an
+   * N+1 query per prospect), never a full-record full-table list.
+   */
+  listIdKinds(where: Prisma.DemoConfigWhereInput): Promise<
+    {
+      id: string;
+      kind: DemoConfigKind;
+      prospectId: string | null;
+      isPrimary: boolean;
+      updatedAt: Date;
+    }[]
+  >;
 }
 
 // =============================================================================
@@ -788,6 +834,8 @@ export interface GtmUserService {
    */
   getOrCreateByEmail(email: string): Promise<GtmUser>;
   get(id: string): Promise<GtmUser | null>;
+  /** Cursor-paginated, newest-updated first. Used by the team + role admin UI. */
+  list(options?: PageOptions): Promise<Page<GtmUser>>;
   /** Read-only lookup by email (lowercased); null when absent. Never creates. */
   findByEmail(email: string): Promise<GtmUser | null>;
   update(id: string, input: UpdateGtmUserInput): Promise<GtmUser>;
@@ -850,7 +898,9 @@ export class TeamMembershipNotFoundError extends Error {
 
 export interface TeamService {
   create(input: CreateTeamInput): Promise<Team>;
-  list(): Promise<Team[]>;
+  /** Cursor-paginated, newest-created first. `Team` has no `updatedAt` column,
+   * so ordering keys off `createdAt` (see `postgres/teams.ts`). */
+  list(options?: PageOptions): Promise<Page<Team>>;
   /** Idempotent: adding an existing (userId, teamId) returns the current row
    * unchanged (role is not re-applied). Defaults new members to MEMBER. */
   addMember(
@@ -868,6 +918,8 @@ export interface TeamService {
     role: UserRole,
   ): Promise<TeamMembership>;
   membershipsForUser(userId: string): Promise<TeamMembership[]>;
+  /** Every membership of a team, oldest first. Used by the team admin UI. */
+  membershipsForTeam(teamId: string): Promise<TeamMembership[]>;
 }
 
 // =============================================================================
@@ -945,6 +997,14 @@ export interface ShareLinkService {
   findByToken(token: string): Promise<ShareLink | null>;
   /** Flips `status` to `"revoked"`. Idempotent - revoking twice is a no-op. */
   revoke(id: string): Promise<ShareLink>;
+  /**
+   * Bounded count of links ever minted by `userId`, any status - used by the
+   * dashboard-home "Getting started" checklist to detect "has shared a demo"
+   * without a full-list fetch. Not filtered to `active`: a later-revoked link
+   * still counts, since the checklist tracks the one-time action of sharing,
+   * not current link validity.
+   */
+  countByUser(userId: string): Promise<number>;
 }
 
 // =============================================================================
@@ -1024,6 +1084,314 @@ export interface VisitorSessionService {
 }
 
 // =============================================================================
+// Analytics Service (read model)
+// =============================================================================
+//
+// Read-only rollups over VisitorSession/TrackEvent. Sessions link to a
+// prospect + demo config ONLY through their `shareLink` (VisitorSession has
+// no direct prospectId/demoConfigId) - every read joins
+// `VisitorSession -> ShareLink`. Internal self-views (`isInternal`) are
+// excluded from every aggregate and list. PII boundary (Phase 10): raw IPs
+// are never surfaced - only enrichment company + captured identity.
+
+// ---- Two-tier read scope ----
+//
+// Tier 1 (prospect visibility): which prospects the viewer may see at all -
+//   `"all"` for OWNER/ADMIN, otherwise the id set from
+//   `lib/auth/gtm.visibleProspectIds`. Callers resolve this once and hand it
+//   to the read layer; the layer NEVER widens it (a caller cannot read a
+//   prospect it was not scoped to). Enforce with `isProspectInReadScope`.
+// Tier 2 (demo-config visibility): own-vs-prospect-derived, resolved by the
+//   caller via `lib/auth/gtm.isDemoConfigVisible` before passing a
+//   `demoConfigId` filter. The read layer trusts an in-scope demoConfigId.
+export type AnalyticsReadScope = "all" | ReadonlySet<string>;
+
+/** Tier-1 gate: is this prospect inside the caller's resolved read scope. */
+export function isProspectInReadScope(
+  scope: AnalyticsReadScope,
+  prospectId: string,
+): boolean {
+  return scope === "all" || scope.has(prospectId);
+}
+
+/** Enrichment projected to the PII-safe surface (never any raw IP). */
+export interface ContactCompany {
+  name: string | null;
+  domain: string | null;
+}
+
+/** One session row, read-only and PII-bounded (company + captured identity). */
+export interface VisitorSessionView {
+  id: string;
+  /** Resolved via the session's share link; null for unattributed sessions. */
+  demoConfigId: string | null;
+  /** Demo kind slug the session ran under (e.g. "wallet"). */
+  demoSlug: string;
+  anonId: string;
+  startedAt: string;
+  lastSeenAt: string;
+  /** From `enrichment` (Phase 10), read defensively; null when absent. */
+  company: ContactCompany | null;
+  /** Captured identity from the wallet-pilot `authenticated` milestone. */
+  email: string | null;
+  dynamicUserId: string | null;
+  /** Milestone event names seen in the session, first-seen order. */
+  milestones: string[];
+}
+
+/** A viewer rolled up across their sessions on one prospect ("who viewed"). */
+export interface ContactView {
+  /** Stable identity key: captured email when present, else `anonId`. */
+  key: string;
+  email: string | null;
+  company: ContactCompany | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  sessionCount: number;
+  /** Distinct demo kinds this viewer touched, alphabetical. */
+  demoSlugs: string[];
+}
+
+/**
+ * A viewer rolled up across every prospect in the caller's scope (the
+ * org-wide Contacts workspace view) - the cross-prospect sibling of
+ * `ContactView`. `id` mirrors `key`; it exists only so this shape satisfies
+ * the cursor-pagination `toPage` contract (`{id: string}`), the same reason
+ * every other paginated record carries an `id`.
+ */
+export interface OrgContactView extends ContactView {
+  id: string;
+  /** Distinct prospect ids this contact touched within scope, sorted. */
+  prospectIds: string[];
+}
+
+/** Per-demo engagement rollup surfaced on the Demos table + hub demo cards. */
+export interface DemoSummary {
+  sessions: number;
+  viewers: number;
+  avgDurationSec: number;
+  /** ISO of the most recent `lastSeenAt`; null when never viewed. */
+  lastViewedAt: string | null;
+}
+
+/** Per-prospect engagement rollup surfaced on the overview + prospect hub. */
+export interface ProspectSummary {
+  sessions: number;
+  viewers: number;
+  avgDurationSec: number;
+  lastViewedAt: string | null;
+}
+
+/** Window for the demo-kind time-series chart; "all" means no lower bound. */
+export type AnalyticsTimeRange = "7d" | "30d" | "90d" | "all";
+
+/**
+ * One UTC-day bucket of the demo-kind sessions-over-time chart. Counts only -
+ * same Tier-1 guarantee as `DemoSummary`, no per-prospect identity.
+ */
+export interface DemoKindTimeseriesPoint {
+  /** UTC day, "YYYY-MM-DD". */
+  date: string;
+  sessions: number;
+  viewers: number;
+}
+
+/**
+ * One stage of the engagement funnel. Stages are returned as an ordered
+ * array so callers render whatever stages carry meaning today; `count` is a
+ * session count (a session counts toward a stage if it reached it), naturally
+ * non-increasing down the array. Never force monotonicity.
+ */
+export interface FunnelStage {
+  /** Stable machine key: "viewed" | "interacted" | "authenticated" | "completed". */
+  key: string;
+  label: string;
+  count: number;
+}
+
+/**
+ * One row of the org-wide per-kind comparison. Counts only - no per-prospect
+ * identity. Spans every demo of the kind visible in the actor's scope.
+ */
+export interface OrgDemoKindBreakdownRow {
+  kind: DemoConfigKind;
+  sessions: number;
+  viewers: number;
+}
+
+export interface AnalyticsService {
+  /** Aggregate for one demo config (caller pre-authorizes the id). */
+  demoSummary(demoConfigId: string): Promise<DemoSummary>;
+  /**
+   * Tier-1 aggregate across every demo config of one kind. Counts only -
+   * sessions, unique viewers, avg duration, last viewed - never any
+   * per-prospect identity, so it is safe to show every operator. The caller
+   * resolves the kind's config ids (ShareLink carries no DemoConfig relation,
+   * so kind cannot be joined in-layer) and passes them in. `scope` narrows the
+   * aggregate to a set of prospect ids (the My/Team filter) or spans all
+   * prospects when `"all"`; narrowing never widens what the caller passed.
+   */
+  demoKindSummary(
+    demoConfigIds: readonly string[],
+    scope: AnalyticsReadScope,
+  ): Promise<DemoSummary>;
+  /**
+   * Tier-1 time series across every demo config of one kind, bucketed by
+   * UTC day. Same counts-only guarantee as `demoKindSummary` - `scope`
+   * narrows by prospect (My/Team filter), `range` narrows the window
+   * ("all" = no lower bound); neither ever reveals which prospect a session
+   * belongs to. `now` is injectable for deterministic tests, defaulting to
+   * the real clock.
+   */
+  demoKindTimeseries(
+    demoConfigIds: readonly string[],
+    scope: AnalyticsReadScope,
+    range: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<DemoKindTimeseriesPoint[]>;
+  /**
+   * Tier-1 engagement funnel across every demo config of one kind (the demo
+   * detail "demo-fit"): Viewed -> Interacted -> Authenticated (+ Completed
+   * only when a "completed" milestone exists). Same real-signal derivation
+   * and counts-only guarantee as `prospectFunnel`; `scope` narrows by prospect
+   * (My/Team filter), `range` narrows the window ("all" = no lower bound).
+   * Never reveals which prospect a session belongs to. `range` defaults to
+   * "all".
+   */
+  demoKindFunnel(
+    demoConfigIds: readonly string[],
+    scope: AnalyticsReadScope,
+    range?: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<FunnelStage[]>;
+  /** Aggregate for one prospect (caller pre-authorizes the id). */
+  prospectSummary(prospectId: string): Promise<ProspectSummary>;
+  /**
+   * Batch of `prospectSummary` for the overview/My Prospects table - one
+   * query instead of N. Returns a map keyed by prospectId; ids with no
+   * sessions map to a zeroed summary.
+   */
+  prospectSummaries(prospectIds: string[]): Promise<Map<string, ProspectSummary>>;
+  /**
+   * The "who has viewed" contacts list for a prospect, grouped by viewer.
+   * Tier-1 scoped: returns `[]` when `prospectId` is outside `scope`.
+   */
+  listProspectContacts(
+    prospectId: string,
+    scope: AnalyticsReadScope,
+  ): Promise<ContactView[]>;
+  /**
+   * Raw (ungrouped) session rows for a prospect, newest first. Tier-1
+   * scoped. `opts.demoConfigId` narrows to a single demo (Tier-2: caller
+   * pre-authorizes the id). Returns `[]` when out of scope.
+   */
+  listProspectSessions(
+    prospectId: string,
+    scope: AnalyticsReadScope,
+    opts?: { demoConfigId?: string },
+  ): Promise<VisitorSessionView[]>;
+  /**
+   * Sessions for one contact (a `ContactView.key`) on a prospect, newest
+   * first. Tier-1 scoped like `listProspectSessions`; the prospect is
+   * already in-view by the time a caller has a contact key, so this is
+   * defense-in-depth. Returns `[]` when out of scope or the key has no
+   * sessions.
+   */
+  listContactSessions(
+    prospectId: string,
+    contactKey: string,
+    scope: AnalyticsReadScope,
+  ): Promise<VisitorSessionView[]>;
+  /**
+   * Org-wide "who has viewed anything" contacts list across every prospect
+   * in `scope` (the workspace Contacts view) - same identity grouping as
+   * `listProspectContacts`, spanning every in-scope prospect instead of one.
+   * `scope` here is the caller's resolved ACTIVE My/Team/All scope (see
+   * `lib/auth/gtm.resolveAnalyticsReadScope`), never the broad
+   * `visibleProspectIds` Tier-1 set. Cursor-paginated (`Page<T>` contract),
+   * ordered newest-`lastSeenAt` first, ties broken by `id` for stability.
+   */
+  listAllContacts(
+    scope: AnalyticsReadScope,
+    page?: PageOptions,
+  ): Promise<Page<OrgContactView>>;
+  /**
+   * Sessions for one contact (an `OrgContactView.key`) across every prospect
+   * in `scope` - the org-wide analog of `listContactSessions`, backing the
+   * Contacts workspace view's inline expand. A contact's sessions may span
+   * more than one prospect here, unlike the single-prospect method.
+   */
+  listAllContactSessions(
+    contactKey: string,
+    scope: AnalyticsReadScope,
+  ): Promise<VisitorSessionView[]>;
+  /**
+   * Daily sessions/viewers series for one prospect (the prospect Overview
+   * "momentum" hero), bucketed by UTC day. Tier-1 scoped: returns `[]` when
+   * `prospectId` is outside `scope`. Bounded ranges fill every day (incl.
+   * zero-activity days) so the x-axis is continuous, exactly like
+   * `demoKindTimeseries`. `now` is injectable for deterministic tests.
+   */
+  prospectTimeseries(
+    prospectId: string,
+    scope: AnalyticsReadScope,
+    range: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<DemoKindTimeseriesPoint[]>;
+  /**
+   * Engagement funnel for one prospect as an ordered stage array:
+   * Viewed -> Interacted -> Authenticated (+ Completed only when a
+   * "completed" milestone actually exists in the data). Derived from real
+   * signals, never fabricated - stages with no meaning are omitted, not
+   * emitted as always-zero. Tier-1 scoped: `[]` when out of scope. `range`
+   * defaults to "all".
+   */
+  prospectFunnel(
+    prospectId: string,
+    scope: AnalyticsReadScope,
+    range?: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<FunnelStage[]>;
+  /**
+   * Org/team roll-up of the daily sessions/viewers series across every demo
+   * (all kinds), bucketed by UTC day. Counts only - `scope` narrows to the
+   * prospects the actor owns/team ("all" for admins); never reveals which
+   * prospect a session belongs to. Fills bounded ranges like
+   * `demoKindTimeseries`.
+   */
+  orgTimeseries(
+    scope: AnalyticsReadScope,
+    range: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<DemoKindTimeseriesPoint[]>;
+  /**
+   * Org/team engagement funnel across every demo (all kinds). Same stage
+   * shape and real-signal derivation as `prospectFunnel`; counts only,
+   * `scope`-narrowed. `range` defaults to "all".
+   */
+  orgFunnel(
+    scope: AnalyticsReadScope,
+    range?: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<FunnelStage[]>;
+  /**
+   * Org/team per-kind comparison: sessions + unique viewers grouped by demo
+   * kind across every demo in scope. Counts only, no per-prospect identity.
+   * `kindByConfigId` maps each demo-config id to its kind - the caller
+   * resolves it (ShareLink carries no DemoConfig relation, so kind cannot be
+   * joined in-layer, mirroring `demoKindSummary`). Every kind present in the
+   * map appears (zero-filled when it had no in-scope sessions); sessions whose
+   * config id is absent from the map are dropped. `range` defaults to "all".
+   */
+  orgDemoKindBreakdown(
+    kindByConfigId: ReadonlyMap<string, DemoConfigKind>,
+    scope: AnalyticsReadScope,
+    range?: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<OrgDemoKindBreakdownRow[]>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
@@ -1042,4 +1410,5 @@ export interface Services {
   teams: TeamService;
   shareLinks: ShareLinkService;
   visitorSessions: VisitorSessionService;
+  analytics: AnalyticsService;
 }

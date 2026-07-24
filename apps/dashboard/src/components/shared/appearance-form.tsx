@@ -9,7 +9,6 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { Input } from "@dynamic-demos/ui";
 import { Select } from "@dynamic-demos/ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -19,6 +18,7 @@ import {
   ColorField,
 } from "@/app/(operator)/checkouts/components/editor/form-components";
 import { AiStyleImport } from "@/app/(operator)/checkouts/components/editor/ai-style-import";
+import { LogoField } from "@/components/shared/logo-field";
 import type { BorderRadiusSize } from "@/lib/types/dashboard";
 
 /**
@@ -114,9 +114,42 @@ interface AppearanceFormProps {
   hideShowPoweredBy?: boolean;
 
   /**
+   * Hide the entire logo block (URL + upload + preview) for kinds that own
+   * their logo elsewhere (e.g. Earn's brand-enum picker lives in KindFields).
+   */
+  hideLogo?: boolean;
+
+  /**
+   * Hide the Accent color field for kinds that do not consume it.
+   */
+  hideAccent?: boolean;
+
+  /**
    * Company URL for AI style import (shows simplified import UI)
    */
   companyUrl?: string;
+
+  /**
+   * Renders without the outer "Appearance" bordered card - for hosts (like
+   * the prospect Settings tab) that already wrap this form in their own
+   * section card, so the fields don't render card-in-card.
+   */
+  bare?: boolean;
+
+  /**
+   * Hide the AI style import card - for hosts that render it themselves
+   * elsewhere (e.g. prospect Basic Info, since import affects the logo).
+   */
+  hideAiImport?: boolean;
+
+  /** Section card title - defaults to "Appearance". */
+  title?: string;
+
+  /** One-line muted subtitle under the title - omitted by default. */
+  description?: string;
+
+  /** Widens the Colors grid to lg:3/xl:4 columns for hosts with more horizontal room. Default false preserves the 2-column grid for every other caller. */
+  wide?: boolean;
 }
 
 export function AppearanceForm({
@@ -127,7 +160,14 @@ export function AppearanceForm({
   setToast,
   simplified = false,
   hideShowPoweredBy = false,
+  hideLogo = false,
+  hideAccent = false,
   companyUrl,
+  bare = false,
+  hideAiImport = false,
+  title = "Appearance",
+  description,
+  wide = false,
 }: AppearanceFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -164,10 +204,10 @@ export function AppearanceForm({
   };
 
   // Show AI import when: not simplified, OR simplified with company URL
-  const showAiImport = !simplified || !!companyUrl;
+  const showAiImport = !hideAiImport && (!simplified || !!companyUrl);
 
-  return (
-    <Section title="Appearance">
+  const body = (
+    <>
       {showAiImport && (
         <AiStyleImport
           config={config as never}
@@ -181,63 +221,51 @@ export function AppearanceForm({
         />
       )}
 
-      {/* Branding */}
-      <Subsection title="Branding">
-        <Field label="Logo URL">
-          <Input
-            type="url"
-            value={branding.logo || ""}
-            onChange={(e) => updateBranding("logo", e.target.value)}
-            placeholder="https://example.com/logo.svg"
-          />
-        </Field>
-        {branding.logo && (
-          <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <p className="text-xs text-slate-500 mb-2">Preview</p>
-            <div
-              className="flex items-center justify-center rounded border border-slate-100 p-4 min-h-[60px]"
-              style={{
-                backgroundColor:
-                  theme.pageBackground || DEFAULT_APPEARANCE_THEME.pageBackground,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={branding.logo}
-                alt="Logo preview"
-                className="max-h-12 max-w-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
+      {/* Branding - operator dark tokens layer on the light hex via `dark:`. */}
+      {(!hideLogo || !hideShowPoweredBy) && (
+        <Subsection title="Branding">
+          {!hideLogo && (
+            <LogoField
+              value={branding.logo || ""}
+              onChange={(logo) => updateBranding("logo", logo)}
+              setToast={setToast}
+              previewBackground={
+                theme.pageBackground || DEFAULT_APPEARANCE_THEME.pageBackground
+              }
+            />
+          )}
+          {!hideShowPoweredBy && (
+            <div className="mt-3">
+              <Checkbox
+                checked={branding.showPoweredBy !== false}
+                onChange={(e) =>
+                  updateBranding("showPoweredBy", e.target.checked)
+                }
+                label='Show "Powered by Dynamic" footer'
               />
             </div>
-          </div>
-        )}
-        {!hideShowPoweredBy && (
-          <div className="mt-3">
-            <Checkbox
-              checked={branding.showPoweredBy !== false}
-              onChange={(e) => updateBranding("showPoweredBy", e.target.checked)}
-              label='Show "Powered by Dynamic" footer'
-            />
-          </div>
-        )}
-      </Subsection>
+          )}
+        </Subsection>
+      )}
 
       {/* Colors */}
       <Subsection title="Colors">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${wide ? "lg:grid-cols-3 xl:grid-cols-4" : ""}`}
+        >
           {/* Core colors - always shown */}
           <ColorField
             label="Primary Color"
             value={theme.primaryColor || DEFAULT_APPEARANCE_THEME.primaryColor}
             onChange={(v) => updateTheme("primaryColor", v)}
           />
-          <ColorField
-            label="Accent Color"
-            value={theme.accentColor || DEFAULT_APPEARANCE_THEME.accentColor}
-            onChange={(v) => updateTheme("accentColor", v)}
-          />
+          {!hideAccent && (
+            <ColorField
+              label="Accent Color"
+              value={theme.accentColor || DEFAULT_APPEARANCE_THEME.accentColor}
+              onChange={(v) => updateTheme("accentColor", v)}
+            />
+          )}
 
           {/* Extended colors - shown when not simplified OR when advanced is expanded */}
           {(!simplified || showAdvanced) && (
@@ -313,7 +341,7 @@ export function AppearanceForm({
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
+            className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 dark:text-muted-foreground hover:text-slate-700 dark:hover:text-foreground transition-colors cursor-pointer"
           >
             <ChevronDown
               className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
@@ -331,6 +359,7 @@ export function AppearanceForm({
             onChange={(e) =>
               updateTheme("borderRadius", e.target.value as BorderRadiusSize)
             }
+            className="dark:bg-background dark:text-foreground dark:border-border"
           >
             <option value="xs">Extra Small</option>
             <option value="sm">Small</option>
@@ -339,6 +368,14 @@ export function AppearanceForm({
           </Select>
         </Field>
       </Subsection>
+    </>
+  );
+
+  // `bare`: no outer card - the host section already renders one (avoids
+  // card-in-card).
+  return bare ? body : (
+    <Section title={title} description={description}>
+      {body}
     </Section>
   );
 }

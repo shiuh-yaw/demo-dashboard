@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "ignoreCommand": "npx turbo-ignore @dynamic-demos/dashboard",
+  "regions": ["iad1"],
   "crons": [
     {
       "path": "/api/cron/reconcile",
