@@ -3,10 +3,8 @@ import { describe, it, expect } from "vitest";
 import {
   ONBOARDING_SEEN_COOKIE,
   ONBOARDING_SEEN_COOKIE_MAX_AGE,
-  ONBOARDING_WELCOME_PATH,
   onboardingSeenCookieOptions,
   getOnboardingSeen,
-  shouldRedirectToOnboarding,
   parseTheme,
 } from "../operator-prefs";
 
@@ -46,23 +44,5 @@ describe("parseTheme", () => {
     expect(parseTheme("light")).toBe("light");
     expect(parseTheme("dark")).toBe("dark");
     expect(parseTheme("auto")).toBe("auto");
-  });
-});
-
-describe("shouldRedirectToOnboarding", () => {
-  it("redirects a first-run browser (cookie absent) on any other path", () => {
-    expect(shouldRedirectToOnboarding(undefined, "/dashboard")).toBe(true);
-    expect(shouldRedirectToOnboarding(undefined, null)).toBe(true);
-  });
-
-  it("does not redirect when already on the welcome route", () => {
-    expect(shouldRedirectToOnboarding(undefined, ONBOARDING_WELCOME_PATH)).toBe(
-      false,
-    );
-  });
-
-  it("does not redirect once the cookie is set, regardless of path", () => {
-    expect(shouldRedirectToOnboarding("true", "/dashboard")).toBe(false);
-    expect(shouldRedirectToOnboarding("true", null)).toBe(false);
   });
 });

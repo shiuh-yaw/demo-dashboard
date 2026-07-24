@@ -42,29 +42,13 @@ export const onboardingSeenCookieOptions = {
   path: "/",
 };
 
-/** True once the operator has dismissed onboarding on this browser. */
+/**
+ * True once the operator has dismissed onboarding on this browser. The
+ * operator layout renders the welcome gate inline whenever this is false
+ * (`app/(operator)/layout.tsx`) - a plain cookie check, no redirect.
+ */
 export function getOnboardingSeen(raw: string | undefined): boolean {
   return raw !== undefined;
-}
-
-/**
- * Dedicated gate route (Phase 2). A full page, not a modal, so it survives
- * refresh and is trivially guarded from `app/(operator)/layout.tsx`.
- */
-export const ONBOARDING_WELCOME_PATH = "/dashboard/welcome";
-
-/**
- * Pure redirect decision for the operator layout's onboarding gate: redirect
- * a first-run browser (cookie absent) to the welcome route, unless the
- * current request is already there (avoids a redirect loop). `pathname` is
- * `null` when the layout can't determine the current path (defaults to
- * gating, the safer failure mode).
- */
-export function shouldRedirectToOnboarding(
-  cookieValue: string | undefined,
-  pathname: string | null,
-): boolean {
-  return !getOnboardingSeen(cookieValue) && pathname !== ONBOARDING_WELCOME_PATH;
 }
 
 /**

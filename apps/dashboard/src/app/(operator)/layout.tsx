@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import Providers from "@/lib/providers";
 import { isDashboardAuthenticated } from "@/lib/auth/session";
 import { getSessionUser, GTM_DENIED_PATH } from "@/lib/auth/gtm";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import DashboardLoginForm from "@/components/login-form";
 import { BrandGateLayout } from "@/components/brand-gate-layout";
+import { WelcomeGate } from "@/components/welcome-gate";
 import { OperatorShell } from "@/components/operator-shell";
 import { Toaster } from "@/components/droplet-client";
 import { getScopeContext } from "@/lib/actions/scope";
@@ -12,8 +13,8 @@ import {
   ONBOARDING_SEEN_COOKIE,
   SIDEBAR_COOKIE,
   THEME_COOKIE,
+  getOnboardingSeen,
   parseTheme,
-  shouldRedirectToOnboarding,
 } from "@/lib/operator-prefs";
 
 interface OperatorLayoutProps {
@@ -47,38 +48,34 @@ export default async function OperatorLayout({
   const user = await getSessionUser();
   if (!user) redirect(GTM_DENIED_PATH);
 
-  const [scope, cookieStore, requestHeaders] = await Promise.all([
+  const [scope, cookieStore] = await Promise.all([
     getScopeContext(),
     cookies(),
-    headers(),
   ]);
-  const collapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
-  const theme = parseTheme(cookieStore.get(THEME_COOKIE)?.value);
 
-  // First-run gate (Phase 2): a not-yet-onboarded browser (cookie absent) is
-  // sent to the welcome route before it reaches anything else, unless it's
-  // already headed there (avoids a redirect loop). `x-pathname` is set by
-  // `middleware.ts` for every operator route.
-  if (
-    shouldRedirectToOnboarding(
-      cookieStore.get(ONBOARDING_SEEN_COOKIE)?.value,
-      requestHeaders.get("x-pathname"),
-    )
-  ) {
-    redirect("/dashboard/welcome");
-  }
-
-  // The onboarding gate owns the full screen: render it outside the operator
-  // shell (no sidebar / top bar), while the auth + allowlist checks above
-  // still apply. Its own chrome lives in `dashboard/welcome/layout.tsx`.
-  if (requestHeaders.get("x-pathname") === "/dashboard/welcome") {
+  // First-run onboarding gate - a pure cookie check. Cookie absent (or unset)
+  // means this browser has not seen onboarding, so render the welcome gate
+  // inline, full-screen, outside the operator shell. Rendering inline instead
+  // of redirecting to a separate route means there is no cross-route
+  // transition - nothing to loop and no dashboard skeleton to flash. The gate
+  // dismisses itself by setting the cookie (`dismissOnboarding`), after which
+  // this check falls through to the shell.
+  if (!getOnboardingSeen(cookieStore.get(ONBOARDING_SEEN_COOKIE)?.value)) {
     return (
       <Providers>
-        <div data-surface="operator">{children}</div>
+        <BrandGateLayout>
+          <WelcomeGate
+            displayName={user.displayName}
+            schedulingUrl={user.schedulingUrl}
+          />
+        </BrandGateLayout>
         <Toaster />
       </Providers>
     );
   }
+
+  const collapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
+  const theme = parseTheme(cookieStore.get(THEME_COOKIE)?.value);
 
   return (
     <Providers>
