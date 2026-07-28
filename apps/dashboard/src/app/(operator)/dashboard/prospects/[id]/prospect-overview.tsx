@@ -45,7 +45,7 @@ import {
 
 export type { ActivityItem };
 
-export const DEFAULT_PROSPECT_RANGE: AnalyticsTimeRange = "30d";
+export const DEFAULT_PROSPECT_RANGE: AnalyticsTimeRange = "7d";
 
 const RANGE_OPTIONS: { value: AnalyticsTimeRange; label: string }[] = [
   { value: "7d", label: "Last 7 days" },

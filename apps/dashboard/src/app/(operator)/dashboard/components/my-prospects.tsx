@@ -16,6 +16,7 @@ import {
 } from "@/components/droplet-client";
 import { ProspectIcon } from "@/components/shared/prospect-icon";
 import { NewProspectDialog } from "@/components/shared/new-prospect-dialog";
+import { THIN_SCROLLBAR } from "@/components/shared/thin-scrollbar";
 import { displayHost } from "@/lib/display-host";
 import { NO_AUTOFILL } from "@/lib/no-autofill";
 import { setProspectFilter } from "@/lib/actions/scope";
@@ -288,7 +289,7 @@ export function MyProspects({
               internally, so the sticky thead pins to its top rather than
               the page's. Below lg: no height/overflow constraint, so it
               lays out at natural height and the page scrolls normally. */}
-          <div className="hidden rounded-xl border border-border bg-card sm:block lg:h-full lg:overflow-y-auto">
+          <div className={`hidden rounded-xl border border-border bg-card sm:block lg:h-full lg:overflow-y-auto ${THIN_SCROLLBAR}`}>
             <table
               data-slot="table"
               className="w-full caption-bottom text-sm table-fixed"

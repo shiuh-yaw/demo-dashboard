@@ -29,7 +29,7 @@ import type {
 import { ORG_DEMO_FILTER_ALL, type OrgDemoFilter } from "@/lib/analytics/org-filter";
 import { getOrgAnalyticsForRange } from "./actions";
 
-export const DEFAULT_ORG_RANGE: AnalyticsTimeRange = "30d";
+export const DEFAULT_ORG_RANGE: AnalyticsTimeRange = "7d";
 
 const RANGE_OPTIONS: { value: AnalyticsTimeRange; label: string }[] = [
   { value: "7d", label: "Last 7 days" },

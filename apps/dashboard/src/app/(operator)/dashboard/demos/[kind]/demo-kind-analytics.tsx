@@ -63,7 +63,7 @@ export interface DemoKindAnalyticsProps {
   initialFunnel: FunnelStage[];
 }
 
-export const DEFAULT_KIND_ANALYTICS_RANGE: AnalyticsTimeRange = "30d";
+export const DEFAULT_KIND_ANALYTICS_RANGE: AnalyticsTimeRange = "7d";
 const DEFAULT_FILTER: KindScopeFilter = "all";
 
 const RANGE_OPTIONS: { value: AnalyticsTimeRange; label: string }[] = [

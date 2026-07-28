@@ -39,7 +39,7 @@ import {
   hasEngagementData,
 } from "../../prospect-overview-stats";
 
-export const DEFAULT_DEMO_INSTANCE_RANGE: AnalyticsTimeRange = "30d";
+export const DEFAULT_DEMO_INSTANCE_RANGE: AnalyticsTimeRange = "7d";
 
 const RANGE_OPTIONS: { value: AnalyticsTimeRange; label: string }[] = [
   { value: "7d", label: "Last 7 days" },

@@ -189,7 +189,14 @@ export function ProspectPicker({
   const activeId = activeRow ? `${listboxId}-${rowKey(activeRow)}` : undefined;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    // `modal` is required when this picker is used inside a droplet `Dialog`
+    // (e.g. "Customize for a prospect"): a modal Radix Dialog puts
+    // `pointer-events: none` on <body> and traps focus, which kills a
+    // non-modal Popover's portaled content - you can't click rows, scroll,
+    // or type in the search box. A modal Popover owns its own pointer/focus
+    // layer above the dialog, restoring all three. Harmless when the picker
+    // is used standalone (outside a dialog).
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <button
           ref={triggerRef}
@@ -228,6 +235,11 @@ export function ProspectPicker({
         align="start"
         sideOffset={4}
         className="w-[var(--radix-popover-trigger-width)] p-0"
+        // A modal droplet Dialog sets `pointer-events: none` on <body>; the
+        // portaled Popover content inherits it and becomes unclickable (can't
+        // click the search box or rows). Force pointer events back on the
+        // content so it's interactive whether or not the Popover is modal.
+        style={{ pointerEvents: "auto" }}
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           inputRef.current?.focus();
@@ -298,7 +310,10 @@ export function ProspectPicker({
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => commit(row)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer",
+                    // mx-1 + rounded so the highlight is an inset pill that
+                    // never collides with the dropdown's rounded corners;
+                    // px-2 keeps text aligned with the px-3 group headers.
+                    "flex items-center gap-2 mx-1 rounded-md px-2 py-1.5 text-sm cursor-pointer",
                     isActive ? "bg-accent" : "hover:bg-accent",
                   )}
                 >
