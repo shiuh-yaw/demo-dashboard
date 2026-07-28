@@ -1311,3 +1311,70 @@ describe("PostgresAnalyticsService.listAllContactSessions (org-wide)", () => {
     expect(await svc.listAllContactSessions("nobody", "all")).toEqual([]);
   });
 });
+
+describe("PostgresAnalyticsService.overviewEngagement", () => {
+  const now = new Date("2026-07-25T00:00:00Z"); // 7d cutoff = 2026-07-18
+
+  it("counts distinct sessions/viewers across prospects and active-this-week prospects", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        // p1: two sessions, same viewer a1; recent -> p1 active this week.
+        session({
+          id: "s1",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          lastSeenAt: new Date("2026-07-20T10:00:00Z"),
+        }),
+        session({
+          id: "s2",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          lastSeenAt: new Date("2026-07-24T10:00:00Z"),
+        }),
+        // p2: one session, viewer a2, but stale -> not active this week.
+        session({
+          id: "s3",
+          anonId: "a2",
+          prospectId: "p2",
+          demoConfigId: "d2",
+          lastSeenAt: new Date("2026-07-01T10:00:00Z"),
+        }),
+        // p3: viewer a1 again (must NOT double-count viewers); recent -> active.
+        session({
+          id: "s4",
+          anonId: "a1",
+          prospectId: "p3",
+          demoConfigId: "d3",
+          lastSeenAt: new Date("2026-07-24T10:00:00Z"),
+        }),
+        // Internal self-view -> excluded from every count.
+        session({
+          id: "s5",
+          anonId: "a9",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          isInternal: true,
+          lastSeenAt: new Date("2026-07-24T10:00:00Z"),
+        }),
+      ]),
+    );
+
+    const result = await svc.overviewEngagement(["p1", "p2", "p3"], now);
+    expect(result.sessions).toBe(4); // s1..s4, internal s5 excluded
+    expect(result.viewers).toBe(2); // distinct anonIds a1, a2 (a1 across p1+p3 counts once)
+    expect(result.activeThisWeek).toBe(2); // p1 and p3 (p2 is stale)
+  });
+
+  it("zeroes out for an empty id list without hitting the client", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([session({ id: "s1", anonId: "a1", prospectId: "p1", demoConfigId: "d1" })]),
+    );
+    expect(await svc.overviewEngagement([], now)).toEqual({
+      sessions: 0,
+      viewers: 0,
+      activeThisWeek: 0,
+    });
+  });
+});

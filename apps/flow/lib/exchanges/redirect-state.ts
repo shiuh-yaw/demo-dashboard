@@ -42,3 +42,17 @@ export function hasPendingExchangeRedirect(): boolean {
     return false;
   }
 }
+
+/**
+ * The post-auth return target to hand the OAuth provider: the current page
+ * minus any fragment. The "#exchange" deep-link marker set before the redirect
+ * must NOT leak into the redirect URL, or the provider sends the user back to
+ * `...#exchange` and it sticks in the address bar. Query params (share link,
+ * theme) are preserved; screen restoration reads sessionStorage, not the hash,
+ * so dropping the fragment is safe.
+ */
+export function exchangeOAuthReturnUrl(href: string): string {
+  const url = new URL(href);
+  url.hash = "";
+  return url.toString();
+}

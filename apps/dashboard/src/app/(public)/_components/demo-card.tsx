@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/droplet-client";
 import type { LandingDemo } from "@/lib/landing/demos";
+import { clearThemeUrl } from "@/lib/share-links/launch-url";
 import { getDemoIllustration } from "./illustrations";
 
 /** Per-category hero tint. */
@@ -78,7 +79,7 @@ export function DemoCard({ demo }: { demo: LandingDemo }) {
           {demo.url !== undefined ? (
             <Button asChild className="flex-1">
               <a
-                href={demo.url}
+                href={clearThemeUrl(demo.url)}
                 target="_blank"
                 rel="noreferrer"
                 className="group/cta"

@@ -72,3 +72,15 @@ export function demoThemeUrl(kind: DemoConfigKind, themeId: string): string {
   const base = launchBaseUrl(kind);
   return base ? `${base}/?theme=${themeId}` : "";
 }
+
+/**
+ * "View demo" URL for generic (unbranded) surfaces - the demo-detail header's
+ * launch button/host link and the demo catalog cards. Appends an EMPTY
+ * `theme=` to the catalog base URL so the demo app clears any theme persisted
+ * from a previous branded (share-link) visit and renders its default
+ * appearance, rather than reusing the last prospect's branding. Empty string
+ * for a nullish base (callers already guard on `demo.url`).
+ */
+export function clearThemeUrl(baseUrl: string | null | undefined): string {
+  return baseUrl ? `${baseUrl}/?theme=` : "";
+}

@@ -15,6 +15,7 @@ import type {
   FunnelStage,
   OrgContactView,
   OrgDemoKindBreakdownRow,
+  OverviewEngagement,
   Page,
   PageOptions,
   ProspectSummary,
@@ -63,6 +64,13 @@ export class StubAnalyticsService implements AnalyticsService {
       out.set(id, { sessions: 0, viewers: 0, avgDurationSec: 0, lastViewedAt: null });
     }
     return out;
+  }
+
+  async overviewEngagement(
+    _prospectIds: string[],
+    _now?: Date,
+  ): Promise<OverviewEngagement> {
+    return { sessions: 0, viewers: 0, activeThisWeek: 0 };
   }
 
   async listProspectContacts(

@@ -9,6 +9,7 @@ import {
   type LandingDemo,
 } from "@/lib/landing/demos";
 import { DemoHero } from "../../_components/demo-card";
+import { clearThemeUrl } from "@/lib/share-links/launch-url";
 
 function LaunchCta({
   demo,
@@ -27,7 +28,7 @@ function LaunchCta({
   return (
     <Button asChild size="lg">
       <a
-        href={demo.url}
+        href={clearThemeUrl(demo.url)}
         target="_blank"
         rel="noreferrer"
         className={`group/cta ${className}`}

@@ -14,6 +14,7 @@ import {
   saveExchangeRedirectState,
   consumeExchangeRedirectState,
   hasPendingExchangeRedirect,
+  exchangeOAuthReturnUrl,
   type ExchangeRedirectState,
 } from "../lib/exchanges/redirect-state";
 
@@ -120,5 +121,29 @@ describe("exchange redirect state", () => {
     // @ts-expect-error -- remove sessionStorage
     delete globalThis.sessionStorage;
     expect(hasPendingExchangeRedirect()).toBe(false);
+  });
+
+  // ---------------------------------------------------------------------------
+  // exchangeOAuthReturnUrl
+  // ---------------------------------------------------------------------------
+
+  it("strips the #exchange fragment from the OAuth return url", () => {
+    expect(
+      exchangeOAuthReturnUrl("https://wallet.dynamic.dev/checkout#exchange"),
+    ).toBe("https://wallet.dynamic.dev/checkout");
+  });
+
+  it("preserves query params (share link, theme) while dropping the fragment", () => {
+    expect(
+      exchangeOAuthReturnUrl(
+        "https://wallet.dynamic.dev/checkout?share=abc&theme=xyz#exchange",
+      ),
+    ).toBe("https://wallet.dynamic.dev/checkout?share=abc&theme=xyz");
+  });
+
+  it("is a no-op when there is no fragment", () => {
+    expect(exchangeOAuthReturnUrl("https://wallet.dynamic.dev/checkout")).toBe(
+      "https://wallet.dynamic.dev/checkout",
+    );
   });
 });

@@ -57,6 +57,7 @@ import {
   getActiveExchangeAdapter,
   saveExchangeRedirectState,
   consumeExchangeRedirectState,
+  exchangeOAuthReturnUrl,
 } from "@/lib/exchanges";
 import type { ExchangeProvider } from "@/lib/exchanges/types";
 import { ExchangeRows } from "./exchange-rows";
@@ -345,9 +346,6 @@ export function ExchangeCheckoutWidget({
   const handleExchangeSelect = useCallback(
     async (exchange: ExchangeProvider) => {
       try {
-        // Mark the URL so deep-linking and the code panel can target #exchange
-        window.history.replaceState(null, "", `#exchange`);
-
         saveExchangeRedirectState({
           exchangeKey: exchange.key,
           depositAmount: effectiveAmount,
@@ -355,7 +353,10 @@ export function ExchangeCheckoutWidget({
 
         await authenticateWithSocial({
           provider: exchange.socialProvider,
-          redirectUrl: window.location.href,
+          // Strip the "#exchange" marker set just above - passing the full href
+          // would make the provider redirect back to `...#exchange`, leaking the
+          // fragment into the address bar. State is restored from sessionStorage.
+          redirectUrl: exchangeOAuthReturnUrl(window.location.href),
         });
       } catch (err) {
         console.error(

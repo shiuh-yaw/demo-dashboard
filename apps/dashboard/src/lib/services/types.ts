@@ -1182,6 +1182,20 @@ export interface ProspectSummary {
   lastViewedAt: string | null;
 }
 
+/**
+ * Org-wide engagement totals for the overview stat cards, over an explicit
+ * set of prospect ids (the caller resolves scope -> ids). `sessions` and
+ * `viewers` are true distinct totals across the set (a viewer seen on two
+ * prospects counts once, unlike summing per-prospect `ProspectSummary`);
+ * `activeThisWeek` is the count of those prospects with a session in the
+ * last 7 days.
+ */
+export interface OverviewEngagement {
+  sessions: number;
+  viewers: number;
+  activeThisWeek: number;
+}
+
 /** Window for the demo-kind time-series chart; "all" means no lower bound. */
 export type AnalyticsTimeRange = "7d" | "30d" | "90d" | "all";
 
@@ -1272,6 +1286,16 @@ export interface AnalyticsService {
    * sessions map to a zeroed summary.
    */
   prospectSummaries(prospectIds: string[]): Promise<Map<string, ProspectSummary>>;
+  /**
+   * Org-wide engagement totals for the overview stat cards across `prospectIds`
+   * (the caller resolves the My/Team/All scope to ids). One lean read: no
+   * `events` hydration, distinct sessions/viewers, and the count of those
+   * prospects active in the last 7 days. `now` is injectable for tests.
+   */
+  overviewEngagement(
+    prospectIds: string[],
+    now?: Date,
+  ): Promise<OverviewEngagement>;
   /**
    * The "who has viewed" contacts list for a prospect, grouped by viewer.
    * Tier-1 scoped: returns `[]` when `prospectId` is outside `scope`.

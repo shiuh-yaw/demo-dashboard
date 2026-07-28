@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildBrandedLaunchUrl,
   buildPlainLaunchUrl,
+  clearThemeUrl,
   demoThemeUrl,
   launchBaseUrl,
 } from "@/lib/share-links/launch-url";
@@ -91,5 +92,21 @@ describe("demoThemeUrl", () => {
   it("carries no share token", () => {
     const url = demoThemeUrl("wallet", "config_1");
     expect(new URL(url).searchParams.get("share")).toBeNull();
+  });
+});
+
+describe("clearThemeUrl", () => {
+  it("appends an empty theme= to clear persisted branding", () => {
+    expect(clearThemeUrl("https://wallet.dynamic.dev")).toBe(
+      "https://wallet.dynamic.dev/?theme=",
+    );
+    expect(new URL(clearThemeUrl("https://wallet.dynamic.dev")).searchParams.get(
+      "theme",
+    )).toBe("");
+  });
+
+  it("returns empty string for a nullish base", () => {
+    expect(clearThemeUrl(null)).toBe("");
+    expect(clearThemeUrl(undefined)).toBe("");
   });
 });

@@ -22,6 +22,7 @@ export {
   saveExchangeRedirectState,
   consumeExchangeRedirectState,
   hasPendingExchangeRedirect,
+  exchangeOAuthReturnUrl,
   type ExchangeRedirectState,
 } from "./redirect-state";
 

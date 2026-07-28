@@ -30,6 +30,7 @@ import {
   type FunnelStage,
   type OrgContactView,
   type OrgDemoKindBreakdownRow,
+  type OverviewEngagement,
   type Page,
   type PageOptions,
   type ProspectSummary,
@@ -532,6 +533,35 @@ export class PostgresAnalyticsService implements AnalyticsService {
       });
     }
     return out;
+  }
+
+  async overviewEngagement(
+    prospectIds: string[],
+    now: Date = new Date(),
+  ): Promise<OverviewEngagement> {
+    if (prospectIds.length === 0) {
+      return { sessions: 0, viewers: 0, activeThisWeek: 0 };
+    }
+    // Lean read for the overview cards: hydrate only `shareLink` (never
+    // `events`), so this scales with session rows, not their event fan-out.
+    const rows = await this.client.visitorSession.findMany({
+      where: { isInternal: false, shareLink: { prospectId: { in: prospectIds } } },
+      include: { shareLink: true },
+    });
+    const weekCutoff = now.getTime() - 7 * DAY_MS;
+    const viewers = new Set<string>();
+    const activeProspects = new Set<string>();
+    for (const r of rows) {
+      viewers.add(r.anonId);
+      if (r.shareLink && r.lastSeenAt.getTime() >= weekCutoff) {
+        activeProspects.add(r.shareLink.prospectId);
+      }
+    }
+    return {
+      sessions: rows.length,
+      viewers: viewers.size,
+      activeThisWeek: activeProspects.size,
+    };
   }
 
   async listProspectSessions(

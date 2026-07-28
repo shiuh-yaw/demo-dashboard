@@ -13,6 +13,7 @@ import { Badge, Button } from "@/components/droplet-client";
 import { SetBreadcrumb } from "@/components/breadcrumbs";
 import { displayHost } from "@/lib/display-host";
 import { LANDING_DEMOS, demoDetailId } from "@/lib/landing/demos";
+import { clearThemeUrl } from "@/lib/share-links/launch-url";
 import { services } from "@/lib/services";
 import { isConfigurableKind } from "@/lib/analytics/demo-kind";
 import { listProspectOptions } from "@/lib/actions/prospects";
@@ -39,6 +40,9 @@ export default async function DemoDetailPage({
 
   const demoKind = demo.kind;
   const configurable = isConfigurableKind(kind);
+  // Generic launch URL with an empty `theme=` so the demo clears any branding
+  // persisted from a prior share-link visit (see `clearThemeUrl`).
+  const viewUrl = clearThemeUrl(demo.url);
 
   // SSR-seed the "Customize for a prospect" picker so its first open is
   // warm - see `ProspectPickerProps.initialData`. Skipped when the kind
@@ -70,7 +74,7 @@ export default async function DemoDetailPage({
                 <>
                   <span aria-hidden>&middot;</span>
                   <a
-                    href={demo.url}
+                    href={viewUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 hover:text-foreground hover:underline"
@@ -85,7 +89,7 @@ export default async function DemoDetailPage({
           <div className="flex shrink-0 items-center gap-2">
             {demo.url && (
               <Button asChild variant="secondary">
-                <a href={demo.url} target="_blank" rel="noreferrer">
+                <a href={viewUrl} target="_blank" rel="noreferrer">
                   View demo
                   <ArrowUpRight className="ml-1.5 h-4 w-4" />
                 </a>

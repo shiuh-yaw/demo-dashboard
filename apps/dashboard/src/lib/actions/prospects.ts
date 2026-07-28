@@ -38,7 +38,11 @@ import { extractThemeFromUrl } from "@/lib/actions/extract-theme";
 import { prospectService, services } from "@/lib/services";
 import type { GtmUser, Page, Prospect, Team } from "@/lib/services";
 import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
-import type { UpdateProspectInput } from "@/lib/services/types";
+import type {
+  OverviewEngagement,
+  UpdateProspectInput,
+} from "@/lib/services/types";
+import { toOverviewRow, type OverviewProspectRow } from "@/lib/overview-row";
 import {
   resolveProspectDemos,
   resolveProspectDemosBatch,
@@ -1110,6 +1114,45 @@ export async function listProspectsPage(
 ): Promise<Page<ProspectProfile>> {
   const { profiles } = await getAllProspectProfiles(scope, cursor);
   return profiles;
+}
+
+/**
+ * `fetchPage` shape for the Overview home's infinite list: one page of
+ * prospects merged with their engagement summary (`OverviewProspectRow`),
+ * under the same enforced `scope` the SSR-seeded first page used. Each page
+ * batch-resolves only its own rows' summaries.
+ */
+export async function listOverviewRowsPage(
+  scope: ProspectScope,
+  cursor: string | null,
+): Promise<Page<OverviewProspectRow>> {
+  const { profiles } = await getAllProspectProfiles(scope, cursor);
+  const summaries = await services.analytics.prospectSummaries(
+    profiles.items.map((p) => p.id),
+  );
+  return {
+    items: profiles.items.map((p) => toOverviewRow(p, summaries)),
+    nextCursor: profiles.nextCursor,
+  };
+}
+
+/**
+ * Org-wide stat-card totals for the Overview home, over EVERY prospect in the
+ * enforced scope (never a single page - that's the bug this fixes). `prospects`
+ * is the full scoped count; the rest come from one lean analytics read. Scope
+ * is re-enforced server-side so it always matches the list below the cards.
+ */
+export async function getOverviewStats(
+  requestedScope?: ProspectScope,
+): Promise<OverviewEngagement & { prospects: number }> {
+  const user = await getSessionUser();
+  if (!user) {
+    return { prospects: 0, sessions: 0, viewers: 0, activeThisWeek: 0 };
+  }
+  const scope = await enforceScope(user, requestedScope);
+  const ids = await prospectService.listIds(prospectScopeWhere(user, scope));
+  const engagement = await services.analytics.overviewEngagement(ids);
+  return { prospects: ids.length, ...engagement };
 }
 
 /**

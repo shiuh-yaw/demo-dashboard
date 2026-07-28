@@ -16,25 +16,23 @@ import {
 } from "@/components/droplet-client";
 import { ProspectIcon } from "@/components/shared/prospect-icon";
 import { NewProspectDialog } from "@/components/shared/new-prospect-dialog";
+import { InfiniteScrollSentinel } from "@/components/shared/infinite-scroll-sentinel";
 import { THIN_SCROLLBAR } from "@/components/shared/thin-scrollbar";
 import { displayHost } from "@/lib/display-host";
 import { NO_AUTOFILL } from "@/lib/no-autofill";
 import { setProspectFilter } from "@/lib/actions/scope";
-import type { ProspectFilter } from "@/lib/prospect-scope";
-
-export interface MyProspectRowView {
-  id: string;
-  name: string;
-  domain: string | null;
-  demos: number;
-  sessions: number;
-  viewers: number;
-  lastViewedAt: string | null;
-  updatedAt: string;
-}
+import { listOverviewRowsPage } from "@/lib/actions/prospects";
+import { useInfiniteList } from "@/lib/query/use-infinite-list";
+import { keys } from "@/lib/query/keys";
+import type { OverviewProspectRow } from "@/lib/overview-row";
+import type { Page } from "@/lib/services/types";
+import type { ProspectFilter, ProspectScope } from "@/lib/prospect-scope";
 
 export interface MyProspectsProps {
-  rows: MyProspectRowView[];
+  /** SSR-seeded first page of overview rows; the infinite list takes it from here with no initial fetch. */
+  initialPage: Page<OverviewProspectRow>;
+  /** The enforced scope for `initialPage` - keys the query cache and is echoed on every "load more" fetch. */
+  scope: ProspectScope;
   canCreate: boolean;
   filter: ProspectFilter;
   isAdmin: boolean;
@@ -67,13 +65,24 @@ function dateValue(iso: string | null): number {
 }
 
 export function MyProspects({
-  rows,
+  initialPage,
+  scope,
   canCreate,
   filter,
   isAdmin,
   onTeam,
 }: MyProspectsProps) {
   const router = useRouter();
+  const {
+    items: rows,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteList<OverviewProspectRow>({
+    queryKey: keys.overviewProspects.list({ scope }),
+    fetchPage: (cursor) => listOverviewRowsPage(scope, cursor),
+    initialPage,
+  });
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -277,6 +286,17 @@ export function MyProspects({
                 </div>
               </Link>
             ))}
+            {hasNextPage && (
+              <InfiniteScrollSentinel
+                onReach={fetchNextPage}
+                disabled={isFetchingNextPage}
+              />
+            )}
+            {isFetchingNextPage && (
+              <p className="py-2 text-center text-xs text-muted-foreground">
+                Loading more...
+              </p>
+            )}
           </div>
 
           {/* Plain <table> in the scroll container itself: droplet's <Table>
@@ -362,6 +382,17 @@ export function MyProspects({
                 ))}
               </TableBody>
             </table>
+            {hasNextPage && (
+              <InfiniteScrollSentinel
+                onReach={fetchNextPage}
+                disabled={isFetchingNextPage}
+              />
+            )}
+            {isFetchingNextPage && (
+              <p className="py-3 text-center text-xs text-muted-foreground">
+                Loading more...
+              </p>
+            )}
           </div>
         </div>
       )}

@@ -9,51 +9,36 @@
 
 import { requireUser } from "@/lib/auth/gtm";
 import { canCreateRecord } from "@/lib/auth/policy";
-import { getAllProspectProfiles } from "@/lib/actions/prospects";
+import {
+  getAllProspectProfiles,
+  getOverviewStats,
+} from "@/lib/actions/prospects";
 import { getScopeContext } from "@/lib/actions/scope";
 import { services } from "@/lib/services";
+import { toOverviewRow } from "@/lib/overview-row";
 import { OverviewMetrics } from "./components/overview-metrics";
-import { MyProspects, type MyProspectRowView } from "./components/my-prospects";
+import { MyProspects } from "./components/my-prospects";
 
 export const dynamic = "force-dynamic";
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
 export default async function OverviewPage() {
   const user = await requireUser();
-  const [{ profiles }, scope] = await Promise.all([
+  const [{ profiles, scope }, scopeCtx] = await Promise.all([
     getAllProspectProfiles(),
     getScopeContext(),
   ]);
 
-  // One batched query instead of N per-prospect round-trips.
-  const summaries = await services.analytics.prospectSummaries(
-    profiles.items.map((p) => p.id),
-  );
-  const zero = { sessions: 0, viewers: 0, lastViewedAt: null };
-
-  const now = Date.now();
-  const rows: MyProspectRowView[] = profiles.items.map((p) => {
-    const s = summaries.get(p.id) ?? zero;
-    return {
-      id: p.id,
-      name: p.name,
-      domain: p.companyUrl ?? null,
-      demos: Object.values(p.demos).filter(Boolean).length,
-      sessions: s.sessions,
-      viewers: s.viewers,
-      lastViewedAt: s.lastViewedAt,
-      updatedAt: p.updatedAt,
-    };
-  });
-
-  const activeThisWeek = rows.filter((r) => {
-    if (!r.lastViewedAt) return false;
-    const t = new Date(r.lastViewedAt).getTime();
-    return !Number.isNaN(t) && now - t <= WEEK_MS;
-  }).length;
-  const sessions = rows.reduce((sum, r) => sum + r.sessions, 0);
-  const viewers = rows.reduce((sum, r) => sum + r.viewers, 0);
+  // First page rows seed the infinite list (one batched summary query for
+  // this page); the stat cards span EVERY prospect in scope, not just this
+  // page, via a separate lean org-wide aggregate.
+  const [summaries, stats] = await Promise.all([
+    services.analytics.prospectSummaries(profiles.items.map((p) => p.id)),
+    getOverviewStats(scope),
+  ]);
+  const initialPage = {
+    items: profiles.items.map((p) => toOverviewRow(p, summaries)),
+    nextCursor: profiles.nextCursor,
+  };
 
   return (
     // lg: the outlet no longer needs to scroll this page - it fills the
@@ -71,20 +56,21 @@ export default async function OverviewPage() {
 
       <div className="shrink-0">
         <OverviewMetrics
-          prospects={rows.length}
-          activeThisWeek={activeThisWeek}
-          sessions={sessions}
-          viewers={viewers}
+          prospects={stats.prospects}
+          activeThisWeek={stats.activeThisWeek}
+          sessions={stats.sessions}
+          viewers={stats.viewers}
         />
       </div>
 
       <div className="lg:min-h-0 lg:flex-1">
         <MyProspects
-          rows={rows}
+          initialPage={initialPage}
+          scope={scope}
           canCreate={canCreateRecord(user)}
-          filter={scope.filter}
-          isAdmin={scope.isAdmin}
-          onTeam={scope.onTeam}
+          filter={scopeCtx.filter}
+          isAdmin={scopeCtx.isAdmin}
+          onTeam={scopeCtx.onTeam}
         />
       </div>
     </div>

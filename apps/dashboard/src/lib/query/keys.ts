@@ -35,6 +35,8 @@ export interface ProspectListFilters {
 
 export const keys = {
   prospects: createEntityListKeys<ProspectListFilters>("prospects"),
+  /** Overview home prospect rows (profile + engagement) - distinct shape/cache from `prospects`. */
+  overviewProspects: createEntityListKeys<ProspectListFilters>("overviewProspects"),
   demoConfigs: createEntityListKeys("demoConfigs"),
   contacts: createEntityListKeys("contacts"),
   sessions: createEntityListKeys("sessions"),
