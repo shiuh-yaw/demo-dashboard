@@ -18,17 +18,13 @@
  * - Screen components receive navigation object for screen transitions
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTrack } from "@dynamic-demos/analytics";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthenticatedIdentity } from "@/hooks/use-authenticated-identity";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useClientInitialized } from "@/hooks/use-client-initialized";
 import { useMilestoneOnce } from "@/hooks/use-milestone-once";
-import {
-  hasFiredOnceThisSession,
-  markFiredThisSession,
-} from "@/lib/analytics/milestones";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { AuthScreen } from "@/components/screens/auth-screen";
 import { JwtGeneratorScreen } from "@/components/screens/jwt-generator-screen";
@@ -60,18 +56,23 @@ export function WalletApp() {
 
   // GTM Phase 09: `authenticated` carries the person-level join keys - the
   // Dynamic user id (always) plus the verified email when present - for any
-  // auth method. Read off the Dynamic user once it populates, which can lag
-  // the isLoggedIn flip (e.g. social login). Session-deduped here since
-  // milestoneOnce cannot carry props.
+  // auth method. Fired once per page LOAD (guarded by this mount-scoped ref),
+  // NOT deduped across reloads via sessionStorage: an already-logged-in user
+  // who reloads must still (re)resolve and send the identity, and the SDK
+  // user restores after mount - a sessionStorage dedupe would let a stale or
+  // early id-only fire permanently suppress the email for the rest of the
+  // tab. Gate on `isClientReady` so the fully-restored user (with email) is
+  // read before firing; the ref stops duplicate fires within one load.
+  const authFiredRef = useRef(false);
   useEffect(() => {
-    if (!isLoggedIn || !identity) return;
-    if (hasFiredOnceThisSession("authenticated")) return;
-    markFiredThisSession("authenticated");
+    if (authFiredRef.current) return;
+    if (!isClientReady || !isLoggedIn || !identity) return;
+    authFiredRef.current = true;
     milestone("authenticated", {
       dynamicUserId: identity.dynamicUserId,
       ...(identity.email ? { email: identity.email } : {}),
     });
-  }, [isLoggedIn, identity, milestone]);
+  }, [isClientReady, isLoggedIn, identity, milestone]);
 
   // Show loading until SDK initialized and screen matches auth state
   if (!isClientReady || !isReady) {

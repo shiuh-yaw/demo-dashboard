@@ -8,7 +8,7 @@ import {
 } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
-import { GtmTracker, BookACallCta } from "@dynamic-demos/analytics";
+import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { WalletConfigProvider } from "@/contexts/wallet-config-context";
 
@@ -74,14 +74,16 @@ export default async function RootLayout({
       </head>
       <body>
         {/* GTM Phase 09: NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this
-            is safe to mount unconditionally (Phase 02 guarantee). */}
+            is safe to mount unconditionally (Phase 02 guarantee). No floating
+            BookACallCta - the header/hero already carries the real Book a
+            call (SiteHeader marketing nav unbranded, ScenarioBrandRow's
+            BookACallButton branded). */}
         <GtmTracker demoSlug="wallet">
           <Providers>
             <WalletConfigProvider config={config}>
               {children}
             </WalletConfigProvider>
           </Providers>
-          <BookACallCta />
         </GtmTracker>
       </body>
     </html>

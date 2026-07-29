@@ -92,6 +92,7 @@ async function createProspectDemoConfigs(
     remittance?: boolean;
     trade?: boolean;
     flow?: boolean;
+    card?: boolean;
   },
 ): Promise<ProspectDemoMap> {
   const demos: ProspectDemoMap = {};
@@ -104,6 +105,7 @@ async function createProspectDemoConfigs(
   const createRemittance = createAll || options?.remittance === true;
   const createTrade = createAll || options?.trade === true;
   const createFlow = createAll || options?.flow === true;
+  const createCard = createAll || options?.card === true;
 
   // Create Earn config with prospect settings
   if (createEarn) {
@@ -348,6 +350,35 @@ async function createProspectDemoConfigs(
       config: flowConfigPayload as unknown as Record<string, unknown>,
     });
     demos.flow = record.id;
+  }
+
+  // Create Card config with prospect theme + branding. apps/card consumes a
+  // WidgetConfig (foregroundColor theme + `name`/`logoUrl` branding); the read
+  // path re-synthesizes from the prospect, so the stored payload is a seed.
+  if (createCard) {
+    const cardTheme: Partial<ProspectTheme> = prospect.theme || {};
+    const cardConfigPayload = {
+      theme: {
+        primaryColor: prospect.primaryColor,
+        primaryHoverColor: cardTheme.primaryHoverColor,
+        accentColor: prospect.accentColor || prospect.primaryColor,
+      },
+      branding: {
+        name: prospectName,
+        logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "card",
+      ownerId,
+      name: `${prospectName} - Card`,
+      description: `Auto-generated from prospect profile: ${prospectId}`,
+      prospectId,
+      isPrimary: true,
+      themeOverrides: null,
+      config: cardConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.card = record.id;
   }
 
   return demos;
@@ -1308,6 +1339,7 @@ export async function createMissingDemos(
     remittance?: boolean;
     trade?: boolean;
     flow?: boolean;
+    card?: boolean;
   },
 ): Promise<ActionResult<ProspectProfile>> {
   const user = await getSessionUser();
@@ -1333,6 +1365,7 @@ export async function createMissingDemos(
       remittance: demoTypes.remittance && !existingDemos.remittance,
       trade: demoTypes.trade && !existingDemos.trade,
       flow: demoTypes.flow && !existingDemos.flow,
+      card: demoTypes.card && !existingDemos.card,
     };
 
     await createProspectDemoConfigs(

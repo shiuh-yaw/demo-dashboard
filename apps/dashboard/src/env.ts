@@ -100,6 +100,19 @@ export const env = createEnv({
      */
     BLINDPAY_WEBHOOK_SECRET: z.string().optional(),
     /**
+     * Rain issuing API key (server-side only). Unset in sandbox-less local
+     * dev; routes 500 via getRainClient when a request needs it.
+     */
+    RAIN_API_KEY: z.string().optional(),
+    /**
+     * Rain API base URL. Defaults to the sandbox host; production is set
+     * explicitly via env + the [prod-creds] PR flow (D-005).
+     */
+    RAIN_API_BASE_URL: z
+      .string()
+      .url()
+      .default("https://api-dev.raincards.xyz"),
+    /**
      * Iron Finance Environment (production or sandbox)
      * Defaults to production
      */
@@ -297,6 +310,8 @@ export const env = createEnv({
     BLINDPAY_INSTANCE_ID: process.env.BLINDPAY_INSTANCE_ID,
     BLINDPAY_API_KEY: process.env.BLINDPAY_API_KEY,
     BLINDPAY_WEBHOOK_SECRET: process.env.BLINDPAY_WEBHOOK_SECRET,
+    RAIN_API_KEY: process.env.RAIN_API_KEY,
+    RAIN_API_BASE_URL: process.env.RAIN_API_BASE_URL,
     IRON_ENVIRONMENT: process.env.IRON_ENVIRONMENT,
     IRON_API_KEY: process.env.IRON_API_KEY,
     IRON_MERCHANT_CUSTOMER_ID: process.env.IRON_MERCHANT_CUSTOMER_ID,

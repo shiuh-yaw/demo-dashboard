@@ -79,6 +79,18 @@ describe("synthesizeProspectConfig", () => {
     });
   });
 
+  it("uses foregroundColor + branding.name/logoUrl for card", () => {
+    const { theme, branding } = synthesizeProspectConfig(
+      "card",
+      makeProspect(),
+    );
+    expect(theme.foregroundColor).toBe("#0e121b");
+    expect(branding).toEqual({
+      logoUrl: "https://cdn.example.com/spacex.png",
+      name: "SpaceX",
+    });
+  });
+
   it("omits the logo when the prospect has none", () => {
     const { branding } = synthesizeProspectConfig(
       "earn",

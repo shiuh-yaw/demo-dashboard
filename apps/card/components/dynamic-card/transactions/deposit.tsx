@@ -1,0 +1,59 @@
+import { ArrowDownLeft, ExternalLink } from "lucide-react";
+import type { CollateralTransactionResponse } from "@dynamic-demos/rain";
+import { formatCurrency } from "@dynamic-demos/utils";
+
+import { formatTransactionDate } from "./format-date";
+import { explorerTxUrl } from "@/lib/explorer";
+
+interface DepositTransactionProps {
+  transaction: CollateralTransactionResponse;
+}
+
+export function DepositTransaction({ transaction }: DepositTransactionProps) {
+  const { collateral } = transaction;
+  const txUrl = explorerTxUrl(collateral.chainId, collateral.transactionHash);
+
+  const rowClass =
+    "group flex items-center justify-between px-3 py-2.5 bg-(--brand-row-bg) rounded-(--brand-radius)";
+  const inner = (
+    <>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-8 h-8 shrink-0 rounded-lg bg-(--brand-surface) border border-(--brand-border) flex items-center justify-center">
+          <ArrowDownLeft
+            className="w-4 h-4 text-(--brand-success)"
+            strokeWidth={1.5}
+          />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-(--brand-fg) tracking-[-0.14px] leading-5">
+            Deposit
+          </p>
+          <p className="text-xs text-(--brand-muted) tracking-[-0.12px] leading-4">
+            {formatTransactionDate(collateral.postedAt)}
+          </p>
+        </div>
+      </div>
+      <span className="flex items-center gap-1.5 shrink-0">
+        <span className="text-sm font-medium text-(--brand-success) tabular-nums">
+          +{formatCurrency(collateral.amount / 100)}
+        </span>
+        {txUrl && (
+          <ExternalLink className="w-3.5 h-3.5 text-(--brand-muted) opacity-0 transition-opacity group-hover:opacity-100" />
+        )}
+      </span>
+    </>
+  );
+
+  return txUrl ? (
+    <a
+      href={txUrl}
+      target="_blank"
+      rel="noreferrer"
+      className={`${rowClass} transition-colors hover:bg-(--brand-row-hover)`}
+    >
+      {inner}
+    </a>
+  ) : (
+    <div className={rowClass}>{inner}</div>
+  );
+}

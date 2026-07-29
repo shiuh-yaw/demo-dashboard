@@ -81,6 +81,7 @@ const DEMO_CONFIGS: DemoConfig[] = [
   { type: "trade", label: "Trade", icon: TrendingUp, configRoute: "/trade" },
   { type: "visa-direct", label: "Visa Direct", icon: CreditCard, configRoute: "/visa-direct" },
   { type: "flow", label: "Flow", icon: Workflow, configRoute: "" },
+  { type: "card", label: "Card", icon: CreditCard, configRoute: "" },
 ];
 
 function formatLastViewed(iso: string | null | undefined): string {

@@ -9,10 +9,10 @@ import { Heart } from "lucide-react";
 
 export interface SiteFooterProps {
   /**
-   * Href behind the heart mark. Defaults to the dashboard's prospects
-   * sign-in - demo apps render <SiteFooter /> bare so the link can't
-   * drift per app; the dashboard itself overrides with its relative
-   * route. Pass `null` to render a plain icon.
+   * Href behind the heart mark. Defaults to the dashboard sign-in - demo
+   * apps render <SiteFooter /> bare so the link can't drift per app; the
+   * dashboard itself overrides with its relative route. Pass `null` to
+   * render a plain icon.
    */
   signInHref?: string | null;
   /**
@@ -50,7 +50,7 @@ const LINKS = [
 ];
 
 export function SiteFooter({
-  signInHref = "https://dynamic.dev/prospects",
+  signInHref = "https://dynamic.dev/dashboard",
   fullWidth = false,
   showCtas = false,
   showSignupCta = true,

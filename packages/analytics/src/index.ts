@@ -11,3 +11,5 @@ export { BookACallCta } from "./cta";
 export { getShareContext } from "./context";
 export { trackBatchSchema, trackEventSchema } from "./schema";
 export type { TrackBatch } from "./schema";
+export { resolveUserEmail, resolveUserIdentity } from "./identity";
+export type { DynamicIdentityUser, UserIdentity } from "./identity";

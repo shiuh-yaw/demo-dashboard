@@ -12,6 +12,7 @@ import {
   logout as sdkLogout,
   isSignedIn as sdkIsSignedIn,
 } from "@dynamic-labs-sdk/client";
+import { resolveUserEmail } from "@dynamic-demos/analytics";
 import { getClient, createSafeWrapper } from "./client";
 
 /**
@@ -48,7 +49,10 @@ export function getAuthenticatedIdentity(): AuthenticatedIdentity | null {
     identityCache = null;
     return null;
   }
-  const email = user.email ?? null;
+  // Shared resolver (@dynamic-demos/analytics) so email extraction is
+  // identical across demos: top-level user.email first, verified-credential
+  // fallbacks for providers that only expose it there.
+  const email = resolveUserEmail(user) ?? null;
   if (
     identityCache?.dynamicUserId === user.id &&
     identityCache.email === email

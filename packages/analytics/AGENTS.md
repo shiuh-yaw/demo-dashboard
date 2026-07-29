@@ -25,6 +25,8 @@ Client tracker demo apps mount to report sessions, pageviews, steps, and milesto
 - `BookACallCta` - floating CTA component; renders nothing without a resolved `cta`. (stable)
 - `trackEventSchema`, `trackBatchSchema` - Zod schemas, the wire contract. (stable)
 - `TrackBatch` - inferred type of `trackBatchSchema`. (stable)
+- `resolveUserEmail`, `resolveUserIdentity` - pure, structurally-typed helpers that read the verified email / person-level identity (`{ dynamicUserId, email? }`) off a Dynamic user. Shared so email extraction is IDENTICAL across demos: top-level `user.email` first, then verified-credential fallbacks (`email` / `oauthEmails` / email-shaped `publicIdentifier`). No `@dynamic-labs-sdk` import - `SdkUser` structurally satisfies `DynamicIdentityUser`. (stable)
+- `DynamicIdentityUser`, `UserIdentity` - the resolver's input/output types. (stable)
 - Everything else in `src/` (`queue.ts`, `cookies.ts`, `context.ts`) is internal - do not import from outside this package.
 
 ## Required environment
@@ -50,7 +52,7 @@ Client tracker demo apps mount to report sessions, pageviews, steps, and milesto
 ## Integration map
 
 **Imports:** none beyond `zod`, `react`, `next/navigation` (peer).
-**Imported by:** `apps/wallet` (Phase 09 pilot - `<GtmTracker demoSlug="wallet">` + `<BookACallCta />` in `app/layout.tsx`, taxonomy in `apps/wallet/AGENTS.md`); dashboard's ingest route imports `trackEventSchema` / `trackBatchSchema` (Phase 06).
+**Imported by:** `apps/wallet` (Phase 09 pilot - `<GtmTracker demoSlug="wallet">` + `<BookACallCta />` in `app/layout.tsx`, taxonomy in `apps/wallet/AGENTS.md`); `apps/card` (`<GtmTracker demoSlug="card">`, taxonomy in `apps/card/AGENTS.md`); both apps also use `resolveUserIdentity` / `resolveUserEmail` for their `authenticated` milestone; dashboard's ingest route imports `trackEventSchema` / `trackBatchSchema` (Phase 06).
 
 ## Examples
 

@@ -46,6 +46,7 @@ const KIND_LABEL: Record<DemoConfigKind, string> = {
   checkout: "Checkouts",
   remittance: "Remittance",
   flow: "Flow",
+  card: "Card",
 };
 
 function formatChartDate(x: Date | number | string): string {

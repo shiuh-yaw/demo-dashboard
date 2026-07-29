@@ -21,8 +21,12 @@ export interface CodeStep {
    * content (server-side Shiki output). Never derive it from user input.
    */
   html: string;
-  /** Canonical docs URL surfaced as the step's "Docs →" link. */
-  docsUrl: string;
+  /**
+   * Canonical docs URL surfaced as the step's "Docs →" link. Optional -
+   * omit it and the step renders no docs link (e.g. steps whose provider has
+   * no per-step doc page).
+   */
+  docsUrl?: string;
 }
 
 export type CodePanelTabId = "sdk" | "api" | "webhooks" | "helpers";

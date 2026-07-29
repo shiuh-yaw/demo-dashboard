@@ -10,6 +10,7 @@ describe("buildAddDemoCatalog", () => {
     expect(kinds).toContain("earn");
     expect(kinds).toContain("wallet");
     expect(kinds).toContain("remittance");
+    expect(kinds).toContain("card");
     // Non-bindable kinds (visa-direct) and external-console kinds (checkout)
     // never appear.
     expect(kinds).not.toContain("visa-direct");
@@ -49,9 +50,10 @@ describe("buildAddDemoCatalog", () => {
       remittance: "r1",
       trade: "t1",
       flow: "f1",
+      card: "c1",
     });
-    // The five in-dashboard bindable kinds (checkout is external, excluded).
-    expect(rows).toHaveLength(5);
+    // The six in-dashboard bindable kinds (checkout is external, excluded).
+    expect(rows).toHaveLength(6);
     expect(rows.every((r) => r.status === "added")).toBe(true);
   });
 });

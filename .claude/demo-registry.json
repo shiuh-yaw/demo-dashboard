@@ -2,6 +2,13 @@
   "generatedAt": null,
   "apps": [
     {
+      "name": "@dynamic-demos/card",
+      "kind": "app",
+      "flow_role": "payouts",
+      "custody": "non-custodial",
+      "status": "experimental"
+    },
+    {
       "name": "@dynamic-demos/checkouts",
       "kind": "app",
       "flow_role": "checkout",
@@ -550,6 +557,20 @@
         "name": "Polymarket",
         "docs": "https://docs.polymarket.com/",
         "api_reference": "https://docs.polymarket.com/quickstart/introduction/main",
+        "agent_docs": "none",
+        "status_page": "none"
+      }
+    },
+    {
+      "name": "@dynamic-demos/rain",
+      "kind": "package",
+      "flow_role": "payouts",
+      "custody": "non-custodial",
+      "status": "experimental",
+      "provider": {
+        "name": "Rain (raincards.xyz)",
+        "docs": "https://docs.rain.xyz/",
+        "api_reference": "https://docs.rain.xyz/",
         "agent_docs": "none",
         "status_page": "none"
       }

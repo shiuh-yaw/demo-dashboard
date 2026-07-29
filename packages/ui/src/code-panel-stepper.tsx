@@ -37,7 +37,7 @@ export function Stepper({ steps }: { steps: CodeStep[] }) {
               <h3 className="text-[15px] font-semibold text-(--brand-fg) leading-snug">
                 {step.title}
               </h3>
-              <DocsLink href={step.docsUrl} />
+              {step.docsUrl ? <DocsLink href={step.docsUrl} /> : null}
             </div>
             <p className="text-sm text-(--brand-fg-secondary) leading-relaxed">
               {renderProse(step.prose)}

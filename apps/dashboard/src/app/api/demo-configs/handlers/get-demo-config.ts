@@ -43,9 +43,9 @@ interface ReadMapper {
   toStored(record: DemoConfigRecord, prospect: Prospect | null): { ownerId?: string };
 }
 
-// Partial - "flow" has no mapper here; apps/flow owns its config directly
-// and a "flow" kind lookup falls through to the prospect-fallback branch
-// below.
+// Partial - "flow" and "card" have no mapper here; those apps own their
+// config directly and a lookup falls through to the prospect-fallback branch
+// below (theme synthesized from the bound prospect).
 const MAPPERS: Partial<Record<DemoConfigKind, ReadMapper>> = {
   earn: earnMapper,
   wallet: walletMapper,

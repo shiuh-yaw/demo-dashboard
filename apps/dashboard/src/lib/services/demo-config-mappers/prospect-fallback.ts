@@ -34,6 +34,14 @@ export function synthesizeProspectConfig(
     { foregroundKey: urlLogo ? "foreground" : "foregroundColor" },
   );
   const logoUrl = prospectLogoUrl(prospect) ?? prospect.logoUrl ?? undefined;
+  // Card consumes a WidgetConfig: `foregroundColor` theme + base branding
+  // (`name` + `logoUrl`) - see apps/card/app/layout.tsx.
+  if (kind === "card") {
+    return {
+      theme: theme ?? {},
+      branding: { ...(logoUrl != null && { logoUrl }), name: prospect.name },
+    };
+  }
   const branding = urlLogo
     ? { ...(logoUrl != null && { logo: logoUrl }), name: prospect.name }
     : { ...(logoUrl != null && { logoUrl }), appName: prospect.name };

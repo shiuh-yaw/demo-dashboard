@@ -177,6 +177,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
   },
   {
     slug: "stablecoin-card",
+    kind: "card",
     showOnLanding: true,
     name: "Stablecoin Card",
     tagline: "A virtual Visa debit card funded by stablecoins in your wallet.",

@@ -1,0 +1,51 @@
+{
+  "name": "@dynamic-demos/card",
+  "version": "0.1.0",
+  "description": "Stablecoin debit card demo (Rain issuer) on the Dynamic JS SDK",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4011",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dynamic-demos/analytics": "workspace:*",
+    "@dynamic-demos/code-highlight": "workspace:*",
+    "@dynamic-demos/dynamic": "workspace:*",
+    "@dynamic-demos/rain": "workspace:*",
+    "@dynamic-demos/theme": "workspace:*",
+    "@dynamic-demos/types": "workspace:*",
+    "@dynamic-demos/ui": "workspace:*",
+    "@dynamic-demos/utils": "workspace:*",
+    "@dynamic-labs-sdk/client": "1.19.1",
+    "@dynamic-labs-sdk/evm": "1.19.1",
+    "@dynamic-labs-sdk/react-hooks": "1.19.1",
+    "@t3-oss/env-nextjs": "0.13.8",
+    "@tanstack/react-query": "catalog:",
+    "clsx": "catalog:",
+    "lucide-react": "0.541.0",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwind-merge": "3.4.0",
+    "viem": "2.42.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@dynamic-demos/tsconfig": "workspace:*",
+    "@eslint/eslintrc": "catalog:",
+    "@tailwindcss/postcss": "4.1.17",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "@types/node": "20.19.25",
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
+    "jsdom": "26.0.0",
+    "tailwindcss": "4.1.17",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -6,6 +6,7 @@
 
 | App | flow_role | custody | status |
 |---|---|---|---|
+| `card` | payouts | non-custodial | experimental |
 | `checkouts` | checkout | non-custodial | stable |
 | `cross-border-ap-ar` | payouts | custodial | experimental |
 | `dashboard` | utility | mixed | stable |
@@ -51,6 +52,12 @@
 | Package | Provider | custody | status |
 |---|---|---|---|
 | `checkouts-widget` | — | non-custodial | stable |
+
+## Payouts providers
+
+| Package | Provider | custody | status |
+|---|---|---|---|
+| `rain` | Rain (raincards.xyz) | non-custodial | experimental |
 
 ## Theming primitives
 

@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { RainApiError } from "@dynamic-demos/rain";
 import { addCorsHeaders } from "./cors";
 import { AppError } from "./errors";
 import { ZodError, formatZodError, getFieldErrors } from "./validation";
@@ -59,6 +60,11 @@ export function handleApiError(error: unknown, context?: string): NextResponse {
   // Handle known application errors
   if (error instanceof AppError) {
     return createErrorResponse(error.message, error.statusCode, error.code);
+  }
+
+  // Handle Rain API errors - surface Rain's real status code, not a generic 500
+  if (error instanceof RainApiError) {
+    return createErrorResponse(error.message, error.status, "RAIN_ERROR");
   }
 
   // Handle unknown errors

@@ -531,6 +531,14 @@ const flowEntry: DemoEditorEntry = {
   backHref: "/dashboard/prospects",
 };
 
+// Card has no in-dashboard editor - like flow, its theme comes from the
+// prospect and apps/card owns the config. The instance page renders the
+// shared insights + share view (see DASHBOARD_EDITABLE_KINDS).
+const cardEntry: DemoEditorEntry = {
+  appearanceMode: "none",
+  backHref: "/dashboard/prospects",
+};
+
 export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   wallet: walletEntry,
   earn: earnEntry,
@@ -539,6 +547,7 @@ export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   "visa-direct": visaDirectEntry,
   checkout: checkoutEntry,
   flow: flowEntry,
+  card: cardEntry,
 };
 
 export function getDemoEditorEntry(kind: DemoConfigKind): DemoEditorEntry {

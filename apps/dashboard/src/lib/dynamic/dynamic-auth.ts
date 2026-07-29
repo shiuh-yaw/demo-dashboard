@@ -42,7 +42,7 @@ type RouteContext = {
  */
 type AuthenticatedRequestHandler<T extends RouteContext = RouteContext> = (
   req: NextRequest,
-  context: { user: AuthenticatedUser } & T
+  context: { user: AuthenticatedUser; environmentId: string } & T
 ) => Promise<NextResponse> | NextResponse;
 
 // =============================================================================
@@ -126,8 +126,9 @@ export function withAuth<T extends RouteContext = RouteContext>(
       // Merge user with context and call handler
       const handlerContext = {
         user,
+        environmentId,
         ...context,
-      } as { user: AuthenticatedUser } & T;
+      } as { user: AuthenticatedUser; environmentId: string } & T;
 
       const response = await handler(req, handlerContext);
       return addCorsHeaders(response);

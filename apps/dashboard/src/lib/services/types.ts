@@ -634,7 +634,8 @@ export type DemoConfigKind =
   | "visa-direct"
   | "checkout"
   | "remittance"
-  | "flow";
+  | "flow"
+  | "card";
 
 /**
  * Demo config row as it lives in Postgres (mirrors the Prisma `DemoConfig`

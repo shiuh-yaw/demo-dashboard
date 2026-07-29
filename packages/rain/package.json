@@ -1,0 +1,33 @@
+{
+  "name": "@dynamic-demos/rain",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@dynamic-labs-sdk/react-hooks": "^1.19.1",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@dynamic-labs-sdk/react-hooks": { "optional": true },
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@dynamic-demos/tsconfig": "workspace:*",
+    "@dynamic-labs-sdk/react-hooks": "1.19.1",
+    "@types/node": "20.19.25",
+    "@types/react": "19.2.5",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

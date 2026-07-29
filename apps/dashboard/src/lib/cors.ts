@@ -10,7 +10,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
   "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, x-dynamic-environment-id",
+    "Content-Type, Authorization, x-dynamic-environment-id, x-rain-card-id, x-rain-user-id",
   "Access-Control-Max-Age": "86400",
 };
 

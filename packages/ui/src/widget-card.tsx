@@ -30,9 +30,12 @@ function HeaderTitle({
         </h2>
       ) : null}
       {subtitle ? (
-        <p className="text-xs leading-5 text-[var(--widget-muted,#9a9a9a)]">
+        // `div`, not `p`: subtitle is a ReactNode - callers pass rich content
+        // (e.g. an address chip with copy/explorer controls) that must not be
+        // nested inside a paragraph.
+        <div className="text-xs leading-5 text-[var(--widget-muted,#9a9a9a)]">
           {subtitle}
-        </p>
+        </div>
       ) : null}
     </>
   );

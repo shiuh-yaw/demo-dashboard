@@ -223,10 +223,15 @@ export async function mergeDepositFireblocksNetwork(
 }
 
 /**
- * Get a user by ID.
+ * Get a user by ID. Pass `envIdOverride` to read from a specific Dynamic
+ * environment (e.g. a demo app on its own env forwarding
+ * `x-dynamic-environment-id`); defaults to this process's environment.
  */
-export async function getUser(userId: string): Promise<DynamicUser | null> {
-  const envId = getEnvironmentId();
+export async function getUser(
+  userId: string,
+  envIdOverride?: string,
+): Promise<DynamicUser | null> {
+  const envId = envIdOverride?.trim() || getEnvironmentId();
   const res = await fetch(
     `${DYNAMIC_API_BASE}/environments/${envId}/users/${userId}`,
     { headers: getAdminHeaders() },
