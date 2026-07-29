@@ -15,7 +15,12 @@ import { BackButton } from "@/components/back-button";
 import { ExchangeCheckoutWidget } from "@/components/exchange-checkout-widget";
 import { ScenarioCard } from "@/components/scenario-card";
 import { useTestnetMode } from "@/components/testnet-toggle";
-import { USDC_BASE, USDC_ARB_SEPOLIA, USDC_SOLANA, chainFamilyForId } from "@/lib/tokens";
+import {
+  chainFamilyForId,
+  settlementTokenForChain,
+  USDC_ARB_SEPOLIA,
+  USDC_BASE,
+} from "@/lib/tokens";
 import { isTestnetSupportedToken } from "@/lib/testnet";
 import { createFlow, settlementFromToken, destination } from "@/lib/checkouts-api";
 import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
@@ -81,12 +86,8 @@ function WidgetStage({
 
   // URL override wins over the testnet toggle and the wallet-derived
   // chain. Absent an override, behavior is unchanged.
-  const fallbackToken = isTestnet
-    ? USDC_ARB_SEPOLIA
-    : walletChain === "SOL"
-      ? USDC_SOLANA
-      : USDC_BASE;
-  const settlementToken = destinationOverride?.token ?? fallbackToken;
+  const settlementToken =
+    destinationOverride?.token ?? settlementTokenForChain(walletChain, isTestnet);
   const destinationChainName =
     destinationOverride?.chainFamily ?? (isTestnet ? "EVM" : walletChain);
 

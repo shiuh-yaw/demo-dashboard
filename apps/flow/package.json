@@ -25,6 +25,7 @@
     "@dynamic-labs-sdk/droplet": "1.19.1",
     "@dynamic-labs-sdk/evm": "1.19.1",
     "@dynamic-labs-sdk/solana": "1.19.1",
+    "@dynamic-labs-sdk/tron": "1.19.1",
     "@dynamic-labs/iconic": "catalog:",
     "@solana/web3.js": "catalog:",
     "@t3-oss/env-nextjs": "0.13.8",

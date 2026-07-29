@@ -17,9 +17,10 @@ import {
   OptimismIcon,
   PolygonIcon,
   SolanaIcon,
+  TronIcon,
 } from "@dynamic-labs/iconic";
 
-import { DYNAMIC_SOLANA_NETWORK_ID } from "./chain";
+import { DYNAMIC_SOLANA_NETWORK_ID, DYNAMIC_TRON_NETWORK_ID } from "./chain";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -36,6 +37,7 @@ const CHAIN_ICONS: Record<number, IconComponent> = {
   10: OptimismIcon,
   56: BnbIcon,
   [DYNAMIC_SOLANA_NETWORK_ID]: SolanaIcon,
+  [DYNAMIC_TRON_NETWORK_ID]: TronIcon,
   // Testnets — same icon as the parent chain
   11155111: EthereumIcon, // Ethereum Sepolia
   84532: BaseChainIcon, // Base Sepolia

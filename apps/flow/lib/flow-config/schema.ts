@@ -45,6 +45,7 @@ export const FLOW_CHAINS = [
   "arbitrum",
   "optimism",
   "solana",
+  "tron",
 ] as const;
 
 export const FLOW_ASSETS = [
@@ -55,6 +56,7 @@ export const FLOW_ASSETS = [
   "ETH",
   "SOL",
   "BTC",
+  "TRX",
 ] as const;
 
 export const flowScenarioSchema = z.enum(FLOW_SCENARIOS);

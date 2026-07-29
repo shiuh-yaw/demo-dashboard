@@ -730,7 +730,8 @@ function DefaultChainConnectHeader({
   walletName?: string;
   onBack: () => void;
 }) {
-  const label = chain === "SOL" ? "Solana" : chain === "EVM" ? "EVM" : "";
+  const CHAIN_DISPLAY_NAMES: Record<string, string> = { SOL: "Solana", EVM: "EVM", TRON: "TRON" };
+  const label = CHAIN_DISPLAY_NAMES[chain] ?? "";
   const eyebrow = walletName
     ? `Select a network`
     : `Connect ${label} wallet`;
@@ -738,7 +739,17 @@ function DefaultChainConnectHeader({
     ? walletName
     : `Add ${label} tokens`;
   return (
-    <div className="flex items-start justify-between gap-3">
+    <div className="flex items-start gap-3">
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Back"
+        className="mt-1 inline-flex items-center justify-center rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] p-1.5 text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors cursor-pointer"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8.75 3.5L5.25 7L8.75 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
       <div className="flex flex-col gap-1">
         <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--brand-muted,#99a0ae)] font-medium">
           {eyebrow}
@@ -747,14 +758,6 @@ function DefaultChainConnectHeader({
           {title}
         </h3>
       </div>
-      <button
-        type="button"
-        onClick={onBack}
-        aria-label="Back"
-        className="inline-flex items-center gap-1.5 self-end rounded-full border border-[var(--brand-border,#e1e4ea)] bg-[var(--brand-surface,#ffffff)] px-2.5 py-1 text-[11px] font-medium text-[var(--brand-muted,#99a0ae)] hover:text-[var(--brand-fg,#0e121b)] hover:bg-[var(--brand-row-hover,#f4f5f7)] transition-colors cursor-pointer"
-      >
-        ← Back
-      </button>
     </div>
   );
 }

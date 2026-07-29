@@ -3,10 +3,12 @@ import {
   ETH_BASE,
   ETH_ETHEREUM,
   SOL_SOLANA,
+  TRX_TRON,
   USDC_BASE,
   USDC_ETHEREUM,
   USDC_POLYGON,
   USDC_SOLANA,
+  USDT_TRON,
 } from "@/lib/tokens";
 
 /**
@@ -24,7 +26,7 @@ import {
  * derive from the linked Token via the `row()` factory below.
  */
 
-type ChainFamily = "EVM" | "SOL";
+type ChainFamily = "EVM" | "SOL" | "TRON";
 
 /**
  * Pairs a canonical `Token` from the catalog with the picker-only
@@ -60,6 +62,8 @@ export const SETTLEMENT_OPTIONS = [
   row(ETH_ETHEREUM, "ethereum", "Ethereum", "EVM"),
   row(USDC_SOLANA, "solana", "Solana", "SOL"),
   row(SOL_SOLANA, "solana", "Solana", "SOL"),
+  row(USDT_TRON, "tron", "TRON", "TRON"),
+  row(TRX_TRON, "tron", "TRON", "TRON"),
 ];
 
 export type SettlementOption = (typeof SETTLEMENT_OPTIONS)[number];

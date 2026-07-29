@@ -54,7 +54,7 @@ Leaf screens (for partial composition):
 Helpers:
 
 - `formatRawTokenAmount`, `formatUsd`, `formatApproxUsd`, `parseUsd`, `formatTokenAmount`, `formatBalance`, `truncateAddress`, `formatErrorMessage`, `isUserRejection` — formatting + error helpers. (stable)
-- `isSolanaChainId`, `DYNAMIC_SOLANA_NETWORK_ID` — chain helpers. (stable)
+- `isSolanaChainId`, `isTronChainId`, `DYNAMIC_SOLANA_NETWORK_ID`, `DYNAMIC_TRON_NETWORK_ID` — chain helpers. (stable)
 - `findTokenBalance`, `getTotalBalanceValue`, `getNetworkBalances`, `normalizeBalanceResponse`, `transformToTokenAssets`, `transformKrakenToTokenAssets`, `isExchangeToken`, `logBalanceDebug` — balance shaping + Kraken adapter, canonical inside the workspace. (stable)
 - `generateTransactionSteps`, `updateTransactionSteps` — step builders re-exported from `TransactionProgressScreen`. (internal — used by `apps/checkouts/` Kraken path; will be removed once `apps/checkouts/` fully delegates or the Kraken path becomes its own package.)
 

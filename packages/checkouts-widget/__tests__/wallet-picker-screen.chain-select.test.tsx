@@ -43,6 +43,24 @@ vi.mock("@dynamic-labs-sdk/client", async () => {
         iconUrl: "https://example.com/metamask.png",
         metadata: { displayName: "MetaMask", icon: "https://example.com/metamask.png" },
       },
+      {
+        key: "tokenpocketevm",
+        name: "TokenPocket",
+        chain: "EVM",
+        groupKey: "tokenpocket",
+        walletProviderType: "browserExtension",
+        iconUrl: "https://example.com/tokenpocket.png",
+        metadata: { displayName: "TokenPocket", icon: "https://example.com/tokenpocket.png" },
+      },
+      {
+        key: "tokenpockettron",
+        name: "TokenPocket",
+        chain: "TRON",
+        groupKey: "tokenpocket",
+        walletProviderType: "browserExtension",
+        iconUrl: "https://example.com/tokenpocket.png",
+        metadata: { displayName: "TokenPocket", icon: "https://example.com/tokenpocket.png" },
+      },
     ]),
     getPrimaryWalletAccount: vi.fn(() => null),
     getWalletAccounts: vi.fn(() => []),
@@ -217,5 +235,64 @@ describe("WalletPickerScreen — chain selection for multi-chain wallets", () =>
     expect(
       screen.getByText(/Phantom supports multiple chains/i),
     ).toBeDefined();
+  });
+
+  it("shows TRON chain option for wallets with TRON provider (e.g. TokenPocket)", () => {
+    const tokenPocketGroup: WalletGroup = {
+      key: "tokenpocket",
+      displayName: "TokenPocket",
+      icon: "https://example.com/tokenpocket.png",
+      providers: [
+        { key: "tokenpocketevm", chain: "EVM", walletProviderType: "browserExtension" } as never,
+        { key: "tokenpockettron", chain: "TRON", walletProviderType: "browserExtension" } as never,
+      ],
+    };
+
+    render(
+      <WalletPickerScreen
+        onConnected={vi.fn()}
+        onChainSelectChange={vi.fn()}
+        selectedWalletForChain={tokenPocketGroup}
+      />,
+    );
+
+    expect(screen.getByText("EVM")).toBeDefined();
+    expect(screen.getByText("TRON")).toBeDefined();
+    expect(
+      screen.getByText(/TokenPocket supports multiple chains/i),
+    ).toBeDefined();
+  });
+
+  it("connects with TRON provider when TRON chain is selected", async () => {
+    const onConnected = vi.fn();
+    const tokenPocketGroup: WalletGroup = {
+      key: "tokenpocket",
+      displayName: "TokenPocket",
+      icon: "https://example.com/tokenpocket.png",
+      providers: [
+        { key: "tokenpocketevm", chain: "EVM", walletProviderType: "browserExtension" } as never,
+        { key: "tokenpockettron", chain: "TRON", walletProviderType: "browserExtension" } as never,
+      ],
+    };
+
+    connectAndVerifyWithWalletProviderMock.mockResolvedValue({
+      address: "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9",
+      chain: "TRON",
+    });
+
+    render(
+      <WalletPickerScreen
+        onConnected={onConnected}
+        onChainSelectChange={vi.fn()}
+        selectedWalletForChain={tokenPocketGroup}
+      />,
+    );
+
+    const tronBtn = screen.getByText("TRON");
+    fireEvent.click(tronBtn.closest("button")!);
+
+    expect(connectAndVerifyWithWalletProviderMock).toHaveBeenCalledWith({
+      walletProviderKey: "tokenpockettron",
+    });
   });
 });

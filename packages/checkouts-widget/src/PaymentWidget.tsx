@@ -42,7 +42,7 @@ import {
   formatUsdSafe,
   getTotalFeeUsd,
 } from "./lib/payment-display";
-import { isSolanaChainId } from "./lib/chain";
+import { isSolanaChainId, isTronChainId } from "./lib/chain";
 import {
   extractFailureMessage,
   isFailedTerminal,
@@ -380,7 +380,7 @@ export function PaymentWidget(props: PaymentWidgetProps): JSX.Element {
     // The previous `!isCrossChain` guard wrongly skipped the approval step
     // for cross-chain flows, causing a totalSteps mismatch when the SDK
     // emitted onStepChange("approval").
-    const needsApproval = needsConversion && !isSolanaChainId(fromToken.chainId);
+    const needsApproval = needsConversion && !isSolanaChainId(fromToken.chainId) && !isTronChainId(fromToken.chainId);
     const initialSteps = generateTransactionSteps(
       mode,
       needsApproval,

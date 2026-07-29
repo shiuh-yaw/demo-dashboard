@@ -27,6 +27,11 @@ import {
   settlementFromToken,
   destination as makeDestination,
 } from "@/lib/checkouts-api";
+import {
+  chainFamilyNetworkLabel,
+  chainFamilyAddressPlaceholder,
+  chainFamilyDisplayName,
+} from "@/lib/tokens";
 import { bindCreateFlow } from "@/lib/bind-create-flow";
 import type { WalletAccount } from "@/lib/dynamic/flow-sdk";
 import {
@@ -213,7 +218,7 @@ function ChainPicker({ onSelect }: { onSelect: (chainKey: string) => void }) {
                   {c.chainLabel}
                 </span>
                 <span className="text-[11px] text-(--brand-muted)">
-                  {c.chainFamily === "SOL" ? "Solana network" : "EVM network"}
+                  {chainFamilyNetworkLabel(c.chainFamily)}
                 </span>
               </span>
             </span>
@@ -293,8 +298,7 @@ function DestinationForm({
   const showAddressError = touched && !addressOk;
   const showAmountError = touched && !amountOk;
 
-  const addressPlaceholder =
-    settlement.chainFamily === "SOL" ? "Solana address" : "0x… (EVM address)";
+  const addressPlaceholder = chainFamilyAddressPlaceholder(settlement.chainFamily);
 
   const MAX_BUTTON_SAFETY_MULTIPLIER = 0.99;
   const canUseMax = !balanceLoading && usdcBalanceUsd > 0;
@@ -337,8 +341,7 @@ function DestinationForm({
           />
           {showAddressError && (
             <span className="text-[11px] text-red-600">
-              Enter a valid{" "}
-              {settlement.chainFamily === "SOL" ? "Solana" : "EVM"} address.
+              Enter a valid {chainFamilyDisplayName(settlement.chainFamily)} address.
             </span>
           )}
         </label>

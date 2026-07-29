@@ -87,15 +87,17 @@ export interface AssetSelectorScreenProps {
   className?: string;
 }
 
-type WalletChain = "EVM" | "SOL";
+type WalletChain = "EVM" | "SOL" | "TRON";
+
+const SUPPORTED_CHAINS = new Set<string>(["EVM", "SOL", "TRON"]);
 
 function getWalletChain(wallet: WalletAccount): WalletChain | null {
   // The SDK's WalletAccount.chain is typed as a specific literal per
-  // chain extension; the runtime value is always one of "EVM" | "SOL"
+  // chain extension; the runtime value is one of "EVM" | "SOL" | "TRON"
   // for the chains this picker supports. Widen to string for the
-  // comparison so the SOL branch isn't narrowed away at compile time.
+  // comparison so non-EVM branches aren't narrowed away at compile time.
   const chain = wallet.chain as string;
-  if (chain === "EVM" || chain === "SOL") return chain as WalletChain;
+  if (SUPPORTED_CHAINS.has(chain)) return chain as WalletChain;
   return null;
 }
 
@@ -131,11 +133,20 @@ const ROW_HEIGHT_PX = 62;
 const ROW_GAP_PX = 8;
 
 /**
+ * Chain families whose wallets commonly support multiple chains (e.g.
+ * MetaMask serves both EVM and SOL). For these, we attempt a secondary
+ * balance fetch across all other enabled networks. Isolated chain
+ * families like TRON are single-chain — secondary fetches would return
+ * stale/incorrect balances from previously connected wallets.
+ */
+const CROSS_CHAIN_FAMILIES = new Set<WalletChain>(["EVM", "SOL"]);
+
+/**
  * Fetch balances for a wallet account. Queries network IDs matching
  * the wallet's chain type first, then also attempts all other enabled
- * networks (multi-chain wallets like MetaMask may serve balances on
- * chains beyond their primary type). Failures on the secondary query
- * are silently ignored so a SOL wallet won't error on EVM networks.
+ * networks — but only for cross-chain wallet families (EVM/SOL).
+ * Failures on the secondary query are silently ignored so a SOL wallet
+ * won't error on EVM networks.
  */
 async function fetchWalletBalances(
   wallet: WalletAccount,
@@ -146,31 +157,44 @@ async function fetchWalletBalances(
 
   const primaryNetworkIds = getEnabledNetworkIds(chain);
   const allNetworkIds = getEnabledNetworkIds();
-  const secondaryNetworkIds = allNetworkIds.filter(
-    (id) => !primaryNetworkIds.includes(id),
-  );
+  const secondaryNetworkIds = CROSS_CHAIN_FAMILIES.has(chain)
+    ? allNetworkIds.filter((id) => !primaryNetworkIds.includes(id))
+    : [];
 
-  if (!primaryNetworkIds.length && !secondaryNetworkIds.length) return [];
-
-  const opts = (ids: number[]) => ({
+  const baseOpts = {
     walletAccount: wallet,
-    networkIds: ids.map(String),
     includeNative: true,
     includePrices: true,
     filterSpamTokens: true,
-  });
+  };
 
-  // Fetch primary chain balances (must succeed).
-  const primaryBalances = primaryNetworkIds.length
-    ? ((await getBalances(opts(primaryNetworkIds))) as unknown as FlatTokenBalance[])
-    : [];
+  // Fetch primary chain balances. When network IDs are known, scope the
+  // query; otherwise let the SDK resolve the active network from the
+  // wallet provider (handles chains like TRON whose network may not
+  // appear in getNetworksData() but are still queryable via the API).
+  let primaryBalances: FlatTokenBalance[] = [];
+  if (primaryNetworkIds.length) {
+    primaryBalances = (await getBalances({
+      ...baseOpts,
+      networkIds: primaryNetworkIds.map(String),
+    })) as unknown as FlatTokenBalance[];
+  } else {
+    // No explicit network IDs — fall back to SDK's active-network
+    // resolution so the balance API call is still made.
+    primaryBalances = (await getBalances(
+      baseOpts,
+    )) as unknown as FlatTokenBalance[];
+  }
 
   // Attempt secondary networks; silently ignore errors.
   let secondaryBalances: FlatTokenBalance[] = [];
   if (secondaryNetworkIds.length) {
     try {
       secondaryBalances =
-        (await getBalances(opts(secondaryNetworkIds))) as unknown as FlatTokenBalance[];
+        (await getBalances({
+          ...baseOpts,
+          networkIds: secondaryNetworkIds.map(String),
+        })) as unknown as FlatTokenBalance[];
     } catch {
       // Expected for wallets that don't support these networks.
     }

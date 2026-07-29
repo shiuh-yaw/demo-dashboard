@@ -8,6 +8,7 @@ import { addBaseAccountEvmExtension } from "@dynamic-labs-sdk/evm/base-account";
 import { addWalletConnectEvmExtension } from "@dynamic-labs-sdk/evm/wallet-connect";
 import { addSolanaExtension } from "@dynamic-labs-sdk/solana";
 import { addWalletConnectSolanaExtension } from "@dynamic-labs-sdk/solana/wallet-connect";
+import { addTronExtension } from "@dynamic-labs-sdk/tron";
 import { createDynamicClientSingleton } from "@dynamic-demos/dynamic/client-singleton";
 import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 
@@ -101,6 +102,7 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
   extend: (client) => {
     addEvmExtension(client);
     addSolanaExtension(client);
+    addTronExtension(client);
     // Coinbase Wallet + Coinbase Smart Wallet via `keys.coinbase.com`.
     // EIP-6963 / window-injected detection (handled by addEvmExtension
     // above) only surfaces Coinbase on desktop browsers where the

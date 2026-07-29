@@ -21,6 +21,9 @@ export const SOLANA_NATIVE_MINT = "So11111111111111111111111111111111111111112";
 /** Dynamic's network id for Solana — bare chain id, not CAIP-2. */
 export const DYNAMIC_SOLANA_NETWORK_ID = 101;
 
+/** Dynamic's network id for TRON mainnet. */
+export const DYNAMIC_TRON_NETWORK_ID = 728126428;
+
 /**
  * Dynamic's API-layer Solana mainnet chain id. The SDK normalizes
  * Solana to this large numeric form when round-tripping through
@@ -46,4 +49,8 @@ export function isSolanaChainId(chainId: number): boolean {
     chainId === DYNAMIC_SOLANA_NETWORK_ID ||
     chainId === DYNAMIC_SOLANA_API_CHAIN_ID
   );
+}
+
+export function isTronChainId(chainId: number): boolean {
+  return chainId === DYNAMIC_TRON_NETWORK_ID;
 }

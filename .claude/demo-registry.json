@@ -57,7 +57,8 @@
             "USDT",
             "ETH",
             "SOL",
-            "BTC"
+            "BTC",
+            "TRX"
           ],
           "rails": [
             "onchain"

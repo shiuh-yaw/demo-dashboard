@@ -21,7 +21,9 @@ import {
   USDC_BASE,
   USDC_SOLANA,
   USDC_ARB_SEPOLIA,
+  USDT_TRON,
   chainFamilyForId,
+  settlementTokenForChain,
 } from "@/lib/tokens";
 import { settlementFromToken, destination } from "@/lib/checkouts-api";
 import type { Token } from "@dynamic-demos/checkouts-widget";
@@ -30,13 +32,8 @@ import type { Token } from "@dynamic-demos/checkouts-widget";
 // Helpers that mirror the widget-demo resolution logic
 // ---------------------------------------------------------------------------
 
-function resolveSettlementToken(
-  isTestnet: boolean,
-  walletChain: string,
-): Token {
-  if (isTestnet) return USDC_ARB_SEPOLIA;
-  if (walletChain === "SOL") return USDC_SOLANA;
-  return USDC_BASE;
+function resolveSettlementToken(isTestnet: boolean, walletChain: string): Token {
+  return settlementTokenForChain(walletChain, isTestnet);
 }
 
 function resolveDestinationChainName(
@@ -66,7 +63,7 @@ describe("destination chain resolution from wallet chain", () => {
     expect(resolveDestinationChainName(true, "EVM")).toBe("EVM");
   });
 
-  it("any chain family string (e.g. TRON) passes through on mainnet", () => {
+  it("TRON wallet on mainnet resolves destinationChain to TRON", () => {
     expect(resolveDestinationChainName(false, "TRON")).toBe("TRON");
   });
 
@@ -77,6 +74,13 @@ describe("destination chain resolution from wallet chain", () => {
     expect(token.chainId).toBe(101);
     expect(token.symbol).toBe("USDC");
     expect(token.address).toBe(USDC_SOLANA.address);
+  });
+
+  it("TRON wallet on mainnet targets USDT on TRON (chainId 728126428)", () => {
+    const token = resolveSettlementToken(false, "TRON");
+    expect(token.chainId).toBe(728126428);
+    expect(token.symbol).toBe("USDT");
+    expect(token.address).toBe(USDT_TRON.address);
   });
 
   it("EVM wallet on mainnet targets USDC on Base (chainId 8453)", () => {
@@ -111,6 +115,10 @@ describe("chainFamilyForId", () => {
 
   it("Ethereum (1) → EVM", () => {
     expect(chainFamilyForId(1)).toBe("EVM");
+  });
+
+  it("TRON mainnet (728126428) → TRON", () => {
+    expect(chainFamilyForId(728126428)).toBe("TRON");
   });
 
   it("unknown chain ID defaults to EVM", () => {
@@ -151,6 +159,17 @@ describe("settlementFromToken", () => {
     expect(s.chainName).toBe("EVM");
     expect(s.chainId).toBe("421614");
   });
+
+  it("builds correct shape from USDT_TRON", () => {
+    const s = settlementFromToken(USDT_TRON, "TRON");
+    expect(s).toEqual({
+      chainName: "TRON",
+      chainId: "728126428",
+      symbol: "USDT",
+      tokenAddress: USDT_TRON.address,
+      tokenDecimals: 6,
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -176,10 +195,13 @@ describe("destination", () => {
     });
   });
 
-  it("works with any chain family string (e.g. TRON)", () => {
+  it("builds TRON destination", () => {
     const d = destination("TRON", "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9");
-    expect(d.chainName).toBe("TRON");
-    expect(d.type).toBe("address");
+    expect(d).toEqual({
+      chainName: "TRON",
+      type: "address",
+      identifier: "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9",
+    });
   });
 });
 
@@ -249,6 +271,33 @@ describe("full createFlow payload shape", () => {
     expect(token.chainId).toBe(421614);
     expect(chainFamilyForId(token.chainId)).toBe("EVM");
     expect(chainName).toBe("EVM");
+  });
+
+  it("TRON wallet on mainnet produces correct payload", () => {
+    const walletChain = "TRON";
+    const walletAddr = "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9";
+    const token = resolveSettlementToken(false, walletChain);
+    const chainName = resolveDestinationChainName(false, walletChain);
+
+    const payload = {
+      mode: "payment" as const,
+      amount: "10.00",
+      currency: "USD",
+      settlementConfig: {
+        settlements: [settlementFromToken(token, chainFamilyForId(token.chainId))],
+      },
+      destinationConfig: {
+        destinations: [destination(chainName, walletAddr)],
+      },
+    };
+
+    const s = payload.settlementConfig.settlements[0]!;
+    const d = payload.destinationConfig.destinations[0]!;
+    expect(s.chainName).toBe("TRON");
+    expect(s.chainId).toBe("728126428");
+    expect(s.symbol).toBe("USDT");
+    expect(d.chainName).toBe("TRON");
+    expect(d.identifier).toBe(walletAddr);
   });
 });
 

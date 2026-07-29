@@ -48,6 +48,14 @@ describe("generateTransactionSteps", () => {
     // SOL→USDC has a convert step (different symbols) but no approval
     expect(steps.map((s) => s.id)).toEqual(["authorize", "convert", "complete"]);
   });
+
+  it("TRON source (no approval): authorize + convert + complete", () => {
+    // TRON doesn't use ERC-20 style approvals — needsApproval must be false
+    // for TRON source tokens. This test documents the expected step shape
+    // when PaymentWidget passes needsApproval=false for a TRON→USDC flow.
+    const steps = generateTransactionSteps("deposit", false, "TRX", "USDT");
+    expect(steps.map((s) => s.id)).toEqual(["authorize", "convert", "complete"]);
+  });
 });
 
 // ---------------------------------------------------------------------------

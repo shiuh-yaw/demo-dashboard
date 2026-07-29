@@ -104,6 +104,26 @@ export const USDT_ETHEREUM: Token = {
   logoURI: "https://api.iconify.design/cryptocurrency/usdt.svg",
 };
 
+export const USDT_TRON: Token = {
+  // TRC-20 USDT — the dominant stablecoin on TRON.
+  address: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+  chainId: 728126428,
+  symbol: "USDT",
+  decimals: 6,
+  name: "Tether USD",
+  logoURI: "https://api.iconify.design/cryptocurrency/usdt.svg",
+};
+
+export const USDC_TRON: Token = {
+  // TRC-20 USDC on TRON mainnet.
+  address: "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8",
+  chainId: 728126428,
+  symbol: "USDC",
+  decimals: 6,
+  name: "USD Coin",
+  logoURI: "https://api.iconify.design/cryptocurrency/usdc.svg",
+};
+
 // =============================================================================
 // Native tokens
 // =============================================================================
@@ -138,6 +158,17 @@ export const SOL_SOLANA: Token = {
   logoURI: "https://api.iconify.design/cryptocurrency/sol.svg",
 };
 
+export const TRX_TRON: Token = {
+  // Native TRX uses the zero address as the native-token marker,
+  // matching the convention the Dynamic routing engine expects.
+  address: "0x0000000000000000000000000000000000000000",
+  chainId: 728126428,
+  symbol: "TRX",
+  decimals: 6,
+  name: "TRON",
+  logoURI: "https://cdn.jsdelivr.net/gh/nicehash/cryptocurrency-icons/svg/icon/trx.svg",
+};
+
 // =============================================================================
 // Lookup
 // =============================================================================
@@ -158,6 +189,9 @@ export const TOKEN_CATALOG = [
   USDC_SOLANA,
   SOL_SOLANA,
   USDT_ETHEREUM,
+  USDT_TRON,
+  USDC_TRON,
+  TRX_TRON,
 ] as const satisfies readonly Token[];
 
 /**
@@ -172,6 +206,7 @@ const CHAIN_KEY_TO_CHAIN_ID: Record<string, number> = {
   ethereum: 1,
   polygon: 137,
   solana: 101,
+  tron: 728126428,
 };
 
 /**
@@ -200,10 +235,62 @@ export function findTokenByAssetChain(
 const CHAIN_ID_TO_FAMILY: Record<number, string> = {
   // Solana
   101: "SOL",
-  // TRON — placeholder for when TRON settlement is enabled.
-  // 728126428: "TRON",
+  // TRON
+  728126428: "TRON",
 };
 
 export function chainFamilyForId(chainId: number): string {
   return CHAIN_ID_TO_FAMILY[chainId] ?? "EVM";
+}
+
+// =============================================================================
+// Chain-family display helpers
+// =============================================================================
+
+const MAINNET_SETTLEMENT: Record<string, Token> = {
+  SOL: USDC_SOLANA,
+  TRON: USDT_TRON,
+};
+
+/**
+ * Pick the settlement token for a connected wallet's chain family.
+ * Testnet always returns Arb Sepolia; mainnet maps SOL→USDC_SOLANA,
+ * TRON→USDT_TRON, everything else→USDC_BASE.
+ */
+export function settlementTokenForChain(
+  walletChain: string,
+  isTestnet: boolean,
+): Token {
+  if (isTestnet) return USDC_ARB_SEPOLIA;
+  return MAINNET_SETTLEMENT[walletChain] ?? USDC_BASE;
+}
+
+const NETWORK_LABELS: Record<string, string> = {
+  SOL: "Solana network",
+  TRON: "TRON network",
+};
+
+/** Human-readable network subtitle for the chain picker. */
+export function chainFamilyNetworkLabel(chainFamily: string): string {
+  return NETWORK_LABELS[chainFamily] ?? "EVM network";
+}
+
+const ADDRESS_PLACEHOLDERS: Record<string, string> = {
+  SOL: "Solana address",
+  TRON: "T… (TRON address)",
+};
+
+/** Placeholder text for a destination address input. */
+export function chainFamilyAddressPlaceholder(chainFamily: string): string {
+  return ADDRESS_PLACEHOLDERS[chainFamily] ?? "0x… (EVM address)";
+}
+
+const FAMILY_NAMES: Record<string, string> = {
+  SOL: "Solana",
+  TRON: "TRON",
+};
+
+/** Short human name for a chain family (for validation messages, etc.). */
+export function chainFamilyDisplayName(chainFamily: string): string {
+  return FAMILY_NAMES[chainFamily] ?? "EVM";
 }

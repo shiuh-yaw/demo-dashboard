@@ -41,7 +41,9 @@ export {
 
 export {
   isSolanaChainId,
+  isTronChainId,
   DYNAMIC_SOLANA_NETWORK_ID,
+  DYNAMIC_TRON_NETWORK_ID,
   ZERO_ADDRESS,
   SOLANA_NATIVE_MINT,
 } from "./lib/chain";

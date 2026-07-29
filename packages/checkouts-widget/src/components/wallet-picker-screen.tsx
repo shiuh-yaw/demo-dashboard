@@ -359,10 +359,12 @@ export default function WalletPickerScreen({
     const CHAIN_ICON_URLS: Record<string, string> = {
       EVM: "https://app.dynamic.xyz/assets/networks/eth.svg",
       SOL: "https://app.dynamic.xyz/assets/networks/solana.svg",
+      TRON: "https://app.dynamic.xyz/assets/networks/tron.svg",
     };
     const CHAIN_LABELS: Record<string, string> = {
       EVM: "EVM",
       SOL: "Solana",
+      TRON: "TRON",
     };
     return (
       <div className={cn("flex flex-col gap-4", className)}>
