@@ -56,6 +56,11 @@ export function corsHeadersForOrigin(
     Vary: "Origin",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    // The tracker drains on unload via navigator.sendBeacon, which always
+    // sends credentials: "include"; without this the cross-origin beacon
+    // (and its preflight) is rejected. Safe here: the origin is reflected
+    // verbatim (never "*"), and the ingest ignores cookies entirely.
+    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
   };
 }

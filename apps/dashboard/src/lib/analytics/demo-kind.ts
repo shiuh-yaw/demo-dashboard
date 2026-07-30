@@ -26,6 +26,7 @@ export const CONFIGURABLE_KIND_TO_DEMO_TYPE = {
   trade: "trade",
   flow: "flow",
   card: "card",
+  "visa-direct": "visa-direct",
 } as const satisfies Partial<Record<DemoConfigKind, DemoConfigKind>>;
 
 export type ConfigurableKind = keyof typeof CONFIGURABLE_KIND_TO_DEMO_TYPE;

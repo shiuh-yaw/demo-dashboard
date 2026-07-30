@@ -54,7 +54,7 @@ export function VisaDirectForm({
           <Input
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="My Visa Direct Config"
+            placeholder="My Liquidity Config"
           />
         </Field>
       </Section>
@@ -71,7 +71,7 @@ export function VisaDirectForm({
           <Input
             value={branding.bannerText ?? ""}
             onChange={(e) => updateBranding("bannerText", e.target.value)}
-            placeholder="Demo environment — Visa Direct × Fireblocks"
+            placeholder="Demo environment - Fireblocks Liquidity"
           />
         </Field>
       </Section>

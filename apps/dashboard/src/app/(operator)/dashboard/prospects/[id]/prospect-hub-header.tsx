@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CalendarClock } from "lucide-react";
-import { Button, StatusBadge } from "@/components/droplet-client";
+import { StatusBadge } from "@/components/droplet-client";
 import { ProspectIcon } from "@/components/shared/prospect-icon";
 import { displayHost } from "@/lib/display-host";
 import { ProspectHubTabs } from "./prospect-hub-tabs";
@@ -11,7 +10,6 @@ export interface ProspectHubHeaderProps {
   name: string;
   domain: string | null;
   status: "active" | "inactive";
-  schedulingUrl: string | null;
   /** The hub base path, e.g. `/dashboard/prospects/{id}` - passed through to the nav. */
   basePath: string;
 }
@@ -32,7 +30,6 @@ export function ProspectHubHeader({
   name,
   domain,
   status,
-  schedulingUrl,
   basePath,
 }: ProspectHubHeaderProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -131,14 +128,6 @@ export function ProspectHubHeader({
           {/* Full-width row below identity on mobile; right-aligned inline on sm+. */}
           <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
             <ProspectHubTabs basePath={basePath} />
-            {schedulingUrl && (
-              <Button asChild variant="secondary" size="sm">
-                <a href={schedulingUrl} target="_blank" rel="noreferrer">
-                  <CalendarClock className="mr-1.5 h-4 w-4" />
-                  Book a call
-                </a>
-              </Button>
-            )}
           </div>
         </div>
       </div>

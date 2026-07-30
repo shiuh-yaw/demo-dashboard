@@ -539,7 +539,7 @@ export interface VisaDirectConfig {
  */
 export const DEFAULT_VISA_DIRECT_CONFIG: VisaDirectConfig = {
   branding: {
-    bannerText: "Demo environment — Visa Direct × Fireblocks",
+    bannerText: "Demo environment - Fireblocks Liquidity",
   },
   theme: {
     primaryColor: "#4779FF",

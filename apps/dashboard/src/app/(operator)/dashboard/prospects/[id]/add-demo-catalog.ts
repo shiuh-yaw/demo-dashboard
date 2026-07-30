@@ -1,7 +1,7 @@
 /**
  * Pure catalog-row builder for the prospect hub's "Add Demo" picker. No React
  * import - stays unit-testable without a DOM. Lists prospect-bindable kinds
- * created in the dashboard (earn/wallet/remittance/trade/flow/card); kinds with
+ * created in the dashboard (earn/wallet/remittance/trade/flow/card/visa-direct); kinds with
  * their own external console (checkout) are excluded. A kind already built for
  * the prospect is "added" (no duplicate-create path), the rest "creatable".
  */
@@ -24,7 +24,8 @@ export type ProspectDemoType =
   | "remittance"
   | "trade"
   | "flow"
-  | "card";
+  | "card"
+  | "visa-direct";
 
 export interface AddDemoRow {
   kind: DemoConfigKind;

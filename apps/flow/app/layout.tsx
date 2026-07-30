@@ -107,10 +107,11 @@ export default async function RootLayout({
               {configId ? (
                 // Branded rule (wallet/earn/trade parity): the Dynamic
                 // site header hides and the shared brand bar takes its
-                // place - sticky with SiteHeader's geometry so the
-                // scenario pages' 104px widget offset holds.
+                // place. Non-sticky on flow - the scenario pages pin their
+                // widget column at lg:top-6 to match.
                 <ScenarioBrandRow
                   variant="bar"
+                  sticky={false}
                   logoHref="/"
                   logo={
                     config.branding?.logoUrl ? (
@@ -132,6 +133,7 @@ export default async function RootLayout({
                   chip="Flow"
                   logo={<FlowMark />}
                   logoHref="/"
+                  sticky={false}
                 />
               )}
               <div className="flex-1">{children}</div>

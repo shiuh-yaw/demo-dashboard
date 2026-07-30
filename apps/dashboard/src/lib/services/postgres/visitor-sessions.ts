@@ -118,47 +118,56 @@ export class PostgresVisitorSessionService implements VisitorSessionService {
     );
     const maxEventDate = maxEventTs > 0 ? new Date(maxEventTs) : new Date();
 
-    // Atomic create-first: try the insert directly rather than
-    // find-then-create/update. Two concurrent batches racing to create
-    // the same new sessionId used to both see `findUnique` return null,
-    // then both call `create` - the loser threw an unhandled P2002. Now
-    // the loser catches its own P2002 and falls through to the same
-    // forward-only update path an "already exists" batch takes.
-    let created: boolean;
-    try {
-      await this.client.visitorSession.create({
-        data: {
-          id: batch.sessionId,
-          shareLinkId: meta.shareLinkId,
-          demoSlug: batch.demoSlug,
-          anonId: batch.anonId,
-          lastSeenAt: maxEventDate,
-          device: meta.ua.device ?? null,
-          os: meta.ua.os ?? null,
-          browser: meta.ua.browser ?? null,
-          country: meta.geo.country ?? null,
-          region: meta.geo.region ?? null,
-          city: meta.geo.city ?? null,
-          ipHash: meta.ipHash,
-          isInternal: meta.isInternal,
-        },
-      });
-      created = true;
-    } catch (err) {
-      if (!isUniqueConstraintError(err)) throw err;
-      created = false;
+    // Find-first: only a genuinely new session INSERTs. The steady state
+    // is an existing session emitting a heartbeat every ~15s; a
+    // create-first strategy fires an INSERT for each one, and Postgres
+    // logs a duplicate-key (23505) error every time even though Prisma's
+    // P2002 is caught in-process - flooding the prod DB logs. Looking the
+    // row up first means existing sessions never attempt an INSERT.
+    // A concurrent batch that wins the create race for a new sessionId
+    // still surfaces P2002 on our create; we catch it and fall through to
+    // the same forward-only update path.
+    const existing = await this.client.visitorSession.findUnique({
+      where: { id: batch.sessionId },
+    });
+
+    let created = false;
+    if (!existing) {
+      try {
+        await this.client.visitorSession.create({
+          data: {
+            id: batch.sessionId,
+            shareLinkId: meta.shareLinkId,
+            demoSlug: batch.demoSlug,
+            anonId: batch.anonId,
+            lastSeenAt: maxEventDate,
+            device: meta.ua.device ?? null,
+            os: meta.ua.os ?? null,
+            browser: meta.ua.browser ?? null,
+            country: meta.geo.country ?? null,
+            region: meta.geo.region ?? null,
+            city: meta.geo.city ?? null,
+            ipHash: meta.ipHash,
+            isInternal: meta.isInternal,
+          },
+        });
+        created = true;
+      } catch (err) {
+        if (!isUniqueConstraintError(err)) throw err;
+        // Lost the create race - the winner's row now exists; fall through.
+      }
     }
 
     if (!created) {
-      const existing = await this.client.visitorSession.findUnique({
-        where: { id: batch.sessionId },
-      });
-      // Forward-only: never move lastSeenAt backward, e.g. an
-      // out-of-order retry replaying an older batch after a newer one.
-      // `existing` should always be present here (we either lost the
-      // create race above or this session already existed); fall back to
-      // maxEventDate defensively if not.
-      const existingLastSeenAt = existing?.lastSeenAt ?? new Date(0);
+      // Forward-only: never move lastSeenAt backward, e.g. an out-of-order
+      // retry replaying an older batch after a newer one. Re-read for the
+      // race-loser case where `existing` was null but the row exists now.
+      const current =
+        existing ??
+        (await this.client.visitorSession.findUnique({
+          where: { id: batch.sessionId },
+        }));
+      const existingLastSeenAt = current?.lastSeenAt ?? new Date(0);
       const nextLastSeenAt =
         maxEventDate.getTime() > existingLastSeenAt.getTime()
           ? maxEventDate

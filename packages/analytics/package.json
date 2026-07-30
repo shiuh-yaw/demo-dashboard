@@ -23,6 +23,7 @@
     "react-dom": { "optional": false }
   },
   "dependencies": {
+    "@dynamic-demos/utils": "workspace:*",
     "zod": "3.25.76"
   },
   "devDependencies": {

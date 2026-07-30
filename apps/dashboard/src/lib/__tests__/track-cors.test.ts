@@ -31,6 +31,9 @@ describe("corsHeadersForOrigin", () => {
       "https://wallet.dynamic.dev",
     );
     expect(headers!["Vary"]).toBe("Origin");
+    // sendBeacon drains with credentials: "include" - the cross-origin
+    // beacon needs this alongside the reflected (non-"*") origin.
+    expect(headers!["Access-Control-Allow-Credentials"]).toBe("true");
   });
 
   it("is case-insensitive against the allowlist", () => {

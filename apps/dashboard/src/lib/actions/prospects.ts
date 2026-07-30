@@ -69,6 +69,7 @@ import {
   DEFAULT_REMITTANCE_CONFIG,
   DEFAULT_TRADE_CONFIG,
   DEFAULT_FLOW_CONFIG,
+  DEFAULT_VISA_DIRECT_CONFIG,
 } from "@/lib/types/dashboard";
 import { DEFAULT_WIDGET_CONFIG } from "@/lib/widget-config";
 
@@ -93,6 +94,7 @@ async function createProspectDemoConfigs(
     trade?: boolean;
     flow?: boolean;
     card?: boolean;
+    "visa-direct"?: boolean;
   },
 ): Promise<ProspectDemoMap> {
   const demos: ProspectDemoMap = {};
@@ -106,6 +108,7 @@ async function createProspectDemoConfigs(
   const createTrade = createAll || options?.trade === true;
   const createFlow = createAll || options?.flow === true;
   const createCard = createAll || options?.card === true;
+  const createVisaDirect = createAll || options?.["visa-direct"] === true;
 
   // Create Earn config with prospect settings
   if (createEarn) {
@@ -379,6 +382,34 @@ async function createProspectDemoConfigs(
       config: cardConfigPayload as unknown as Record<string, unknown>,
     });
     demos.card = record.id;
+  }
+
+  // Create Liquidity (visa-direct) config with prospect branding. Only
+  // primaryColor + logo are prospect-driven; the read path hydrates the
+  // rest of the theme from the prospect (visaDirectMapper.toStored).
+  if (createVisaDirect) {
+    const visaDirectConfigPayload = {
+      ...DEFAULT_VISA_DIRECT_CONFIG,
+      branding: {
+        ...DEFAULT_VISA_DIRECT_CONFIG.branding,
+        logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
+      },
+      theme: {
+        ...DEFAULT_VISA_DIRECT_CONFIG.theme,
+        primaryColor: prospect.primaryColor,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "visa-direct",
+      ownerId,
+      name: `${prospectName} - Liquidity`,
+      description: `Auto-generated from prospect profile: ${prospectId}`,
+      prospectId,
+      isPrimary: true,
+      themeOverrides: null,
+      config: visaDirectConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos["visa-direct"] = record.id;
   }
 
   return demos;
@@ -1340,6 +1371,7 @@ export async function createMissingDemos(
     trade?: boolean;
     flow?: boolean;
     card?: boolean;
+    "visa-direct"?: boolean;
   },
 ): Promise<ActionResult<ProspectProfile>> {
   const user = await getSessionUser();
@@ -1366,6 +1398,8 @@ export async function createMissingDemos(
       trade: demoTypes.trade && !existingDemos.trade,
       flow: demoTypes.flow && !existingDemos.flow,
       card: demoTypes.card && !existingDemos.card,
+      "visa-direct":
+        demoTypes["visa-direct"] && !existingDemos["visa-direct"],
     };
 
     await createProspectDemoConfigs(

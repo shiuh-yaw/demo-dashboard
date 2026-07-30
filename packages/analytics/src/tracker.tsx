@@ -23,6 +23,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
+import { BookACallProvider } from "@dynamic-demos/utils/book-a-call";
 import { EventQueue, type EventQueueMeta } from "./queue";
 import {
   ensureAnonId,
@@ -32,6 +33,7 @@ import {
   syncInternalCookie,
   syncShareCookie,
 } from "./cookies";
+import { getShareContext } from "./context";
 import type { TrackEvent } from "./schema";
 
 const SESSION_STORAGE_KEY = "dd_session_id";
@@ -90,8 +92,32 @@ export function GtmTracker({ demoSlug, pixelSlot, children }: GtmTrackerProps) {
   const pathname = usePathname();
   const [contextValue, setContextValue] =
     useState<GtmTrackerContextValue | null>(null);
+  // Operator book-a-call URL from the share link. Undefined until resolved
+  // (and when there is no share link), which BookACallProvider falls back
+  // to the generic Dynamic link for - so the chrome CTAs are correct
+  // without any per-app wiring.
+  const [bookACallHref, setBookACallHref] = useState<string | undefined>(
+    undefined,
+  );
   const metaRef = useRef<EventQueueMeta | null>(null);
   const lastTrackedPathRef = useRef<string | null | undefined>(undefined);
+
+  // Resolve the share-scoped book-a-call CTA once on mount. Fail-silent;
+  // an unresolved value simply leaves the generic default in place.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const context = await getShareContext(getShareToken());
+        if (!cancelled && context.cta?.url) setBookACallHref(context.cta.url);
+      } catch {
+        // fail-silent
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Mount-once init: cookies, session id, queue construction, initial
   // pageview, heartbeat.
@@ -183,8 +209,10 @@ export function GtmTracker({ demoSlug, pixelSlot, children }: GtmTrackerProps) {
 
   return (
     <GtmTrackerContext.Provider value={contextValue}>
-      {children}
-      {pixelSlot}
+      <BookACallProvider href={bookACallHref}>
+        {children}
+        {pixelSlot}
+      </BookACallProvider>
     </GtmTrackerContext.Provider>
   );
 }

@@ -6,6 +6,7 @@
  */
 
 import { Heart } from "lucide-react";
+import { BookACallLink } from "./book-a-call";
 
 export interface SiteFooterProps {
   /**
@@ -109,14 +110,9 @@ export function SiteFooter({
         </div>
         {showCtas ? (
           <nav className="flex items-center gap-2 text-sm sm:gap-3">
-            <a
-              href="https://www.dynamic.xyz/book-a-call"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-7 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-xs font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] sm:h-8 dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30]"
-            >
+            <BookACallLink className="inline-flex h-7 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-xs font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] sm:h-8 dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30]">
               Book a call
-            </a>
+            </BookACallLink>
             {showSignupCta && (
               <a
                 href="https://app.dynamic.xyz/"

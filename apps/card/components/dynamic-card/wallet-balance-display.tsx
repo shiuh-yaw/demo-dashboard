@@ -39,6 +39,14 @@ export function AvailableToFundRow({ className }: AvailableToFundRowProps) {
     maybeTrackWalletFunded(Number(formatted), milestoneOnce);
   }, [formatted, milestoneOnce]);
 
+  // Group thousands for display only - `formatted` itself stays a bare
+  // numeric string (Number(formatted) above would NaN on a grouped value).
+  const numeric = formatted === undefined ? undefined : Number(formatted);
+  const displayBalance =
+    numeric === undefined || Number.isNaN(numeric)
+      ? (formatted ?? "0")
+      : numeric.toLocaleString("en-US", { maximumFractionDigits: 6 });
+
   return (
     <div
       className={cn(
@@ -72,7 +80,7 @@ export function AvailableToFundRow({ className }: AvailableToFundRowProps) {
           <Skeleton className="h-4 w-16" />
         ) : (
           <span className="text-sm font-medium text-(--brand-fg) tabular-nums">
-            {formatted ?? "0"} USDC
+            {displayBalance} USDC
           </span>
         )}
         <Tooltip content="Refresh balance">

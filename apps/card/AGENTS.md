@@ -139,10 +139,11 @@ that secret (`apps/dashboard/src/lib/rain/client.ts`).
 
 ## Required environment
 
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - per-app Dynamic env - optional.
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` - workspace default.
-- `NEXT_PUBLIC_APP_ENV` - `production` flips sandbox off (D-005).
-- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`) - optional. Unset → `<GtmTracker>`/`useTrack()`/`<BookACallCta>` are total no-ops; the app builds and runs unchanged.
+- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - per-app Dynamic env (or `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` as the workspace fallback). `resolveCredentials` throws at boot if neither is set.
+- `NEXT_PUBLIC_DASHBOARD_URL` - **required.** Dashboard origin; the browser reads Rain through `{this}/api/rain/*` and the app's `/api/card/apply` forwarder posts to `{DASHBOARD_URL ?? NEXT_PUBLIC_DASHBOARD_URL}/api/rain/apply`. (`DASHBOARD_URL` is an optional server-only override for the forwarder.)
+- `NEXT_PUBLIC_APP_ENV` - `production` flips sandbox off (D-005); unset = sandbox.
+- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`) - optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
+- **No `DYNAMIC_API_KEY`.** Card issuance goes through the dashboard's `/api/rain/*` (which holds `RAIN_API_KEY`) and storage is client-side Dynamic metadata (no admin token) - the browser Dynamic client needs only the environment id.
 
 ## Analytics taxonomy
 

@@ -54,24 +54,42 @@ interface TrackEventRow {
 export function createFakeVisitorSessionPrisma(): VisitorSessionPrismaClient & {
   __sessions: Map<string, VisitorSessionRow>;
   __events: Map<string, TrackEventRow>;
+  /**
+   * Simulate a concurrent batch winning the create race: the next
+   * `create` first inserts `row` (the race winner) and then throws P2002,
+   * so the service's find-first path (findUnique returned null, create
+   * then loses) hits its P2002 fallback.
+   */
+  __raceOnNextCreate: (row: VisitorSessionRow) => void;
 } {
   const sessions = new Map<string, VisitorSessionRow>();
   const events = new Map<string, TrackEventRow>();
   const now = () => new Date();
+  let pendingRace: VisitorSessionRow | null = null;
 
   return {
     __sessions: sessions,
     __events: events,
+    __raceOnNextCreate(row) {
+      pendingRace = row;
+    },
     visitorSession: {
       async findUnique({ where }) {
         const row = sessions.get(where.id);
         return row ? { ...row } : null;
       },
       async create({ data }) {
+        // A pending race means a concurrent writer inserted the row after
+        // our findUnique returned null; mirror that then fail with P2002.
+        if (pendingRace) {
+          const raced = pendingRace;
+          pendingRace = null;
+          sessions.set(raced.id, raced);
+          throw new FakePrismaUniqueViolation("VisitorSession_pkey");
+        }
         // Enforce the `VisitorSession` primary key uniqueness, mirroring
-        // Postgres - the service always attempts `create` first (see
-        // `upsertFromBatch`), relying on this to signal an existing row
-        // via P2002 rather than a pre-flight `findUnique`.
+        // Postgres - the service only reaches `create` for a session its
+        // pre-flight `findUnique` did not find.
         if (sessions.has(data.id)) {
           throw new FakePrismaUniqueViolation("VisitorSession_pkey");
         }

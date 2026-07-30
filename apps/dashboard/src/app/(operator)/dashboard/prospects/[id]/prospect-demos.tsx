@@ -79,7 +79,7 @@ const DEMO_CONFIGS: DemoConfig[] = [
   { type: "wallet", label: "Wallet", icon: Wallet, configRoute: "/wallets" },
   { type: "remittance", label: "Remittance", icon: Send, configRoute: "/remittance" },
   { type: "trade", label: "Trade", icon: TrendingUp, configRoute: "/trade" },
-  { type: "visa-direct", label: "Visa Direct", icon: CreditCard, configRoute: "/visa-direct" },
+  { type: "visa-direct", label: "Liquidity", icon: CreditCard, configRoute: "/visa-direct" },
   { type: "flow", label: "Flow", icon: Workflow, configRoute: "" },
   { type: "card", label: "Card", icon: CreditCard, configRoute: "" },
 ];

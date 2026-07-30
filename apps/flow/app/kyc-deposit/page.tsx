@@ -36,9 +36,9 @@ export default async function KycDepositPage({
       <main className="mx-auto max-w-6xl px-6 pt-8 pb-20">
         <KycDepositHero />
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Sticky offset clears the layout's h-20 sticky bar
-              (SiteHeader unbranded, the brand bar under ?theme=). */}
-          <div className="lg:col-span-5 lg:sticky lg:top-[104px] self-start">
+          {/* Widget column pins near the top on scroll (flow header is
+              non-sticky, so no h-20 offset is needed). */}
+          <div className="lg:col-span-5 lg:sticky lg:top-6 self-start">
             <KycDepositWidgetDemo destinationOverride={destinationOverride} />
             <TransactionDisclaimer />
           </div>

@@ -120,6 +120,12 @@ export {
 export { SiteHeader, type SiteHeaderProps } from "./site-header";
 export { SiteFooter, type SiteFooterProps } from "./site-footer";
 export { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
+export {
+  BookACallProvider,
+  BookACallLink,
+  useBookACallHref,
+  DEFAULT_BOOK_A_CALL_HREF,
+} from "./book-a-call";
 
 // Code panel — integration stepper with tabs and code frames
 export {

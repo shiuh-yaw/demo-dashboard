@@ -11,6 +11,7 @@
 
 import { useState, type ReactNode } from "react";
 import { cn } from "@dynamic-demos/utils";
+import { useBookACallHref } from "./book-a-call";
 
 /**
  * Book a call CTA - the branded hero's right-side action (the default
@@ -19,7 +20,7 @@ import { cn } from "@dynamic-demos/utils";
 export function BookACallButton() {
   return (
     <a
-      href="https://www.dynamic.xyz/book-a-call"
+      href={useBookACallHref()}
       target="_blank"
       rel="noreferrer"
       className="shrink-0 whitespace-nowrap rounded-(--brand-radius) bg-(--brand-primary) px-4 py-2.5 text-sm font-semibold text-(--brand-primary-fg) transition-opacity hover:opacity-90"
@@ -47,11 +48,14 @@ export function ScenarioBrandRow({
   logo,
   variant = "hero",
   logoHref,
+  sticky = true,
 }: {
   logo?: ReactNode;
   variant?: "hero" | "bar";
   /** Wraps the logo in a link (e.g. flow's bar links home to "/"). */
   logoHref?: string;
+  /** `bar` only: pin to top on scroll. Default true; flow opts out. */
+  sticky?: boolean;
 }) {
   const logoSlot =
     logo && logoHref ? (
@@ -70,7 +74,9 @@ export function ScenarioBrandRow({
 
   if (variant === "bar") {
     return (
-      <header className="sticky top-0 z-40 border-b border-(--brand-border) bg-(--brand-page-bg)/90 backdrop-blur">
+      <header
+        className={`${sticky ? "sticky top-0 z-40 " : ""}border-b border-(--brand-border) bg-(--brand-page-bg)/90 backdrop-blur`}
+      >
         <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           {row}
         </div>

@@ -19,9 +19,9 @@ describe("isConfigurableKind", () => {
     expect(isConfigurableKind("checkout")).toBe(true);
     expect(isConfigurableKind("trade")).toBe(true);
     expect(isConfigurableKind("flow")).toBe(true);
+    expect(isConfigurableKind("visa-direct")).toBe(true);
   });
   it("rejects kinds without one", () => {
-    expect(isConfigurableKind("visa-direct")).toBe(false);
     expect(isConfigurableKind("bogus")).toBe(false);
   });
 });

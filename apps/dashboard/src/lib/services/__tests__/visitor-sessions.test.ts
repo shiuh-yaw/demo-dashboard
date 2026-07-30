@@ -182,14 +182,12 @@ describe("PostgresVisitorSessionService", () => {
   });
 
   it("reports created: false and forward-only-updates lastSeenAt when a concurrent batch wins the create race for a new sessionId", async () => {
-    // Simulate a concurrent batch for the same new sessionId that already
-    // inserted the VisitorSession row between our (removed) pre-check and
-    // our own `create` call - the fake's `create` enforces the primary
-    // key uniqueness the same way Postgres does, so our attempt throws
-    // P2002 and the service must fall back to the forward-only update
-    // path instead of throwing.
+    // find-first: our findUnique returns null, but a concurrent batch
+    // inserts the row before our own `create`, which then throws P2002.
+    // The service must fall back to the forward-only update path instead
+    // of throwing.
     const client = createFakeVisitorSessionPrisma();
-    client.__sessions.set("11111111-1111-1111-1111-111111111111", {
+    client.__raceOnNextCreate({
       id: "11111111-1111-1111-1111-111111111111",
       shareLinkId: "sl_1",
       demoSlug: "wallet",

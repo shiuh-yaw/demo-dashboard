@@ -21,6 +21,7 @@ import {
 } from "react";
 import { ChevronDown, PhoneCall } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
+import { useBookACallHref } from "./book-a-call";
 
 const HeaderMenuContext = createContext<{ close: () => void } | null>(null);
 
@@ -211,7 +212,7 @@ export function HeaderMenuRow({
 export function BookACallMenuRow() {
   return (
     <HeaderMenuRow
-      href="https://www.dynamic.xyz/book-a-call"
+      href={useBookACallHref()}
       target="_blank"
       variant="accent"
       icon={<PhoneCall className="w-4 h-4" />}

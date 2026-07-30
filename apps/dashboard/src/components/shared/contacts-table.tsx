@@ -29,7 +29,6 @@ import {
 import type { ContactView, VisitorSessionView } from "@/lib/services";
 import { THIN_SCROLLBAR } from "@/components/shared/thin-scrollbar";
 import {
-  companyLabel,
   formatDateTime,
   formatDuration,
   formatShortDate,
@@ -128,7 +127,7 @@ export function ContactsTable<C extends ContactView>({
             const rowSessions = sessionsByKey[c.key];
             const isLoading = loadingKeys.has(c.key);
             const regionId = `contact-sessions-${c.key}`;
-            const label = c.email ?? companyLabel(c);
+            const label = c.email ?? "Unknown User";
 
             return (
               <Fragment key={c.key}>
@@ -152,13 +151,8 @@ export function ContactsTable<C extends ContactView>({
                       />
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground">
-                          {companyLabel(c)}
+                          {c.email ?? "Unknown User"}
                         </p>
-                        {c.email && (
-                          <p className="truncate text-xs text-muted-foreground">
-                            {c.email}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </TableCell>

@@ -1738,6 +1738,9 @@ importers:
 
   packages/analytics:
     dependencies:
+      '@dynamic-demos/utils':
+        specifier: workspace:*
+        version: link:../utils
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -2258,6 +2261,12 @@ importers:
       '@dynamic-demos/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.5
+      react:
+        specifier: 19.1.6
+        version: 19.1.6
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

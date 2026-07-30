@@ -53,7 +53,11 @@ export function LoginPage({ returnToOverride }: LoginPageProps = {}) {
     window.location.href = path;
   }, [returnTo]);
 
-  if (!isClientReady) {
+  // Spinner while the SDK boots AND while an authenticated session is
+  // redirecting: rendering the auth screen during the logged-in window (as
+  // window.location.href navigation resolves) is what flashed it repeatedly
+  // on each Dynamic auth event.
+  if (!isClientReady || isLoggedIn) {
     return (
       <WidgetCard>
         <div className="flex items-center justify-center min-h-64">

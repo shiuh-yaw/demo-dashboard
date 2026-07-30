@@ -9,7 +9,6 @@
 
 import { notFound } from "next/navigation";
 import { getProspectProfile, getCachedProspect } from "@/lib/actions/prospects";
-import { getSessionUser } from "@/lib/auth/gtm";
 import { SetBreadcrumb } from "@/components/breadcrumbs";
 import { ProspectHubHeader } from "./prospect-hub-header";
 
@@ -32,10 +31,7 @@ export default async function ProspectHubLayout({
   // Cached read (same underlying row `getProspectProfile` above already
   // fetched this request) - a raw `services.prospects.get(id)` call here
   // would bypass that cache and re-query for status/domain alone.
-  const [prospect, user] = await Promise.all([
-    getCachedProspect(id),
-    getSessionUser(),
-  ]);
+  const prospect = await getCachedProspect(id);
 
   const status = prospect?.status === "ARCHIVED" ? "inactive" : "active";
   const domain = prospect?.domain ?? result.data.companyUrl ?? null;
@@ -55,7 +51,6 @@ export default async function ProspectHubLayout({
         name={result.data.name}
         domain={domain}
         status={status}
-        schedulingUrl={user?.schedulingUrl ?? null}
         basePath={`/dashboard/prospects/${id}`}
       />
       <div className="mt-8">{children}</div>

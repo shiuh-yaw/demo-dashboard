@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { DynamicLogo } from "./dynamic-logo";
 import { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
+import { BookACallLink } from "./book-a-call";
 
 export interface SiteHeaderProps {
   /**
@@ -65,6 +66,12 @@ export interface SiteHeaderProps {
    * homeHref (the catalog).
    */
   logoHref?: string;
+  /**
+   * Whether the bar pins to the top on scroll. Default true (all marketing
+   * and demo surfaces). flow opts out (sticky={false}) so its top chrome
+   * scrolls away with the page.
+   */
+  sticky?: boolean;
 }
 
 export function SiteHeader({
@@ -76,6 +83,7 @@ export function SiteHeader({
   trailing,
   logo,
   logoHref,
+  sticky = true,
 }: SiteHeaderProps) {
   // On the catalog the "Demos" pill IS the current location; on demo
   // pages it becomes the ancestor crumb with the demo name as the pill.
@@ -121,7 +129,7 @@ export function SiteHeader({
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#E7E9EE] bg-[#F4F5F7]/90 backdrop-blur dark:border-[#2C2C30] dark:bg-[#0A0A0A]/90">
+    <header className={`${sticky ? "sticky top-0 z-40 " : ""}border-b border-[#E7E9EE] bg-[#F4F5F7]/90 backdrop-blur dark:border-[#2C2C30] dark:bg-[#0A0A0A]/90`}>
       <div
         className={`mx-auto flex h-20 items-center justify-between gap-4 px-4 sm:px-6 ${
           fullWidth ? "" : "max-w-6xl"
@@ -166,14 +174,9 @@ export function SiteHeader({
           <div className="flex items-center gap-2 sm:gap-3">{trailing}</div>
         ) : (
         <nav className="flex items-center gap-2 text-sm sm:gap-3">
-          <a
-            href="https://www.dynamic.xyz/book-a-call"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden h-10 items-center whitespace-nowrap rounded-md bg-white px-3 font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30] sm:inline-flex"
-          >
+          <BookACallLink className="hidden h-10 items-center whitespace-nowrap rounded-md bg-white px-3 font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30] sm:inline-flex">
             Book a call
-          </a>
+          </BookACallLink>
           <a
             href="https://app.dynamic.xyz/"
             target="_blank"
