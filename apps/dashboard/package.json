@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 4000",
-    "build": "if [ \"$VERCEL_ENV\" = \"production\" ] || [ \"$VERCEL_ENV\" = \"preview\" ]; then pnpm --filter @dynamic-demos/db prisma:migrate:deploy; fi && next build",
+    "build": "bash ./scripts/db-build.sh",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

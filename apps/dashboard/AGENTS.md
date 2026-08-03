@@ -108,7 +108,7 @@ Dashboard uses its own internal styling — it is the operator UI, not a custome
 - **Custom domain:** TBD (preview URL stable for operators today).
 - **Owner:** demos team.
 - **Dev port:** 4000 (`pnpm dev:dashboard`).
-- **Migrations on deploy:** `prisma migrate deploy` runs in `build` when `VERCEL_ENV=production`; preview + local builds skip. Requires `DIRECT_URL` in the Vercel Production env.
+- **Migrations on deploy:** the `build` script is `scripts/db-build.sh` - it runs `prisma migrate deploy` on `VERCEL_ENV=production` and `preview` (requires `DIRECT_URL`), then `next build`. On `preview` it also (a) maps the Supabase branch's `POSTGRES_PRISMA_URL`/`POSTGRES_URL_NON_POOLING` onto `DATABASE_URL`/`DIRECT_URL` when those are unset, so migrations target the per-PR branch DB, and (b) runs `prisma:seed` (synthetic, idempotent, best-effort) to populate the empty branch. Production is never seeded. Local builds (`VERCEL_ENV` unset) skip both.
 
 ## Integration map
 

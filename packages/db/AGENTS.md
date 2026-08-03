@@ -107,6 +107,13 @@ Redis. If a demo app needs data, add an endpoint under
 
 - `DATABASE_URL` - Supabase pooler URL, port 6543, runtime - required
 - `DIRECT_URL` - Supabase direct URL, port 5432, migrations only - required
+- On a Vercel preview branch, `client.ts` falls back to `POSTGRES_PRISMA_URL`
+  (injected by the Supabase branch integration) when `DATABASE_URL` is unset,
+  so runtime targets the per-PR branch DB. Prod/local always set `DATABASE_URL`
+  and never hit the fallback.
+- `prisma/seed.ts` (`pnpm prisma:seed`) seeds synthetic, idempotent fixtures.
+  It refuses to run unless `VERCEL_ENV=preview` or `ALLOW_SEED=true` - a guard
+  because `.env.local` points at prod. Never seeds production.
 
 D-013: the pooler URL is mandatory at runtime to avoid exhausting
 serverless connections; the direct URL is mandatory for migrations because
