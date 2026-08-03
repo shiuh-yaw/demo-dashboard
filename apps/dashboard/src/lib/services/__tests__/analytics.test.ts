@@ -16,10 +16,15 @@ function matches(row: AnalyticsSessionRow, where: AnalyticsSessionWhere): boolea
   if (where.isInternal !== undefined && row.isInternal !== where.isInternal) {
     return false;
   }
+  if (where.demoSlug !== undefined && row.demoSlug !== where.demoSlug) {
+    return false;
+  }
   if (where.startedAt?.gte !== undefined) {
     if (row.startedAt.getTime() < where.startedAt.gte.getTime()) return false;
   }
-  if (where.shareLinkId?.not === null) {
+  if (where.shareLinkId === null) {
+    if (row.shareLink != null) return false;
+  } else if (where.shareLinkId?.not === null) {
     if (row.shareLink == null) return false;
   }
   const sl = where.shareLink;
@@ -1376,5 +1381,185 @@ describe("PostgresAnalyticsService.overviewEngagement", () => {
       viewers: 0,
       activeThisWeek: 0,
     });
+  });
+});
+
+describe("PostgresAnalyticsService.catalogFunnel", () => {
+  // Catalog sessions carry demoSlug="catalog" and no shareLink (shareLink:
+  // null - never a prospect's demo). "demo_launch" step events carry
+  // props.demo naming the launched demo's slug.
+  function fixture() {
+    return new PostgresAnalyticsService(
+      fakePrisma([
+        // Viewed the catalog only, never launched anything.
+        session({
+          id: "s1",
+          anonId: "a1",
+          prospectId: "unused",
+          demoConfigId: "unused",
+          demoSlug: "catalog",
+          shareLink: null,
+        }),
+        // a2 launches "earn", then comes back and launches "wallet" too -
+        // 2 sessions, 1 unique visitor.
+        session({
+          id: "s2",
+          anonId: "a2",
+          prospectId: "unused",
+          demoConfigId: "unused",
+          demoSlug: "catalog",
+          shareLink: null,
+          events: [
+            {
+              type: "step",
+              name: "demo_launch",
+              props: { demo: "earn" },
+              ts: new Date("2026-07-20T10:00:00Z"),
+            },
+          ],
+        }),
+        session({
+          id: "s3",
+          anonId: "a2",
+          prospectId: "unused",
+          demoConfigId: "unused",
+          demoSlug: "catalog",
+          shareLink: null,
+          events: [
+            {
+              type: "step",
+              name: "demo_launch",
+              props: { demo: "wallet" },
+              ts: new Date("2026-07-21T10:00:00Z"),
+            },
+          ],
+        }),
+        // a4 also launches "earn" - earn now leads wallet 2-to-1.
+        session({
+          id: "s4",
+          anonId: "a4",
+          prospectId: "unused",
+          demoConfigId: "unused",
+          demoSlug: "catalog",
+          shareLink: null,
+          events: [
+            {
+              type: "step",
+              name: "demo_launch",
+              props: { demo: "earn" },
+              ts: new Date("2026-07-22T10:00:00Z"),
+            },
+            // Guarded: a non-string demo must never be counted or crash.
+            {
+              type: "step",
+              name: "demo_launch",
+              props: { demo: 123 },
+              ts: new Date("2026-07-22T10:01:00Z"),
+            },
+          ],
+        }),
+        // Internal catalog self-view - excluded from every count, even
+        // though it carries a demo_launch event.
+        session({
+          id: "s5",
+          anonId: "a9",
+          prospectId: "unused",
+          demoConfigId: "unused",
+          demoSlug: "catalog",
+          shareLink: null,
+          isInternal: true,
+          events: [
+            {
+              type: "step",
+              name: "demo_launch",
+              props: { demo: "earn" },
+              ts: new Date("2026-07-22T10:00:00Z"),
+            },
+          ],
+        }),
+        // A different demo's own slug, no share link - not a catalog session.
+        session({
+          id: "s6",
+          anonId: "a5",
+          prospectId: "unused",
+          demoConfigId: "unused",
+          demoSlug: "earn",
+          shareLink: null,
+        }),
+        // A real prospect (share-link) session on the "catalog" demo slug -
+        // must never be attributed to the catalog funnel; it keeps the
+        // existing shareLinkId-not-null join for prospect reads.
+        session({
+          id: "s7",
+          anonId: "a6",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          demoSlug: "catalog",
+        }),
+      ]),
+    );
+  }
+
+  it("counts only demoSlug=catalog + shareLinkId=null + non-internal sessions as visits", async () => {
+    const funnel = await fixture().catalogFunnel();
+    // s1,s2,s3,s4 = 4 visits. s5 internal, s6 wrong slug, s7 share-linked
+    // (prospect) - all excluded.
+    expect(funnel.visits).toBe(4);
+  });
+
+  it("de-dupes uniqueVisitors by anonId", async () => {
+    const funnel = await fixture().catalogFunnel();
+    // a1, a2 (s2+s3), a4 -> 3 unique visitors.
+    expect(funnel.uniqueVisitors).toBe(3);
+  });
+
+  it("groups demo_launch events by props.demo, sorted by launches desc, with launchRate", async () => {
+    const funnel = await fixture().catalogFunnel();
+    expect(funnel.byDemo).toEqual([
+      { slug: "earn", launches: 2, launchRate: 2 / 3 },
+      { slug: "wallet", launches: 1, launchRate: 1 / 3 },
+    ]);
+  });
+
+  it("guards non-string props.demo values - never counted, never throws", async () => {
+    const funnel = await fixture().catalogFunnel();
+    const total = funnel.byDemo.reduce((sum, d) => sum + d.launches, 0);
+    // 2 earn + 1 wallet = 3; the numeric-demo event on s4 never counts.
+    expect(total).toBe(3);
+  });
+
+  it("excludes an internal catalog session's launches entirely", async () => {
+    const funnel = await fixture().catalogFunnel();
+    const earn = funnel.byDemo.find((d) => d.slug === "earn")!;
+    // Would be 3 if s5's internal launch counted - must stay 2.
+    expect(earn.launches).toBe(2);
+  });
+
+  it("excludes a share-link (prospect) session from catalog counts entirely", async () => {
+    const funnel = await fixture().catalogFunnel();
+    // s7 is a prospect session on demoSlug "catalog" - if it leaked in,
+    // visits/uniqueVisitors would include a6.
+    expect(funnel.visits).toBe(4);
+    expect(funnel.uniqueVisitors).toBe(3);
+  });
+
+  it("returns zeros with no divide-by-zero when there are no catalog sessions", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        session({ id: "s1", anonId: "a1", prospectId: "p1", demoConfigId: "d1" }),
+      ]),
+    );
+    const funnel = await svc.catalogFunnel();
+    expect(funnel).toEqual({ visits: 0, uniqueVisitors: 0, byDemo: [] });
+  });
+
+  it("does not disturb the existing prospect-scoped reads on the same dataset", async () => {
+    const svc = fixture();
+    // s7's prospect (p1/d1) still resolves normally through the untouched
+    // shareLinkId-not-null join - catalogFunnel must not have altered it.
+    const summary = await svc.demoSummary("d1");
+    expect(summary.sessions).toBe(1);
+    const funnel = await svc.catalogFunnel();
+    expect(funnel.visits).toBe(4);
   });
 });

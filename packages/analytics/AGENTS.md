@@ -13,7 +13,7 @@ Client tracker demo apps mount to report sessions, pageviews, steps, and milesto
 ## Capabilities
 
 - `<GtmTracker demoSlug>` - mount-once provider: cookie/session bootstrap, initial + route-change pageviews, 15s visibility heartbeat, batching queue.
-- `useTrack()` - `milestone(name, props?)` / `step(name)` for a demo's own funnel taxonomy.
+- `useTrack()` - `milestone(name, props?)` / `step(name, props?)` for a demo's own funnel taxonomy.
 - `<BookACallCta />` - floating CTA rendered only when the share context resolves one.
 - Shared Zod wire schema (`trackEventSchema`, `trackBatchSchema`) - the single source of truth also imported by the dashboard ingest route (Phase 06).
 - Fail-silent transport: batched POST with `keepalive`, `sendBeacon` drain on tab hide, retry-once-then-drop on failure.
@@ -21,7 +21,7 @@ Client tracker demo apps mount to report sessions, pageviews, steps, and milesto
 ## Public surface
 
 - `GtmTracker` - provider component; mount once per app layout, wrapping the app tree. (stable)
-- `useTrack` - hook returning `{ milestone, step }`; no-op outside a `<GtmTracker>` ancestor. (stable)
+- `useTrack` - hook returning `{ milestone, step }`, both `(name, props?)`; no-op outside a `<GtmTracker>` ancestor. (stable)
 - `BookACallCta` - floating CTA component; renders nothing without a resolved `cta`. (stable)
 - `trackEventSchema`, `trackBatchSchema` - Zod schemas, the wire contract. (stable)
 - `TrackBatch` - inferred type of `trackBatchSchema`. (stable)
@@ -52,7 +52,7 @@ Client tracker demo apps mount to report sessions, pageviews, steps, and milesto
 ## Integration map
 
 **Imports:** none beyond `zod`, `react`, `next/navigation` (peer).
-**Imported by:** `apps/wallet` (Phase 09 pilot - `<GtmTracker demoSlug="wallet">` + `<BookACallCta />` in `app/layout.tsx`, taxonomy in `apps/wallet/AGENTS.md`); `apps/card` (`<GtmTracker demoSlug="card">`, taxonomy in `apps/card/AGENTS.md`); both apps also use `resolveUserIdentity` / `resolveUserEmail` for their `authenticated` milestone; dashboard's ingest route imports `trackEventSchema` / `trackBatchSchema` (Phase 06).
+**Imported by:** `apps/wallet` (Phase 09 pilot - `<GtmTracker demoSlug="wallet">` + `<BookACallCta />` in `app/layout.tsx`, taxonomy in `apps/wallet/AGENTS.md`); `apps/card` (`<GtmTracker demoSlug="card">`, taxonomy in `apps/card/AGENTS.md`); both apps also use `resolveUserIdentity` / `resolveUserEmail` for their `authenticated` milestone; `apps/dashboard`'s public catalog landing (`<GtmTracker demoSlug="catalog">` in `(public)/layout.tsx`, `useTrack().step("demo_launch", { demo })` in `(public)/_components/tracked-launch-link.tsx` - feeds `services.analytics.catalogFunnel()`); dashboard's ingest route imports `trackEventSchema` / `trackBatchSchema` (Phase 06).
 
 ## Examples
 

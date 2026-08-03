@@ -1,4 +1,5 @@
 import { Figtree } from "next/font/google";
+import { GtmTracker } from "@dynamic-demos/analytics";
 
 import { SiteHeader } from "./_components/site-header";
 import { SiteFooter } from "./_components/site-footer";
@@ -20,13 +21,15 @@ interface PublicLayoutProps {
  */
 export default function PublicLayout({ children }: PublicLayoutProps) {
   return (
-    <div
-      className={`${figtree.className} flex min-h-screen flex-col bg-[#F4F5F7] text-slate-900`}
-    >
-      <ForceLightTheme />
-      <SiteHeader homeHref="/" />
-      <main className="flex-1">{children}</main>
-      <SiteFooter />
-    </div>
+    <GtmTracker demoSlug="catalog">
+      <div
+        className={`${figtree.className} flex min-h-screen flex-col bg-[#F4F5F7] text-slate-900`}
+      >
+        <ForceLightTheme />
+        <SiteHeader homeHref="/" />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+      </div>
+    </GtmTracker>
   );
 }

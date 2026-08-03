@@ -1234,6 +1234,26 @@ export interface OrgDemoKindBreakdownRow {
   viewers: number;
 }
 
+/**
+ * Read model for the demo-catalog landing funnel: visits to the catalog
+ * itself, its unique visitors, and which demos those visitors go on to
+ * launch. Entirely separate from prospect/share-link analytics - catalog
+ * sessions carry no share link.
+ */
+export interface CatalogFunnel {
+  /** Non-internal catalog sessions. */
+  visits: number;
+  /** Distinct anonId across those sessions. */
+  uniqueVisitors: number;
+  /** One row per launched demo, sorted by launches desc. */
+  byDemo: Array<{
+    slug: string;
+    launches: number;
+    /** launches / uniqueVisitors; 0 when uniqueVisitors is 0. */
+    launchRate: number;
+  }>;
+}
+
 export interface AnalyticsService {
   /** Aggregate for one demo config (caller pre-authorizes the id). */
   demoSummary(demoConfigId: string): Promise<DemoSummary>;
@@ -1414,6 +1434,13 @@ export interface AnalyticsService {
     range?: AnalyticsTimeRange,
     now?: Date,
   ): Promise<OrgDemoKindBreakdownRow[]>;
+  /**
+   * Demo-catalog landing funnel: visits + unique visitors to the catalog
+   * itself, plus which demos those visitors go on to launch. Entirely
+   * separate from prospect/share-link analytics - never touches the
+   * `shareLinkId not null` join the rest of this interface reads through.
+   */
+  catalogFunnel(): Promise<CatalogFunnel>;
 }
 
 // =============================================================================

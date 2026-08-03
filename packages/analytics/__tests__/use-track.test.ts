@@ -87,6 +87,19 @@ describe("useTrack props cap (capProps, 2048 char serialized limit)", () => {
     expect(event.props).toEqual({ plan: "pro" });
   });
 
+  it("step() also enqueues props - e.g. a catalog demo_launch event", () => {
+    const enqueueMock = mockContext();
+
+    const { result } = renderHook(() => useTrack());
+    result.current.step("demo_launch", { demo: "wallet" });
+
+    expect(enqueueMock).toHaveBeenCalledTimes(1);
+    const event = enqueueMock.mock.calls[0]![0];
+    expect(event.type).toBe("step");
+    expect(event.name).toBe("demo_launch");
+    expect(event.props).toEqual({ demo: "wallet" });
+  });
+
   it("drops non-serializable props (circular reference) silently, still emits the event", () => {
     const enqueueMock = mockContext();
     const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});

@@ -22,6 +22,7 @@ import {
   type AnalyticsReadScope,
   type AnalyticsService,
   type AnalyticsTimeRange,
+  type CatalogFunnel,
   type ContactCompany,
   type ContactView,
   type DemoConfigKind,
@@ -77,8 +78,10 @@ export interface AnalyticsSessionRow {
 /** Relation-aware filter; mirrors the Prisma `VisitorSession` where subset. */
 export interface AnalyticsSessionWhere {
   isInternal?: boolean;
+  demoSlug?: string;
   startedAt?: { gte?: Date };
-  shareLinkId?: { not: null };
+  /** `{ not: null }` for the prospect join; `null` for catalog's no-share-link read. */
+  shareLinkId?: { not: null } | null;
   shareLink?: {
     prospectId?: string | { in: string[] };
     demoConfigId?: string | { in: string[] };
@@ -221,6 +224,21 @@ function hasMilestone(row: AnalyticsSessionRow, name: string): boolean {
 
 const COMPLETED_MILESTONE = "completed";
 
+/** `VisitorSession.demoSlug` value for the catalog front door itself. */
+const CATALOG_SLUG = "catalog";
+
+/** Event name a catalog session emits when the visitor launches a demo. */
+const DEMO_LAUNCH_EVENT = "demo_launch";
+
+/** Catalog's own where clause: non-internal, no share link, demoSlug=catalog.
+ * Never joins `shareLink` - isolated from every prospect/share-link read in
+ * this file, which all key off `shareLinkId not null` instead. */
+const CATALOG_WHERE: AnalyticsSessionWhere = {
+  demoSlug: CATALOG_SLUG,
+  shareLinkId: null,
+  isInternal: false,
+};
+
 /**
  * Engagement funnel from REAL signals only: Viewed (session exists) ->
  * Interacted (a step or any milestone) -> Authenticated (the `authenticated`
@@ -249,6 +267,34 @@ function buildFunnel(rows: AnalyticsSessionRow[]): FunnelStage[] {
     stages.push({ key: "completed", label: "Completed", count: completed });
   }
   return stages;
+}
+
+/**
+ * Groups a catalog session's `demo_launch` events by the demo slug they
+ * launched, sorted by launches desc. `props.demo` is opaque Json - guarded
+ * to a string, anything else (missing, number, object) is silently dropped
+ * rather than counted or thrown on.
+ */
+function buildCatalogByDemo(
+  rows: AnalyticsSessionRow[],
+  uniqueVisitors: number,
+): CatalogFunnel["byDemo"] {
+  const launches = new Map<string, number>();
+  for (const row of rows) {
+    for (const ev of row.events) {
+      if (ev.name !== DEMO_LAUNCH_EVENT) continue;
+      const demo = ev.props?.demo;
+      if (typeof demo !== "string") continue;
+      launches.set(demo, (launches.get(demo) ?? 0) + 1);
+    }
+  }
+  return Array.from(launches.entries())
+    .map(([slug, count]) => ({
+      slug,
+      launches: count,
+      launchRate: uniqueVisitors ? count / uniqueVisitors : 0,
+    }))
+    .sort((a, b) => b.launches - a.launches);
 }
 
 /**
@@ -774,5 +820,24 @@ export class PostgresAnalyticsService implements AnalyticsService {
     return Array.from(acc.entries())
       .map(([kind, b]) => ({ kind, sessions: b.sessions, viewers: b.viewers.size }))
       .sort((a, b) => a.kind.localeCompare(b.kind));
+  }
+
+  /**
+   * Demo-catalog landing funnel. Reuses `VisitorSession` + `TrackEvent` -
+   * no schema change: a catalog visit is `demoSlug="catalog"` with no share
+   * link (`shareLinkId=null`), and a launch is that session's
+   * `demo_launch` event carrying `props.demo`. Isolated from every
+   * prospect/share-link read above: this is the only method in the class
+   * that queries `shareLinkId: null` instead of `{ not: null }`, so it can
+   * never contend with or alter those reads.
+   */
+  async catalogFunnel(): Promise<CatalogFunnel> {
+    const rows = await this.client.visitorSession.findMany({
+      where: CATALOG_WHERE,
+      include: INCLUDE,
+    });
+    const visits = rows.length;
+    const uniqueVisitors = new Set(rows.map((r) => r.anonId)).size;
+    return { visits, uniqueVisitors, byDemo: buildCatalogByDemo(rows, uniqueVisitors) };
   }
 }

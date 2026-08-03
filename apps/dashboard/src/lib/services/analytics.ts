@@ -8,6 +8,7 @@ import type {
   AnalyticsReadScope,
   AnalyticsService,
   AnalyticsTimeRange,
+  CatalogFunnel,
   ContactView,
   DemoConfigKind,
   DemoKindTimeseriesPoint,
@@ -151,5 +152,9 @@ export class StubAnalyticsService implements AnalyticsService {
     _now?: Date,
   ): Promise<OrgDemoKindBreakdownRow[]> {
     return [];
+  }
+
+  async catalogFunnel(): Promise<CatalogFunnel> {
+    return { visits: 0, uniqueVisitors: 0, byDemo: [] };
   }
 }

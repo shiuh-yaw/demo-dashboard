@@ -7,7 +7,11 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "node",
-    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+    include: [
+      "src/**/*.test.ts",
+      "src/**/*.test.tsx",
+      "scripts/**/*.test.ts",
+    ],
     // The create-demo-app skill tests live outside the dashboard tree and
     // are run via a dedicated config file
     // (.claude/skills/create-demo-app/__tests__/vitest.skill.config.ts) so

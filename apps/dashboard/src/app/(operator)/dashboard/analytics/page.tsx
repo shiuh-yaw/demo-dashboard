@@ -14,6 +14,7 @@ import {
   AnalyticsDashboard,
   DEFAULT_ORG_RANGE,
 } from "./analytics-dashboard";
+import { CatalogFunnel } from "./catalog-funnel";
 import { resolveOrgAnalyticsScope } from "./org-scope";
 
 export const dynamic = "force-dynamic";
@@ -25,10 +26,11 @@ export default async function AnalyticsPage() {
 
   // The all-time funnel doubles as the "any data at all" gate: no base-stage
   // views in scope means nothing to show yet.
-  const [funnelStages, initialTimeseries, initialBreakdown] = await Promise.all([
+  const [funnelStages, initialTimeseries, initialBreakdown, catalog] = await Promise.all([
     services.analytics.orgFunnel(scope),
     services.analytics.orgTimeseries(scope, DEFAULT_ORG_RANGE),
     services.analytics.orgDemoKindBreakdown(kindByConfigId, scope, DEFAULT_ORG_RANGE),
+    services.analytics.catalogFunnel(),
   ]);
   const hasAnyData = (funnelStages[0]?.count ?? 0) > 0;
   const kinds = availableKinds(kindByConfigId);
@@ -51,6 +53,14 @@ export default async function AnalyticsPage() {
       ) : (
         <AnalyticsEmpty />
       )}
+
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">Catalog</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Visits to the demo catalog and which demos those visitors launch.
+        </p>
+      </div>
+      <CatalogFunnel data={catalog} />
     </div>
   );
 }

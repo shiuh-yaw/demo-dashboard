@@ -17,7 +17,7 @@ import type { TrackEvent } from "./schema";
 
 export interface UseTrackResult {
   milestone: (name: string, props?: Record<string, unknown>) => void;
-  step: (name: string) => void;
+  step: (name: string, props?: Record<string, unknown>) => void;
 }
 
 function capProps(
@@ -77,8 +77,8 @@ export function useTrack(): UseTrackResult {
   );
 
   const step = useCallback(
-    (name: string) => {
-      emit("step", name);
+    (name: string, props?: Record<string, unknown>) => {
+      emit("step", name, props);
     },
     [emit],
   );
