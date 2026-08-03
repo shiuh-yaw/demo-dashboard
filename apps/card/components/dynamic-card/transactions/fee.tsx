@@ -28,9 +28,13 @@ export function FeeTransaction({ transaction }: FeeTransactionProps) {
           </p>
         </div>
       </div>
-      <span className="text-sm font-medium text-(--brand-error) tabular-nums">
-        -{formatCurrency(fee.amount / 100)}
-      </span>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-sm font-medium text-(--brand-error) tabular-nums">
+          -{formatCurrency(fee.amount / 100)}
+        </span>
+        {/* Empty slot mirrors the link icon column so amounts align. */}
+        <span className="w-4 shrink-0" aria-hidden />
+      </div>
     </div>
   );
 }

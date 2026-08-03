@@ -33,14 +33,17 @@ export function DepositTransaction({ transaction }: DepositTransactionProps) {
           </p>
         </div>
       </div>
-      <span className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <span className="text-sm font-medium text-(--brand-success) tabular-nums">
           +{formatCurrency(collateral.amount / 100)}
         </span>
-        {txUrl && (
-          <ExternalLink className="w-3.5 h-3.5 text-(--brand-muted) opacity-0 transition-opacity group-hover:opacity-100" />
-        )}
-      </span>
+        {/* Fixed slot so amounts align whether or not a row links out. */}
+        <span className="flex w-4 shrink-0 items-center justify-center">
+          {txUrl && (
+            <ExternalLink className="w-3.5 h-3.5 text-(--brand-muted) opacity-0 transition-opacity group-hover:opacity-100" />
+          )}
+        </span>
+      </div>
     </>
   );
 
