@@ -7,6 +7,7 @@
 
 import { Heart } from "lucide-react";
 import { BookACallLink } from "./book-a-call";
+import { DEMOS_CATALOG_URL } from "./catalog-url";
 
 export interface SiteFooterProps {
   /**
@@ -51,7 +52,7 @@ const LINKS = [
 ];
 
 export function SiteFooter({
-  signInHref = "https://dynamic.dev/dashboard",
+  signInHref = `${DEMOS_CATALOG_URL}/dashboard`,
   fullWidth = false,
   showCtas = false,
   showSignupCta = true,

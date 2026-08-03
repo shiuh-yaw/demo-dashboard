@@ -126,6 +126,7 @@ export {
   useBookACallHref,
   DEFAULT_BOOK_A_CALL_HREF,
 } from "./book-a-call";
+export { DEMOS_CATALOG_URL } from "./catalog-url";
 
 // Code panel — integration stepper with tabs and code frames
 export {

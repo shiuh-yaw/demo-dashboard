@@ -2,8 +2,9 @@
  * CORS for the public tracker-facing endpoints (`/api/share/context`, and
  * Phase GTM-06's `/api/events`). Distinct from the wildcard `src/lib/cors.ts`
  * used by operator-facing provider endpoints - these reflect only an allowed
- * origin, never `*`: https `dynamic.dev`/subdomains are built in, external
- * origins come from `TRACK_CORS_ORIGINS`. Non-allowed origins get no CORS
+ * origin, never `*`: https `dynamic.dev` + `dynamic.xyz` (and their
+ * subdomains) are built in, external origins come from `TRACK_CORS_ORIGINS`.
+ * Non-allowed origins get no CORS
  * headers at all (leaks nothing about the allowlist to a rejected caller).
  */
 
@@ -24,7 +25,11 @@ export function parseTrackCorsOrigins(raw: string | undefined): string[] {
  * `Vary: Origin`), or `null` when the origin is missing or not allowlisted -
  * callers should send the response without any CORS headers in that case.
  */
-/** Native demos are always allowed: https + hostname dynamic.dev or a true subdomain. */
+/**
+ * Native demos are always allowed: https on dynamic.dev (individual demos'
+ * subdomains) or dynamic.xyz (the demo.dynamic.xyz catalog + other Dynamic
+ * subdomains) - apex or any true subdomain of either.
+ */
 export function isBuiltinTrackOrigin(origin: string): boolean {
   let url: URL;
   try {
@@ -34,7 +39,12 @@ export function isBuiltinTrackOrigin(origin: string): boolean {
   }
   if (url.protocol !== "https:") return false;
   const host = url.hostname.toLowerCase();
-  return host === "dynamic.dev" || host.endsWith(".dynamic.dev");
+  return (
+    host === "dynamic.dev" ||
+    host.endsWith(".dynamic.dev") ||
+    host === "dynamic.xyz" ||
+    host.endsWith(".dynamic.xyz")
+  );
 }
 
 /** Single origin policy for all tracker endpoints: builtin or env-allowlisted. */

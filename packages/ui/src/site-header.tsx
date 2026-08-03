@@ -18,11 +18,13 @@ import { ChevronDown } from "lucide-react";
 import { DynamicLogo } from "./dynamic-logo";
 import { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
 import { BookACallLink } from "./book-a-call";
+import { DEMOS_CATALOG_URL } from "./catalog-url";
 
 export interface SiteHeaderProps {
   /**
-   * Where the logo + "Demos" crumb link. Default "/" (the catalog
-   * itself); demo apps pass the catalog URL, e.g. "https://dynamic.dev".
+   * Where the logo + "Demos" crumb link. Defaults to the shared
+   * DEMOS_CATALOG_URL so demo apps don't hardcode it; the dashboard (which
+   * IS the catalog) passes a same-site "/".
    */
   homeHref?: string;
   /**
@@ -75,7 +77,7 @@ export interface SiteHeaderProps {
 }
 
 export function SiteHeader({
-  homeHref = "/",
+  homeHref = DEMOS_CATALOG_URL,
   chip = "Demos",
   demos = DEMO_DIRECTORY,
   fullWidth = false,

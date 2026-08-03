@@ -20,7 +20,7 @@ const dmSans = DM_Sans({
 });
 
 /** Canonical public domain of the demos landing — used as `metadataBase`. */
-const SITE_URL = "https://dynamic.dev";
+const SITE_URL = "https://demo.dynamic.xyz";
 
 const SITE_TITLE = "Dynamic Demos";
 const SITE_DESCRIPTION =

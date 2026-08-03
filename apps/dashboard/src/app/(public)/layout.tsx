@@ -24,7 +24,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       className={`${figtree.className} flex min-h-screen flex-col bg-[#F4F5F7] text-slate-900`}
     >
       <ForceLightTheme />
-      <SiteHeader />
+      <SiteHeader homeHref="/" />
       <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>

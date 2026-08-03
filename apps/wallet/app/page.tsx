@@ -98,7 +98,7 @@ export default async function Home() {
       <ScenarioLayout
       header={
         isBranded ? undefined : (
-          <SiteHeader homeHref="https://dynamic.dev" chip="Wallet" />
+          <SiteHeader chip="Wallet" />
         )
       }
       hero={

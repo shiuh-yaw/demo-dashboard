@@ -57,7 +57,6 @@ export default async function DashboardLayout({
         <div className="min-h-screen bg-earn-light flex flex-col">
           {hasSiteChrome ? (
             <SiteHeader
-              homeHref="https://dynamic.dev"
               chip="Earn"
               fullWidth
               trailing={<UserMenu user={user} />}

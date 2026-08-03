@@ -72,7 +72,6 @@ export function DashboardHeader() {
       <SiteHeader
         chip="Fireblocks MTLco"
         fullWidth
-        homeHref="https://dynamic.dev"
         center={navTabs}
         trailing={signOut}
         logo={branding.logoUrl ? <AppLogo size={32} logoUrl={branding.logoUrl} /> : undefined}

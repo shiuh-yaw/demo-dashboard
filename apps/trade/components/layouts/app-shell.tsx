@@ -52,7 +52,6 @@ export function AppShell({ children }: AppShellProps) {
         // bar visible without relying on SiteHeader's sticky.
         <div className="relative z-20 shrink-0">
           <SiteHeader
-            homeHref="https://dynamic.dev"
             chip="Trade"
             fullWidth
             trailing={controls}

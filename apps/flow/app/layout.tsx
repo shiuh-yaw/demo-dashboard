@@ -129,7 +129,6 @@ export default async function RootLayout({
                 />
               ) : (
                 <SiteHeader
-                  homeHref="https://dynamic.dev"
                   chip="Flow"
                   logo={<FlowMark />}
                   logoHref="/"

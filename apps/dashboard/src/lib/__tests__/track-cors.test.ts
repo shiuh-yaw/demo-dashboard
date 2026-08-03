@@ -63,16 +63,21 @@ describe("corsHeadersForOrigin", () => {
 });
 
 describe("isBuiltinTrackOrigin", () => {
-  it("allows the apex and true subdomains over https", () => {
+  it("allows the apex and true subdomains over https (dynamic.dev + dynamic.xyz)", () => {
     expect(isBuiltinTrackOrigin("https://dynamic.dev")).toBe(true);
     expect(isBuiltinTrackOrigin("https://wallet.dynamic.dev")).toBe(true);
     expect(isBuiltinTrackOrigin("https://a.b.dynamic.dev")).toBe(true);
+    expect(isBuiltinTrackOrigin("https://dynamic.xyz")).toBe(true);
+    expect(isBuiltinTrackOrigin("https://demo.dynamic.xyz")).toBe(true);
+    expect(isBuiltinTrackOrigin("https://app.dynamic.xyz")).toBe(true);
   });
 
   it("rejects lookalike hosts on a non-boundary match", () => {
     expect(isBuiltinTrackOrigin("https://evildynamic.dev")).toBe(false);
     expect(isBuiltinTrackOrigin("https://dynamic.dev.evil.com")).toBe(false);
     expect(isBuiltinTrackOrigin("https://wallet.dynamic.devx")).toBe(false);
+    expect(isBuiltinTrackOrigin("https://dynamic.xyz.evil.com")).toBe(false);
+    expect(isBuiltinTrackOrigin("https://notdynamic.xyz")).toBe(false);
   });
 
   it("rejects non-https and garbage origins", () => {

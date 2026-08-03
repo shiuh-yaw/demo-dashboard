@@ -112,7 +112,6 @@ export default async function RootLayout({
               header={
                 isBranded ? undefined : (
                   <SiteHeader
-                    homeHref="https://dynamic.dev"
                     chip="Stablecoin Card"
                   />
                 )

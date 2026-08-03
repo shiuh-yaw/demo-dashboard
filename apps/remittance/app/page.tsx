@@ -77,7 +77,7 @@ export default async function HomePage({
         <ScenarioLayout
           header={
             isBranded ? undefined : (
-              <SiteHeader homeHref="https://dynamic.dev" chip="Remittance" />
+              <SiteHeader chip="Remittance" />
             )
           }
           hero={

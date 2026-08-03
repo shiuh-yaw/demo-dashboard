@@ -74,7 +74,6 @@ export function AppChrome({
       header={
         hasSiteChrome ? (
           <SiteHeader
-            homeHref="https://dynamic.dev"
             chip="Remittance"
             fullWidth
             center={<CenterNav items={navItems} />}

@@ -78,12 +78,7 @@ export function DemoCard({ demo }: { demo: LandingDemo }) {
         <div className="mt-1 flex items-center gap-2">
           {demo.url !== undefined ? (
             <Button asChild className="flex-1">
-              <a
-                href={clearThemeUrl(demo.url)}
-                target="_blank"
-                rel="noreferrer"
-                className="group/cta"
-              >
+              <a href={clearThemeUrl(demo.url)} className="group/cta">
                 Launch demo
                 <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
               </a>
