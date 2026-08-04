@@ -69,17 +69,17 @@ model ProspectTheme {
 
 /// A company we sell to. Owns identity + theme; demo configs reference it.
 model Prospect {
-  id                 String         @id @default(cuid())
+  id                 String              @id @default(cuid())
   ownerId            String
   /// Nullable, no default: a prospect belongs to no team until explicitly assigned.
   teamId             String?
   createdById        String?
-  status             ProspectStatus @default(ACTIVE)
+  status             ProspectStatus      @default(ACTIVE)
   name               String
   description        String?
   companyUrl         String?
   /// "custom" | "dynamic" - decides whether `logoUrl` renders. Validated at the service layer.
-  logo               String         @default("dynamic")
+  logo               String              @default("dynamic")
   logoUrl            String?
   /// Palette copied to ProspectTheme in GTM-03.5A; still canonical until the 03.5B cutover.
   borderRadius       String?
@@ -98,12 +98,13 @@ model Prospect {
   gradientTo         String?
   domain             String?
   notes              String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   demoConfigs        DemoConfig[]
-  team               Team?          @relation(fields: [teamId], references: [id], onDelete: Restrict)
-  createdBy          User?          @relation("ProspectCreatedBy", fields: [createdById], references: [id])
+  team               Team?               @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  createdBy          User?               @relation("ProspectCreatedBy", fields: [createdById], references: [id])
   theme              ProspectTheme?
+  contactAppearances ContactAppearance[]
 
   @@index([ownerId])
   @@index([teamId])
@@ -279,4 +280,31 @@ model TrackEvent {
   session   VisitorSession @relation(fields: [sessionId], references: [id])
 
   @@index([sessionId, ts])
+}
+
+model Contact {
+  id            String              @id @default(cuid())
+  email         String              @unique
+  firstSeenAt   DateTime            @default(now())
+  dynamicUserId String?
+  notifiedAt    DateTime?
+  lastSeenAt    DateTime            @default(now())
+  sightingCount Int                 @default(0)
+  appearances   ContactAppearance[]
+
+  @@index([firstSeenAt])
+}
+
+model ContactAppearance {
+  id          String    @id @default(cuid())
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  demoSlug    String
+  prospectId  String?
+  prospect    Prospect? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
+  firstSeenAt DateTime  @default(now())
+
+  @@unique([contactId, demoSlug, prospectId])
+  @@index([prospectId])
+  @@index([demoSlug])
 }

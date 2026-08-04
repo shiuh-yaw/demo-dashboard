@@ -8,3 +8,4 @@
  * fetch via the dashboard HTTP API.
  */
 export { PostgresProspectService } from "./prospects";
+export { PostgresContactService } from "./contacts";

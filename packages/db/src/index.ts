@@ -15,3 +15,7 @@
  */
 export { prisma } from "./client";
 export { Prisma, PrismaClient } from "@prisma/client";
+// Model types consumers type against directly (rather than re-deriving via
+// `Prisma.XGetPayload`) - added as each service needs one. Keep this list
+// narrow; most services define their own mapped interface instead.
+export type { Contact, ContactAppearance } from "@prisma/client";

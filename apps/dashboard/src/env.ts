@@ -263,6 +263,17 @@ export const env = createEnv({
      * no origin - the endpoints still respond, just without CORS headers.
      */
     TRACK_CORS_ORIGINS: z.string().optional().default(""),
+    /**
+     * Slack bot token (`xoxb-...`) used to post first-seen leads to #leads.
+     * Optional - the notifier no-ops when unset (local/preview safe), never
+     * throws. Never log this value.
+     */
+    SLACK_BOT_TOKEN: z.string().optional(),
+    /**
+     * Slack channel id the leads notifier posts to. Optional alongside
+     * SLACK_BOT_TOKEN - both must be set for the notifier to send.
+     */
+    SLACK_LEADS_CHANNEL: z.string().optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -335,6 +346,8 @@ export const env = createEnv({
     GTM_ALLOWED_DOMAINS: process.env.GTM_ALLOWED_DOMAINS,
     IP_HASH_SALT: process.env.IP_HASH_SALT,
     TRACK_CORS_ORIGINS: process.env.TRACK_CORS_ORIGINS,
+    SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
+    SLACK_LEADS_CHANNEL: process.env.SLACK_LEADS_CHANNEL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_DEMO_URL_OVERRIDES:

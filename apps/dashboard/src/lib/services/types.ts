@@ -6,7 +6,7 @@
  */
 
 import type { TransactionState } from "@dynamic-demos/transactions";
-import type { Prisma } from "@dynamic-demos/db";
+import type { Prisma, Contact, ContactAppearance } from "@dynamic-demos/db";
 
 import type {
   Transaction,
@@ -1493,6 +1493,34 @@ export interface AnalyticsService {
 }
 
 // =============================================================================
+// Contact Service (New-Lead Slack Notifier)
+// =============================================================================
+//
+// Durable, cross-demo contact capture - distinct from the read-only
+// `ContactView`/`OrgContactView` analytics rollups above (those derive from
+// VisitorSession/TrackEvent; this is the durable `Contact`/`ContactAppearance`
+// write path Prisma models added in Task 1). Postgres-only, no cutover flag.
+
+export interface RecordSightingInput {
+  /** Caller passes a normalized, validated email. */
+  email: string;
+  dynamicUserId?: string | null;
+  demoSlug: string;
+  prospectId?: string | null;
+}
+
+export interface RecordSightingResult {
+  contact: Contact;
+  /** True only for the caller that flips `notifiedAt` null -> now. */
+  shouldNotify: boolean;
+  appearance: ContactAppearance;
+}
+
+export interface ContactService {
+  recordSighting(input: RecordSightingInput): Promise<RecordSightingResult>;
+}
+
+// =============================================================================
 // Service Factory
 // =============================================================================
 
@@ -1512,4 +1540,5 @@ export interface Services {
   shareLinks: ShareLinkService;
   visitorSessions: VisitorSessionService;
   analytics: AnalyticsService;
+  contacts: ContactService;
 }

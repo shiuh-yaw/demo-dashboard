@@ -6,7 +6,10 @@
  * that file for the CORS/validate/rate-limit/attribute/persist pipeline.
  */
 
+import { after } from "next/server";
+
 import { env } from "@/env";
+import { handleLead } from "@/lib/analytics/leads/handle";
 import { shareLinkService, visitorSessionService } from "@/lib/services";
 import { parseTrackCorsOrigins } from "@/lib/track-cors";
 import { createTrackHandler } from "@/lib/track/handler";
@@ -34,6 +37,9 @@ const handlers = createTrackHandler({
     getTrackRateLimitClient,
     DEFAULT_TRACK_IP_RATE_LIMIT,
   ),
+  onBatchIngested: ({ batch, prospectId, isInternal }) => {
+    after(() => handleLead(batch, { prospectId, isInternal }));
+  },
 });
 
 export const POST = handlers.POST;

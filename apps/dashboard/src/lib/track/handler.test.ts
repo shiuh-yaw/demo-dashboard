@@ -7,6 +7,8 @@
 
 import { describe, expect, it, vi } from "vitest";
 
+import type { TrackBatch } from "@dynamic-demos/analytics";
+
 import type {
   ShareLinkService,
   VisitorSessionService,
@@ -63,7 +65,7 @@ function createInMemoryRateLimitClient(): TrackRateLimitClient {
 }
 
 function createFakeShareLinkService(
-  resolved: { id: string } | null = null,
+  resolved: { id: string; prospect?: { id: string } } | null = null,
 ): Pick<ShareLinkService, "resolveByToken"> & {
   resolveByToken: ReturnType<typeof vi.fn>;
 } {
@@ -93,8 +95,14 @@ function createCapturingLogger(): TrackLogger & { lines: string[] } {
 interface BuildHandlerOpts {
   rateLimiter?: TrackRateLimiter;
   ipRateLimiter?: TrackRateLimiter;
-  resolvedShareLink?: { id: string } | null;
+  resolvedShareLink?: { id: string; prospect?: { id: string } } | null;
   logger?: TrackLogger;
+  onBatchIngested?: (args: {
+    batch: TrackBatch;
+    created: boolean;
+    prospectId: string | null;
+    isInternal: boolean;
+  }) => void;
 }
 
 function buildHandler(opts: BuildHandlerOpts = {}) {
@@ -114,6 +122,7 @@ function buildHandler(opts: BuildHandlerOpts = {}) {
     rateLimiter,
     ipRateLimiter,
     logger,
+    onBatchIngested: opts.onBatchIngested,
   });
 
   return { handlers, shareLinkService, visitorSessionService, logger };
@@ -306,6 +315,40 @@ describe("createTrackHandler POST", () => {
     expect(res.status).toBe(200);
     const [, metaArg] = visitorSessionService.upsertFromBatch.mock.calls[0];
     expect(metaArg.shareLinkId).toBe("share_123");
+  });
+
+  it("invokes onBatchIngested after a successful upsert with prospectId + isInternal", async () => {
+    const onBatchIngested = vi.fn();
+    const { handlers } = buildHandler({
+      resolvedShareLink: { id: "sl1", prospect: { id: "p1" } },
+      onBatchIngested,
+    });
+    const res = await handlers.POST(
+      buildRequest({ body: validBatch({ shareToken: "tok" }) }),
+    );
+    expect(res.status).toBe(200);
+    expect(onBatchIngested).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prospectId: "p1",
+        isInternal: false,
+        created: expect.any(Boolean),
+      }),
+    );
+  });
+
+  it("still returns 200 and persists when onBatchIngested throws synchronously", async () => {
+    const onBatchIngested = vi.fn(() => {
+      throw new Error("boom");
+    });
+    const { handlers, visitorSessionService } = buildHandler({
+      onBatchIngested,
+    });
+    const res = await handlers.POST(buildRequest({ body: validBatch() }));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+    expect(visitorSessionService.upsertFromBatch).toHaveBeenCalledTimes(1);
+    expect(onBatchIngested).toHaveBeenCalledTimes(1);
   });
 
   it("propagates isInternal=true from the dd_internal cookie", async () => {

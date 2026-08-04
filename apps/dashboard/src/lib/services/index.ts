@@ -26,6 +26,7 @@ import { PostgresTeamService } from "./postgres/teams";
 import { PostgresShareLinkService } from "./postgres/share-links";
 import { PostgresVisitorSessionService } from "./postgres/visitor-sessions";
 import { PostgresAnalyticsService } from "./postgres/analytics";
+import { PostgresContactService } from "./postgres/contacts";
 import type {
   ProspectService,
   DemoConfigService,
@@ -37,6 +38,7 @@ import type {
   ShareLinkService,
   VisitorSessionService,
   AnalyticsService,
+  ContactService,
 } from "./types";
 
 // Export service instances
@@ -61,6 +63,10 @@ export const visitorSessionService: VisitorSessionService =
 // same rationale as the other Postgres-only stores). `StubAnalyticsService`
 // (./analytics) stays as a zeroed fallback behind the same interface.
 export const analyticsService: AnalyticsService = new PostgresAnalyticsService();
+// Postgres-only, no cutover flag (New-Lead Slack Notifier) - `StubContactService`
+// (./contacts) exists only to satisfy the interface in non-DB contexts and is
+// never selected.
+export const contactService: ContactService = new PostgresContactService();
 
 // Export as combined services object
 export const services: Services = {
@@ -76,6 +82,7 @@ export const services: Services = {
   shareLinks: shareLinkService,
   visitorSessions: visitorSessionService,
   analytics: analyticsService,
+  contacts: contactService,
 };
 
 // Re-export types
@@ -140,6 +147,9 @@ export type {
   OrgContactView,
   ContactCompany,
   VisitorSessionView,
+  ContactService,
+  RecordSightingInput,
+  RecordSightingResult,
 } from "./types";
 export { isProspectInReadScope } from "./types";
 export {

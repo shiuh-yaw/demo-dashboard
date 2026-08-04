@@ -12,7 +12,7 @@
  * into a demo's render path, so all work happens server-side only.
  */
 
-import { trackBatchSchema } from "@dynamic-demos/analytics";
+import { trackBatchSchema, type TrackBatch } from "@dynamic-demos/analytics";
 
 import type {
   ShareLinkService,
@@ -56,6 +56,18 @@ export interface CreateTrackHandlerOptions {
   logger?: TrackLogger;
   /** Cookie name the dashboard's own launch flow sets to mark self-views. Defaults to `dd_internal`. */
   internalCookieName?: string;
+  /**
+   * Fired right after a successful upsert, alongside the derived
+   * `prospectId` (from the resolved share link, if any) and `isInternal`.
+   * Lets callers (e.g. the route) hang post-ingest work off `after()`
+   * without this file needing to know about leads/notifications.
+   */
+  onBatchIngested?: (args: {
+    batch: TrackBatch;
+    created: boolean;
+    prospectId: string | null;
+    isInternal: boolean;
+  }) => void;
 }
 
 /**
@@ -107,6 +119,7 @@ export function createTrackHandler(
     ipRateLimiter,
     logger = DEFAULT_LOGGER,
     internalCookieName = "dd_internal",
+    onBatchIngested,
   } = opts;
 
   async function OPTIONS(req: Request): Promise<Response> {
@@ -181,9 +194,11 @@ export function createTrackHandler(
     // 6. Resolve share token. Invalid/revoked/expired tokens are NOT
     // errors - the session persists unattributed.
     let shareLinkId: string | null = null;
+    let prospectId: string | null = null;
     if (batch.shareToken) {
       const resolved = await shareLinkService.resolveByToken(batch.shareToken);
       shareLinkId = resolved?.id ?? null;
+      prospectId = resolved?.prospect?.id ?? null;
     }
 
     // 7. Derive geo/UA server-side - never trust these from the client.
@@ -206,14 +221,15 @@ export function createTrackHandler(
       getCookie(req.headers, internalCookieName) === "1" ||
       batch.isInternal === true;
 
+    let created: boolean;
     try {
-      await visitorSessionService.upsertFromBatch(batch, {
+      ({ created } = await visitorSessionService.upsertFromBatch(batch, {
         geo,
         ua,
         ipHash,
         shareLinkId,
         isInternal,
-      });
+      }));
     } catch (err) {
       logger.error(
         `[track] persist-failed session=${batch.sessionId} demo=${batch.demoSlug} reason=${stringifyErr(err)}`,
@@ -225,6 +241,11 @@ export function createTrackHandler(
     logger.info(
       `[track] batch session=${batch.sessionId} demo=${batch.demoSlug} events=${batch.events.length} attributed=${shareLinkId !== null} internal=${isInternal} durMs=${Date.now() - startedAt}`,
     );
+    try {
+      onBatchIngested?.({ batch, created, prospectId, isInternal });
+    } catch {
+      // a post-ingest hook must never break the tracker's response
+    }
 
     return jsonResponse({ ok: true }, 200, corsHeaders);
   }
