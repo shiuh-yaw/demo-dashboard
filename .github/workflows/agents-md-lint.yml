@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
 
       - name: Lint every packages/*/AGENTS.md and apps/*/AGENTS.md
         run: node scripts/lint-agents-md.mjs
