@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 
 import "./globals.css";
 
@@ -21,7 +22,10 @@ export default function RootLayout({
         {/* GTM: NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this is safe
             to mount unconditionally (@dynamic-demos/analytics guarantee). */}
         <GtmTracker demoSlug="proceeds">
-          <Providers>{children}</Providers>
+          <Providers>
+            <IdentityBridge />
+            {children}
+          </Providers>
         </GtmTracker>
       </body>
     </html>

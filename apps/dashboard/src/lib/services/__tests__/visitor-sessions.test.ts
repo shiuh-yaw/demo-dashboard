@@ -203,6 +203,9 @@ describe("PostgresVisitorSessionService", () => {
       ipHash: "hash_abc",
       isInternal: false,
       enrichment: null,
+      identifiedUserId: null,
+      identifiedEmail: null,
+      identityTraits: null,
     });
     const svc = new PostgresVisitorSessionService(client);
 
@@ -215,5 +218,144 @@ describe("PostgresVisitorSessionService", () => {
     // makeBatch()'s event ts (1_000) is newer than the raced-in row's
     // lastSeenAt (500), so it should still advance forward.
     expect(session!.lastSeenAt.getTime()).toBe(1_000);
+  });
+
+  it("persists identity on the create path when batch.identity is present", async () => {
+    const client = createFakeVisitorSessionPrisma();
+    const svc = new PostgresVisitorSessionService(client);
+
+    await svc.upsertFromBatch(
+      makeBatch({
+        identity: {
+          userId: "user_1",
+          email: "person@example.com",
+          traits: { plan: "pro" },
+        },
+      }),
+      baseMeta,
+    );
+
+    const session = client.__sessions.get(
+      "11111111-1111-1111-1111-111111111111",
+    );
+    expect(session!.identifiedUserId).toBe("user_1");
+    expect(session!.identifiedEmail).toBe("person@example.com");
+    expect(session!.identityTraits).toEqual({ plan: "pro" });
+  });
+
+  it("persists identity on the update path when batch.identity is present on a later batch", async () => {
+    const client = createFakeVisitorSessionPrisma();
+    const svc = new PostgresVisitorSessionService(client);
+
+    await svc.upsertFromBatch(makeBatch(), baseMeta);
+    await svc.upsertFromBatch(
+      makeBatch({
+        events: [
+          {
+            eventId: "44444444-4444-4444-4444-444444444444",
+            type: "identify",
+            name: "identify",
+            ts: 2_000,
+          },
+        ],
+        identity: { userId: "user_1", email: "person@example.com" },
+      }),
+      baseMeta,
+    );
+
+    const session = client.__sessions.get(
+      "11111111-1111-1111-1111-111111111111",
+    );
+    expect(session!.identifiedUserId).toBe("user_1");
+    expect(session!.identifiedEmail).toBe("person@example.com");
+  });
+
+  it("a later batch without identity does not null out a previously-persisted identity", async () => {
+    const client = createFakeVisitorSessionPrisma();
+    const svc = new PostgresVisitorSessionService(client);
+
+    await svc.upsertFromBatch(
+      makeBatch({ identity: { userId: "user_1", email: "person@example.com" } }),
+      baseMeta,
+    );
+    await svc.upsertFromBatch(
+      makeBatch({
+        events: [
+          {
+            eventId: "44444444-4444-4444-4444-444444444444",
+            type: "step",
+            name: "step-2",
+            ts: 2_000,
+          },
+        ],
+      }),
+      baseMeta,
+    );
+
+    const session = client.__sessions.get(
+      "11111111-1111-1111-1111-111111111111",
+    );
+    expect(session!.identifiedUserId).toBe("user_1");
+    expect(session!.identifiedEmail).toBe("person@example.com");
+  });
+
+  it("a later identify() call with a new userId last-wins over the stored identity", async () => {
+    const client = createFakeVisitorSessionPrisma();
+    const svc = new PostgresVisitorSessionService(client);
+
+    await svc.upsertFromBatch(
+      makeBatch({ identity: { userId: "user_1", email: "first@example.com" } }),
+      baseMeta,
+    );
+    await svc.upsertFromBatch(
+      makeBatch({
+        events: [
+          {
+            eventId: "44444444-4444-4444-4444-444444444444",
+            type: "identify",
+            name: "identify",
+            ts: 2_000,
+          },
+        ],
+        identity: { userId: "user_2", email: "second@example.com" },
+      }),
+      baseMeta,
+    );
+
+    const session = client.__sessions.get(
+      "11111111-1111-1111-1111-111111111111",
+    );
+    expect(session!.identifiedUserId).toBe("user_2");
+    expect(session!.identifiedEmail).toBe("second@example.com");
+  });
+
+  it("a partial identity (no email) does not null out a previously-captured email", async () => {
+    const client = createFakeVisitorSessionPrisma();
+    const svc = new PostgresVisitorSessionService(client);
+
+    await svc.upsertFromBatch(
+      makeBatch({ identity: { userId: "user_1", email: "person@example.com" } }),
+      baseMeta,
+    );
+    await svc.upsertFromBatch(
+      makeBatch({
+        events: [
+          {
+            eventId: "44444444-4444-4444-4444-444444444444",
+            type: "identify",
+            name: "identify",
+            ts: 2_000,
+          },
+        ],
+        identity: { userId: "user_1" },
+      }),
+      baseMeta,
+    );
+
+    const session = client.__sessions.get(
+      "11111111-1111-1111-1111-111111111111",
+    );
+    expect(session!.identifiedUserId).toBe("user_1");
+    expect(session!.identifiedEmail).toBe("person@example.com");
   });
 });

@@ -190,6 +190,73 @@ describe("EventQueue", () => {
     queue.destroy();
   });
 
+  it("buildBatch omits identity by default (backward-compat)", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true });
+    const queue = new EventQueue({
+      getMeta: () => meta,
+      trackUrl: "https://track.example.com",
+      fetchImpl,
+      batchSize: 1,
+    });
+
+    queue.enqueue(makeEvent("a"));
+    await flushMicrotasks();
+
+    const body = JSON.parse(fetchImpl.mock.calls[0]![1].body);
+    expect("identity" in body).toBe(false);
+
+    queue.destroy();
+  });
+
+  it("setIdentity makes every subsequent batch include the identity", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true });
+    const queue = new EventQueue({
+      getMeta: () => meta,
+      trackUrl: "https://track.example.com",
+      fetchImpl,
+      batchSize: 1,
+    });
+
+    queue.setIdentity({ userId: "u_1", email: "a@b.co" });
+
+    queue.enqueue(makeEvent("a"));
+    await flushMicrotasks();
+    const first = JSON.parse(fetchImpl.mock.calls[0]![1].body);
+    expect(first.identity).toEqual({ userId: "u_1", email: "a@b.co" });
+
+    fetchImpl.mockClear();
+    queue.enqueue(makeEvent("b"));
+    await flushMicrotasks();
+    const second = JSON.parse(fetchImpl.mock.calls[0]![1].body);
+    expect(second.identity).toEqual({ userId: "u_1", email: "a@b.co" });
+
+    queue.destroy();
+  });
+
+  it("setIdentity is last-wins and merges traits across calls", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true });
+    const queue = new EventQueue({
+      getMeta: () => meta,
+      trackUrl: "https://track.example.com",
+      fetchImpl,
+      batchSize: 1,
+    });
+
+    queue.setIdentity({ userId: "u_1", traits: { plan: "free" } });
+    queue.setIdentity({ userId: "u_1", email: "a@b.co", traits: { seat: "admin" } });
+
+    queue.enqueue(makeEvent("a"));
+    await flushMicrotasks();
+    const body = JSON.parse(fetchImpl.mock.calls[0]![1].body);
+    expect(body.identity).toEqual({
+      userId: "u_1",
+      email: "a@b.co",
+      traits: { plan: "free", seat: "admin" },
+    });
+
+    queue.destroy();
+  });
+
   it("does not drain via beacon when the buffer is empty", () => {
     const sendBeacon = vi.fn().mockReturnValue(true);
     Object.defineProperty(navigator, "sendBeacon", {

@@ -19,6 +19,7 @@ import {
 } from "@dynamic-demos/ui";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { FlowMark } from "@/components/scenario-chrome";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { Providers } from "./providers";
 
 import "./globals.css";
@@ -103,6 +104,7 @@ export default async function RootLayout({
             to mount unconditionally (analytics package guarantee). */}
         <GtmTracker demoSlug="flow">
           <Providers>
+            <IdentityBridge />
             <div className="flex min-h-dvh flex-col">
               {configId ? (
                 // Branded rule (wallet/earn/trade parity): the Dynamic

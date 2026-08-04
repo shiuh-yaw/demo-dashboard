@@ -30,25 +30,25 @@ regions:
 
 # @dynamic-demos/proceeds
 
-Operator-facing onchain proceeds-to-bank demo. A merchant connects their Dynamic wallet, views balances + transaction history sourced from Alchemy, and offramps USDC to fiat via Iron (US ACH/wire, EU SEPA, GB Faster Payments). The app is the **historical source of the canonical theme** — its `globals.css` was promoted to `packages/theme/src/defaults.css` in Phase 4-defaults (D-020).
+Operator-facing onchain proceeds-to-bank demo. A merchant connects their Dynamic wallet, views balances + transaction history sourced from Alchemy, and offramps USDC to fiat via Iron (US ACH/wire, EU SEPA, GB Faster Payments). The app is the **historical source of the canonical theme** - its `globals.css` was promoted to `packages/theme/src/defaults.css` in Phase 4-defaults (D-020).
 
 ## Capabilities
 
 - Email-OTP login (Dynamic).
 - Wallet balance display via Alchemy Prices API + asset transfers.
 - Transaction history (Alchemy `getAssetTransfers`) with status badges.
-- Iron offramp flow — quote, beneficiary entry, sign + submit transfer, poll status.
+- Iron offramp flow - quote, beneficiary entry, sign + submit transfer, poll status.
 - Per-app brand theming via `--brand-*` CSS variables (D-007).
 
 ## Public surface
 
 App routes:
 
-- `/` — dashboard / balances landing (after auth).
-- `/(auth)/login` — email OTP.
-- `/(app)/...` — main authenticated surface (balances, history, offramp).
-- `/api/balance` — server-only Alchemy balance proxy.
-- `/api/...` — additional Iron + Alchemy server routes.
+- `/` - dashboard / balances landing (after auth).
+- `/(auth)/login` - email OTP.
+- `/(app)/...` - main authenticated surface (balances, history, offramp).
+- `/api/balance` - server-only Alchemy balance proxy.
+- `/api/...` - additional Iron + Alchemy server routes.
 
 Cookie / header contract (D-008):
 
@@ -56,21 +56,21 @@ Cookie / header contract (D-008):
 
 ## Required environment
 
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` — per-app Dynamic env id — optional (falls back to default).
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` — workspace default — required if no per-app id.
-- `ALCHEMY_API_KEY` — server-only Alchemy key — required.
-- `IRON_API_KEY` — server-only Iron key — required (D-003: this app holds Iron creds today; Phase 5B routes via dashboard).
-- `IRON_ENVIRONMENT` — `sandbox` | `production` — defaults to sandbox (D-005).
-- `NEXT_PUBLIC_APP_ENV` — `production` flips sandbox flags off.
+- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - per-app Dynamic env id - optional (falls back to default).
+- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` - workspace default - required if no per-app id.
+- `ALCHEMY_API_KEY` - server-only Alchemy key - required.
+- `IRON_API_KEY` - server-only Iron key - required (D-003: this app holds Iron creds today; Phase 5B routes via dashboard).
+- `IRON_ENVIRONMENT` - `sandbox` | `production` - defaults to sandbox (D-005).
+- `NEXT_PUBLIC_APP_ENV` - `production` flips sandbox flags off.
 - `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`) - optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
 
 ## Theming
 
-Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; proceeds-specific tokens (`--proceeds-navy`, `--proceeds-blue`, `--proceeds-grey*`, `--proceeds-gold`, `--proceeds-teal`, `--max-width-content`) remain in `app/globals.css` since they're consumed by app-only chrome (`dashboard-header`, `app-shell`). The app uses `createDemoMiddleware` with `configIdSource: 'none'` — there's no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if proceeds ever gains per-tenant theming. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--brand-*` token contract is the canonical source; proceeds-specific tokens (`--proceeds-navy`, `--proceeds-blue`, `--proceeds-grey*`, `--proceeds-gold`, `--proceeds-teal`, `--max-width-content`) remain in `app/globals.css` since they're consumed by app-only chrome (`dashboard-header`, `app-shell`). The app uses `createDemoMiddleware` with `configIdSource: 'none'` - there's no per-config theme overlay, so the SSR `<ThemeStyleTag>` pattern (D-008) is not wired today; it would land if proceeds ever gains per-tenant theming. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 
 ## Analytics
 
-`<GtmTracker demoSlug="proceeds">` wraps the tree in `app/layout.tsx`, no-op with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned); no per-app milestones are wired yet.
+`<GtmTracker demoSlug="proceeds">` wraps the tree in `app/layout.tsx`, no-op with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned). `authenticated` - the shared fleet-wide milestone (`useIdentify`, `@dynamic-demos/analytics`) - is mounted via `<IdentityBridge />` (`components/analytics/identity-bridge.tsx`, in the layout inside `<Providers>` since proceeds is multi-page), fed by `hooks/use-authenticated-user.ts` (gated on `hooks/use-client-initialized.ts`). Fires once per page load with `{ dynamicUserId, email? }` on any auth method; no other per-app milestones are wired yet.
 
 ## Credentials
 
@@ -85,10 +85,12 @@ Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--bran
 
 **Invariants:**
 
-- All Iron + Alchemy calls go through `app/api/*` server routes — keys never reach the client.
+- All Iron + Alchemy calls go through `app/api/*` server routes - keys never reach the client.
 - User wallet selection persists in Dynamic user metadata (D-002).
 - Sandbox-by-default (D-005). Real Iron money requires `IRON_ENVIRONMENT=production` + `[prod-creds]` PR title.
 - Apps don't access Postgres (D-002). Persistence happens at dashboard via events (Phase 5A).
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` via the shared `createDemoMiddleware` (`applyBrandedNoIndex`/`isBrandedSearch` in `@dynamic-demos/dynamic/noindex`); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Proceeds" preview, identical for branded and bare URLs (no prospect/theme data read).
 
 ## Data boundaries
 
@@ -126,10 +128,10 @@ export const middleware = createDemoMiddleware({
 ## Do / Don't
 
 - Do: keep Iron + Alchemy calls behind `app/api/*` server routes.
-- Do: surface offramp status by polling — webhooks land at dashboard (D-011), not here.
+- Do: surface offramp status by polling - webhooks land at dashboard (D-011), not here.
 - Do: use `--brand-*` CSS variables, not hardcoded hex.
 - Don't: expose Iron / Alchemy keys with `NEXT_PUBLIC_`.
-- Don't: persist transactions in this app — emit events to dashboard once Phase 5B lands.
+- Don't: persist transactions in this app - emit events to dashboard once Phase 5B lands.
 
 ## Open questions / known gaps
 

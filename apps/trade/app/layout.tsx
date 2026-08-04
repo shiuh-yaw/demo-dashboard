@@ -10,6 +10,7 @@ import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { TradeConfigProvider } from "@/contexts/trade-config-context";
 import type { TradeConfig } from "@/lib/trade-config";
 
@@ -78,6 +79,7 @@ export default async function RootLayout({
             is safe to mount unconditionally (Phase 02 guarantee). */}
         <GtmTracker demoSlug="trade">
           <Providers>
+            <IdentityBridge />
             <TradeConfigProvider config={config} configId={configId ?? undefined}>
               {children}
             </TradeConfigProvider>

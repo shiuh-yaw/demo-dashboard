@@ -75,7 +75,7 @@ Sandbox-by-default (D-005).
 
 ## Analytics
 
-`<GtmTracker demoSlug="remittance">` wraps the tree in `app/layout.tsx`; no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned) - no per-app milestones wired yet.
+`<GtmTracker demoSlug="remittance">` wraps the tree in `app/layout.tsx`; no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned). `authenticated` - the shared fleet-wide milestone (`useIdentify`, `@dynamic-demos/analytics`) - is mounted via `<IdentityBridge />` (`components/analytics/identity-bridge.tsx`, in the layout inside `<Providers>`), fed by `hooks/use-authenticated-user.ts` (gated on `hooks/use-client-initialized.ts`). Fires once per page load with `{ dynamicUserId, email? }` on any auth method; no other per-app milestones wired yet.
 
 ## Theming
 
@@ -101,6 +101,8 @@ Browser-tab title is branded via `generateMetadata` in `app/layout.tsx`: a `Reac
 - Recipient + KYC data persists to dashboard via orchestration events (Phase 5A); not in this app.
 - The visa-direct cookie pattern is canonical (D-008).
 - Sandbox-by-default (D-005).
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` via the shared `createDemoMiddleware` (`applyBrandedNoIndex`/`isBrandedSearch` in `@dynamic-demos/dynamic/noindex`); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Remittance" preview, identical for branded and bare URLs (no prospect/theme data read).
 
 ## Data boundaries
 

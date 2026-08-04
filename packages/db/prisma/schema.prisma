@@ -254,6 +254,10 @@ model VisitorSession {
   ipHash      String?
   isInternal  Boolean      @default(false)
   enrichment  Json?
+  /// Session-level identity captured via `identify()` (packages/analytics). Last-wins across batches; never overwritten by a later batch that omits identity.
+  identifiedUserId String?
+  identifiedEmail  String?
+  identityTraits   Json?
   shareLink   ShareLink?   @relation(fields: [shareLinkId], references: [id])
   events      TrackEvent[]
 

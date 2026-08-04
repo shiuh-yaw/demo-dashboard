@@ -5,6 +5,7 @@ import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker, BookACallCta } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { VisaDirectConfigProvider } from "@/contexts/visa-direct-config-context";
 import { DEFAULT_VISA_DIRECT_CONFIG } from "@/lib/visa-direct-config";
 
@@ -49,6 +50,7 @@ export default async function RootLayout({
       <body>
         <GtmTracker demoSlug="visa-direct">
           <Providers>
+            <IdentityBridge />
             <VisaDirectConfigProvider config={resolvedConfig}>
               {children}
             </VisaDirectConfigProvider>

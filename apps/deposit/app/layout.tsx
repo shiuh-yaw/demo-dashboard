@@ -10,6 +10,7 @@ import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { NetworkBar } from "./network-bar";
 import { DepositConfigProvider } from "@/contexts/deposit-config-context";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 
 import "./globals.css";
 
@@ -51,6 +52,7 @@ export default async function RootLayout({
         {/* NEXT_PUBLIC_TRACK_URL unset -> total no-op, so this is safe to
             mount unconditionally (packages/analytics Phase 02 guarantee). */}
         <GtmTracker demoSlug="deposit">
+          <IdentityBridge />
           <div className="min-h-screen flex items-center justify-center p-6">
             <div className="w-full max-w-[400px]">
               <Providers>

@@ -49,10 +49,11 @@ describe("CatalogFunnel", () => {
 
     const rows = screen.getAllByRole("row").slice(1); // drop the header row
     expect(rows).toHaveLength(2);
-    expect(rows[0].textContent).toContain("wallet");
+    // slugs render as their friendly catalog names (wallet -> "Wallet")
+    expect(rows[0].textContent).toContain("Wallet");
     expect(rows[0].textContent).toContain("30");
     expect(rows[0].textContent).toContain("38%");
-    expect(rows[1].textContent).toContain("trade");
+    expect(rows[1].textContent).toContain("Trade");
     expect(rows[1].textContent).toContain("10");
     expect(rows[1].textContent).toContain("13%");
   });

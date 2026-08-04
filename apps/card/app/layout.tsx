@@ -20,7 +20,7 @@ import {
 } from "@dynamic-demos/ui";
 import { Providers } from "./providers";
 import { BrandingProvider } from "@/components/branding-provider";
-import { CardIdentity } from "@/components/analytics/card-identity";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { ScenarioBrandLogo } from "@/components/scenario-brand-logo";
 import { buildCodeSteps, CARD_SDK_STEPS } from "@/lib/code-steps";
 
@@ -98,7 +98,7 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        {/* GtmTracker wraps Providers so CardIdentity (needs useTrack here +
+        {/* GtmTracker wraps Providers so IdentityBridge (needs useTrack here +
             useUser inside Providers) fires the auth milestones from any page.
             No floating BookACallCta - the header/hero carries Book a call. */}
         <GtmTracker demoSlug="card">
@@ -147,7 +147,7 @@ export default async function RootLayout({
                     <ScenarioBrandLogo align="center" />
                   )}
                   <Providers>
-                    <CardIdentity />
+                    <IdentityBridge />
                     {children}
                   </Providers>
                 </div>

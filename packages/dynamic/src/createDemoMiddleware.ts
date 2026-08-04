@@ -25,10 +25,15 @@
  *
  * Apps with bespoke route rewriting (e.g. trade's `/t/[id]/*`) supply
  * `rewritePath` + `getConfigIdFromPath` to extract config id from the URL path.
+ *
+ * Every response also carries `X-Robots-Tag: noindex, nofollow` when the
+ * request is a branded demo URL (`?share=` and/or `?theme=` present) - see
+ * `./noindex`. Bare demo URLs stay indexable.
  */
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { applyBrandedNoIndex } from "./noindex";
 
 export type PublicRouteMatcher = string | RegExp;
 
@@ -197,7 +202,7 @@ export function createDemoMiddleware(opts: CreateDemoMiddlewareOptions) {
     });
   }
 
-  return function middleware(request: NextRequest): NextResponse {
+  function coreMiddleware(request: NextRequest): NextResponse {
     const path = request.nextUrl.pathname;
     const hasAuth = request.cookies.has(authCookieName);
 
@@ -360,5 +365,9 @@ export function createDemoMiddleware(opts: CreateDemoMiddlewareOptions) {
     }
 
     return syncConfigCookie(buildPassThrough());
+  }
+
+  return function middleware(request: NextRequest): NextResponse {
+    return applyBrandedNoIndex(request, coreMiddleware(request));
   };
 }

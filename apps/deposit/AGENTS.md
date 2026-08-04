@@ -14,7 +14,7 @@ Multi-network deposit demo. End users sign in via Dynamic, are auto-assigned (or
 
 - Email-OTP + social login (Dynamic).
 - Network selector (`network-bar.tsx`) for picking which chain the user wants to deposit on.
-- Per-user Fireblocks deposit address creation/lookup (server-only) — backed by the vault helpers in `@dynamic-demos/fireblocks`.
+- Per-user Fireblocks deposit address creation/lookup (server-only) - backed by the vault helpers in `@dynamic-demos/fireblocks`.
 - Live balance polling.
 - JWT-protected API access via `verifyDynamicJWT`.
 
@@ -22,29 +22,29 @@ Multi-network deposit demo. End users sign in via Dynamic, are auto-assigned (or
 
 App routes:
 
-- `/` — landing + network selector + deposit address card.
-- `/api/...` — server-only deposit-address allocation, balance reads.
+- `/` - landing + network selector + deposit address card.
+- `/api/...` - server-only deposit-address allocation, balance reads.
 
-Phase 1D consolidated client-singleton helpers; Phase 4 added `middleware.ts` (minimal config-id forwarder) for theme-config forwarding. Authentication remains client-side via the Dynamic SDK widget — there are no JWT-protected SSR routes; deposit's `app/api/*` routes verify JWTs themselves via `requireUserId`.
+Phase 1D consolidated client-singleton helpers; Phase 4 added `middleware.ts` (minimal config-id forwarder) for theme-config forwarding. Authentication remains client-side via the Dynamic SDK widget - there are no JWT-protected SSR routes; deposit's `app/api/*` routes verify JWTs themselves via `requireUserId`.
 
 ## Required environment
 
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` — per-app Dynamic env — optional.
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` — workspace default.
-- `FIREBLOCKS_API_KEY` — server-only — required.
-- `FIREBLOCKS_API_SECRET` — server-only PEM — required.
-- `FIREBLOCKS_API_BASE_URL` — defaults to sandbox (D-005).
-- `FIREBLOCKS_VAULT_ACCOUNT_ID` — root vault id used for sub-account allocation.
-- `NEXT_PUBLIC_DASHBOARD_API_URL` — base URL for dashboard wallet config API (defaults to `http://localhost:4000` in dev).
-- `NEXT_PUBLIC_TRACK_URL` — dashboard GTM ingest base URL (`@dynamic-demos/analytics`) — optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
+- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - per-app Dynamic env - optional.
+- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID_DEFAULT` - workspace default.
+- `FIREBLOCKS_API_KEY` - server-only - required.
+- `FIREBLOCKS_API_SECRET` - server-only PEM - required.
+- `FIREBLOCKS_API_BASE_URL` - defaults to sandbox (D-005).
+- `FIREBLOCKS_VAULT_ACCOUNT_ID` - root vault id used for sub-account allocation.
+- `NEXT_PUBLIC_DASHBOARD_API_URL` - base URL for dashboard wallet config API (defaults to `http://localhost:4000` in dev).
+- `NEXT_PUBLIC_TRACK_URL` - dashboard GTM ingest base URL (`@dynamic-demos/analytics`) - optional. Unset → `<GtmTracker>`/`useTrack()` are total no-ops; the app builds and runs unchanged.
 
 ## Analytics
 
-`<GtmTracker demoSlug="deposit">` wraps the tree in `app/layout.tsx`; no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned) — no per-app milestones instrumented yet.
+`<GtmTracker demoSlug="deposit">` wraps the tree in `app/layout.tsx`; no-ops with `NEXT_PUBLIC_TRACK_URL` unset. Pageviews/heartbeats are automatic (package-owned). `authenticated` - the shared fleet-wide milestone (`useIdentify`, `@dynamic-demos/analytics`) - is mounted via `<IdentityBridge />` (`components/analytics/identity-bridge.tsx`, in the layout inside `<GtmTracker>`), fed by the reactive raw Dynamic user off `hooks/use-authenticated-user.ts` (gated on `useClientInitialized`). Fires once per page load with `{ dynamicUserId, email? }` on any auth method; no other per-app milestones instrumented yet.
 
 ## Theming
 
-Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?theme=<configId>` as the `x-deposit-config-id` header; `app/layout.tsx` reads it server-side, fetches the wallet config from the dashboard `/api/wallets/[id]` endpoint (deposit shares the wallet flow_role), projects `WidgetTheme` → `Partial<BrandTheme>` via `lib/deposit-brand.ts`, and emits the per-brand `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`. Static deposit defaults live in `app/globals.css` (with `--widget-*` compat aliases for shared `packages/ui` components). Header-only forwarding — no `Set-Cookie` (deep-links honor URL state). `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?theme=<configId>` as the `x-deposit-config-id` header; `app/layout.tsx` reads it server-side, fetches the wallet config from the dashboard `/api/wallets/[id]` endpoint (deposit shares the wallet flow_role), projects `WidgetTheme` → `Partial<BrandTheme>` via `lib/deposit-brand.ts`, and emits the per-brand `--brand-*` overrides via `<ThemeStyleTag overridesOnly>` in `<head>`. Static deposit defaults live in `app/globals.css` (with `--widget-*` compat aliases for shared `packages/ui` components). Header-only forwarding - no `Set-Cookie` (deep-links honor URL state). `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 
 ## Credentials
 
@@ -59,9 +59,11 @@ Adopts the unified theme injection pattern (D-008). `middleware.ts` forwards `?t
 **Invariants:**
 
 - Mixed custody: the user controls the destination wallet, but Fireblocks holds vault sub-accounts that allocate the deposit address. Surface this in copy.
-- All Fireblocks calls go through `app/api/*` server routes — keys never reach the client.
+- All Fireblocks calls go through `app/api/*` server routes - keys never reach the client.
 - Sandbox-by-default (D-005). Production opt-in requires `[prod-creds]` PR title.
 - Apps don't access Postgres (D-002). Deposit-address-to-user mapping lives in Dynamic user metadata.
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` via the shared `createConfigForwardingMiddleware` (`applyBrandedNoIndex`/`isBrandedSearch` in `@dynamic-demos/dynamic/noindex`); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Deposit" preview, identical for branded and bare URLs (no prospect/theme data read).
 
 ## Data boundaries
 

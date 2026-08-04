@@ -8,13 +8,13 @@ status: experimental
 
 # @dynamic-demos/visa-direct
 
-Airbnb-style branded host portal demonstrating Visa Direct stablecoin payouts to crypto wallets. Hosts log in, configure their preferred payout method, and receive USDC payouts via Visa Direct Push-to-Wallet API — Fireblocks orchestrates and custodies, MTLco onramps (USD → USDC). Sales demo for Visa + financial-institution partners; the demo is the **authoritative reference** for the visa-direct cookie + SSR theme pattern (D-008).
+Airbnb-style branded host portal demonstrating Visa Direct stablecoin payouts to crypto wallets. Hosts log in, configure their preferred payout method, and receive USDC payouts via Visa Direct Push-to-Wallet API - Fireblocks orchestrates and custodies, MTLco onramps (USD → USDC). Sales demo for Visa + financial-institution partners; the demo is the **authoritative reference** for the visa-direct cookie + SSR theme pattern (D-008).
 
 ## Capabilities
 
 - Email-OTP + Google SSO login (Dynamic).
 - Payment Methods page: bank, crypto wallet (BYO Kraken / embedded Fireblocks), and debit card cards. Phase 1 lands cards; Phase 2 lands wallet flows; Phase 3 wires payout; Phase 4 adds history.
-- Demo payout modal — POST `/api/payout` → Visa Direct API (stubbed) → Fireblocks `createTransaction` mapping. Polls for status.
+- Demo payout modal - POST `/api/payout` → Visa Direct API (stubbed) → Fireblocks `createTransaction` mapping. Polls for status.
 - Wallet verification + AML + sanctions inline checks before execution.
 - Transaction history with side-by-side Visa Direct + Fireblocks payload drawer (Phase 4).
 - Default payment method state machine persisted in Dynamic user metadata.
@@ -23,11 +23,11 @@ Airbnb-style branded host portal demonstrating Visa Direct stablecoin payouts to
 
 App routes:
 
-- `/login` — auth (email OTP + Google SSO).
-- `/payment-methods` — primary surface (Phase 1+).
-- `/transactions` — payout history (Phase 4).
-- `/api/payout` — server-only payout trigger (Phase 3).
-- `/api/transactions` — history (Phase 4).
+- `/login` - auth (email OTP + Google SSO).
+- `/payment-methods` - primary surface (Phase 1+).
+- `/transactions` - payout history (Phase 4).
+- `/api/payout` - server-only payout trigger (Phase 3).
+- `/api/transactions` - history (Phase 4).
 
 Cookie / header contract (D-008):
 
@@ -37,25 +37,29 @@ Cookie / header contract (D-008):
 
 Validated in `lib/env.ts` via `@t3-oss/env-nextjs` + Zod.
 
-- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` — Dynamic env id — required.
-- `DYNAMIC_API_KEY` — enables Dynamic user metadata persistence — optional.
-- `FIREBLOCKS_API_KEY` — server-only — required (Phase 3).
-- `FIREBLOCKS_API_SECRET` — server-only, base64 PEM — required (Phase 3).
-- `FIREBLOCKS_VAULT_ACCOUNT_ID` — MTLco connected sub-account id — required (Phase 3).
-- `VISA_DIRECT_API_KEY` — server-only, stubbed Phase 1-2 — required.
-- `VISA_DIRECT_BASE_URL` — per-environment base URL — required.
+- `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - Dynamic env id - required.
+- `DYNAMIC_API_KEY` - enables Dynamic user metadata persistence - optional.
+- `FIREBLOCKS_API_KEY` - server-only - required (Phase 3).
+- `FIREBLOCKS_API_SECRET` - server-only, base64 PEM - required (Phase 3).
+- `FIREBLOCKS_VAULT_ACCOUNT_ID` - MTLco connected sub-account id - required (Phase 3).
+- `VISA_DIRECT_API_KEY` - server-only, stubbed Phase 1-2 - required.
+- `VISA_DIRECT_BASE_URL` - per-environment base URL - required.
 
 Sandbox-by-default (D-005): `NEXT_PUBLIC_APP_ENV=production` is the only flip; absent or anything else stays sandbox.
 
+## Analytics
+
+`<GtmTracker demoSlug="visa-direct">` + a floating `<BookACallCta />` wrap the tree in `app/layout.tsx` (`@dynamic-demos/analytics`); both no-op when `NEXT_PUBLIC_TRACK_URL` is unset. Pageviews/heartbeats are automatic (package-owned). `authenticated` - the shared fleet-wide milestone (`useIdentify`) - is mounted via `<IdentityBridge />` (`components/analytics/identity-bridge.tsx`, in the layout inside `<Providers>`), fed by `hooks/use-authenticated-user.ts` (gated on `hooks/use-client-initialized.ts`). Fires once per page load with `{ dynamicUserId, email? }` on any auth method; no other per-app milestones are wired yet.
+
 ## Theming
 
-Per-config brand themes are projected at SSR via `<ThemeStyleTag>` from `@dynamic-demos/theme/theme-style-tag` (D-008). `createDemoMiddleware` reads `?theme=<configId>` on entry, sets the `visa_direct_config_id` cookie, and forwards `x-visa-direct-config-id` to the root layout. The layout fetches the stored config, projects `theme.primaryColor` onto a partial `BrandTheme` via `lib/visa-direct-brand.ts` (`themeToBrandTheme`), and emits an inline `<style>` block in `<head>` with only the per-brand overrides — `defaults.css` + the static `--brand-*` declarations in `app/globals.css` provide everything else. Zero FOUC, sticky brand across navigation, no client-side theme fetch. `--widget-*` compat aliases stay in `globals.css` until shared `packages/ui` components migrate to `--brand-*`. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
+Per-config brand themes are projected at SSR via `<ThemeStyleTag>` from `@dynamic-demos/theme/theme-style-tag` (D-008). `createDemoMiddleware` reads `?theme=<configId>` on entry, sets the `visa_direct_config_id` cookie, and forwards `x-visa-direct-config-id` to the root layout. The layout fetches the stored config, projects `theme.primaryColor` onto a partial `BrandTheme` via `lib/visa-direct-brand.ts` (`themeToBrandTheme`), and emits an inline `<style>` block in `<head>` with only the per-brand overrides - `defaults.css` + the static `--brand-*` declarations in `app/globals.css` provide everything else. Zero FOUC, sticky brand across navigation, no client-side theme fetch. `--widget-*` compat aliases stay in `globals.css` until shared `packages/ui` components migrate to `--brand-*`. `globals.css` pins the pre-D-030 default palette (Apple-ish tone) so the D-030 canonical-token change doesn't restyle this app; removing the pin is a deliberate future restyle.
 
 ## Credentials
 
 - **Dynamic:** per-app `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` (D-003). Falls back to the workspace default if unset.
 - **Fireblocks:** per-app credentials live in this app's env (D-003). MTLco vault sub-account id is required.
-- **Other providers:** none — Visa Direct credentials live here for now (Phase 5B will route this through dashboard orchestration).
+- **Other providers:** none - Visa Direct credentials live here for now (Phase 5B will route this through dashboard orchestration).
 
 ## Slots vs invariants
 
@@ -63,16 +67,18 @@ Per-config brand themes are projected at SSR via `<ThemeStyleTag>` from `@dynami
 
 **Invariants:**
 
-- All Fireblocks + Visa Direct calls go through Next.js API routes — credentials never leave the server.
+- All Fireblocks + Visa Direct calls go through Next.js API routes - credentials never leave the server.
 - Wallet selection + default preference persist to **Dynamic user metadata**, not a per-app DB (D-002).
-- Default payment method state machine is single-default — only one card holds the badge at a time.
+- Default payment method state machine is single-default - only one card holds the badge at a time.
 - The visa-direct cookie pattern is canonical (D-008). Don't fork it.
 - Apps don't access Postgres directly (D-002).
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` via the shared `createDemoMiddleware` (`applyBrandedNoIndex`/`isBrandedSearch` in `@dynamic-demos/dynamic/noindex`); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Fireblocks Liquidity" preview, identical for branded and bare URLs (no prospect/theme data read).
 
 ## Data boundaries
 
 - No Postgres access. The dashboard owns the canonical persistence (D-002).
-- Redis isn't currently used — payout history will land in Dynamic metadata until Phase 5A wires events to dashboard.
+- Redis isn't currently used - payout history will land in Dynamic metadata until Phase 5A wires events to dashboard.
 - User state (default method, wallet selections) → Dynamic user metadata.
 - Canonical transactions → events emitted to dashboard `/api/orchestrate/...` once Phase 5B lands.
 
@@ -87,7 +93,7 @@ Per-config brand themes are projected at SSR via `<ThemeStyleTag>` from `@dynami
 
 ## Integration map
 
-**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/fireblocks` (Phase 3+).
+**Imports:** `@dynamic-demos/dynamic`, `@dynamic-demos/ui`, `@dynamic-demos/utils`, `@dynamic-demos/fireblocks` (Phase 3+), `@dynamic-demos/analytics` (`GtmTracker` / `BookACallCta` / `useIdentify` - GTM instrumentation).
 **Imported by:** none (apps are leaves).
 
 ## Examples
@@ -103,7 +109,7 @@ export const middleware = createDemoMiddleware({
 ```
 
 ```tsx
-// app/layout.tsx — server layout reads x-visa-direct-config-id and injects theme
+// app/layout.tsx - server layout reads x-visa-direct-config-id and injects theme
 import { headers } from "next/headers";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { themeToBrandTheme } from "@/lib/visa-direct-brand";
@@ -124,10 +130,10 @@ return (
 - Do: keep Fireblocks + Visa Direct calls behind server-only `app/api/*` routes.
 - Do: persist user preferences (default method, wallet) in Dynamic user metadata.
 - Do: use `--brand-*` CSS variables from `@dynamic-demos/theme`; `--widget-*` compat aliases in `globals.css` exist only for shared `packages/ui` consumers and will retire when `packages/ui` migrates.
-- Do: mirror `apps/remittance` patterns for layout, hooks, and screen state machines — that's the gold-standard reference.
+- Do: mirror `apps/remittance` patterns for layout, hooks, and screen state machines - that's the gold-standard reference.
 - Don't: expose Fireblocks or Visa Direct keys with `NEXT_PUBLIC_` prefix.
-- Don't: persist canonical transactions in this app — emit events to dashboard once Phase 5B lands.
-- Don't: store wallet selection in `localStorage` — Dynamic user metadata is the cross-device source of truth.
+- Don't: persist canonical transactions in this app - emit events to dashboard once Phase 5B lands.
+- Don't: store wallet selection in `localStorage` - Dynamic user metadata is the cross-device source of truth.
 
 ## Open questions / known gaps
 

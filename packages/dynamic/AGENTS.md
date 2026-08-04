@@ -29,6 +29,8 @@ If you are an AI agent implementing against the Dynamic SDK, **consult the SDK s
 
 - `createDemoMiddleware` — Next.js middleware factory implementing the visa-direct cookie + JWT auth pattern (D-008). Supports config-prefix routes, regex public routes, functional login/return paths, and optional path rewrites. A scenario front door at `/` needs no special option: list `/` first in `publicRoutes` (earn's shape) — it becomes the derived loginPath, unauthenticated users on protected routes land there, and authenticated visitors bounce to `defaultReturnPath`.
 - `createConfigForwardingMiddleware` — lighter middleware for client-side-auth apps (wallet, checkouts, shop, deposit): forwards `?theme=<configId>` as `x-<demoType>-config-id` and `?scope=<page|widget>` as `x-<demoType>-theme-scope`, both sticky-cookied across navigations; an explicit empty param clears on the same request. No auth gating, no redirects.
+- `isBrandedSearch` / `applyBrandedNoIndex` (`./noindex`) — branded-demo noindex. Both `createDemoMiddleware` and `createConfigForwardingMiddleware` call `applyBrandedNoIndex` on every response, so any app wired through either factory automatically sets `X-Robots-Tag: noindex, nofollow` when the request URL carries `?share=` and/or `?theme=` (the params `buildBrandedLaunchUrl` sets and `/s/[token]` redirects to). Bare demo URLs stay indexable. Apps with bespoke middleware (flow) or no middleware at all (cross-border-ap-ar) apply the same check directly - see their `middleware.ts`.
+- `renderDemoOgImage` (`./og-image`) — generic OG/Twitter unfurl image composer built on `next/og`'s `ImageResponse`. Takes only `{ demoLabel }` (no prospect/brand/theme data, no config fetch) and renders a fixed 1200x630 Dynamic-branded PNG: diamond mark + "Dynamic" wordmark, the label large, a generic subtitle, and the `demo.dynamic.xyz` footer. Every consuming app's `app/opengraph-image.tsx` returns this unmodified, so branded and bare URLs unfurl identically - unlike `noindex`, which only blocks search crawlers, this is what stops a forwarded branded link's *preview* from leaking which customer it's for. Font loading best-effort fetches Inter from Google Fonts (subset to only the glyphs it renders) and silently falls back to next/og's bundled default font on any failure - never throws.
 - JWT cookie sync — `setDynamicJwtCookie`, `clearDynamicJwtCookie`, `createSyncCookieRoute()` factory for `/api/auth/sync-cookie`.
 - `<DynamicInit />` — generic client-side init component with adapters; apps inject SDK-specific `isSignedIn` / `getAuthToken` / event subscription.
 - `<DynamicAuthProvider>` — opt-in HOC bundling `DynamicInit` with the children tree.
@@ -50,6 +52,8 @@ Stable entry points (consumed by apps):
 - `@dynamic-demos/dynamic/networks` — `createNetworkConfig` + chain ids.
 - `@dynamic-demos/dynamic/resolve-credentials` — `resolveCredentials`.
 - `@dynamic-demos/dynamic/client-singleton` — `createDynamicClientSingleton`, `createSafeWrapper`, `createAsyncSafeWrapper`.
+- `@dynamic-demos/dynamic/noindex` — `isBrandedSearch`, `applyBrandedNoIndex`.
+- `@dynamic-demos/dynamic/og-image` — `renderDemoOgImage`, `buildOgFontSubsetText`, `OG_IMAGE_WIDTH`, `OG_IMAGE_HEIGHT`. Not re-exported from the root barrel (pulls in `next/og`'s renderer) - always import this subpath directly.
 - `@dynamic-demos/dynamic/client` — client-only barrel: `ConnectedAuthScreen`, `useAuthForm`, `<DynamicInit />`, `<DynamicAuthProvider>`.
 
 Internal:

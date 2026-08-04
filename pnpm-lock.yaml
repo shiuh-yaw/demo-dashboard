@@ -321,6 +321,9 @@ importers:
 
   apps/cross-border-ap-ar:
     dependencies:
+      '@dynamic-demos/dynamic':
+        specifier: workspace:*
+        version: link:../../packages/dynamic
       '@dynamic-demos/fireblocks':
         specifier: workspace:*
         version: link:../../packages/fireblocks

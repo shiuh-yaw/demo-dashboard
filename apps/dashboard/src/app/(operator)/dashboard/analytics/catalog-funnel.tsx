@@ -5,6 +5,8 @@
  * `CatalogFunnel` (Task 1) for the read model this renders.
  */
 
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import {
   MetricCard,
   Table,
@@ -15,6 +17,7 @@ import {
   TableRow,
 } from "@/components/droplet-client";
 import type { CatalogFunnel as CatalogFunnelData } from "@/lib/services/types";
+import { getDemoBySlug } from "@/lib/landing/demos";
 
 export interface CatalogFunnelProps {
   data: CatalogFunnelData;
@@ -22,6 +25,12 @@ export interface CatalogFunnelProps {
 
 function formatRate(rate: number): string {
   return `${Math.round(rate * 100)}%`;
+}
+
+/** Friendly display name for a launched demo, falling back to the raw slug
+ *  (e.g. a demo since removed from the landing catalog). */
+function demoLabel(slug: string): string {
+  return getDemoBySlug(slug)?.name ?? slug;
 }
 
 export function CatalogFunnel({ data }: CatalogFunnelProps) {
@@ -46,8 +55,21 @@ export function CatalogFunnel({ data }: CatalogFunnelProps) {
             </TableHeader>
             <TableBody>
               {data.byDemo.map((row) => (
-                <TableRow key={row.slug}>
-                  <TableCell className="font-medium text-foreground">{row.slug}</TableCell>
+                <TableRow
+                  key={row.slug}
+                  className="group relative cursor-pointer transition-colors hover:bg-muted/40"
+                >
+                  <TableCell className="font-medium text-foreground">
+                    {/* Stretched link: the anchor stays accessible, but its
+                        hit area (after:inset-0) covers the whole row. */}
+                    <Link
+                      href={`/dashboard/analytics/catalog/${row.slug}`}
+                      className="inline-flex items-center gap-1 after:absolute after:inset-0 after:content-[''] group-hover:text-primary group-hover:underline"
+                    >
+                      {demoLabel(row.slug)}
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">
                     {row.launches}
                   </TableCell>

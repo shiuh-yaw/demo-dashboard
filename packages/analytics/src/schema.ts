@@ -15,7 +15,7 @@ export const MAX_PROPS_SERIALIZED_LENGTH = 2048;
 
 export const trackEventSchema = z.object({
   eventId: z.string().uuid(),
-  type: z.enum(["pageview", "step", "milestone"]),
+  type: z.enum(["pageview", "step", "milestone", "identify"]),
   name: z.string().min(1).max(128),
   path: z.string().max(512).optional(),
   ts: z.number().int().positive(), // epoch ms, client clock
@@ -34,12 +34,27 @@ export const trackEventSchema = z.object({
 
 export type TrackEvent = z.infer<typeof trackEventSchema>;
 
+/**
+ * Session-level identity, set via `useTrack().identify(userId, traits?)` and
+ * carried on every batch from then on (last-wins across `identify` calls -
+ * see `EventQueue.setIdentity`). Additive/optional - a batch without it must
+ * still validate.
+ */
+export const identitySchema = z.object({
+  userId: z.string().min(1).max(128),
+  email: z.string().max(320).optional(),
+  traits: z.record(z.unknown()).optional(),
+});
+
+export type TrackIdentity = z.infer<typeof identitySchema>;
+
 export const trackBatchSchema = z.object({
   sessionId: z.string().uuid(),
   anonId: z.string().uuid(),
   demoSlug: z.string().min(1).max(64),
   shareToken: z.string().max(64).optional(),
   isInternal: z.boolean().optional(),
+  identity: identitySchema.optional(),
   events: z.array(trackEventSchema).min(1).max(50),
 });
 

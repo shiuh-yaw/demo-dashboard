@@ -39,6 +39,9 @@ interface VisitorSessionRow {
   ipHash: string | null;
   isInternal: boolean;
   enrichment: unknown | null;
+  identifiedUserId: string | null;
+  identifiedEmail: string | null;
+  identityTraits: Record<string, unknown> | null;
 }
 
 interface TrackEventRow {
@@ -110,6 +113,9 @@ export function createFakeVisitorSessionPrisma(): VisitorSessionPrismaClient & {
           ipHash: data.ipHash,
           isInternal: data.isInternal,
           enrichment: null,
+          identifiedUserId: data.identifiedUserId ?? null,
+          identifiedEmail: data.identifiedEmail ?? null,
+          identityTraits: data.identityTraits ?? null,
         };
         sessions.set(data.id, row);
         return { ...row };
@@ -122,6 +128,15 @@ export function createFakeVisitorSessionPrisma(): VisitorSessionPrismaClient & {
         const updated: VisitorSessionRow = {
           ...existing,
           lastSeenAt: data.lastSeenAt,
+          ...(data.identifiedUserId !== undefined
+            ? { identifiedUserId: data.identifiedUserId }
+            : {}),
+          ...(data.identifiedEmail !== undefined
+            ? { identifiedEmail: data.identifiedEmail }
+            : {}),
+          ...(data.identityTraits !== undefined
+            ? { identityTraits: data.identityTraits }
+            : {}),
         };
         sessions.set(where.id, updated);
         return { ...updated };

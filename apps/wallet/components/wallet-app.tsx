@@ -18,10 +18,8 @@
  * - Screen components receive navigation object for screen transitions
  */
 
-import { useEffect, useRef } from "react";
-import { useTrack } from "@dynamic-demos/analytics";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useAuthenticatedIdentity } from "@/hooks/use-authenticated-identity";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useClientInitialized } from "@/hooks/use-client-initialized";
 import { useMilestoneOnce } from "@/hooks/use-milestone-once";
@@ -44,8 +42,6 @@ export function WalletApp() {
   const navigation = useNavigation(isLoggedIn);
   const { screen, isReady, isTransitioning } = navigation;
   const milestoneOnce = useMilestoneOnce();
-  const { milestone } = useTrack();
-  const identity = useAuthenticatedIdentity();
 
   // GTM Phase 09: `signed_in` milestone - no email in props (identity stays
   // share-link-only). Session-deduped so it fires once per tab session even
@@ -54,25 +50,8 @@ export function WalletApp() {
     if (isLoggedIn) milestoneOnce("signed_in");
   }, [isLoggedIn, milestoneOnce]);
 
-  // GTM Phase 09: `authenticated` carries the person-level join keys - the
-  // Dynamic user id (always) plus the verified email when present - for any
-  // auth method. Fired once per page LOAD (guarded by this mount-scoped ref),
-  // NOT deduped across reloads via sessionStorage: an already-logged-in user
-  // who reloads must still (re)resolve and send the identity, and the SDK
-  // user restores after mount - a sessionStorage dedupe would let a stale or
-  // early id-only fire permanently suppress the email for the rest of the
-  // tab. Gate on `isClientReady` so the fully-restored user (with email) is
-  // read before firing; the ref stops duplicate fires within one load.
-  const authFiredRef = useRef(false);
-  useEffect(() => {
-    if (authFiredRef.current) return;
-    if (!isClientReady || !isLoggedIn || !identity) return;
-    authFiredRef.current = true;
-    milestone("authenticated", {
-      dynamicUserId: identity.dynamicUserId,
-      ...(identity.email ? { email: identity.email } : {}),
-    });
-  }, [isClientReady, isLoggedIn, identity, milestone]);
+  // `authenticated` milestone now fires from `<IdentityBridge />`, mounted
+  // once in `app/layout.tsx` (@dynamic-demos/analytics).
 
   // Show loading until SDK initialized and screen matches auth state
   if (!isClientReady || !isReady) {

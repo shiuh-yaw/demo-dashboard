@@ -1563,3 +1563,95 @@ describe("PostgresAnalyticsService.catalogFunnel", () => {
     expect(funnel.visits).toBe(4);
   });
 });
+
+describe("PostgresAnalyticsService.catalogDemoTimeseries (per-demo launch trend)", () => {
+  const NOW = new Date("2026-07-22T00:00:00Z");
+
+  // Catalog launches: earn on 07-20 (s2) and 07-22 (s4); wallet on 07-21 (s3).
+  // s5 is an internal earn launch (excluded); s4 also carries a numeric
+  // props.demo that must never match a slug.
+  const catalog = { prospectId: "unused", demoConfigId: "unused", demoSlug: "catalog", shareLink: null } as const;
+
+  function fixture() {
+    return new PostgresAnalyticsService(
+      fakePrisma([
+        session({ id: "s1", anonId: "a1", ...catalog }),
+        session({
+          id: "s2",
+          anonId: "a2",
+          ...catalog,
+          events: [
+            { type: "step", name: "demo_launch", props: { demo: "earn" }, ts: new Date("2026-07-20T10:00:00Z") },
+          ],
+        }),
+        session({
+          id: "s3",
+          anonId: "a2",
+          ...catalog,
+          events: [
+            { type: "step", name: "demo_launch", props: { demo: "wallet" }, ts: new Date("2026-07-21T10:00:00Z") },
+          ],
+        }),
+        session({
+          id: "s4",
+          anonId: "a4",
+          ...catalog,
+          events: [
+            { type: "step", name: "demo_launch", props: { demo: "earn" }, ts: new Date("2026-07-22T10:00:00Z") },
+            { type: "step", name: "demo_launch", props: { demo: 123 }, ts: new Date("2026-07-22T10:01:00Z") },
+          ],
+        }),
+        session({
+          id: "s5",
+          anonId: "a9",
+          ...catalog,
+          isInternal: true,
+          events: [
+            { type: "step", name: "demo_launch", props: { demo: "earn" }, ts: new Date("2026-07-22T10:00:00Z") },
+          ],
+        }),
+      ]),
+    );
+  }
+
+  it("buckets a demo's launches by UTC day and zero-fills the window", async () => {
+    const points = await fixture().catalogDemoTimeseries("earn", "7d", NOW);
+    expect(points).toHaveLength(8); // 07-15..07-22 inclusive
+    expect(points[0]!.date).toBe("2026-07-15");
+    expect(points[points.length - 1]!.date).toBe("2026-07-22");
+    const byDate = new Map(points.map((p) => [p.date, p.launches]));
+    expect(byDate.get("2026-07-20")).toBe(1);
+    expect(byDate.get("2026-07-22")).toBe(1);
+    expect(byDate.get("2026-07-16")).toBe(0); // empty in-between day still present
+    // earn total across the window = 2 (the numeric-demo event never counts).
+    expect(points.reduce((sum, p) => sum + p.launches, 0)).toBe(2);
+  });
+
+  it("filters to the requested slug only", async () => {
+    const points = await fixture().catalogDemoTimeseries("wallet", "7d", NOW);
+    const byDate = new Map(points.map((p) => [p.date, p.launches]));
+    expect(byDate.get("2026-07-21")).toBe(1);
+    expect(byDate.get("2026-07-20")).toBe(0); // earn's day, not wallet's
+    expect(points.reduce((sum, p) => sum + p.launches, 0)).toBe(1);
+  });
+
+  it("excludes internal launches", async () => {
+    const points = await fixture().catalogDemoTimeseries("earn", "all", NOW);
+    // Only s2 (07-20) + s4 (07-22); s5's internal earn launch never counts.
+    expect(points.reduce((sum, p) => sum + p.launches, 0)).toBe(2);
+  });
+
+  it("drops launches older than the range cutoff", async () => {
+    const points = await fixture().catalogDemoTimeseries(
+      "earn",
+      "7d",
+      new Date("2026-09-01T00:00:00Z"), // every fixture launch is now stale
+    );
+    expect(points.every((p) => p.launches === 0)).toBe(true);
+  });
+
+  it("returns an empty series for a slug that was never launched", async () => {
+    const points = await fixture().catalogDemoTimeseries("nonexistent", "all", NOW);
+    expect(points).toEqual([]);
+  });
+});

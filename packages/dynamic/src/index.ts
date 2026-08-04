@@ -64,6 +64,12 @@ export {
   type ConfigForwardingMiddlewareOptions,
 } from "./createConfigForwardingMiddleware";
 export {
+  isBrandedSearch,
+  applyBrandedNoIndex,
+  NOINDEX_HEADER,
+  NOINDEX_VALUE,
+} from "./noindex";
+export {
   setDynamicJwtCookie,
   clearDynamicJwtCookie,
   getJwtMaxAgeSeconds,

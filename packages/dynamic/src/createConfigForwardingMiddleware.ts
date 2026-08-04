@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { applyBrandedNoIndex } from "./noindex";
 
 const DEFAULT_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
@@ -33,6 +34,10 @@ export interface ConfigForwardingMiddlewareOptions {
  * No auth gating, no redirects — for client-side-auth apps (wallet,
  * checkouts, shop, deposit) where the Dynamic SDK widget handles login.
  * Apps with server-side protected routes use `createDemoMiddleware`.
+ *
+ * Every response also carries `X-Robots-Tag: noindex, nofollow` when the
+ * request is a branded demo URL (`?share=` and/or `?theme=` present) - see
+ * `./noindex`. Bare demo URLs stay indexable.
  */
 export function createConfigForwardingMiddleware(
   opts: ConfigForwardingMiddlewareOptions,
@@ -84,6 +89,6 @@ export function createConfigForwardingMiddleware(
     persistSticky(theme, cookieName);
     persistSticky(scope, scopeCookieName);
 
-    return res;
+    return applyBrandedNoIndex(request, res);
   };
 }

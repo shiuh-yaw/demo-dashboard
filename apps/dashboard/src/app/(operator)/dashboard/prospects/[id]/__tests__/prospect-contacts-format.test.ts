@@ -67,6 +67,8 @@ describe("milestoneLabel", () => {
       email: null,
       dynamicUserId: null,
       milestones,
+      identifiedUserId: null,
+      identifiedEmail: null,
     };
   }
 

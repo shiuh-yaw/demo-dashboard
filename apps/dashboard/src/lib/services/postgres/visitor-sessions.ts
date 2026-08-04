@@ -35,10 +35,33 @@ interface VisitorSessionRow {
   ipHash: string | null;
   isInternal: boolean;
   enrichment: unknown | null;
+  identifiedUserId: string | null;
+  identifiedEmail: string | null;
+  identityTraits: unknown | null;
 }
 
 /** "heartbeat"-named events advance `lastSeenAt` but are never persisted. */
 const HEARTBEAT_EVENT_NAME = "heartbeat";
+
+/**
+ * Fields to merge into an `update` call for `batch.identity` - only the
+ * per-field values actually present on this batch, so a batch with no
+ * identity (or a partial identity missing e.g. `email`) never overwrites a
+ * previously-persisted value with null/undefined. Last-wins is per-field:
+ * a present value always replaces the stored one.
+ */
+function identityUpdateFields(identity: TrackBatchInput["identity"]): {
+  identifiedUserId?: string;
+  identifiedEmail?: string;
+  identityTraits?: Record<string, unknown>;
+} {
+  if (!identity) return {};
+  return {
+    ...(identity.userId ? { identifiedUserId: identity.userId } : {}),
+    ...(identity.email ? { identifiedEmail: identity.email } : {}),
+    ...(identity.traits ? { identityTraits: identity.traits } : {}),
+  };
+}
 
 /**
  * Detect Prisma's "unique constraint failed" error without dragging the
@@ -77,11 +100,19 @@ export interface VisitorSessionPrismaClient {
         city: string | null;
         ipHash: string | null;
         isInternal: boolean;
+        identifiedUserId?: string | null;
+        identifiedEmail?: string | null;
+        identityTraits?: Record<string, unknown> | null;
       };
     }): Promise<VisitorSessionRow>;
     update(args: {
       where: { id: string };
-      data: { lastSeenAt: Date };
+      data: {
+        lastSeenAt: Date;
+        identifiedUserId?: string;
+        identifiedEmail?: string;
+        identityTraits?: Record<string, unknown>;
+      };
     }): Promise<VisitorSessionRow>;
   };
   trackEvent: {
@@ -149,6 +180,9 @@ export class PostgresVisitorSessionService implements VisitorSessionService {
             city: meta.geo.city ?? null,
             ipHash: meta.ipHash,
             isInternal: meta.isInternal,
+            identifiedUserId: batch.identity?.userId ?? null,
+            identifiedEmail: batch.identity?.email ?? null,
+            identityTraits: batch.identity?.traits ?? null,
           },
         });
         created = true;
@@ -174,7 +208,10 @@ export class PostgresVisitorSessionService implements VisitorSessionService {
           : existingLastSeenAt;
       await this.client.visitorSession.update({
         where: { id: batch.sessionId },
-        data: { lastSeenAt: nextLastSeenAt },
+        data: {
+          lastSeenAt: nextLastSeenAt,
+          ...identityUpdateFields(batch.identity),
+        },
       });
     }
 

@@ -7,6 +7,7 @@ import { ThemeStyleTag, buildDemoMetadata } from "@dynamic-demos/theme";
 import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { DynamicInit } from "@/components/dynamic-init";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { EarnConfigProvider } from "@/contexts/earn-config-context";
 import { DEFAULT_EARN_CONFIG } from "@/lib/earn-config";
 import { themeToBrandTheme } from "@/lib/earn-brand";
@@ -67,6 +68,7 @@ export default async function RootLayout({
         <GtmTracker demoSlug="earn">
           <EarnConfigProvider config={config} configId={configId ?? undefined}>
             <DynamicInit />
+            <IdentityBridge />
             {children}
             <Toaster position="bottom-right" richColors closeButton />
           </EarnConfigProvider>

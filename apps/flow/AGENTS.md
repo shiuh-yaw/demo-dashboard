@@ -120,7 +120,7 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 
 ## Analytics
 
-`<GtmTracker demoSlug="flow">` wraps the tree in `app/layout.tsx` (no-ops with `NEXT_PUBLIC_TRACK_URL` unset). Pageviews and heartbeats are automatic (package-owned) - no per-app milestone taxonomy is wired up yet.
+`<GtmTracker demoSlug="flow">` wraps the tree in `app/layout.tsx` (no-ops with `NEXT_PUBLIC_TRACK_URL` unset). Pageviews and heartbeats are automatic (package-owned). `authenticated` - the shared fleet-wide milestone (`useIdentify`, `@dynamic-demos/analytics`) - is mounted via `<IdentityBridge />` (`components/analytics/identity-bridge.tsx`, in the layout, inside `<Providers>`), fed by `hooks/use-authenticated-user.ts` (gated on `hooks/use-client-initialized.ts`). Flow's scenarios connect wallets at different verification levels - `checkout`/`deposit` are connect-only (`verifyOnConnect={false}`), `kyc-deposit`/`withdraw` verify the wallet - so `client.user` (and therefore the milestone) only populates for the verified flows; connect-only scenarios correctly never fire it. No other per-app milestone taxonomy is wired up yet.
 
 ## Architecture invariants
 
@@ -129,6 +129,8 @@ See `.env.example`. All values target sandbox by default per D-005. Production o
 - **D-008 (cookie + SSR theming):** `?theme=<configId>` → `flow_config_id` cookie + `x-flow-config-id` header → server `fetchDemoConfig` → inline `<ThemeStyleTag>`. No FOUC.
 - **No icons (Fireblocks brand rule):** numbered labels in Bandwidth Blue, triangle SVG bullets via flexbox. No `lucide-react` in chrome.
 - **Light + dark mode required:** `.dark` class on `<html>`, set by an inline init script before paint. Tokens in `globals.css` flip per mode; consumer-facing surfaces must work in both.
+- **Branded-demo noindex:** `middleware.ts` sets `X-Robots-Tag: noindex, nofollow` on branded demo URLs (`?share=` and/or `?theme=` present, via `applyBrandedNoIndex` from `@dynamic-demos/dynamic/noindex`); the bare `/` URL stays indexable.
+- **Generic OG/Twitter unfurl:** `app/opengraph-image.tsx` returns the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - a fixed "Flow" preview with no prospect/theme data, identical for branded and bare URLs (unlike the noindex rule above, this also protects the link *preview* itself, not just search indexing).
 
 ## Gotchas
 

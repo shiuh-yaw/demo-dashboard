@@ -9,6 +9,7 @@ import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { RemittanceConfigProvider } from "@/contexts/remittance-config-context";
 import type { RemittanceConfig } from "@/lib/remittance-config";
 
@@ -62,6 +63,7 @@ export default async function RootLayout({
             mount unconditionally (@dynamic-demos/analytics Phase 02 guarantee). */}
         <GtmTracker demoSlug="remittance">
           <Providers>
+            <IdentityBridge />
             <RemittanceConfigProvider
               config={config}
               configId={configId ?? undefined}

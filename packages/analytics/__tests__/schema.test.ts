@@ -54,6 +54,12 @@ describe("trackEventSchema", () => {
       trackEventSchema.parse({ ...validEvent, type: "click" }),
     ).toThrow();
   });
+
+  it("accepts the identify event type", () => {
+    expect(() =>
+      trackEventSchema.parse({ ...validEvent, type: "identify", name: "identify" }),
+    ).not.toThrow();
+  });
 });
 
 describe("trackBatchSchema", () => {
@@ -92,6 +98,42 @@ describe("trackBatchSchema", () => {
   it("rejects a bad uuid for sessionId", () => {
     expect(() =>
       trackBatchSchema.parse(makeBatch({ sessionId: "not-a-uuid" })),
+    ).toThrow();
+  });
+
+  it("parses a valid batch without an identity (backward-compat)", () => {
+    const batch = makeBatch();
+    expect("identity" in batch).toBe(false);
+    expect(() => trackBatchSchema.parse(batch)).not.toThrow();
+  });
+
+  it("parses a valid batch with an identity (userId, email, traits)", () => {
+    expect(() =>
+      trackBatchSchema.parse(
+        makeBatch({
+          identity: { userId: "u_1", email: "a@b.co", traits: { plan: "pro" } },
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it("parses a valid batch with an identity that omits email/traits", () => {
+    expect(() =>
+      trackBatchSchema.parse(makeBatch({ identity: { userId: "u_1" } })),
+    ).not.toThrow();
+  });
+
+  it("rejects an identity with an empty userId", () => {
+    expect(() =>
+      trackBatchSchema.parse(makeBatch({ identity: { userId: "" } })),
+    ).toThrow();
+  });
+
+  it("rejects an identity with an oversized userId", () => {
+    expect(() =>
+      trackBatchSchema.parse(
+        makeBatch({ identity: { userId: "u".repeat(129) } }),
+      ),
     ).toThrow();
   });
 });

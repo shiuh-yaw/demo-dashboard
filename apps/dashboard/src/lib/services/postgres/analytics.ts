@@ -23,6 +23,7 @@ import {
   type AnalyticsService,
   type AnalyticsTimeRange,
   type CatalogFunnel,
+  type CatalogDemoTimeseriesPoint,
   type ContactCompany,
   type ContactView,
   type DemoConfigKind,
@@ -66,6 +67,14 @@ export interface AnalyticsSessionRow {
   lastSeenAt: Date;
   isInternal: boolean;
   enrichment: unknown | null;
+  /**
+   * Session-level identity persisted server-side by
+   * `PostgresVisitorSessionService.upsertFromBatch` (SP2) via `identify()`.
+   * Additive alongside the milestone-derived `email`/`dynamicUserId` below -
+   * a later sub-project can switch reads to prefer these columns.
+   */
+  identifiedUserId?: string | null;
+  identifiedEmail?: string | null;
   shareLink: { prospectId: string; demoConfigId: string } | null;
   events: Array<{
     type: string;
@@ -298,6 +307,45 @@ function buildCatalogByDemo(
 }
 
 /**
+ * Daily launch trend for one catalog demo: counts `demo_launch` events whose
+ * `props.demo` strictly equals `slug`, bucketed by the event's own UTC day
+ * (not the session start), and zero-filled across bounded ranges so the chart
+ * axis stays continuous - mirrors `buildTimeseries`. Strict `=== slug` drops
+ * non-string `props.demo` for free. Internal sessions are already excluded by
+ * `CATALOG_WHERE` upstream.
+ */
+function buildCatalogDemoTimeseries(
+  rows: AnalyticsSessionRow[],
+  slug: string,
+  range: AnalyticsTimeRange,
+  now: Date,
+): CatalogDemoTimeseriesPoint[] {
+  const days = RANGE_DAYS[range];
+  const cutoff = days == null ? null : new Date(now.getTime() - days * DAY_MS);
+
+  const buckets = new Map<string, number>();
+  for (const row of rows) {
+    for (const ev of row.events) {
+      if (ev.name !== DEMO_LAUNCH_EVENT) continue;
+      if (ev.props?.demo !== slug) continue;
+      if (cutoff && ev.ts.getTime() < cutoff.getTime()) continue;
+      const key = dayKey(ev.ts);
+      buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+  }
+  if (cutoff) {
+    for (let t = cutoff.getTime(); t <= now.getTime(); t += DAY_MS) {
+      const key = dayKey(new Date(t));
+      if (!buckets.has(key)) buckets.set(key, 0);
+    }
+  }
+
+  return Array.from(buckets.entries())
+    .map(([date, launches]) => ({ date, launches }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
  * Defensive enrichment reader. Phase 10 writes `enrichment` as opaque Json;
  * this tolerates several plausible shapes (`{ company: { name, domain } }`,
  * `{ company: "Acme" }`, `{ companyName, companyDomain }`, ipinfo `{ org }`)
@@ -369,6 +417,8 @@ function toSessionView(row: AnalyticsSessionRow): VisitorSessionView {
     email: identity.email,
     dynamicUserId: identity.dynamicUserId,
     milestones: readMilestones(row),
+    identifiedUserId: row.identifiedUserId ?? null,
+    identifiedEmail: row.identifiedEmail ?? null,
   };
 }
 
@@ -839,5 +889,23 @@ export class PostgresAnalyticsService implements AnalyticsService {
     const visits = rows.length;
     const uniqueVisitors = new Set(rows.map((r) => r.anonId)).size;
     return { visits, uniqueVisitors, byDemo: buildCatalogByDemo(rows, uniqueVisitors) };
+  }
+
+  /**
+   * Per-demo launch trend (the drill-down behind a `catalogFunnel` row).
+   * Reads the same isolated catalog slice (`CATALOG_WHERE`, no share-link
+   * join) and buckets one demo's launches by day - see
+   * `buildCatalogDemoTimeseries`.
+   */
+  async catalogDemoTimeseries(
+    slug: string,
+    range: AnalyticsTimeRange,
+    now: Date = new Date(),
+  ): Promise<CatalogDemoTimeseriesPoint[]> {
+    const rows = await this.client.visitorSession.findMany({
+      where: CATALOG_WHERE,
+      include: INCLUDE,
+    });
+    return buildCatalogDemoTimeseries(rows, slug, range, now);
   }
 }

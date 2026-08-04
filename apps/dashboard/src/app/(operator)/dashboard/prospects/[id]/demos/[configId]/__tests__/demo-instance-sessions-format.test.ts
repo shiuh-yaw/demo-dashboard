@@ -20,6 +20,8 @@ function session(
     email: null,
     dynamicUserId: null,
     milestones: [],
+    identifiedUserId: null,
+    identifiedEmail: null,
     ...overrides,
   };
 }

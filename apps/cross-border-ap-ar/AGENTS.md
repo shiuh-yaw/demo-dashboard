@@ -59,6 +59,8 @@ Consumes `@dynamic-demos/theme/defaults.css` (D-007 / D-020). The shared `--bran
 - All Fireblocks calls go through `app/api/*` server routes — keys never reach the client.
 - Sandbox-by-default (D-005).
 - No Postgres (D-002). Disbursement history persisted in Fireblocks transaction memo / dashboard.
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` from `middleware.ts` (`isBrandedSearch`, local helper - this app has no other use of `@dynamic-demos/dynamic`'s middleware factories); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Cross-border AP/AR" preview, identical for branded and bare URLs (no prospect/theme data read). This app added `@dynamic-demos/dynamic` as a new dependency solely for this composer (unlike the noindex check above, the OG composer isn't a 3-line helper worth duplicating).
 
 ## Data boundaries
 

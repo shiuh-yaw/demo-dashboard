@@ -14,6 +14,8 @@
     "./auth-cookies": "./src/auth-cookies.ts",
     "./demo-middleware": "./src/createDemoMiddleware.ts",
     "./config-forwarder": "./src/createConfigForwardingMiddleware.ts",
+    "./noindex": "./src/noindex.ts",
+    "./og-image": "./src/og-image.tsx",
     "./resolve-credentials": "./src/resolveCredentials.ts",
     "./networks": "./src/networks.ts",
     "./init": "./src/DynamicInit.tsx",

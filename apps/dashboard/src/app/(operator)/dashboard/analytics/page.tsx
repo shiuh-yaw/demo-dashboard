@@ -1,9 +1,10 @@
 /**
- * Analytics - the all-demos-combined org/team roll-up. Scope is resolved
- * server-side (admins see everything, everyone else their own + team
- * prospects); every read is counts-only, no per-prospect identity. Renders
- * the empty state only when there is genuinely zero engagement anywhere,
- * otherwise the dashboard.
+ * Analytics - the all-demos-combined org/team roll-up (the "Engagement" tab).
+ * Scope is resolved server-side (admins see everything, everyone else their
+ * own + team prospects); every read is counts-only, no per-prospect identity.
+ * Renders the empty state only when there is genuinely zero engagement
+ * anywhere, otherwise the dashboard. The public-catalog funnel is a separate
+ * report under the Catalog tab (`./catalog`).
  */
 
 import { requireUser } from "@/lib/auth/gtm";
@@ -14,7 +15,6 @@ import {
   AnalyticsDashboard,
   DEFAULT_ORG_RANGE,
 } from "./analytics-dashboard";
-import { CatalogFunnel } from "./catalog-funnel";
 import { resolveOrgAnalyticsScope } from "./org-scope";
 
 export const dynamic = "force-dynamic";
@@ -26,23 +26,19 @@ export default async function AnalyticsPage() {
 
   // The all-time funnel doubles as the "any data at all" gate: no base-stage
   // views in scope means nothing to show yet.
-  const [funnelStages, initialTimeseries, initialBreakdown, catalog] = await Promise.all([
+  const [funnelStages, initialTimeseries, initialBreakdown] = await Promise.all([
     services.analytics.orgFunnel(scope),
     services.analytics.orgTimeseries(scope, DEFAULT_ORG_RANGE),
     services.analytics.orgDemoKindBreakdown(kindByConfigId, scope, DEFAULT_ORG_RANGE),
-    services.analytics.catalogFunnel(),
   ]);
   const hasAnyData = (funnelStages[0]?.count ?? 0) > 0;
   const kinds = availableKinds(kindByConfigId);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Analytics</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Org-wide sessions, engagement, and demo fit across every demo.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Org-wide sessions, engagement, and demo fit across every demo.
+      </p>
       {hasAnyData ? (
         <AnalyticsDashboard
           initialTimeseries={initialTimeseries}
@@ -53,14 +49,6 @@ export default async function AnalyticsPage() {
       ) : (
         <AnalyticsEmpty />
       )}
-
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">Catalog</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Visits to the demo catalog and which demos those visitors launch.
-        </p>
-      </div>
-      <CatalogFunnel data={catalog} />
     </div>
   );
 }

@@ -13,7 +13,7 @@
  *     against unbounded memory growth when the tracker is misconfigured).
  */
 
-import type { TrackBatch, TrackEvent } from "./schema";
+import type { TrackBatch, TrackEvent, TrackIdentity } from "./schema";
 
 export interface EventQueueMeta {
   sessionId: string;
@@ -42,6 +42,7 @@ const DEFAULT_FLUSH_INTERVAL_MS = 5000;
 export class EventQueue {
   private buffer: TrackEvent[] = [];
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private identity: TrackIdentity | undefined;
   private readonly getMeta: () => EventQueueMeta;
   private readonly trackUrl: string | undefined;
   private readonly batchSize: number;
@@ -71,6 +72,30 @@ export class EventQueue {
       }
     } catch {
       // fail-silent: listener registration is best-effort
+    }
+  }
+
+  /**
+   * Set (or update) the session-level identity. Last-wins: a later call
+   * merges its traits over the existing ones rather than replacing them
+   * wholesale. From the next `buildBatch` on, every batch carries `identity`.
+   */
+  setIdentity(identity: TrackIdentity | null | undefined): void {
+    try {
+      if (!identity) return;
+      const mergedTraits = {
+        ...(this.identity?.traits ?? {}),
+        ...(identity.traits ?? {}),
+      };
+      this.identity = {
+        ...this.identity,
+        ...identity,
+        ...(Object.keys(mergedTraits).length > 0
+          ? { traits: mergedTraits }
+          : {}),
+      };
+    } catch {
+      // fail-silent
     }
   }
 
@@ -150,6 +175,7 @@ export class EventQueue {
       demoSlug: meta.demoSlug,
       shareToken: meta.shareToken,
       isInternal: meta.isInternal,
+      ...(this.identity ? { identity: this.identity } : {}),
       events,
     };
   }

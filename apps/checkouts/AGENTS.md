@@ -76,6 +76,8 @@ Storage prefix in dashboard remains `payment-widget:` (legacy quirk — kept for
 - All Checkout Flow API calls go through `@dynamic-demos/checkouts-widget/checkout-flow` — never directly from `@dynamic-labs-sdk/client` elsewhere in the app.
 - The Checkout Flow primitives sign and broadcast on the user's behalf; the app never holds keys.
 - Apps don't access Postgres (D-002).
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` via the shared `createConfigForwardingMiddleware` (`applyBrandedNoIndex`/`isBrandedSearch` in `@dynamic-demos/dynamic/noindex`); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Checkouts" preview, identical for branded and bare URLs (no prospect/theme data read).
 
 ## Data boundaries
 

@@ -1025,13 +1025,23 @@ export interface ShareLinkService {
 export interface TrackEventInput {
   /** Client-generated UUID - becomes `TrackEvent.id`, the idempotency key. */
   eventId: string;
-  type: "pageview" | "step" | "milestone";
+  type: "pageview" | "step" | "milestone" | "identify";
   /** `name === "heartbeat"` events advance `lastSeenAt` but are never persisted as a row. */
   name: string;
   path?: string;
   /** Epoch ms, client clock. */
   ts: number;
   props?: Record<string, unknown>;
+}
+
+/**
+ * Session-level identity carried on a batch. Mirrors `packages/analytics`'s
+ * `identitySchema` structurally (see `TrackEventInput`).
+ */
+export interface TrackIdentityInput {
+  userId: string;
+  email?: string;
+  traits?: Record<string, unknown>;
 }
 
 /** Mirrors `packages/analytics`'s `trackBatchSchema` structurally (see `TrackEventInput`). */
@@ -1046,6 +1056,11 @@ export interface TrackBatchInput {
   /** Client-declared hint. `meta.isInternal` (server-resolved) is
    * authoritative for persistence - this service does not read this field. */
   isInternal?: boolean;
+  /** Set via `identify()`, carried on every batch from then on (SP1). When
+   * present, `upsertFromBatch` persists it onto the session - last-wins,
+   * but a batch without `identity` never nulls out a previously-persisted
+   * value. */
+  identity?: TrackIdentityInput;
   events: TrackEventInput[];
 }
 
@@ -1074,9 +1089,13 @@ export interface VisitorSessionService {
    * Upserts the `VisitorSession` row by `batch.sessionId`: creates it with
    * `meta` on first sight, or (on subsequent calls) advances `lastSeenAt`
    * forward-only to the max event `ts` in this batch - never backward,
-   * and meta fields are not re-applied on update. Then inserts every
-   * non-heartbeat event via `createMany({ skipDuplicates: true })` so
-   * retried batches / duplicate event ids never double-write.
+   * and meta fields are not re-applied on update. When `batch.identity` is
+   * present, persists it onto `identifiedUserId`/`identifiedEmail`/
+   * `identityTraits` (create and update) - last-wins across batches, but a
+   * batch without `identity` never nulls out a previously-persisted value.
+   * Then inserts every non-heartbeat event via
+   * `createMany({ skipDuplicates: true })` so retried batches / duplicate
+   * event ids never double-write.
    */
   upsertFromBatch(
     batch: TrackBatchInput,
@@ -1138,6 +1157,14 @@ export interface VisitorSessionView {
   dynamicUserId: string | null;
   /** Milestone event names seen in the session, first-seen order. */
   milestones: string[];
+  /**
+   * Session-level identity persisted server-side via `identify()` (SP2) -
+   * additive alongside `email`/`dynamicUserId` above. A later sub-project
+   * (SP4, lead capture) can read these instead of parsing the `authenticated`
+   * milestone.
+   */
+  identifiedUserId: string | null;
+  identifiedEmail: string | null;
 }
 
 /** A viewer rolled up across their sessions on one prospect ("who viewed"). */
@@ -1252,6 +1279,16 @@ export interface CatalogFunnel {
     /** launches / uniqueVisitors; 0 when uniqueVisitors is 0. */
     launchRate: number;
   }>;
+}
+
+/**
+ * One UTC-day bucket of a single catalog demo's launch trend. Counts only -
+ * anonymous catalog traffic, no per-person identity (there is none to reveal).
+ */
+export interface CatalogDemoTimeseriesPoint {
+  /** UTC day, "YYYY-MM-DD". */
+  date: string;
+  launches: number;
 }
 
 export interface AnalyticsService {
@@ -1441,6 +1478,18 @@ export interface AnalyticsService {
    * `shareLinkId not null` join the rest of this interface reads through.
    */
   catalogFunnel(): Promise<CatalogFunnel>;
+  /**
+   * Daily launch trend for a single catalog demo (the drill-down behind a
+   * `catalogFunnel().byDemo` row): counts of that demo's `demo_launch` events
+   * bucketed by UTC day, zero-filled across bounded ranges like
+   * `demoKindTimeseries`. Same catalog isolation + non-internal guarantee as
+   * `catalogFunnel`; `now` is injectable for deterministic tests.
+   */
+  catalogDemoTimeseries(
+    slug: string,
+    range: AnalyticsTimeRange,
+    now?: Date,
+  ): Promise<CatalogDemoTimeseriesPoint[]>;
 }
 
 // =============================================================================

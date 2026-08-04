@@ -71,6 +71,8 @@ Phase 4 migrates shop to the unified theme injection pattern (D-008):
 - Cart state is **client-side only** (demo simplification). Production-grade carts would live in dashboard or a per-app DB; this is intentionally not that.
 - Apps don't access Postgres (D-002). Order history (when added) goes through dashboard.
 - Sandbox-by-default (D-005). Production checkouts require explicit env opt-in.
+- Branded demo URLs (`?share=` and/or `?theme=` present) get `X-Robots-Tag: noindex, nofollow` via the shared `createConfigForwardingMiddleware` (`applyBrandedNoIndex`/`isBrandedSearch` in `@dynamic-demos/dynamic/noindex`); the bare URL stays indexable.
+- `app/opengraph-image.tsx` renders the OG/Twitter unfurl via the shared `renderDemoOgImage` (`@dynamic-demos/dynamic/og-image`) - generic "Shop" preview, identical for branded and bare URLs (no prospect/theme data read).
 
 ## Data boundaries
 

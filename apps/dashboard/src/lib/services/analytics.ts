@@ -9,6 +9,7 @@ import type {
   AnalyticsService,
   AnalyticsTimeRange,
   CatalogFunnel,
+  CatalogDemoTimeseriesPoint,
   ContactView,
   DemoConfigKind,
   DemoKindTimeseriesPoint,
@@ -156,5 +157,13 @@ export class StubAnalyticsService implements AnalyticsService {
 
   async catalogFunnel(): Promise<CatalogFunnel> {
     return { visits: 0, uniqueVisitors: 0, byDemo: [] };
+  }
+
+  async catalogDemoTimeseries(
+    _slug: string,
+    _range: AnalyticsTimeRange,
+    _now?: Date,
+  ): Promise<CatalogDemoTimeseriesPoint[]> {
+    return [];
   }
 }

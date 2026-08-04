@@ -11,6 +11,7 @@ import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { WalletConfigProvider } from "@/contexts/wallet-config-context";
+import { IdentityBridge } from "@/components/analytics/identity-bridge";
 
 import "./globals.css";
 
@@ -79,6 +80,7 @@ export default async function RootLayout({
             call (SiteHeader marketing nav unbranded, ScenarioBrandRow's
             BookACallButton branded). */}
         <GtmTracker demoSlug="wallet">
+          <IdentityBridge />
           <Providers>
             <WalletConfigProvider config={config}>
               {children}
