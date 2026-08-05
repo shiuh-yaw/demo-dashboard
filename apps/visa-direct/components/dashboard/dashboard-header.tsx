@@ -22,7 +22,7 @@ const NAV_LINKS = [
 export function DashboardHeader() {
   const logoutMutation = useLogout();
   const pathname = usePathname();
-  const { branding } = useVisaDirectConfig();
+  const { branding, isBranded } = useVisaDirectConfig();
 
   const navTabs = (
     <nav className="flex items-center gap-0.5">
@@ -70,7 +70,14 @@ export function DashboardHeader() {
         </div>
       )}
       <SiteHeader
-        chip="Fireblocks MTLco"
+        // The demo's name, reading after the "Demos /" crumb. MTLco is the
+        // onramp entity behind the payouts, not what this demo is called - it
+        // stays in the API and env references only.
+        chip="Liquidity"
+        // Branded: drops the "Demos" crumb + chip so a prospect's product isn't
+        // advertising the Dynamic demos catalog. This console has no hero to put
+        // a ScenarioBrandRow in, so the header carries the brand instead.
+        isBranded={isBranded}
         fullWidth
         center={navTabs}
         trailing={signOut}

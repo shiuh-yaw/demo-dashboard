@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { widgetThemeToBrandTheme } from "@dynamic-demos/theme";
-import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
+import { fetchDemoConfigResult } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker, BookACallCta } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
@@ -12,7 +12,7 @@ import { DEFAULT_VISA_DIRECT_CONFIG } from "@/lib/visa-direct-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Visa Direct — Dynamic Demos",
+  title: "Fireblocks Liquidity - Dynamic Demos",
   description:
     "Receive USDC payouts via Visa Direct Push-to-Wallet, powered by Fireblocks custody. Configurable branding via the demo dashboard.",
 };
@@ -28,11 +28,12 @@ export default async function RootLayout({
   // themeOverrides into the returned config, so the shallow-merge inside
   // fetchDemoConfig only needs the top-level (theme, branding) keys
   // replaced atomically — no further deep merge required here.
-  const resolvedConfig = await fetchDemoConfig({
-    demoType: "visa-direct",
-    id: configId,
-    fallback: DEFAULT_VISA_DIRECT_CONFIG,
-  });
+  const { config: resolvedConfig, resolved: isBranded } =
+    await fetchDemoConfigResult({
+      demoType: "visa-direct",
+      id: configId,
+      fallback: DEFAULT_VISA_DIRECT_CONFIG,
+    });
 
   // SSR theme injection (D-008): emit only the `--brand-*` overrides for
   // the tokens visa-direct personalizes per brand (primary, primary-hover,
@@ -51,7 +52,12 @@ export default async function RootLayout({
         <GtmTracker demoSlug="visa-direct">
           <Providers>
             <IdentityBridge />
-            <VisaDirectConfigProvider config={resolvedConfig}>
+            <VisaDirectConfigProvider
+              config={resolvedConfig}
+              configId={configId}
+              isBranded={isBranded}
+            >
+
               {children}
             </VisaDirectConfigProvider>
           </Providers>

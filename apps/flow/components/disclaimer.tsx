@@ -29,6 +29,8 @@
 
 import type { ReactNode } from "react";
 
+import { SecuredByFireblocks } from "@dynamic-demos/ui";
+
 /** Stable id used by the landing page's cite link to scroll here. */
 export const FULL_DISCLAIMER_ANCHOR = "disclaimer";
 
@@ -162,6 +164,11 @@ export function FullDisclaimer() {
 export function TransactionDisclaimer() {
   return (
     <div className="mt-3 w-full max-w-[440px] mx-auto lg:mx-0 px-1 flex flex-col gap-2 text-[11px] leading-relaxed text-(--brand-muted)">
+      {/* Attribution, not legal copy - it rides here because all four scenario
+          routes already render this component directly under the widget, which
+          is exactly where the mark belongs. Shared with apps/connections so the
+          two demos credit Fireblocks identically. */}
+      <SecuredByFireblocks className="mb-1 self-center lg:self-start" />
       <p>
         Your application should make clear to end-users that asset
         conversion and cross-chain routing are executed by independent

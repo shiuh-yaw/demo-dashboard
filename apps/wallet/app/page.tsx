@@ -2,7 +2,7 @@
  * Wallet scenario page (Server Component) - demos-surface phase 2 v2.
  *
  * Flow's scenario-page shape inside the Dynamic site chrome: shared
- * <SiteHeader>/<SiteFooter> (same as the dynamic.dev catalog), hero,
+ * chrome from buildScenarioChrome (same as the dynamic.dev catalog), hero,
  * then the LIVE wallet widget on the left (login card immediately
  * usable; WalletApp handles auth → dashboard internally) and the SDK
  * integration panel on the right. Snippets are Shiki-highlighted here,
@@ -17,19 +17,16 @@
 
 import { headers } from "next/headers";
 import type { WidgetConfig } from "@dynamic-demos/theme";
-import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
+import { fetchDemoConfigResult } from "@dynamic-demos/theme/fetch-demo-config";
 import {
+  buildScenarioChrome,
   CodePanel,
   PanelNotice,
-  ScenarioBrandRow,
   ScenarioHero,
   ScenarioLayout,
   SdkStack,
-  SiteFooter,
-  SiteHeader,
 } from "@dynamic-demos/ui";
 import { WalletApp } from "@/components/wallet-app";
-import { ResetThemeButton } from "@/components/reset-theme-button";
 import { ScenarioBrandLogo } from "@/components/scenario-brand-logo";
 import { WalletPanel } from "@/components/wallet-panel";
 import { PanelSectionProvider } from "@/contexts/panel-section-context";
@@ -52,14 +49,22 @@ export default async function Home() {
   const headersList = await headers();
   const themeScope =
     headersList.get("x-wallet-theme-scope") === "widget" ? "widget" : "page";
-  const config = await fetchDemoConfig<WidgetConfig>({
+  const { config, resolved: isBranded } = await fetchDemoConfigResult<WidgetConfig>({
     demoType: "wallet",
     id: headersList.get("x-wallet-config-id"),
     fallback: {},
   });
   // Branded demos drop the Dynamic site header (full immersion) and
   // carry a Book a call CTA in the hero's brand row instead.
-  const isBranded = Object.keys(config).length > 0;
+  // One call for the chrome contract. `logoPlacement` carries the widget-scope
+  // case: under ?scope=widget the logo centers over the widget below instead of
+  // sitting in the hero, and the brand row keeps Book a call right-aligned.
+  const chrome = buildScenarioChrome({
+    chip: "Wallet",
+    isBranded,
+    brandLogo: <ScenarioBrandLogo align="start" />,
+    logoPlacement: themeScope === "widget" ? "widget" : "hero",
+  });
 
   // All panel variants are highlighted server-side; the client-side
   // WalletPanel switcher just picks one (Q-017).
@@ -96,27 +101,10 @@ export default async function Home() {
   return (
     <PanelSectionProvider>
       <ScenarioLayout
-      header={
-        isBranded ? undefined : (
-          <SiteHeader chip="Wallet" />
-        )
-      }
+      header={chrome.header}
       hero={
         <ScenarioHero
-          logo={
-            isBranded ? (
-              // Logo renders here under page scope only - widget scope
-              // centers it over the widget instead; the shared row keeps
-              // the Book a call CTA right-aligned either way.
-              <ScenarioBrandRow
-                logo={
-                  themeScope === "page" ? (
-                    <ScenarioBrandLogo align="start" />
-                  ) : undefined
-                }
-              />
-            ) : undefined
-          }
+          logo={chrome.heroLogo}
           title="A wallet your users control."
           titleAccent="No seed phrase required."
           pitch="Sign in with email, social, passkeys, or your own auth and every user gets a non-custodial MPC wallet in seconds - no seed phrase, no extension. Create wallets on any chain, read balances and history, sponsor your users' network fees, and verify sessions on your own backend - built entirely on Dynamic."
@@ -129,7 +117,6 @@ export default async function Home() {
         <div className="brand-scope w-full max-w-[440px] mx-auto lg:mx-0">
           {themeScope === "widget" && <ScenarioBrandLogo align="center" />}
           <WalletApp />
-          <ResetThemeButton />
         </div>
       }
       panel={
@@ -174,7 +161,7 @@ export default async function Home() {
           }}
         />
       }
-      footer={<SiteFooter />}
+      footer={chrome.footer}
     />
     </PanelSectionProvider>
   );

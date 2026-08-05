@@ -1,6 +1,5 @@
 "use client";
 
-import { Zap } from "lucide-react";
 import { useClientInitialized } from "@/hooks/use-client-initialized";
 import { WidgetCard, Spinner } from "@dynamic-demos/ui";
 import { WidgetLayout } from "@/components/ui/widget-layout";
@@ -18,7 +17,7 @@ interface AppShellProps {
  */
 function AppShellInner({ children }: AppShellProps) {
   const isClientReady = useClientInitialized();
-  const { isModalOpen, openModal, closeModal } = usePayoutContext();
+  const { isModalOpen, closeModal } = usePayoutContext();
 
   if (!isClientReady) {
     return (
@@ -35,16 +34,6 @@ function AppShellInner({ children }: AppShellProps) {
   return (
     <DashboardLayout header={<DashboardHeader />}>
       {children}
-
-      {/* Fixed "Simulate payout" button — always visible inside (app) layout */}
-      <button
-        onClick={openModal}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-(--brand-primary) text-white text-sm font-semibold shadow-lg transition-all hover:opacity-90 active:scale-95"
-        aria-label="Simulate payout"
-      >
-        <Zap className="w-4 h-4" />
-        Simulate payout
-      </button>
 
       {/* Payout modal — Phase 1 stub */}
       <PayoutModal isOpen={isModalOpen} onClose={closeModal} />

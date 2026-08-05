@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight, Check, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/droplet-client";
 import {
   LANDING_DEMOS,
@@ -84,11 +84,13 @@ export default async function DemoDetailPage({ params }: DemoPageProps) {
 
   return (
     <article className="mx-auto max-w-3xl px-6 pt-8 pb-16">
+      {/* Chevron rather than an arrow, easing left on hover - same back
+          affordance the demos themselves use. */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+        className="group inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
         All demos
       </Link>
 

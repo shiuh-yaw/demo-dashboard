@@ -26,6 +26,7 @@ export const CONFIGURABLE_KIND_TO_DEMO_TYPE = {
   trade: "trade",
   flow: "flow",
   card: "card",
+  connections: "connections",
   "visa-direct": "visa-direct",
 } as const satisfies Partial<Record<DemoConfigKind, DemoConfigKind>>;
 

@@ -26,7 +26,8 @@ export interface FetchDemoConfigOpts<T> {
    * Override the dashboard base URL. When omitted, the helper resolves
    * one of (in priority order): `DASHBOARD_URL`,
    * `NEXT_PUBLIC_DASHBOARD_URL`, `NEXT_PUBLIC_DASHBOARD_API_URL`,
-   * `NEXT_PUBLIC_API_BASE_URL`. The last two are compat aliases for the
+   * `NEXT_PUBLIC_API_BASE_URL`, `DASHBOARD_API_URL`; outside production it then
+   * falls back to `http://localhost:4000`. The last two are compat aliases for the
    * env names the per-app fetchers shipped with — apps don't need to
    * rename their existing variables. When none are set, the helper logs
    * a warning and returns `fallback`.
@@ -38,6 +39,9 @@ export interface FetchDemoConfigOpts<T> {
   logger?: { warn: (msg: string, ...args: unknown[]) => void };
 }
 
+/** Where `pnpm dev` serves apps/dashboard. */
+const DEV_DASHBOARD_URL = "http://localhost:4000";
+
 const DEFAULT_LOGGER = {
   warn: (msg: string, ...args: unknown[]) => {
     // eslint-disable-next-line no-console
@@ -45,7 +49,28 @@ const DEFAULT_LOGGER = {
   },
 };
 
-export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<T> {
+/**
+ * A config plus whether it came from the dashboard.
+ *
+ * `resolved: false` means the returned config IS the fallback - no id, no
+ * dashboard URL, or the fetch failed. Callers deciding branded-vs-unbranded
+ * chrome must key off this rather than off the presence of a config id: the
+ * cookie says "a brand was requested", only this says "we got it". Deriving
+ * branding from the id renders branded chrome over an unbranded page, which is
+ * a misleading failure instead of an obvious one.
+ */
+export interface DemoConfigResult<T> {
+  config: T;
+  resolved: boolean;
+}
+
+/**
+ * As `fetchDemoConfig`, but reports whether the config actually resolved.
+ * Same lenient failure modes - never throws.
+ */
+export async function fetchDemoConfigResult<T>(
+  opts: FetchDemoConfigOpts<T>,
+): Promise<DemoConfigResult<T>> {
   const {
     demoType,
     id,
@@ -55,17 +80,19 @@ export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<
     logger = DEFAULT_LOGGER,
   } = opts;
 
+  const unresolved: DemoConfigResult<T> = { config: fallback, resolved: false };
+
   if (id == null || id === "") {
-    return fallback;
+    return unresolved;
   }
 
   const baseUrl = resolveDashboardUrl(dashboardUrl);
   if (!baseUrl) {
     logger.warn(
-      "[fetchDemoConfig] no DASHBOARD_URL set; falling back to defaults",
+      "[fetchDemoConfig] no dashboard URL set (and not in dev); falling back to defaults",
       { demoType, id },
     );
-    return fallback;
+    return unresolved;
   }
 
   const fetcher: typeof fetch = fetchImpl ?? globalThis.fetch;
@@ -73,7 +100,7 @@ export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<
     logger.warn(
       "[fetchDemoConfig] no fetch implementation available; falling back to defaults",
     );
-    return fallback;
+    return unresolved;
   }
 
   const url = `${baseUrl.replace(/\/$/, "")}/api/demo-configs/${encodeURIComponent(
@@ -92,11 +119,27 @@ export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<
         `[fetchDemoConfig] non-2xx fetching demo config; falling back`,
         { demoType, id, status: res.status, url },
       );
-      return fallback;
+      return unresolved;
     }
     const raw = (await res.json()) as unknown;
     const data = unwrapEnvelope<T>(raw);
-    return mergeOverFallback(fallback, data);
+    if (data == null || typeof data !== "object") {
+      logger.warn(`[fetchDemoConfig] payload was not an object; falling back`, {
+        demoType,
+        id,
+        url,
+      });
+      return unresolved;
+    }
+    // Deliberately shallow, not deep: the dashboard returns a full config
+    // record (partials are normalized server-side), and a shallow merge
+    // guarantees `theme`/`branding` are replaced atomically. A fetched payload
+    // missing a top-level field keeps the fallback's value, which keeps demos
+    // resilient against partial dashboard schemas.
+    return {
+      config: { ...(fallback as object), ...(data as object) } as T,
+      resolved: true,
+    };
   } catch (err) {
     logger.warn(`[fetchDemoConfig] fetch threw; falling back`, {
       demoType,
@@ -104,8 +147,12 @@ export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<
       url,
       err,
     });
-    return fallback;
+    return unresolved;
   }
+}
+
+export async function fetchDemoConfig<T>(opts: FetchDemoConfigOpts<T>): Promise<T> {
+  return (await fetchDemoConfigResult(opts)).config;
 }
 
 function resolveDashboardUrl(explicit?: string): string | undefined {
@@ -117,12 +164,27 @@ function resolveDashboardUrl(explicit?: string): string | undefined {
   // shipped with (NEXT_PUBLIC_DASHBOARD_API_URL for checkouts/wallet/shop,
   // NEXT_PUBLIC_API_BASE_URL for earn/remittance/trade) — keeping those
   // working means no app `.env.local` edits are required to migrate.
-  return (
+  const configured =
     process.env.DASHBOARD_URL ??
     process.env.NEXT_PUBLIC_DASHBOARD_URL ??
     process.env.NEXT_PUBLIC_DASHBOARD_API_URL ??
-    process.env.NEXT_PUBLIC_API_BASE_URL
-  );
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    // A fifth name, because two apps ship it (connect, flow) and its absence
+    // from this list is exactly the bug below: the var looked set, the fetch
+    // never happened.
+    process.env.DASHBOARD_API_URL;
+  if (configured) return configured;
+
+  // Outside production, assume the dashboard is running where `pnpm dev` puts
+  // it. Every app previously had to name the URL itself, and any app that
+  // named it with a key not on this list silently rendered the DEFAULT palette
+  // while still believing it was branded - `isBranded` comes from the theme
+  // cookie, not from this fetch, so the chrome went branded over an unbranded
+  // page. A local default costs nothing and removes the whole class of it.
+  // Production is left strict: guessing localhost there would hide a real
+  // misconfiguration behind a connection error.
+  if (process.env.NODE_ENV !== "production") return DEV_DASHBOARD_URL;
+  return undefined;
 }
 
 /**
@@ -142,18 +204,4 @@ function unwrapEnvelope<T>(raw: unknown): Partial<T> | T {
     return (raw as { data: Partial<T> | T }).data;
   }
   return raw as Partial<T> | T;
-}
-
-/**
- * Shallow-merge fetched data over the fallback. We deliberately don't deep-
- * merge: dashboards return a full config record, and partial records are
- * normalized to full records server-side. This shallow merge guarantees
- * `theme`/`branding` fields are replaced atomically.
- *
- * If the fetched payload lacks a top-level field, the fallback's value is
- * preserved. This keeps demos resilient against partial dashboard schemas.
- */
-function mergeOverFallback<T>(fallback: T, data: Partial<T> | T): T {
-  if (data == null || typeof data !== "object") return fallback;
-  return { ...(fallback as object), ...(data as object) } as T;
 }

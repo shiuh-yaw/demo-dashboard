@@ -13,22 +13,19 @@
  * oauthCallbackParams exemption lets them through).
  */
 
-import { headers } from "next/headers";
 import {
+  buildScenarioChrome,
   CodePanel,
-  ScenarioBrandRow,
   ScenarioHero,
   ScenarioLayout,
   SdkStack,
-  SiteFooter,
-  SiteHeader,
 } from "@dynamic-demos/ui";
 import { EarnPanel } from "@/components/earn-panel";
-import { ResetThemeButton } from "@/components/reset-theme-button";
 import { ScenarioBrandLogo } from "@/components/scenario-brand-logo";
 import { ScenarioWidget } from "@/components/scenario-widget";
 import { LoginCleanup } from "@/components/login-cleanup";
 import { PanelSectionProvider } from "@/contexts/panel-section-context";
+import { getEarnConfig } from "@/lib/get-earn-config";
 import {
   buildCodeSteps,
   EARN_OTP_STEPS,
@@ -49,13 +46,18 @@ export default async function HomePage({
     (params.code && params.state)
   );
 
-  const headersList = await headers();
-  const configId = headersList.get("x-earn-config-id");
+  const { isBranded } = await getEarnConfig();
   // Branded demos drop the Dynamic site header (full immersion) and
   // carry the brand logo + a Book a call CTA in the hero row instead.
   // Branding itself comes from EarnConfigProvider (root layout fetch);
   // <ScenarioBrandLogo> reads it client-side.
-  const isBranded = !!configId;
+  // One call for the chrome contract - header vs brand row, the theme reset in
+  // the footer, the shared footer itself. See buildScenarioChrome.
+  const chrome = buildScenarioChrome({
+    chip: "Earn",
+    isBranded,
+    brandLogo: <ScenarioBrandLogo />,
+  });
 
   const [sdkSteps, otpSteps] = await Promise.all([
     buildCodeSteps(EARN_SDK_STEPS),
@@ -75,18 +77,10 @@ export default async function HomePage({
   return (
     <PanelSectionProvider>
       <ScenarioLayout
-        header={
-          isBranded ? undefined : (
-            <SiteHeader chip="Earn" />
-          )
-        }
+        header={chrome.header}
         hero={
           <ScenarioHero
-            logo={
-              isBranded ? (
-                <ScenarioBrandRow logo={<ScenarioBrandLogo />} />
-              ) : undefined
-            }
+            logo={chrome.heroLogo}
             title="Stablecoin yield, embedded in your product."
             titleAccent="No wallet setup required."
             pitch="Sign in with email or a social account, create a non-custodial MPC wallet in one call - no seed phrase, no extension - then deposit USDC into curated vaults, track positions, and withdraw anytime. Built entirely on Dynamic."
@@ -96,7 +90,6 @@ export default async function HomePage({
           <div className="w-full max-w-[440px] mx-auto lg:mx-0">
             <LoginCleanup />
             <ScenarioWidget isOAuthCallback={isOAuthCallback} />
-            <ResetThemeButton />
           </div>
         }
         panel={
@@ -111,7 +104,7 @@ export default async function HomePage({
             }}
           />
         }
-        footer={<SiteFooter />}
+        footer={chrome.footer}
       />
     </PanelSectionProvider>
   );

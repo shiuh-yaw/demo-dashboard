@@ -248,11 +248,56 @@ export function StablecoinCardIllustration() {
   );
 }
 
+/** Connect - a wallet list with one row picked, and a connected badge. */
+function ConnectIllustration() {
+  return (
+    <Svg>
+      <defs>
+        <linearGradient id="ill-connect-row" x1="16" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.04" />
+        </linearGradient>
+      </defs>
+      <Frame />
+      {/* Two wallet rows at the same weight as the other cards' skeletons - the
+          previous version stacked three 10px rows and filled the chosen one's
+          label with FG, which read as a redacted line rather than a wallet. */}
+      <rect x="16" y="24" width="104" height="14" rx="5" fill={MUTED_FILL} />
+      <rect x="21" y="28" width="6" height="6" rx="2" fill={BORDER} />
+      <rect x="32" y="30" width="30" height="3" rx="1.5" fill={BORDER} />
+      {/* The picked wallet */}
+      <rect
+        x="16"
+        y="42"
+        width="104"
+        height="14"
+        rx="5"
+        fill="url(#ill-connect-row)"
+        stroke={ACCENT}
+        strokeWidth="1.5"
+      />
+      <rect x="21" y="46" width="6" height="6" rx="2" fill={ACCENT} />
+      <rect x="32" y="48" width="38" height="3" rx="1.5" fill={ACCENT} fillOpacity="0.55" />
+      {/* Connected badge, same treatment as Flow's confirmed badge */}
+      <circle cx="134" cy="49" r="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
+      <path
+        d="M130.5 49 L133 51.5 L137.5 46.5"
+        stroke={ACCENT}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
+}
+
 /**
- * Slug → illustration lookup for the six landing demos. Resolve through
+ * Slug → illustration lookup for the landing demos. Resolve through
  * `getDemoIllustration` so unknown slugs fall back safely.
  */
 export const DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
+  connections: ConnectIllustration,
   wallet: WalletIllustration,
   trade: TradeIllustration,
   earn: EarnIllustration,

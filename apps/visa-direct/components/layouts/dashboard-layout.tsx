@@ -1,5 +1,6 @@
-import { PoweredByFooter } from "@dynamic-demos/ui";
+import { SiteFooter } from "@dynamic-demos/ui";
 import { ClientOnlySlot } from "@/components/ui/client-only-slot";
+import { ResetThemeButton } from "@/components/reset-theme-button";
 
 interface DashboardLayoutProps {
   header?: React.ReactNode;
@@ -25,7 +26,11 @@ export function DashboardLayout({ header, children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
-      <PoweredByFooter className="shrink-0 pb-4" />
+      {/* The shared SiteFooter, same as every other demo - not the
+          PoweredByFooter watermark, which is for embedded widget surfaces.
+          `fullWidth` matches the header above it, and Clear theme rides the
+          links row (renders nothing when unbranded). */}
+      <SiteFooter fullWidth extraLinks={<ResetThemeButton />} />
     </div>
   );
 }

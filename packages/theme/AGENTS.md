@@ -17,7 +17,8 @@ Unified theming primitives for demo apps. Owns the `--brand-*` CSS variable cont
 - Brand contract: `BrandTheme` interface + `BRAND_DEFAULTS` mirror the CSS file in TypeScript.
 - CSS-var projector: `themeToCssVars` returns a `Record<string, string>` of `--brand-*` overrides; `cssVarsToRootBlock` serialises to a `:root { ... }` block.
 - SSR overlay: `<ThemeStyleTag>` server component renders an inline `<style>` (no `useEffect`, no client mounting); supports `overridesOnly` for surgical token bumps and `selector` to confine the brand to a subtree (default `:root`; wallet passes `.brand-scope` to theme only the live widget).
-- Server-side config fetch: `fetchDemoConfig` reads the dashboard API for a stored config and shallow-merges over a fallback. Lenient on failure — returns the fallback so demos keep rendering.
+- Server-side config fetch: `fetchDemoConfig` reads the dashboard API for a stored config and shallow-merges over a fallback. Lenient on failure - returns the fallback so demos keep rendering.
+- `fetchDemoConfigResult` is the same fetch returning `{ config, resolved }`. **Anything deciding branded-vs-unbranded chrome must key off `resolved`, not off the presence of a config id.** The id only says a brand was requested; keying chrome off it renders branded chrome over an unbranded page whenever the fetch fails, which is a misleading failure rather than an obvious one. `fetchDemoConfig` is a thin wrapper returning `.config`.
 - Demo metadata: `buildDemoMetadata({ demoName, description, appName? })` builds the shared tab title/description shape — branded configs title the tab as the prospect's app (`"SpaceX - Trade"`), unbranded falls back to `"<Demo> - Dynamic Demos"`. Framework-neutral plain object, assignable to Next's `Metadata`. Apps with a brand-name field pair it with a `React.cache`-wrapped config getter shared between `generateMetadata` and the root layout (trade/wallet reference; `fetchDemoConfig` itself is no-store and would double-fetch otherwise).
 - Color math: `darkenHex`, `lightenHex`, `mixHex`, `readableTextOn` (HSL/luminance-based, hex-safe).
 - Legacy theme shapes: `BaseTheme`, `WidgetTheme`, `DashboardTheme` (extends `BaseTheme`); branding counterparts.
@@ -59,7 +60,8 @@ Stable subpaths declared in `package.json#exports`:
 - `BRAND_DEFAULTS` and `defaults.css` stay in lockstep — adding a token requires updates in both, plus the projection in `themeToCssVars` (the snapshot test in `__tests__/defaultsCss.test.ts` enforces this).
 - Theme objects are pure data; no hooks, no effects, no DOM access.
 - `<ThemeStyleTag>` is server-only (D-008). No `useEffect`. No client-side CSS injection.
-- `fetchDemoConfig` never throws — failure modes return the caller's fallback.
+- `fetchDemoConfig` never throws - failure modes return the caller's fallback.
+- Every unresolved path returns the caller's fallback object itself, so `resolved: false` and `config === fallback` always agree. Callers should read `resolved` rather than re-deriving it: inspecting the config cannot work for apps whose fallback is fully populated (earn's `DEFAULT_EARN_CONFIG`).
 - Sandbox-by-default applies to the dashboard fetcher (D-005).
 
 ## Integration map

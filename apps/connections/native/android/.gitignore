@@ -1,0 +1,9 @@
+# Android / Gradle build artifacts
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+.kotlin/
+.DS_Store
+# Gradle wrapper binary is generated on first open in Android Studio

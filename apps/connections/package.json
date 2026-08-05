@@ -1,0 +1,47 @@
+{
+  "name": "@dynamic-demos/connections",
+  "version": "0.1.0",
+  "description": "Connect-only wallet flow - embeddable in an iframe or native webview, redirects back with the connected address",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4013",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dynamic-demos/analytics": "workspace:*",
+    "@dynamic-demos/code-highlight": "workspace:*",
+    "@dynamic-demos/dynamic": "workspace:*",
+    "@dynamic-demos/theme": "workspace:*",
+    "@dynamic-demos/ui": "workspace:*",
+    "@dynamic-labs-sdk/client": "1.19.1",
+    "@dynamic-labs-sdk/evm": "1.19.1",
+    "@dynamic-labs-sdk/metamask": "1.19.1",
+    "@dynamic-labs-sdk/react-hooks": "1.19.1",
+    "@dynamic-labs-sdk/solana": "1.19.1",
+    "@dynamic-labs-sdk/wallet-connect": "1.19.1",
+    "@t3-oss/env-nextjs": "0.13.8",
+    "@tanstack/react-query": "catalog:",
+    "next": "catalog:",
+    "qrcode.react": "4.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@dynamic-demos/tsconfig": "workspace:*",
+    "@eslint/eslintrc": "catalog:",
+    "@tailwindcss/postcss": "4.1.17",
+    "@types/node": "20.19.25",
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "tailwindcss": "4.1.17",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

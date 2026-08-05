@@ -41,13 +41,19 @@ export const GTM_DENIED_PATH = "/dashboard/denied";
 // Domain allowlist (pure)
 // =============================================================================
 
-/** Comma-separated -> trimmed, lowercased, de-blanked domain list. */
-export function parseAllowedDomains(raw: string | undefined): string[] {
-  return (raw ?? "")
-    .split(",")
-    .map((d) => d.trim().toLowerCase())
-    .filter(Boolean);
-}
+/**
+ * Who may reach the operator surface. Hardcoded, not env-driven: the two
+ * corporate domains are the answer in every environment, and an env var for
+ * them is a way to get it wrong - an unset var fails closed and locks everyone
+ * out (which is what it did locally), a mistyped one silently admits nobody.
+ * In code, widening the allowlist needs a diff and a review.
+ *
+ * Lowercase, and exact-match only - see `emailDomainAllowed`.
+ */
+export const ALLOWED_EMAIL_DOMAINS: readonly string[] = [
+  "fireblocks.com",
+  "dynamic.xyz",
+];
 
 /**
  * Exact match on the full domain after `@`, lowercased. Empty allowlist ->
@@ -150,7 +156,7 @@ export const getSessionUser = cache(async (): Promise<GtmUser | null> => {
   return resolveSessionUser({
     getCurrentUser,
     users: services.users,
-    allowedDomains: parseAllowedDomains(env.GTM_ALLOWED_DOMAINS),
+    allowedDomains: [...ALLOWED_EMAIL_DOMAINS],
     onMismatch: warnMismatch,
   });
 });

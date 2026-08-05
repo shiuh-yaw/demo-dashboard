@@ -1,0 +1,1425 @@
+/*
+ * The widget's own tokens now resolve through the shared `--brand-*` palette
+ * (@dynamic-demos/theme), so a dashboard config themes this flow the same way
+ * it themes every other demo. The fallbacks are upstream's literal values, so
+ * an unthemed render is byte-identical to the standalone POC.
+ */
+:root {
+  /* Accent */
+  --fb-blue: var(--brand-primary, #1877f2);
+  --fb-blue-hover: var(--brand-primary-hover, #166fe5);
+
+  /* Theme tokens adapted from Dynamic's checkout widget */
+  --fg: var(--brand-fg, #0e121b);
+  --muted: var(--brand-muted, #99a0ae);
+  --secondary: #606770;
+  --disclosure: #8a8d91;
+  --disclosure-link: #4b4f56;
+  --bg: var(--brand-surface, #ffffff); /* single background on mobile */
+  --surface: var(--brand-surface, #ffffff);
+  --row-bg: var(--brand-row-bg, #f9fafb);
+  --row-hover: var(--brand-row-hover, #f2f3f5);
+  --border: var(--brand-border, #e1e4ea);
+
+  --radius-row: var(--brand-radius, 12px);
+  --radius-card: var(--brand-radius-lg, 20px);
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile-first: full-screen, single background. */
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top)) 16px
+    max(12px, env(safe-area-inset-bottom));
+  gap: 12px;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--surface);
+  padding: 12px 4px 4px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card--center {
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Docs sits directly on the page background - no white card. Wider than the
+   connect card to fit the left nav + content. */
+.card--docs {
+  background: transparent;
+  max-width: 820px;
+}
+
+/* Heading block */
+/* Heading metrics match `ScreenHeader` in packages/checkouts-widget - the shared
+   wallet picker every other demo mounts. Upstream's own scale (11px/700 eyebrow
+   over a 19px/700 title) read a full step louder than the same screen does in
+   flow or checkouts. */
+.eyebrow {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.card__title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.375;
+  text-align: left;
+  margin: 0 0 4px;
+  color: var(--fg);
+}
+
+.card__subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+  margin: 0 0 18px;
+  line-height: 1.375;
+}
+
+/* Copy that FOLLOWS the thing it describes (the hand-off confirmation sits under
+   the wallet row) rather than preceding it, so the 18px belongs above, not below.
+ *
+ * Spacing has to live here, not as Tailwind utilities on the element. This file
+ * is imported unlayered while Tailwind's classes sit in `@layer utilities`, and
+ * unlayered wins regardless of order - so `mt-4 mb-0` on a `.card__subtitle`
+ * silently loses to the `margin` shorthand above and does nothing at all. Any
+ * utility that fights a property this stylesheet already sets has the same
+ * problem; put the value here instead. */
+.card__subtitle--after {
+  margin: 14px 0 0;
+}
+
+/* Per-guide section heading. Every guide (Web, Basic, Headless, RN) leads with
+   one, so the Basic and Headless layouts stay structurally identical. */
+.docs-section__title {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: left;
+  margin: 0 0 6px;
+  color: var(--fg);
+}
+
+.card--center .card__title,
+.card--center .card__subtitle,
+.chain-header .card__title,
+.chain-header .card__subtitle {
+  text-align: center;
+}
+
+/* When a title is followed directly by content (no subtitle), add breathing
+   room - e.g. the home wallet list. The search field carries the same offset in
+   its own component: it is a shared <Input> now, so there is no class here to
+   hang a sibling selector on. */
+.card__title + .list,
+.card__title + .address-input {
+  margin-top: 18px;
+}
+
+/* Wallet / chain rows */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list--scroll {
+  max-height: 52vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+
+/* Row geometry matches `InstalledRow` in packages/checkouts-widget: 12px gap, a
+   32px icon, 16/12 padding, and no min-height - the height comes from the icon
+   plus padding (56px), same as every other demo's wallet list. */
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-row);
+  background: var(--row-bg);
+  padding: 12px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--fg);
+  text-align: left;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.tile:hover:not(:disabled) {
+  background: var(--row-hover);
+}
+
+.tile:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.tile:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tile__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.tile__icon img,
+.tile__icon svg {
+  border-radius: 8px;
+  object-fit: contain;
+  display: block;
+}
+
+.tile__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--fb-blue);
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tile > .tile__name,
+.tile > .tile__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.tile__label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.tile__name {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.tile__sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Right-side badges (Installed pill + multi-chain chevron). */
+.tile__meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+/* "Installed" pill */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fb-blue);
+}
+
+/* Home actions: a manual-entry text link */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.actions__manual {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.btn-ghost {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--fg);
+  background: var(--row-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.06s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--row-hover);
+  border-color: #c4c7cc;
+}
+
+.btn-ghost:active {
+  transform: scale(0.99);
+}
+
+.list-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 12px 0 2px;
+}
+
+.list-manual {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 14px 0 2px;
+}
+
+.install-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 16px 0 2px;
+}
+
+.install-hint a {
+  color: var(--fb-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.install-hint a:hover {
+  text-decoration: underline;
+}
+
+.text-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fb-blue);
+  cursor: pointer;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* Search field. The input itself is the shared <Input>; only the two controls
+   overlaid on it are styled here.
+
+   Hide the browser's native search clear (X) - we render our own Clear pill, and
+   both at once reads as a bug. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-field__clear {
+  flex: none;
+  border: none;
+  background: var(--row-hover);
+  color: var(--secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.search-field__clear:hover {
+  background: #e6e8ec;
+  color: var(--fg);
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* Notices */
+.notice {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.45;
+}
+
+.notice--error {
+  background: #ffebe8;
+  border: 1px solid #dd3c10;
+  color: #b31700;
+}
+
+.notice--warn {
+  background: #fff7e6;
+  border: 1px solid #f0b429;
+  color: #7a5200;
+}
+
+.notice code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Status (loading / redirecting) */
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 15px;
+  padding: 28px 0;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(24, 119, 242, 0.25);
+  border-top-color: var(--fb-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex: none;
+}
+
+.spinner--sm {
+  width: 15px;
+  height: 15px;
+  margin-left: auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Confirmation */
+.success-check {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 4px;
+  border-radius: 50%;
+  background: #e7f3ff;
+  color: var(--fb-blue);
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.confirm-wallet .tile__label {
+  align-items: flex-start;
+}
+
+.confirm-wallet .tile__name {
+  font-size: 16px;
+}
+
+.address {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--secondary);
+  word-break: break-all;
+  background: var(--row-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 8px 0 18px;
+  max-width: 320px;
+}
+
+/* Buttons */
+.btn-primary {
+  width: 100%;
+  max-width: 320px;
+  padding: 13px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: var(--fb-blue);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.06s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--fb-blue-hover);
+}
+
+/* Press feedback, same 0.99 as `.tile` - every tappable surface in the widget
+   gives way slightly. These are <a> deep-link taps, so this is the only
+   confirmation the user gets before the app switch. */
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-primary--block {
+  max-width: none;
+  margin-top: 16px;
+}
+
+/* When these button styles back an <a> (deep-link / return taps), anchors are
+   inline, left-aligned, and underlined by default - reset them so they render
+   like the <button> variant. */
+a.btn-primary,
+a.btn-ghost {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-link {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 6px;
+  background: none;
+  border: none;
+  color: var(--fb-blue);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+/* Back button + chain header */
+/* Centred icon-over-title. Used by the status screens (WalletConnect QR /
+   connecting, wallet-not-installed) where a big wallet icon is the subject. */
+.chain-header {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.chain-header .tile__icon {
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+/* Centred prose reads badly at the card's full 436px - two ragged near-full-width
+   lines look accidental. A tighter measure makes the wrap deliberate. */
+.chain-header .card__subtitle {
+  max-width: 30ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* Manual address entry */
+.address-input {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.5;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  resize: none;
+  background: var(--surface);
+  word-break: break-all;
+}
+
+.address-input:focus {
+  border-color: var(--fb-blue);
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.18);
+}
+
+.detect-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--row-bg);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  align-self: flex-start;
+}
+
+.detect-chip svg {
+  border-radius: 6px;
+}
+
+.detect-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 12px 0 0;
+}
+
+/* Skeleton loading */
+.tile--skeleton {
+  pointer-events: none;
+}
+
+.sk {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef0f3 25%, #f6f7f9 37%, #eef0f3 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.sk--icon {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+.sk--bar {
+  height: 14px;
+  flex: 1;
+  border-radius: 7px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Connected / redirecting screen */
+/* Read-only summary row (the connected wallet, the callback's echo of it). Every
+   interactive cue has to be undone, not just the cursor: `.tile:active` scales to
+   0.99, and since this renders as a <div> the `:not(:disabled)` guard doesn't
+   exclude it - so pressing it animated like a button that does nothing. */
+.tile--static {
+  cursor: default;
+}
+
+.tile--static:hover,
+.tile--static:active {
+  background: var(--row-bg);
+  transform: none;
+}
+
+/* Success header on the connected screen */
+.success-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/* Sized against the 16px title beside it, not against the wallet row's 34px
+   icon - the two are different components and only their left edges line up. */
+.success-header__icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  background: #12b76a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-header .card__title {
+  margin: 0;
+}
+
+.tile__check {
+  margin-left: auto;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e7f7ef;
+  color: #12b76a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.redirect-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--row-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.redirect-count {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fb-blue);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Callback page: the params we handed back, one card each. */
+.callback-params {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.callback-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+/* Shown when a value was clipped - e.g. a base64 wallet-icon data URI. */
+.callback-value__meta {
+  display: block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* Inline link inside guide prose. Inherits size from its paragraph so it never
+   shrinks the line it sits on (unlike `.text-link`, which pins 13px). */
+.docs-inline-link {
+  color: var(--fb-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.docs-inline-link:hover {
+  text-decoration: underline;
+}
+
+/* Callout / note box (docs) */
+.callout {
+  background: var(--row-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 4px 0 20px;
+  font-size: 13.5px;
+  color: var(--secondary);
+  line-height: 1.5;
+}
+
+.callout__eyebrow {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--fb-blue);
+  margin: 0 0 4px;
+}
+
+.callout p {
+  margin: 0;
+}
+
+/* Docs steps - connected timeline, no background or separators */
+.step {
+  position: relative;
+  padding-left: 40px;
+  padding-bottom: 28px;
+}
+
+.step:last-of-type {
+  padding-bottom: 0;
+}
+
+/* Vertical connector line running through the numbered circles. */
+.step::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--border);
+}
+
+.step:first-of-type::before {
+  top: 13px;
+  height: calc(100% - 13px);
+}
+
+.step:last-of-type::before {
+  height: 13px;
+}
+
+.step__num {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fb-blue);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step__title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  padding-top: 3px;
+  color: var(--fg);
+}
+
+.step__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step__desc {
+  margin: 0;
+  font-size: 14px;
+  color: var(--secondary);
+  line-height: 1.5;
+}
+
+.step__note {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.step__desc code,
+.param__desc code,
+.step__note code,
+.callout code {
+  background: var(--row-hover);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0 5px;
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fg);
+}
+
+/* Docs params */
+.param {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+}
+
+.param__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.param__name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.param__type {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.param__req {
+  margin-left: auto;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.param__req--on {
+  color: var(--fb-blue);
+}
+
+.param__desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--secondary);
+  line-height: 1.45;
+}
+
+/*
+ * Dark code block - chrome matched to `CodeFrame` in @dynamic-demos/ui
+ * (rounded-2xl, #0d1117, a white-alpha strip rather than a second solid fill,
+ * white/55 label) so these read as the same component as every other demo's
+ * code frames. The dark frame is deliberately theme-independent - code reads as
+ * "terminal" under any brand - which is why the hexes here aren't brand tokens;
+ * the border is the one value that follows the palette.
+ *
+ * Not yet matched: real syntax highlighting. Ours runs Shiki server-side, and
+ * these snippets are inline literals in a client component, so they only get
+ * comment dimming. See AGENTS.md → Open questions.
+ */
+.code {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0d1117;
+}
+
+.code__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code__file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.code__copy {
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 7px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.code__copy:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Body metrics mirror `.shiki-block pre.shiki` in @dynamic-demos/ui. */
+.code__body {
+  margin: 0;
+  padding: 1rem 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.code__body::-webkit-scrollbar {
+  height: 6px;
+}
+.code__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.code__body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+}
+.code__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.code__line {
+  display: flex;
+  padding-right: 1.5rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  white-space: pre;
+}
+
+.code__ln {
+  width: 2.25em;
+  padding-right: 1.5em;
+  margin-left: 0.5em;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.22);
+  user-select: none;
+  -webkit-user-select: none;
+  flex: none;
+}
+
+/*
+ * github-dark's plain-text foreground, matching the Shiki theme our CodeFrame
+ * renders - so an unhighlighted block sits in the same colour space as a
+ * highlighted one instead of reading as a different component.
+ */
+.code__text {
+  color: #e6edf3;
+}
+
+.code__text--comment {
+  color: #8b949e;
+}
+
+/* Bottom disclosure (ToS / Privacy) */
+.disclosure__secured {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.disclosure__secured-label {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  /* Uppercase caps are top-weighted in their line box; nudge down to optically
+     center against the logo. */
+  transform: translateY(2px);
+}
+
+.disclosure__secured img {
+  display: block;
+}
+
+.disclosure__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--disclosure-link);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Tabs at the top of the docs page (Web / Native). */
+/* Docs: subtle left nav + content. Each nav item deep-links to
+   #developers/<section>. */
+.docs-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+.docs-nav {
+  position: sticky;
+  top: 12px;
+  flex: 0 0 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.docs-nav__group {
+  margin: 12px 0 2px;
+  padding: 0 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+.docs-nav__item {
+  text-align: left;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--secondary);
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: 0 8px 8px 0;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.docs-nav__item:hover {
+  background: var(--row-bg);
+}
+.docs-nav__item--sub {
+  padding-left: 18px;
+  font-size: 13px;
+}
+.docs-nav__item--active {
+  color: var(--fb-blue);
+  font-weight: 600;
+  background: var(--row-bg);
+  border-left-color: var(--fb-blue);
+}
+.docs-content {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .docs-layout {
+    flex-direction: column;
+    gap: 12px;
+    /* Stretch content to the card width; without this the column keeps
+       flex-start and content sizes to its widest child (code blocks) and
+       overflows the viewport. */
+    align-items: stretch;
+  }
+  .docs-nav {
+    position: static;
+    flex: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .docs-nav__group {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: none; /* the sub-labels read fine inline on mobile */
+  }
+  .docs-nav__item {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .docs-nav__item--active {
+    border-color: var(--fb-blue);
+  }
+}
+
+/* Collapsible source block (the full FireblocksConnectFlow.swift). */
+.code-collapse {
+  margin: 4px 0 8px;
+}
+.advanced-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 34px 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted, #8a8f98);
+}
+.advanced-divider::before,
+.advanced-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.code-collapse__summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fb-blue);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--row-bg);
+  user-select: none;
+}
+.code-collapse__summary::-webkit-details-marker {
+  display: none;
+}
+.code-collapse__summary::before {
+  content: "▸ ";
+  color: var(--muted);
+}
+.code-collapse[open] .code-collapse__summary::before {
+  content: "▾ ";
+}
+.code-collapse[open] .code-collapse__summary {
+  margin-bottom: 8px;
+}
+.code-collapse__summary code {
+  color: inherit;
+}
+
+.disclosure {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 4px 6px 8px;
+  color: var(--disclosure);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.disclosure p {
+  margin: 0 0 10px;
+}
+
+.disclosure p:last-child {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.disclosure a {
+  color: var(--disclosure-link);
+  text-decoration: underline;
+}
+
+/* WalletConnect QR */
+.qr {
+  align-self: center;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin: 8px auto 12px;
+  line-height: 0;
+}
+
+.qr svg {
+  display: block;
+  border-radius: 8px;
+}
+
+/* Subtle motion - disabled when the user prefers reduced motion.
+ *
+ * `.card` deliberately has no entrance animation. The flow mounts twice by
+ * construction (the `ssr: false` fallback, then the real chunk), so a
+ * mount-triggered fade played twice and read as the card flashing. The screens
+ * inside the card are keyed separately too, so every back/forward step replayed
+ * it as well. Content still appears progressively; nothing needs the fade. */
+@media (prefers-reduced-motion: no-preference) {
+  .detect-chip,
+  .qr {
+    animation: popIn 0.18s ease both;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Desktop: centered card on a soft backdrop (matches reference). */
+@media (min-width: 560px) {
+  :root {
+    --bg: var(--brand-page-bg, #f0f2f5);
+  }
+
+  .page {
+    justify-content: center;
+    padding: 24px 16px;
+    gap: 16px;
+  }
+
+  .card {
+    flex: none;
+    border-radius: var(--radius-card);
+    border: 1px solid #ededf0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px rgba(0, 0, 0, 0.08);
+    padding: 22px 22px 20px;
+  }
+
+  .card--center {
+    flex: none;
+  }
+
+  .list--scroll {
+    max-height: 320px;
+  }
+
+  /* Docs is tall - top-align and let the page scroll. */
+  .page--docs {
+    justify-content: flex-start;
+  }
+
+  .card--docs {
+    /* Wider than the connect card to fit the left nav + content. */
+    max-width: 820px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 4px 8px 24px;
+  }
+}
+
+/* Debug panel (?debug) - a fixed, monospace environment readout used when
+   testing inside an embedded web view on a real device. */
+.debug-panel {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 9999;
+  max-height: 42vh;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(14, 18, 27, 0.92);
+  color: #e7ebf3;
+  font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+.debug-panel__title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+.debug-panel__grid {
+  margin: 0;
+  display: grid;
+  gap: 3px;
+}
+.debug-panel__row {
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  gap: 8px;
+}
+.debug-panel__row dt {
+  opacity: 0.6;
+}
+.debug-panel__row dd {
+  margin: 0;
+  word-break: break-all;
+}
+
+/*
+ * Scenario-page surface.
+ *
+ * `.page` is a full-viewport shell - right for the standalone / embedded flow,
+ * wrong inside the scenario page's two-column grid, where the widget is one
+ * column beside the code panel. Scoping the de-shelling to this attribute keeps
+ * the embed routes (`/connect`, `/headless`) on upstream's untouched geometry.
+ */
+[data-connect-surface="scenario"] .page {
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  background: transparent;
+}
+
+[data-connect-surface="scenario"] .card {
+  flex: none;
+  max-width: none;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 28px rgba(0, 0, 0, 0.08);
+  padding: 22px 22px 20px;
+}
+
+[data-connect-surface="scenario"] .disclosure {
+  max-width: none;
+  padding: 14px 6px 0;
+}

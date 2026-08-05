@@ -91,6 +91,18 @@ Never hardcode values; reference `.env.example` (which must exist).
 - Validation at the trust boundary
 - Specific security guarantees
 
+## Analytics taxonomy
+
+Apps only. Delete this section for packages that emit no events.
+
+State where `<GtmTracker demoSlug="...">` is mounted, whether `<BookACallCta />` is mounted and why/why not, and which module owns the milestone name union. Then one row per event. Keep this table and `lib/analytics/milestones.ts` in sync - renaming an event is a breaking analytics change, and this table is where a reader finds out what a name means.
+
+| Milestone | Trigger | Props |
+|---|---|---|
+| `<name>` | What user action or state change fires it, and any dedupe (once per session / per load). Note the paths that do NOT reach it. | Prop names, or `none`. |
+
+State explicitly that no addresses, emails, or hashes appear in props - or, if the demo has a real reason to include something identifying, say what and why.
+
 ## Integration map
 
 Which other packages/apps does this depend on? Which depend on this? One-liner each.

@@ -5,18 +5,15 @@ import {
   widgetThemeToBrandTheme,
   type WidgetConfig,
 } from "@dynamic-demos/theme";
-import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
+import { fetchDemoConfigResult } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import {
+  buildScenarioChrome,
   CodePanel,
-  ResetThemeButton,
-  ScenarioBrandRow,
   ScenarioHero,
   ScenarioLayout,
   SdkStack,
-  SiteFooter,
-  SiteHeader,
 } from "@dynamic-demos/ui";
 import { Providers } from "./providers";
 import { BrandingProvider } from "@/components/branding-provider";
@@ -33,12 +30,12 @@ import "./globals.css";
 const getCardConfig = cache(async () => {
   const headersList = await headers();
   const configId = headersList.get("x-card-config-id");
-  const config = await fetchDemoConfig<WidgetConfig>({
+  const { config, resolved } = await fetchDemoConfigResult<WidgetConfig>({
     demoType: "card",
     id: configId,
     fallback: {},
   });
-  return { configId, config };
+  return { configId, config, isBranded: resolved };
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -58,7 +55,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
-  const { config } = await getCardConfig();
+  const { config, isBranded } = await getCardConfig();
 
   const brandTheme = widgetThemeToBrandTheme(config.theme ?? {});
   const themeScope =
@@ -67,7 +64,15 @@ export default async function RootLayout({
   // Branded (?theme=) drops the Dynamic SiteHeader and carries the brand
   // identity in the hero's brand row (logo + Book a call) instead - same rule
   // as wallet. Unbranded keeps the Dynamic demos-site header.
-  const isBranded = Object.keys(config).length > 0;
+  // One call for the chrome contract. `logoPlacement` carries the widget-scope
+  // case: under ?scope=widget the logo centers over the widget instead of
+  // sitting in the hero.
+  const chrome = buildScenarioChrome({
+    chip: "Stablecoin Card",
+    isBranded,
+    brandLogo: <ScenarioBrandLogo align="start" />,
+    logoPlacement: themeScope === "widget" ? "widget" : "hero",
+  });
 
   // Every route renders inside one shared scenario shell (hero + live widget
   // column + SDK code panel), so the marketing + integration story stays
@@ -109,30 +114,10 @@ export default async function RootLayout({
             }}
           >
             <ScenarioLayout
-              header={
-                isBranded ? undefined : (
-                  <SiteHeader
-                    chip="Stablecoin Card"
-                  />
-                )
-              }
+              header={chrome.header}
               hero={
                 <ScenarioHero
-                  logo={
-                    isBranded ? (
-                      // Page scope: brand logo above the hero title. Widget
-                      // scope: logo centers over the widget instead (below);
-                      // the brand row keeps Book a call right-aligned either
-                      // way.
-                      <ScenarioBrandRow
-                        logo={
-                          themeScope === "page" ? (
-                            <ScenarioBrandLogo align="start" />
-                          ) : undefined
-                        }
-                      />
-                    ) : undefined
-                  }
+                  logo={chrome.heroLogo}
                   title="A debit card your users fund with stablecoins."
                   titleAccent="Issued in seconds."
                   pitch="Your users sign in with email or social and get an embedded wallet and a virtual Visa card in the same flow. They fund it gaslessly from their own stablecoin balance and spend it anywhere Visa is accepted - issue, fund, and reveal the card in a handful of calls."
@@ -153,13 +138,7 @@ export default async function RootLayout({
                 </div>
               }
               panel={<CodePanel sdkSteps={sdkSteps} notice={builtWith} />}
-              footer={
-                <SiteFooter
-                  extraLinks={
-                    <ResetThemeButton active={isBranded} variant="link" />
-                  }
-                />
-              }
+              footer={chrome.footer}
             />
           </BrandingProvider>
         </GtmTracker>

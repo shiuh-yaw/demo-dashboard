@@ -247,8 +247,56 @@ On a fresh branch `skill/<kebab>-<unix-timestamp>`:
 5. Edit `apps/dashboard/src/lib/services/demo-config-schemas.ts` to append `"<kebab>"` to `DEMO_CONFIG_KINDS` and add a per-kind member to the discriminated union.
 6. Edit `apps/dashboard/src/lib/types/dashboard.ts` to append `<Type>Config` and `Stored<Type>Config` interfaces with demo-specific shape decided at scaffold time.
 7. Edit `apps/dashboard/src/components/sidebar.tsx` to add a nav entry.
-8. Write `apps/<kebab>/AGENTS.md` per `docs/templates/AGENTS.template.md`.
-9. Run `pnpm exec node scripts/generate-demo-registry.mjs` to regenerate `.claude/demo-registry.{md,json}`.
+8. **Wire the chrome contract** - `buildScenarioChrome()` from `@dynamic-demos/ui`, see "Branding wiring" below. Not the individual primitives.
+9. **Wire analytics** - see "Analytics wiring" below. Both halves are required: `<GtmTracker>` in the layout AND `milestone()` calls on the flow's funnel steps. A layout tracker alone ships a demo that records pageviews and nothing about whether anyone completed the flow.
+10. Write `apps/<kebab>/AGENTS.md` per `docs/templates/AGENTS.template.md`, including its **Analytics taxonomy** table.
+11. Run `pnpm exec node scripts/generate-demo-registry.mjs` to regenerate `.claude/demo-registry.{md,json}`.
+
+### Branding wiring (mandatory for Step 8.8)
+
+**Every demo is themeable per prospect. This is not optional and not a follow-up.** A demo that can't be handed to a prospect under their brand is not finished.
+
+**Use `buildScenarioChrome()` from `@dynamic-demos/ui`. Do not assemble `SiteHeader` / `ScenarioBrandRow` / `ScenarioBrandImage` / `ResetThemeButton` / `SiteFooter` by hand.** The helper returns all four slots from one input, because `header` and `heroLogo` are two halves of one decision - a branded page drops the marketing header, so if you drop it without adding the brand row the page has no header at all. That exact bug shipped more than once.
+
+```tsx
+const { config } = await getMyDemoConfig();
+const chrome = buildScenarioChrome({
+  chip: "MyDemo",
+  isBranded: Object.keys(config).length > 0,
+  brandLogoUrl: config.branding?.logoUrl,
+});
+
+<ScenarioLayout
+  header={chrome.header}
+  hero={<ScenarioHero logo={chrome.heroLogo} title="..." pitch="..." />}
+  demo={<><MyWidget />{chrome.reset}</>}
+  footer={chrome.footer}
+/>
+```
+
+Two things that are easy to get wrong and produce a silently unbranded page:
+
+- **Pass `dashboardUrl` to `fetchDemoConfig` explicitly.** Its fallback sniffs `DASHBOARD_URL` / `NEXT_PUBLIC_DASHBOARD_URL` / `NEXT_PUBLIC_DASHBOARD_API_URL` / `NEXT_PUBLIC_API_BASE_URL`. If the app validates a different name (connect used `DASHBOARD_API_URL`), the fetch never happens, a warning goes to the server log, and the browser renders the default palette. Resolve the config in ONE `React.cache`'d module and import it - a second unconfigured call site is how half a fix persists.
+- **The stored branding keys are `logoUrl` and `appName`,** not `WidgetBranding`'s `logo` and `name`. Typing the config as a plain `WidgetConfig` compiles and reads `undefined`. Declare the shape the dashboard actually writes.
+
+Also required for the demo to be brandable at all: a `connect`-style entry in `LANDING_DEMOS`, an entry in `CONFIGURABLE_KIND_TO_DEMO_TYPE`, and a creation branch in `createProspectDemoConfigs`. Without the last one the prospect picker lists the demo and creating it silently does nothing.
+
+Enforced by `packages/theme/src/__tests__/scenario-chrome-contract.test.ts`, which scans every app composing `ScenarioLayout`.
+
+### Analytics wiring (mandatory for Step 8.9)
+
+Every demo is a GTM instrument, so "did anyone finish it?" has to be answerable. `@dynamic-demos/analytics` is no-op with `NEXT_PUBLIC_TRACK_URL` unset, so this is always safe to wire and needs no env guards.
+
+**Both halves are required. The first without the second is the failure mode this section exists to prevent** - `apps/connections` shipped with a layout tracker and zero funnel events, which looks instrumented in `package.json` and measures nothing:
+
+1. **Layout tracker.** `<GtmTracker demoSlug="<kebab>">` wrapping the tree in `app/layout.tsx`. Gives pageviews + heartbeats, package-owned.
+2. **Funnel milestones.** `lib/analytics/milestones.ts` exporting a `const [...] as const` string-literal union, and `useTrack().milestone(name, props)` fired at each step of the flow the demo exists to demonstrate. Model on `apps/wallet/lib/analytics/milestones.ts`.
+
+**Choosing the events.** Instrument the funnel, not the UI: the steps where a user can drop out, ending with the one that means the demo succeeded. Reuse an existing name (`signed_in`, `authenticated`, `wallet_funded`, …) whenever the semantics match - cross-demo comparability is the point, and shared names give person-level join keys. Where a flow splits one logical step into two screens, make them two events; the gap between them is the measurement.
+
+**Never put these in props:** wallet addresses, emails, transaction hashes, or anything else that identifies a person or their funds. Identity stays share-link-only. Props are for shape (asset, chain, amount bucket, scheme), not identity.
+
+**`<BookACallCta />`** is a judgment call, not a default. Mount it only if the app has no Book-a-call in its header or hero, and never on a surface that ships inside an integrator's iframe.
 
 ### Auth wiring (mandatory for Step 8.2)
 

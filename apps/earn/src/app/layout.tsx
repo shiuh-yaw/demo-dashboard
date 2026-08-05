@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { cache } from "react";
 import { headers } from "next/headers";
 import { Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeStyleTag, buildDemoMetadata } from "@dynamic-demos/theme";
-import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { DynamicInit } from "@/components/dynamic-init";
 import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { EarnConfigProvider } from "@/contexts/earn-config-context";
-import { DEFAULT_EARN_CONFIG } from "@/lib/earn-config";
+import { getEarnConfig } from "@/lib/get-earn-config";
 import { themeToBrandTheme } from "@/lib/earn-brand";
 import "@/app/globals.css";
 
@@ -17,19 +15,6 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   variable: "--font-roboto",
-});
-
-// React.cache dedupes the dashboard fetch across generateMetadata and
-// RootLayout within one request (fetchDemoConfig itself is no-store).
-const getEarnConfig = cache(async () => {
-  const headersList = await headers();
-  const configId = headersList.get("x-earn-config-id");
-  const config = await fetchDemoConfig({
-    demoType: "earn",
-    id: configId,
-    fallback: DEFAULT_EARN_CONFIG,
-  });
-  return { configId, config };
 });
 
 export async function generateMetadata(): Promise<Metadata> {

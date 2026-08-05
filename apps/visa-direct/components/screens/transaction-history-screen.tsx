@@ -3,8 +3,10 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FileCode, RefreshCw, Wallet } from "lucide-react";
+import { Button } from "@dynamic-demos/ui";
 import { ApiPayloadDrawer } from "@/components/screens/api-payload-drawer";
 import { truncateAddress } from "@/lib/format";
+import { SimulatePayoutButton } from "@/components/dashboard/simulate-payout-button";
 import type { TransactionRecord } from "@/lib/transactions/server";
 
 /* ── Status badge ─────────────────────────────────────────────────── */
@@ -158,7 +160,7 @@ export function TransactionHistoryScreen({
     <>
       <div>
         {/* Page heading */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold text-(--brand-fg)">
               Transaction history
@@ -169,21 +171,28 @@ export function TransactionHistoryScreen({
                 : "Past payouts processed via Visa Direct and Fireblocks"}
             </p>
           </div>
-          <button
-            type="button"
+          <div className="flex shrink-0 items-center gap-2">
+          {/* Icon-only, on the shared Button: the label was redundant next to the
+              glyph and made a secondary action compete with the primary CTA
+              beside it. The spinner state and the last-updated tooltip carry
+              what the text used to say. */}
+          <Button
+            variant="outline"
+            size="icon"
             onClick={handleRefresh}
             disabled={!canRefresh}
-            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--brand-radius) border border-(--brand-border) text-xs text-(--brand-muted) hover:text-(--brand-fg) hover:bg-(--brand-row-bg) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Refresh transactions"
+            className="shrink-0"
+            aria-label={isRefreshing ? "Refreshing transactions" : "Refresh transactions"}
             title={
               lastUpdatedLabel ? `Last updated ${lastUpdatedLabel}` : "Refresh"
             }
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
             />
-            <span>{isRefreshing ? "Refreshing…" : "Refresh"}</span>
-          </button>
+          </Button>
+            <SimulatePayoutButton />
+          </div>
         </div>
 
         {/* No wallet configured */}

@@ -9,10 +9,10 @@ import {
   canMutateDemoConfig,
   canMutateProspect,
   canReassignProspect,
+  ALLOWED_EMAIL_DOMAINS,
   emailDomainAllowed,
   isDemoConfigVisible,
   isProspectVisible,
-  parseAllowedDomains,
   resolveSessionUser,
   visibleProspectIds,
   canViewProspect,
@@ -25,14 +25,17 @@ import { createFakeUserPrisma } from "@/lib/services/__tests__/fake-prisma-users
 
 const ALLOWED = ["fireblocks.com", "dynamic.xyz"];
 
-describe("parseAllowedDomains", () => {
-  it("splits, trims, lowercases, and drops blanks", () => {
-    expect(parseAllowedDomains(" Fireblocks.com , DYNAMIC.xyz ,, ")).toEqual([
-      "fireblocks.com",
-      "dynamic.xyz",
-    ]);
-    expect(parseAllowedDomains(undefined)).toEqual([]);
-    expect(parseAllowedDomains("")).toEqual([]);
+describe("ALLOWED_EMAIL_DOMAINS", () => {
+  // Pinned deliberately. The list is who can reach the operator surface, so
+  // adding a domain should have to change a test too, not just a constant.
+  it("is exactly the two corporate domains, lowercased", () => {
+    expect([...ALLOWED_EMAIL_DOMAINS]).toEqual(["fireblocks.com", "dynamic.xyz"]);
+  });
+
+  it("is what emailDomainAllowed actually accepts", () => {
+    expect(emailDomainAllowed("alice@fireblocks.com", [...ALLOWED_EMAIL_DOMAINS])).toBe(true);
+    expect(emailDomainAllowed("bob@dynamic.xyz", [...ALLOWED_EMAIL_DOMAINS])).toBe(true);
+    expect(emailDomainAllowed("mallory@gmail.com", [...ALLOWED_EMAIL_DOMAINS])).toBe(false);
   });
 });
 

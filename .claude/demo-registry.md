@@ -8,6 +8,7 @@
 |---|---|---|---|
 | `card` | payouts | non-custodial | experimental |
 | `checkouts` | checkout | non-custodial | stable |
+| `connections` | auth | non-custodial | experimental |
 | `cross-border-ap-ar` | payouts | custodial | experimental |
 | `dashboard` | utility | mixed | stable |
 | `deposit` | wallet | mixed | experimental |

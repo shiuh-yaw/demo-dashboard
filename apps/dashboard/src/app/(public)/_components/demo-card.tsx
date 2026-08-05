@@ -72,7 +72,11 @@ export function DemoCard({ demo }: { demo: LandingDemo }) {
           )}
         </div>
 
-        <p className="flex-1 text-sm leading-relaxed text-slate-600">
+        {/* Exactly two lines, whatever the tagline's length: `min-h` reserves the
+            second line so a one-line tagline doesn't pull its card's buttons up
+            out of line with its neighbours, and `line-clamp-2` stops a long one
+            pushing them down. 2 x leading-relaxed (1.625) at text-sm. */}
+        <p className="line-clamp-2 min-h-[2lh] flex-1 text-sm leading-relaxed text-slate-600">
           {demo.tagline}
         </p>
 

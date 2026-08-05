@@ -283,7 +283,7 @@ matrix lives in `src/lib/auth/policy.ts` (pure `canMutateRecord` / `canCreateRec
 (own records + team-membership records; ADMIN/OWNER unscoped) via `visibleProspectIds(user)`.
 
 ```ts
-getSessionUser(): Promise<User | null>  // verified Dynamic JWT -> GTM_ALLOWED_DOMAINS exact-match -> getOrCreateByEmail -> write-once dynamicUserId capture + claimLegacyRecords. No team auto-join (explicit-only). Deactivated/off-domain -> null.
+getSessionUser(): Promise<User | null>  // verified Dynamic JWT -> ALLOWED_EMAIL_DOMAINS exact-match -> getOrCreateByEmail -> write-once dynamicUserId capture + claimLegacyRecords. No team auto-join (explicit-only). Deactivated/off-domain -> null.
 requireUser(): Promise<User>            // redirect("/dashboard/denied") when unauthenticated or off-domain
 requireAdmin(): Promise<User>           // ADMIN+ (canAccessOperations), fail closed
 // mutation guards: visibleProspectIds(user), canMutateProspect(user, prospect), canMutateDemoConfig(user, record)
@@ -309,7 +309,8 @@ Runs post-response via Next 15 `after()` inside the ingest route on session crea
 
 ### Environment additions (all server-only except `NEXT_PUBLIC_TRACK_URL`)
 
-- `GTM_ALLOWED_DOMAINS` - comma-separated (`fireblocks.com,dynamic.xyz`). Exact domain match, fail-closed when empty. This is the ONLY GTM auth env var: GTM-D-002 (2026-07-20) dropped all role-seeding env vars (`GTM_OWNER_EMAILS`/`GTM_ADMIN_EMAILS`) and the individual-email allowlist. The first OWNER is bootstrapped by the `set-role` CLI; every other role is granted in-app.
+GTM auth has no env var. The sign-in allowlist is `ALLOWED_EMAIL_DOMAINS` in `lib/auth/gtm.ts` (`fireblocks.com`, `dynamic.xyz`; exact domain match, fail-closed on an empty list) - the same two domains in every environment, so a var only adds ways to diverge. GTM-D-002 (2026-07-20) dropped the role-seeding vars (`GTM_OWNER_EMAILS`/`GTM_ADMIN_EMAILS`) and the individual-email allowlist; the first OWNER is bootstrapped by the `set-role` CLI, every other role is granted in-app.
+
 - `TRACK_CORS_ORIGINS` - comma-separated demo origins.
 - `IP_HASH_SALT` - random salt for ipHash.
 - `IPINFO_TOKEN` - company-level enrichment (optional; noop provider without it).

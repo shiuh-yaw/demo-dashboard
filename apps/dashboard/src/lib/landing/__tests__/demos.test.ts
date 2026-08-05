@@ -11,6 +11,7 @@ describe("LANDING_DEMOS config", () => {
     const slugs = LANDING_DEMOS.map((d) => d.slug).sort();
     expect(slugs).toEqual([
       "checkouts",
+      "connections",
       "earn",
       "flow",
       "remittance",

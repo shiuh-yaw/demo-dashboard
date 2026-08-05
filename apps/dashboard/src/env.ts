@@ -240,13 +240,6 @@ export const env = createEnv({
      */
     SUMSUB_LEVEL_NAME: z.string().min(1).optional().default("id-only"),
     /**
-     * GTM sign-in allowlist: comma-separated email domains permitted into the
-     * operator surface (e.g. `fireblocks.com,dynamic.xyz`). Matching is on the
-     * full domain after `@`, lowercased, exact. Empty (default) fails
-     * closed - nobody passes. There is NO individual-email allowlist.
-     */
-    GTM_ALLOWED_DOMAINS: z.string().optional().default(""),
-    /**
      * Pepper mixed into `sha256(ip + IP_HASH_SALT)` before persisting
      * `VisitorSession.ipHash` (Phase GTM-06). Raw IPs are never stored;
      * this salt just keeps the hash from being a trivial rainbow-table
@@ -343,7 +336,6 @@ export const env = createEnv({
     SUMSUB_SECRET_KEY: process.env.SUMSUB_SECRET_KEY,
     SUMSUB_ENVIRONMENT: process.env.SUMSUB_ENVIRONMENT,
     SUMSUB_LEVEL_NAME: process.env.SUMSUB_LEVEL_NAME,
-    GTM_ALLOWED_DOMAINS: process.env.GTM_ALLOWED_DOMAINS,
     IP_HASH_SALT: process.env.IP_HASH_SALT,
     TRACK_CORS_ORIGINS: process.env.TRACK_CORS_ORIGINS,
     SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN,

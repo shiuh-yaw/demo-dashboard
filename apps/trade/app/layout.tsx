@@ -1,4 +1,3 @@
-import { cache } from "react";
 import type { Metadata } from "next";
 import { DM_Sans, Inter } from "next/font/google";
 import { headers } from "next/headers";
@@ -6,13 +5,12 @@ import {
   buildDemoMetadata,
   widgetThemeToBrandTheme,
 } from "@dynamic-demos/theme";
-import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { TradeConfigProvider } from "@/contexts/trade-config-context";
-import type { TradeConfig } from "@/lib/trade-config";
+import { getTradeConfig } from "@/lib/get-trade-config";
 
 import "./globals.css";
 
@@ -26,19 +24,6 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-});
-
-// React.cache dedupes the dashboard fetch across generateMetadata and
-// RootLayout within one request (fetchDemoConfig itself is no-store).
-const getTradeConfig = cache(async () => {
-  const headersList = await headers();
-  const configId = headersList.get("x-trade-config-id");
-  const config = await fetchDemoConfig<TradeConfig>({
-    demoType: "trade",
-    id: configId,
-    fallback: {},
-  });
-  return { configId, config };
 });
 
 export async function generateMetadata(): Promise<Metadata> {

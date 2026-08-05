@@ -20,12 +20,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GtmUser, Prospect } from "@/lib/services";
 
-// ESM `import` evaluation is hoisted above ordinary statements, so a plain
-// `process.env.GTM_ALLOWED_DOMAINS = ...` here would run too late - after
-// `@/lib/actions/prospects` (and transitively `@/env`) already parsed the
-// unset var to its "" default. Mock `@/env` directly instead, same as the
-// other module mocks below.
-vi.mock("@/env", () => ({ env: { GTM_ALLOWED_DOMAINS: "fireblocks.com" } }));
+// Stubbed so importing `@/lib/actions/prospects` (and transitively `@/env`)
+// doesn't run real env validation in a unit test. The sign-in domain allowlist
+// is no longer read from here - it's `ALLOWED_EMAIL_DOMAINS` in lib/auth/gtm.
+vi.mock("@/env", () => ({ env: {} }));
 
 // Real per-argument memoizing `cache()` (the installed "react" build no-ops
 // `cache()` outside a Server Component render) - proves the memoization

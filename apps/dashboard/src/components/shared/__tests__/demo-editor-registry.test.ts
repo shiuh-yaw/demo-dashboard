@@ -12,7 +12,17 @@ import {
 describe("demoEditorRegistry", () => {
   it("covers every demo kind", () => {
     expect(Object.keys(demoEditorRegistry).sort()).toEqual(
-      ["card", "checkout", "earn", "flow", "remittance", "trade", "visa-direct", "wallet"].sort(),
+      [
+        "card",
+        "checkout",
+        "connections",
+        "earn",
+        "flow",
+        "remittance",
+        "trade",
+        "visa-direct",
+        "wallet",
+      ].sort(),
     );
   });
 

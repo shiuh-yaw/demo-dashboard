@@ -221,9 +221,49 @@ export function StablecoinCardIllustration() {
   );
 }
 
+/** Connect - a wallet list with one row picked, and a connected badge. */
+export function ConnectIllustration() {
+  return (
+    <Svg>
+      <defs>
+        <linearGradient id="op-ill-connect-row" x1="16" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+          {accentStop("0%", 0.18)}
+          {accentStop("100%", 0.04)}
+        </linearGradient>
+      </defs>
+      <Frame />
+      <rect x="16" y="24" width="104" height="14" rx="5" className="di-muted" />
+      <rect x="21" y="28" width="6" height="6" rx="2" className="di-border-stroke" />
+      <rect x="32" y="30" width="30" height="3" rx="1.5" className="di-border-stroke" />
+      <rect
+        x="16"
+        y="42"
+        width="104"
+        height="14"
+        rx="5"
+        fill="url(#op-ill-connect-row)"
+        className="di-accent-stroke"
+        strokeWidth="1.5"
+      />
+      <rect x="21" y="46" width="6" height="6" rx="2" className="di-accent" />
+      <rect x="32" y="48" width="38" height="3" rx="1.5" className="di-accent" fillOpacity="0.55" />
+      <circle cx="134" cy="49" r="8" className="di-surface-box" strokeWidth="1.5" />
+      <path
+        d="M130.5 49 L133 51.5 L137.5 46.5"
+        className="di-accent-stroke"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
+}
+
 /** Slug -> operator illustration; unknown slugs fall back to Wallet. */
 export const OPERATOR_DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
   wallet: WalletIllustration,
+  connections: ConnectIllustration,
   trade: TradeIllustration,
   earn: EarnIllustration,
   flow: FlowIllustration,

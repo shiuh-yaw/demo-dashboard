@@ -74,6 +74,19 @@ export interface SiteHeaderProps {
    * scrolls away with the page.
    */
   sticky?: boolean;
+  /**
+   * A prospect config is active for this request. Drops the "Demos" crumb and
+   * the demo-name chip, so a branded demo stops advertising the Dynamic demos
+   * catalog inside a prospect's product.
+   *
+   * For scenario-shaped demos `buildScenarioChrome` handles this by swapping the
+   * whole header for `ScenarioBrandRow`. Console-shaped demos (visa-direct) have
+   * no hero to put a brand row in and keep this header across every route, so
+   * they pass `isBranded` here instead and supply the prospect mark via `logo`.
+   *
+   * The marketing CTAs need no flag - `trailing` already displaces them.
+   */
+  isBranded?: boolean;
 }
 
 export function SiteHeader({
@@ -86,10 +99,12 @@ export function SiteHeader({
   logo,
   logoHref,
   sticky = true,
+  isBranded = false,
 }: SiteHeaderProps) {
   // On the catalog the "Demos" pill IS the current location; on demo
   // pages it becomes the ancestor crumb with the demo name as the pill.
-  const onDemoPage = chip !== "Demos";
+  // Branded: neither renders - see `isBranded`.
+  const onDemoPage = !isBranded && chip !== "Demos";
 
   // The hover grid only appears on demo pages - the catalog page IS the
   // grid, so its "Demos" pill stays a plain label (no chevron, no panel).
@@ -153,7 +168,7 @@ export function SiteHeader({
             )}
           </a>
           <div className="flex items-center gap-1.5 max-[380px]:hidden">
-            {demosCrumb}
+            {isBranded ? null : demosCrumb}
             {onDemoPage && (
               <>
                 <span className="text-sm font-medium text-slate-400">/</span>

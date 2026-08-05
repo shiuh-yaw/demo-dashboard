@@ -23,7 +23,7 @@ Coast coexists for now. v1 does not replicate Coast's capture/builder features; 
 3. `Brand` is renamed to `Prospect` (single table; theme fields stay, identity fields added). No separate sibling record.
 4. Operator entry point moves to `/dashboard` (replaces the footer-heart -> `/brands` path). Public landing unchanged.
 5. Operator UI migrates to `@dynamic-labs-sdk/droplet` primitives (client-shim pattern already proven in the `(public)` tree). New GTM surfaces are droplet-native from day one; legacy config forms migrate per-route-group as follow-ups.
-6. Access: domain allowlist (`GTM_ALLOWED_DOMAINS`: fireblocks.com, dynamic.xyz) via the existing Dynamic OTP sign-in; two roles (`operator`, `se`), enforced server-side.
+6. Access: domain allowlist (`ALLOWED_EMAIL_DOMAINS` in `lib/auth/gtm.ts`: fireblocks.com, dynamic.xyz) via the existing Dynamic OTP sign-in; two roles (`operator`, `se`), enforced server-side.
 7. Book-a-call CTA config lives on the SE's profile (scheduling URL), delivered to demos via the tracker context endpoint.
 8. Instrumentation pilots on wallet only; fleet rollout is a fast-follow.
 9. (GTM-D-002, 2026-07-20) Profile renamed to User - the single internal-person entity; dynamicUserId (JWT sub) joins legacy ownerId values; visibility is workspace-shared (all users see all prospects/demos; creator or operator may mutate).
@@ -84,7 +84,7 @@ Entry at `/dashboard` (operator group; public landing untouched, `(public)` stay
 ## Auth and roles
 
 - Sign-in unchanged: dashboard's own Dynamic env, email OTP (D-004 intact).
-- Post-JWT check: email domain must be in `GTM_ALLOWED_DOMAINS`. First sign-in auto-creates `Profile` (role `se`).
+- Post-JWT check: email domain must be in `ALLOWED_EMAIL_DOMAINS`. First sign-in auto-creates `Profile` (role `se`).
 - Server-side enforcement on every mutation/route; nav visibility is cosmetic only. Role checks fail closed.
 
 ## Enrichment

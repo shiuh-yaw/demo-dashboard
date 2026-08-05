@@ -1,32 +1,17 @@
-import { cache } from "react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import {
   buildDemoMetadata,
   widgetThemeToBrandTheme,
 } from "@dynamic-demos/theme";
-import { fetchDemoConfig } from "@dynamic-demos/theme/fetch-demo-config";
 import { ThemeStyleTag } from "@dynamic-demos/theme/theme-style-tag";
 import { GtmTracker } from "@dynamic-demos/analytics";
 import { Providers } from "./providers";
 import { IdentityBridge } from "@/components/analytics/identity-bridge";
 import { RemittanceConfigProvider } from "@/contexts/remittance-config-context";
-import type { RemittanceConfig } from "@/lib/remittance-config";
+import { getRemittanceConfig } from "@/lib/get-remittance-config";
 
 import "./globals.css";
-
-// React.cache dedupes the dashboard fetch across generateMetadata and
-// RootLayout within one request (fetchDemoConfig itself is no-store).
-const getRemittanceConfig = cache(async () => {
-  const headersList = await headers();
-  const configId = headersList.get("x-remittance-config-id");
-  const config = await fetchDemoConfig<RemittanceConfig>({
-    demoType: "remittance",
-    id: configId,
-    fallback: {},
-  });
-  return { configId, config };
-});
 
 export async function generateMetadata(): Promise<Metadata> {
   const { config } = await getRemittanceConfig();

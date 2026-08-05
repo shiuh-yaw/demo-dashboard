@@ -31,7 +31,7 @@ One logical PR.
 
 ## Hard rules
 
-- **Fail closed.** Unverifiable JWT, off-domain email, missing user -> no access. Empty `GTM_ALLOWED_DOMAINS` -> nobody passes.
+- **Fail closed.** Unverifiable JWT, off-domain email, missing user -> no access. An empty `ALLOWED_EMAIL_DOMAINS` -> nobody passes.
 - Domain matching: full domain after `@`, lowercased, exact match (`evil-fireblocks.com` must not pass for `fireblocks.com`).
 - Role + creator enforcement is server-side in every mutating action - never only in UI.
 - Role checks compare enum values, never strings scattered through call sites - one policy module (`can.ts` or similar) owns the matrix.
@@ -54,13 +54,13 @@ One logical PR.
    - `canAccessOperations(user)`: ADMIN+.
    - `canSetRole(actor, targetCurrentRole, newRole)`: OWNER -> any; ADMIN -> only when both `targetCurrentRole` and `newRole` are MEMBER or VIEWER; others never.
 2. **`apps/dashboard/src/lib/auth/gtm.ts`** per PLAN.md contract:
-   - `getSessionUser()`: verified Dynamic session (email + sub) -> lowercase email -> `GTM_ALLOWED_DOMAINS` exact-match check -> `services.users.getOrCreateByEmail(email)` -> persist `dynamicUserId = sub` if unset (write-once; log + keep original on mismatch, never overwrite) -> on first sub capture, fire `services.users.claimLegacyRecords(user)` (one-shot legacy createdById reconciliation, Phase 03.5). No team auto-join (membership is explicit-only). Deactivated users (`deactivatedAt` set) are rejected like off-domain. Null on any failure.
+   - `getSessionUser()`: verified Dynamic session (email + sub) -> lowercase email -> `ALLOWED_EMAIL_DOMAINS` exact-match check -> `services.users.getOrCreateByEmail(email)` -> persist `dynamicUserId = sub` if unset (write-once; log + keep original on mismatch, never overwrite) -> on first sub capture, fire `services.users.claimLegacyRecords(user)` (one-shot legacy createdById reconciliation, Phase 03.5). No team auto-join (membership is explicit-only). Deactivated users (`deactivatedAt` set) are rejected like off-domain. Null on any failure.
    - `requireUser()` / `requireAdmin()`: as contracted; denied page at `/dashboard/denied`.
 3. **Wire the `(operator)` layout** to `requireUser()`.
 4. **Visibility flip**: one `visibleProspectIds(user)` helper (team-membership join; ADMIN+ -> unscoped) used by every list action. Demo-type actions + prospects action drop the `ownerId === user.sub` filter and scope by the helper instead (unbound demos - null prospectId - are workspace-visible). Edit/delete guards become `canMutateRecord`. Create paths: VIEWER rejected; others stamp `createdById` + `ownerId = user.sub` per Phase 03.5's dual-write rule. Route all actions through the shared policy helpers, not per-file logic.
 5. **`setRole` action** (`lib/actions/users.ts`): guarded by `canSetRole`; no UI yet (Phase 07) - server action + tests only.
-6. **Env**: `GTM_ALLOWED_DOMAINS`, `GTM_OWNER_EMAILS`, `GTM_ADMIN_EMAILS` in validation + `.env.example` placeholders.
-7. **Tests**: domain matcher (exact/case/lookalike/empty fail-closed); getSessionUser happy/off-domain/no-session + dynamicUserId capture + sub-mismatch logging; role seeding matrix (owner-list, admin-list, default MEMBER; seeding happens on creation only); full `policy.ts` matrix (all four roles x own/other/orphan records, minting, operations, setRole combinations incl. ADMIN attempting to touch ADMIN/OWNER -> rejected); per-action: list returns other-owners' rows, VIEWER mutation rejected, MEMBER edits own but not other's, ADMIN edits anything incl. orphans.
+6. **Access list**: `ALLOWED_EMAIL_DOMAINS` in `lib/auth/gtm.ts`, in code rather than env. GTM auth reads no env var.
+7. **Tests**: domain matcher (exact/case/lookalike/empty fail-closed); getSessionUser happy/off-domain/no-session + dynamicUserId capture + sub-mismatch logging; default role MEMBER on creation (roles are never seeded); full `policy.ts` matrix (all four roles x own/other/orphan records, minting, operations, setRole combinations incl. ADMIN attempting to touch ADMIN/OWNER -> rejected); per-action: list returns other-owners' rows, VIEWER mutation rejected, MEMBER edits own but not other's, ADMIN edits anything incl. orphans.
 8. **Docs**: AGENTS.md (roles, sharing model, policy module).
 
 ## Acceptance criteria

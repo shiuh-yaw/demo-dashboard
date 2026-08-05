@@ -26,6 +26,7 @@ import {
   TrendingUp,
   CreditCard,
   Workflow,
+  Link2,
   CircleCheck,
 } from "lucide-react";
 import type { ProspectProfile } from "@/lib/types/dashboard";
@@ -82,6 +83,9 @@ const DEMO_CONFIGS: DemoConfig[] = [
   { type: "visa-direct", label: "Liquidity", icon: CreditCard, configRoute: "/visa-direct" },
   { type: "flow", label: "Flow", icon: Workflow, configRoute: "" },
   { type: "card", label: "Card", icon: CreditCard, configRoute: "" },
+  // No configRoute: like flow and card, connect's theme comes from the prospect
+  // and apps/connections owns its config, so there is nothing to edit here.
+  { type: "connections", label: "Connections", icon: Link2, configRoute: "" },
 ];
 
 function formatLastViewed(iso: string | null | undefined): string {

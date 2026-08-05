@@ -94,6 +94,7 @@ async function createProspectDemoConfigs(
     trade?: boolean;
     flow?: boolean;
     card?: boolean;
+    connections?: boolean;
     "visa-direct"?: boolean;
   },
 ): Promise<ProspectDemoMap> {
@@ -108,6 +109,7 @@ async function createProspectDemoConfigs(
   const createTrade = createAll || options?.trade === true;
   const createFlow = createAll || options?.flow === true;
   const createCard = createAll || options?.card === true;
+  const createConnect = createAll || options?.connections === true;
   const createVisaDirect = createAll || options?.["visa-direct"] === true;
 
   // Create Earn config with prospect settings
@@ -382,6 +384,36 @@ async function createProspectDemoConfigs(
       config: cardConfigPayload as unknown as Record<string, unknown>,
     });
     demos.card = record.id;
+  }
+
+  // Create Connect config with prospect branding. Like card and flow it has no
+  // in-dashboard editor - apps/connections owns its config and reads the theme
+  // through the prospect - so this only seeds the branding the widget renders.
+  if (createConnect) {
+    const connectTheme: Partial<ProspectTheme> = prospect.theme || {};
+    const connectConfigPayload = {
+      theme: {
+        primaryColor: prospect.primaryColor,
+        primaryHoverColor: connectTheme.primaryHoverColor,
+        accentColor: prospect.accentColor || prospect.primaryColor,
+        borderRadius: prospect.borderRadius,
+      },
+      branding: {
+        appName: prospectName,
+        logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "connections",
+      ownerId,
+      name: `${prospectName} - Connect`,
+      description: `Auto-generated from prospect profile: ${prospectId}`,
+      prospectId,
+      isPrimary: true,
+      themeOverrides: null,
+      config: connectConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.connections = record.id;
   }
 
   // Create Liquidity (visa-direct) config with prospect branding. Only
@@ -1371,6 +1403,7 @@ export async function createMissingDemos(
     trade?: boolean;
     flow?: boolean;
     card?: boolean;
+    connections?: boolean;
     "visa-direct"?: boolean;
   },
 ): Promise<ActionResult<ProspectProfile>> {
@@ -1398,6 +1431,7 @@ export async function createMissingDemos(
       trade: demoTypes.trade && !existingDemos.trade,
       flow: demoTypes.flow && !existingDemos.flow,
       card: demoTypes.card && !existingDemos.card,
+      connections: demoTypes.connections && !existingDemos.connections,
       "visa-direct":
         demoTypes["visa-direct"] && !existingDemos["visa-direct"],
     };

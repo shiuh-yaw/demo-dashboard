@@ -40,6 +40,7 @@ import { usePayoutContext } from "@/contexts/payout-context";
 import { useExternalWalletLabel } from "@/hooks/use-external-wallet-label";
 import { EXTERNAL_WALLET_PROVIDER_PREFIX } from "@/components/screens/connect-external-wallet-modal";
 import { getExchangeDisplay } from "@/lib/exchanges-registry";
+import { SimulatePayoutButton } from "@/components/dashboard/simulate-payout-button";
 import { truncateAddress } from "@/lib/format";
 
 /**
@@ -143,13 +144,16 @@ export function WalletScreen() {
     <>
       <div className="space-y-6">
         {/* Heading */}
-        <div>
-          <h1 className="text-xl font-semibold text-(--brand-fg)">
-            My wallet
-          </h1>
-          <p className="text-sm text-(--brand-muted) mt-1">
-            Send and earn on your stablecoin payouts
-          </p>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-(--brand-fg)">
+              My wallet
+            </h1>
+            <p className="text-sm text-(--brand-muted) mt-1">
+              Send and earn on your stablecoin payouts
+            </p>
+          </div>
+          <SimulatePayoutButton />
         </div>
 
         {/* Balance hero */}

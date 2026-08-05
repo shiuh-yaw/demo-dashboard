@@ -108,6 +108,12 @@ export {
   type ScenarioHeroProps,
 } from "./scenario-chrome";
 export { ScenarioLayout } from "./scenario-layout";
+// The composed chrome contract - prefer this over assembling the pieces below.
+export {
+  buildScenarioChrome,
+  type ScenarioChrome,
+  type ScenarioChromeInput,
+} from "./build-scenario-chrome";
 export {
   BookACallButton,
   ScenarioBrandRow,
@@ -156,6 +162,7 @@ export {
 
 // Branding components
 export { DynamicLogo, type DynamicLogoProps } from "./dynamic-logo";
+export { FlowMark } from "./flow-mark";
 export { KrakenLogo, type KrakenLogoProps } from "./kraken-logo";
 export {
   FireblocksLogomark,
@@ -166,6 +173,11 @@ export {
   PoweredByFooter,
   type PoweredByFooterProps,
 } from "./powered-by-footer";
+export {
+  SecuredByFireblocks,
+  type SecuredByFireblocksProps,
+} from "./secured-by-fireblocks";
+
 
 // Providers
 export { ThemeProvider, type ThemeProviderProps } from "./theme-provider";

@@ -539,6 +539,14 @@ const cardEntry: DemoEditorEntry = {
   backHref: "/dashboard/prospects",
 };
 
+// Connect has no in-dashboard editor - like flow and card, its theme comes from
+// the prospect and apps/connections owns the config. The instance page renders the
+// shared insights + share view (see DASHBOARD_EDITABLE_KINDS).
+const connectEntry: DemoEditorEntry = {
+  appearanceMode: "none",
+  backHref: "/dashboard/prospects",
+};
+
 export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   wallet: walletEntry,
   earn: earnEntry,
@@ -548,6 +556,7 @@ export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   checkout: checkoutEntry,
   flow: flowEntry,
   card: cardEntry,
+  connections: connectEntry,
 };
 
 export function getDemoEditorEntry(kind: DemoConfigKind): DemoEditorEntry {

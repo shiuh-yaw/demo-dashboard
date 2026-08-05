@@ -16,6 +16,13 @@
       "status": "stable"
     },
     {
+      "name": "@dynamic-demos/connections",
+      "kind": "app",
+      "flow_role": "auth",
+      "custody": "non-custodial",
+      "status": "experimental"
+    },
+    {
       "name": "@dynamic-demos/cross-border-ap-ar",
       "kind": "app",
       "flow_role": "payouts",

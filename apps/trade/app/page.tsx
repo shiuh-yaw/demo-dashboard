@@ -18,21 +18,18 @@
  * parity); the SiteFooter stays under every theme.
  */
 
-import { headers } from "next/headers";
 import {
+  buildScenarioChrome,
   CodePanel,
-  ScenarioBrandRow,
   ScenarioHero,
   ScenarioLayout,
   SdkStack,
-  SiteFooter,
-  SiteHeader,
 } from "@dynamic-demos/ui";
 import { LoginPage } from "@/components/login-page";
-import { ResetThemeButton } from "@/components/reset-theme-button";
 import { ScenarioBrandLogo } from "@/components/scenario-brand-logo";
 import { TradePanel } from "@/components/trade-panel";
 import { PanelSectionProvider } from "@/contexts/panel-section-context";
+import { getTradeConfig } from "@/lib/get-trade-config";
 import {
   buildCodeSteps,
   TRADE_OTP_STEPS,
@@ -48,13 +45,18 @@ export default async function HomePage({
   const returnTo =
     typeof params.returnTo === "string" ? params.returnTo : undefined;
 
-  const headersList = await headers();
-  const configId = headersList.get("x-trade-config-id");
+  const { isBranded } = await getTradeConfig();
   // Branded demos drop the Dynamic site header (full immersion) and
   // carry the brand logo + a Book a call CTA in the hero row instead.
   // Branding comes from TradeConfigProvider (root layout fetch);
   // <ScenarioBrandLogo> reads it client-side.
-  const isBranded = !!configId;
+  // One call for the chrome contract - header vs brand row, the theme reset in
+  // the footer, the shared footer itself. See buildScenarioChrome.
+  const chrome = buildScenarioChrome({
+    chip: "Trade",
+    isBranded,
+    brandLogo: <ScenarioBrandLogo />,
+  });
 
   const [sdkSteps, otpSteps] = await Promise.all([
     buildCodeSteps(TRADE_SDK_STEPS),
@@ -77,18 +79,10 @@ export default async function HomePage({
           lock (globals.css) so this page scrolls like a document. */}
       <div data-scenario-page>
       <ScenarioLayout
-        header={
-          isBranded ? undefined : (
-            <SiteHeader chip="Trade" />
-          )
-        }
+        header={chrome.header}
         hero={
           <ScenarioHero
-            logo={
-              isBranded ? (
-                <ScenarioBrandRow logo={<ScenarioBrandLogo />} />
-              ) : undefined
-            }
+            logo={chrome.heroLogo}
             title="Trade everything."
             titleAccent="One app, every market."
             pitch="Users scatter across apps because no single one offers every market. Give them an invisible embedded MPC wallet at login - no seed phrase, no extension - and put token markets, real-world events, and onchain swaps behind one familiar interface and one unified portfolio. Become the place where your users trade everything - built entirely on Dynamic."
@@ -97,7 +91,6 @@ export default async function HomePage({
         demo={
           <div className="w-full max-w-[440px] mx-auto lg:mx-0">
             <LoginPage returnToOverride={returnTo} />
-            <ResetThemeButton />
           </div>
         }
         panel={
@@ -112,7 +105,7 @@ export default async function HomePage({
             }}
           />
         }
-        footer={<SiteFooter />}
+        footer={chrome.footer}
       />
       </div>
     </PanelSectionProvider>

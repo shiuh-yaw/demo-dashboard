@@ -66,6 +66,35 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
+    slug: "connections",
+    showOnLanding: true,
+    kind: "connections",
+    name: "Connections",
+    tagline: "Let users bring the wallet they already have - 600+ wallets, read-only.",
+    description:
+      "A hosted wallet-connection page an app can hand off to: the user picks from 600+ wallets - installed extension, QR, or mobile deeplink - and lands back on your callback with their public address. Connect-only by design, so there is no signature request and nothing to approve. Drop it in an iframe, a webview, or open it as a redirect.",
+    category: "wallet",
+    url: "https://connections.dynamic.dev",
+    highlights: [
+      "600+ wallets: extension, QR, and mobile deeplink",
+      "Read-only - no signing, no transaction approval",
+      "Returns the address to your own redirect_uri",
+      "Embeddable in an iframe or native webview",
+    ],
+    stack: [
+      "EIP-6963 wallet discovery",
+      "WalletConnect + deeplinks",
+      "Per-prospect theming",
+      "Headless engine for native hosts",
+    ],
+    resources: [
+      {
+        label: "Connecting external wallets docs",
+        url: "https://www.dynamic.xyz/docs/javascript/building-ui/connecting-external-wallets",
+      },
+    ],
+  },
+  {
     slug: "trade",
     showOnLanding: true,
     kind: "trade",
