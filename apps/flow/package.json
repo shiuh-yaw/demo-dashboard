@@ -24,6 +24,7 @@
     "@dynamic-labs-sdk/client": "1.19.1",
     "@dynamic-labs-sdk/droplet": "1.19.1",
     "@dynamic-labs-sdk/evm": "1.19.1",
+    "@dynamic-labs-sdk/react-hooks": "1.19.1",
     "@dynamic-labs-sdk/solana": "1.19.1",
     "@dynamic-labs-sdk/tron": "1.19.1",
     "@dynamic-labs/iconic": "catalog:",
