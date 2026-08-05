@@ -99,7 +99,13 @@ export async function verifyDynamicJWT(
 ): Promise<DynamicJwtPayload | null> {
   try {
     const jwksClient = getJwksClient(environmentId);
-    const signingKey = await jwksClient.getSigningKey();
+    // Select the key by the token's own `kid`. Dynamic rotates signing keys per
+    // environment, so a JWKS legitimately serves more than one, and jwks-rsa
+    // refuses to guess between them - an unqualified getSigningKey() throws
+    // `SigningKeyNotFoundError` as soon as a second key appears, which the catch
+    // below turns into a null payload that every caller reads as "logged out".
+    const kid = jwt.decode(token, { complete: true })?.header.kid;
+    const signingKey = await jwksClient.getSigningKey(kid);
     const publicKey = signingKey.getPublicKey();
 
     const decoded = jwt.verify(token, publicKey, {
