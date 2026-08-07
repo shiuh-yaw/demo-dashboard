@@ -70,7 +70,52 @@ export const METADATA_KEYS = {
    * Shape: `{ "base"?: { vaultAccountId, internalWalletId, depositAddresses }, … }`.
    */
   DEPOSIT_FIREBLOCKS: "deposit_fireblocks",
+  /**
+   * Accounts app: business-account ids this user has hidden from their list.
+   * Array of id strings. Presentation only - never an authorization input.
+   */
+  HIDDEN_BUSINESS_ACCOUNTS: "hidden_business_accounts",
 } as const;
+
+/**
+ * Cap on hidden ids, so this key cannot grow into the 2KB metadata budget and
+ * start failing writes for every other key on the user.
+ */
+export const MAX_HIDDEN_BUSINESS_ACCOUNTS = 40;
+
+/**
+ * Business-account ids this user has hidden.
+ *
+ * Tolerant on read: anything that is not an array of non-empty strings comes
+ * back empty rather than throwing. Metadata is user-writable through the SDK,
+ * so its shape is an assumption, not a guarantee - and a malformed value must
+ * not be able to blank someone's account list.
+ */
+export function getHiddenBusinessAccounts(user: UserWithMetadata): string[] {
+  const raw = user.metadata?.[METADATA_KEYS.HIDDEN_BUSINESS_ACCOUNTS];
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  for (const value of raw) {
+    if (typeof value !== "string") continue;
+    const id = value.trim();
+    if (id !== "") seen.add(id);
+  }
+  return [...seen].slice(0, MAX_HIDDEN_BUSINESS_ACCOUNTS);
+}
+
+/** Replace the hidden list. Deduped and capped before it is written. */
+export async function setHiddenBusinessAccounts(
+  userId: string,
+  ids: readonly string[],
+): Promise<string[]> {
+  const next = [
+    ...new Set(ids.map((id) => id.trim()).filter((id) => id !== "")),
+  ].slice(0, MAX_HIDDEN_BUSINESS_ACCOUNTS);
+  await updateUserMetadata(userId, {
+    [METADATA_KEYS.HIDDEN_BUSINESS_ACCOUNTS]: next,
+  });
+  return next;
+}
 
 /** Deposit demo networks that map to separate Fireblocks vault metadata. */
 export type DepositFireblocksNetworkKey = "base" | "base-sepolia";

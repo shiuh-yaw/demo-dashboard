@@ -13,6 +13,7 @@ describe("demoEditorRegistry", () => {
   it("covers every demo kind", () => {
     expect(Object.keys(demoEditorRegistry).sort()).toEqual(
       [
+        "accounts",
         "card",
         "checkout",
         "connections",

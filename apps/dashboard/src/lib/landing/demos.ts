@@ -70,7 +70,7 @@ export const LANDING_DEMOS: LandingDemo[] = [
     showOnLanding: true,
     kind: "connections",
     name: "Connections",
-    tagline: "Let users bring the wallet they already have - 600+ wallets, read-only.",
+    tagline: "Bring any of 600+ wallets your users already have.",
     description:
       "A hosted wallet-connection page an app can hand off to: the user picks from 600+ wallets - installed extension, QR, or mobile deeplink - and lands back on your callback with their public address. Connect-only by design, so there is no signature request and nothing to approve. Drop it in an iframe, a webview, or open it as a redirect.",
     category: "wallet",
@@ -93,6 +93,32 @@ export const LANDING_DEMOS: LandingDemo[] = [
         url: "https://www.dynamic.xyz/docs/javascript/building-ui/connecting-external-wallets",
       },
     ],
+  },
+  {
+    slug: "accounts",
+    showOnLanding: true,
+    kind: "accounts",
+    name: "Accounts",
+    tagline: "One wallet, many signers - admin reach kept separate.",
+    description:
+      "Business accounts put an embedded wallet under a team instead of a person. Create an account, mint wallets it owns outright, then add co-signers so more than one person signs from the same wallet. Administrative reach stays separate from signing authority: an admin manages the roster but cannot sign, a signer signs but cannot manage. Fits company treasuries, B2B platforms provisioning customer wallets, supervised consumer accounts, and agent-assisted wallets.",
+    category: "wallet",
+    url: "https://accounts.dynamic.dev",
+    highlights: [
+      "Owner / admin / viewer roles, distinct from signing rights",
+      "Co-signers share one wallet - two people, the same address",
+      "Mint wallets the account owns outright",
+      "Sensitive changes gated behind step-up verification",
+    ],
+    stack: [
+      "Business Accounts (early access)",
+      "Dynamic embedded wallets",
+      "Scoped elevated access tokens",
+      "Per-prospect theming",
+    ],
+    // No resources yet: the JavaScript reference pages for Business Accounts
+    // are unpublished, and the API-reference links read as internal.
+    resources: [],
   },
   {
     slug: "trade",

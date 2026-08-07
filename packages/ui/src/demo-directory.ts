@@ -21,8 +21,13 @@ export const DEMO_DIRECTORY: DemoDirectoryEntry[] = [
   },
   {
     name: "Connections",
-    tagline: "Let users bring the wallet they already have - 600+ wallets, read-only.",
+    tagline: "Bring any of 600+ wallets your users already have.",
     href: "https://connections.dynamic.dev",
+  },
+  {
+    name: "Accounts",
+    tagline: "One wallet, many signers - admin reach kept separate.",
+    href: "https://accounts.dynamic.dev",
   },
   {
     name: "Trade",

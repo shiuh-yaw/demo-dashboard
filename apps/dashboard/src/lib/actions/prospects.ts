@@ -39,6 +39,7 @@ import { prospectService, services } from "@/lib/services";
 import type { GtmUser, Page, Prospect, Team } from "@/lib/services";
 import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
 import type {
+  DemoConfigKind,
   OverviewEngagement,
   UpdateProspectInput,
 } from "@/lib/services/types";
@@ -78,6 +79,31 @@ type ActionResult<T> =
   | { success: false; error: string };
 
 /**
+ * Demo kinds a prospect can have built from the dashboard, in catalog order.
+ *
+ * Single source for both the request shape and the per-kind create flags:
+ * `accounts` shipped missing from a hand-written copy of this list, so the
+ * action reported success and created nothing.
+ */
+const PROSPECT_DEMO_TYPES = [
+  "earn",
+  "checkout",
+  "wallet",
+  "remittance",
+  "trade",
+  "flow",
+  "card",
+  "connections",
+  "accounts",
+  "visa-direct",
+] as const satisfies readonly DemoConfigKind[];
+
+type ProspectDemoTypeKey = (typeof PROSPECT_DEMO_TYPES)[number];
+
+/** Which kinds to build. Absent or empty means "all of them". */
+type ProspectDemoRequest = Partial<Record<ProspectDemoTypeKey, boolean>>;
+
+/**
  * Create demo configs for a prospect profile
  * Returns the IDs of created configs
  */
@@ -86,17 +112,7 @@ async function createProspectDemoConfigs(
   prospectName: string,
   prospect: ProspectSettings,
   ownerId: string,
-  options?: {
-    earn?: boolean;
-    checkout?: boolean;
-    wallet?: boolean;
-    remittance?: boolean;
-    trade?: boolean;
-    flow?: boolean;
-    card?: boolean;
-    connections?: boolean;
-    "visa-direct"?: boolean;
-  },
+  options?: ProspectDemoRequest,
 ): Promise<ProspectDemoMap> {
   const demos: ProspectDemoMap = {};
 
@@ -110,6 +126,7 @@ async function createProspectDemoConfigs(
   const createFlow = createAll || options?.flow === true;
   const createCard = createAll || options?.card === true;
   const createConnect = createAll || options?.connections === true;
+  const createAccounts = createAll || options?.accounts === true;
   const createVisaDirect = createAll || options?.["visa-direct"] === true;
 
   // Create Earn config with prospect settings
@@ -414,6 +431,42 @@ async function createProspectDemoConfigs(
       config: connectConfigPayload as unknown as Record<string, unknown>,
     });
     demos.connections = record.id;
+  }
+
+  // Create Accounts config with prospect branding. Like connections it has no
+  // in-dashboard editor - apps/accounts owns its config and reads the theme
+  // through the prospect - so this only seeds the branding the widget renders.
+  if (createAccounts) {
+    const accountsTheme: Partial<ProspectTheme> = prospect.theme || {};
+    const accountsLogoUrl =
+      prospect.logo === "custom" ? prospect.logoUrl : undefined;
+    const accountsConfigPayload = {
+      theme: {
+        primaryColor: prospect.primaryColor,
+        primaryHoverColor: accountsTheme.primaryHoverColor,
+        accentColor: prospect.accentColor || prospect.primaryColor,
+        borderRadius: prospect.borderRadius,
+      },
+      // `BaseBranding`'s own field names - `logo` + `logoUrl` + `name`. An
+      // `appName` key here reaches the app as nothing at all: the hero logo
+      // and the tab title both read the canonical shape.
+      branding: {
+        logo: accountsLogoUrl ? "custom" : "dynamic",
+        logoUrl: accountsLogoUrl,
+        name: prospectName,
+      },
+    };
+    const record = await services.demoConfigs.create({
+      kind: "accounts",
+      ownerId,
+      name: `${prospectName} - Accounts`,
+      description: `Auto-generated from prospect profile: ${prospectId}`,
+      prospectId,
+      isPrimary: true,
+      themeOverrides: null,
+      config: accountsConfigPayload as unknown as Record<string, unknown>,
+    });
+    demos.accounts = record.id;
   }
 
   // Create Liquidity (visa-direct) config with prospect branding. Only
@@ -1395,17 +1448,7 @@ export async function deleteProspectDemo(
  */
 export async function createMissingDemos(
   id: string,
-  demoTypes: {
-    earn?: boolean;
-    checkout?: boolean;
-    wallet?: boolean;
-    remittance?: boolean;
-    trade?: boolean;
-    flow?: boolean;
-    card?: boolean;
-    connections?: boolean;
-    "visa-direct"?: boolean;
-  },
+  demoTypes: ProspectDemoRequest,
 ): Promise<ActionResult<ProspectProfile>> {
   const user = await getSessionUser();
   if (!user) {
@@ -1423,18 +1466,14 @@ export async function createMissingDemos(
 
     const profile = prospectToProfile(prospect);
     const existingDemos = await resolveProspectDemos(id);
-    const createOptions = {
-      earn: demoTypes.earn && !existingDemos.earn,
-      checkout: demoTypes.checkout && !existingDemos.checkout,
-      wallet: demoTypes.wallet && !existingDemos.wallet,
-      remittance: demoTypes.remittance && !existingDemos.remittance,
-      trade: demoTypes.trade && !existingDemos.trade,
-      flow: demoTypes.flow && !existingDemos.flow,
-      card: demoTypes.card && !existingDemos.card,
-      connections: demoTypes.connections && !existingDemos.connections,
-      "visa-direct":
-        demoTypes["visa-direct"] && !existingDemos["visa-direct"],
-    };
+    // Every key is always present, so this never reads as "no options given"
+    // (which means build everything).
+    const createOptions = Object.fromEntries(
+      PROSPECT_DEMO_TYPES.map((type) => [
+        type,
+        Boolean(demoTypes[type]) && !existingDemos[type],
+      ]),
+    ) as Record<ProspectDemoTypeKey, boolean>;
 
     await createProspectDemoConfigs(
       profile.id,

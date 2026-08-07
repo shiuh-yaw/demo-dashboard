@@ -547,6 +547,14 @@ const connectEntry: DemoEditorEntry = {
   backHref: "/dashboard/prospects",
 };
 
+// Accounts has no in-dashboard editor - like flow, card, and connections its
+// theme comes from the prospect and apps/accounts owns the config. The instance
+// page renders the shared insights + share view (see DASHBOARD_EDITABLE_KINDS).
+const accountsEntry: DemoEditorEntry = {
+  appearanceMode: "none",
+  backHref: "/dashboard/prospects",
+};
+
 export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   wallet: walletEntry,
   earn: earnEntry,
@@ -557,6 +565,7 @@ export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   flow: flowEntry,
   card: cardEntry,
   connections: connectEntry,
+  accounts: accountsEntry,
 };
 
 export function getDemoEditorEntry(kind: DemoConfigKind): DemoEditorEntry {

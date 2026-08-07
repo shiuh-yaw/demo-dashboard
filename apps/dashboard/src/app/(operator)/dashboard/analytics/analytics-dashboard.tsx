@@ -48,6 +48,7 @@ const KIND_LABEL: Record<DemoConfigKind, string> = {
   flow: "Flow",
   card: "Card",
   connections: "Connections",
+  accounts: "Accounts",
 };
 
 function formatChartDate(x: Date | number | string): string {

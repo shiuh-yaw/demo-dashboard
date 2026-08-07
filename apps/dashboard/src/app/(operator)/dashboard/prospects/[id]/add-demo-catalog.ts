@@ -26,6 +26,7 @@ export type ProspectDemoType =
   | "flow"
   | "card"
   | "connections"
+  | "accounts"
   | "visa-direct";
 
 export interface AddDemoRow {

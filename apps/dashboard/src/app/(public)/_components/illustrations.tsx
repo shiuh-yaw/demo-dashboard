@@ -292,11 +292,80 @@ function ConnectIllustration() {
   );
 }
 
+function AccountsIllustration() {
+  return (
+    <Svg>
+      <defs>
+        <linearGradient
+          id="ill-accounts-card"
+          x1="20"
+          y1="26"
+          x2="20"
+          y2="54"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.06" />
+        </linearGradient>
+      </defs>
+      <Frame />
+
+      {/*
+        Laid out ACROSS the frame, not down it. The frame is 148x52, so a
+        vertical stack put the signer avatars below y=66 - outside the card,
+        which is what made the old version look broken. One wallet on the left,
+        the people who sign it on the right, joined by a bracket.
+
+        Strokes are ACCENT rather than BORDER: at this size the border grey read
+        as almost invisible.
+      */}
+      <rect
+        x="20"
+        y="26"
+        width="58"
+        height="28"
+        rx="7"
+        fill="url(#ill-accounts-card)"
+        stroke={ACCENT}
+        strokeWidth="1.5"
+      />
+      <circle cx="31" cy="40" r="4.5" fill={ACCENT} fillOpacity="0.75" />
+      <rect x="40" y="35.5" width="28" height="3" rx="1.5" fill={ACCENT} fillOpacity="0.55" />
+      <rect x="40" y="41.5" width="17" height="3" rx="1.5" fill={ACCENT} fillOpacity="0.3" />
+
+      {/* One wallet, two signers: the bracket is the whole point of the demo. */}
+      <path
+        d="M78 40 H88 M88 31 V49 M88 31 H99 M88 49 H99"
+        stroke={ACCENT}
+        strokeOpacity="0.45"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+
+      {[31, 49].map((cy) => (
+        <g key={cy}>
+          <circle cx="107" cy={cy} r="8" fill={SURFACE} stroke={ACCENT} strokeWidth="1.5" />
+          <circle cx="107" cy={cy - 2.4} r="2.4" fill={ACCENT} fillOpacity="0.85" />
+          <path
+            d={`M103.2 ${cy + 3.4}a4.2 4.2 0 017.6 0`}
+            stroke={ACCENT}
+            strokeWidth="1.4"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
 /**
  * Slug → illustration lookup for the landing demos. Resolve through
  * `getDemoIllustration` so unknown slugs fall back safely.
  */
 export const DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
+  accounts: AccountsIllustration,
   connections: ConnectIllustration,
   wallet: WalletIllustration,
   trade: TradeIllustration,

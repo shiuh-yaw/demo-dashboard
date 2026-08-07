@@ -10,6 +10,7 @@ describe("LANDING_DEMOS config", () => {
   it("contains exactly the catalog demos", () => {
     const slugs = LANDING_DEMOS.map((d) => d.slug).sort();
     expect(slugs).toEqual([
+      "accounts",
       "checkouts",
       "connections",
       "earn",

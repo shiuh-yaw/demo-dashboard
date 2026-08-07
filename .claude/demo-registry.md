@@ -6,6 +6,7 @@
 
 | App | flow_role | custody | status |
 |---|---|---|---|
+| `accounts` | wallet | non-custodial | experimental |
 | `card` | payouts | non-custodial | experimental |
 | `checkouts` | checkout | non-custodial | stable |
 | `connections` | auth | non-custodial | experimental |

@@ -12,6 +12,19 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   helperText?: string;
   /** Use monospace font for the input */
   mono?: boolean;
+  /**
+   * Keep password managers out of this field.
+   *
+   * Opt-in rather than the default, because the same component renders real
+   * email and password fields where autofill is the point. Turn it on for
+   * anything a vault would only ever fill wrongly - a blockchain address, an
+   * amount, a token contract - where the offer to fill "Eric Tesenair" into a
+   * recipient field is at best noise and at worst a mis-send.
+   *
+   * Four attributes because each manager reads its own: 1Password, LastPass,
+   * Dashlane, and the browser's own heuristic.
+   */
+  noAutofill?: boolean;
 }
 
 /**
@@ -19,7 +32,20 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * Uses CSS variables for theming.
  */
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, helperText, id, mono = false, ...props }, ref) => {
+  (
+    {
+      className,
+      type,
+      label,
+      error,
+      helperText,
+      id,
+      mono = false,
+      noAutofill = false,
+      ...props
+    },
+    ref,
+  ) => {
     const generatedId = useId();
     const inputId = id || (label ? `input-${generatedId}` : undefined);
 
@@ -50,11 +76,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           ref={ref}
+          {...(noAutofill && {
+            autoComplete: "off",
+            "data-1p-ignore": "true",
+            "data-lpignore": "true",
+            "data-form-type": "other",
+          })}
           {...props}
         />
-        {error && <p className="mt-1.5 text-sm text-red-500">{error}</p>}
+        {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-[var(--widget-muted,#64748b)]">
+          <p className="mt-1.5 text-xs leading-relaxed text-[var(--widget-muted,#64748b)]">
             {helperText}
           </p>
         )}

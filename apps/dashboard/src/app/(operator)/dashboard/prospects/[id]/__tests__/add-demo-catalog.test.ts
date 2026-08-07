@@ -51,10 +51,11 @@ describe("buildAddDemoCatalog", () => {
       flow: "f1",
       card: "c1",
       connections: "n1",
+      accounts: "a1",
       "visa-direct": "v1",
     });
-    // The eight in-dashboard bindable kinds (checkout is external, excluded).
-    expect(rows).toHaveLength(8);
+    // The nine in-dashboard bindable kinds (checkout is external, excluded).
+    expect(rows).toHaveLength(9);
     expect(rows.every((r) => r.status === "added")).toBe(true);
   });
 });

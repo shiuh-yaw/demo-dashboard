@@ -35,6 +35,7 @@ export const DEMO_CONFIG_KINDS = [
   "flow",
   "card",
   "connections",
+  "accounts",
 ] as const satisfies readonly DemoConfigKind[];
 
 export const demoConfigKindSchema = z.enum(DEMO_CONFIG_KINDS);
@@ -92,6 +93,11 @@ const connectConfigSchema = z.object({
   config: permissiveConfig,
 });
 
+const accountsConfigSchema = z.object({
+  kind: z.literal("accounts"),
+  config: permissiveConfig,
+});
+
 /**
  * Discriminated union routing by `kind`. Used by the service layer's
  * write paths (`create`, `update`, `upsertWithId`) to validate the
@@ -110,6 +116,7 @@ export const demoConfigPayloadSchema = z.discriminatedUnion("kind", [
   flowConfigSchema,
   cardConfigSchema,
   connectConfigSchema,
+  accountsConfigSchema,
 ]);
 
 /**

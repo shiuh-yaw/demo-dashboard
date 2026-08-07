@@ -260,9 +260,71 @@ export function ConnectIllustration() {
   );
 }
 
+export function AccountsIllustration() {
+  return (
+    <Svg>
+      <defs>
+        <linearGradient
+          id="op-ill-accounts-card"
+          x1="20"
+          y1="26"
+          x2="20"
+          y2="54"
+          gradientUnits="userSpaceOnUse"
+        >
+          {accentStop("0%", 0.18)}
+          {accentStop("100%", 0.06)}
+        </linearGradient>
+      </defs>
+      <Frame />
+
+      {/* Mirrors the public landing illustration - keep the two in step. Laid
+          out across the 148x52 frame, since a vertical stack pushed the signer
+          avatars outside it. */}
+      <rect
+        x="20"
+        y="26"
+        width="58"
+        height="28"
+        rx="7"
+        fill="url(#op-ill-accounts-card)"
+        className="di-accent-stroke"
+        strokeWidth="1.5"
+      />
+      <circle cx="31" cy="40" r="4.5" className="di-accent" fillOpacity="0.75" />
+      <rect x="40" y="35.5" width="28" height="3" rx="1.5" className="di-accent" fillOpacity="0.55" />
+      <rect x="40" y="41.5" width="17" height="3" rx="1.5" className="di-accent" fillOpacity="0.3" />
+
+      <path
+        d="M78 40 H88 M88 31 V49 M88 31 H99 M88 49 H99"
+        className="di-accent-stroke"
+        strokeOpacity="0.45"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+
+      {[31, 49].map((cy) => (
+        <g key={cy}>
+          <circle cx="107" cy={cy} r="8" className="di-surface-box" strokeWidth="1.5" />
+          <circle cx="107" cy={cy - 2.4} r="2.4" className="di-accent" fillOpacity="0.85" />
+          <path
+            d={`M103.2 ${cy + 3.4}a4.2 4.2 0 017.6 0`}
+            className="di-accent-stroke"
+            strokeWidth="1.4"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
 /** Slug -> operator illustration; unknown slugs fall back to Wallet. */
 export const OPERATOR_DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
   wallet: WalletIllustration,
+  accounts: AccountsIllustration,
   connections: ConnectIllustration,
   trade: TradeIllustration,
   earn: EarnIllustration,

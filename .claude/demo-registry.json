@@ -2,6 +2,19 @@
   "generatedAt": null,
   "apps": [
     {
+      "name": "@dynamic-demos/accounts",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "non-custodial",
+      "status": "experimental",
+      "provider": {
+        "name": "Dynamic Business Accounts (early access)",
+        "docs": "https://www.dynamic.xyz/docs/api-reference/sdk/sdk-%E2%80%94-create-a-business-account",
+        "api_reference": "https://www.dynamic.xyz/docs/api-reference/sdk/sdk-%E2%80%94-get-a-business-account-with-embedded-members-and-signers",
+        "agent_docs": "none"
+      }
+    },
+    {
       "name": "@dynamic-demos/card",
       "kind": "app",
       "flow_role": "payouts",

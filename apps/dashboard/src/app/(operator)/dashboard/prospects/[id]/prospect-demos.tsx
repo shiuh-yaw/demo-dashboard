@@ -27,6 +27,7 @@ import {
   CreditCard,
   Workflow,
   Link2,
+  Users,
   CircleCheck,
 } from "lucide-react";
 import type { ProspectProfile } from "@/lib/types/dashboard";
@@ -74,7 +75,7 @@ interface DemoConfig {
   configRoute: string; // Dashboard route to edit config; "" when none exists.
 }
 
-const DEMO_CONFIGS: DemoConfig[] = [
+const DEMO_CONFIGS = [
   { type: "earn", label: "Earn", icon: Banknote, configRoute: "/earns" },
   { type: "checkout", label: "Checkouts", icon: ArrowUpDown, configRoute: "/checkouts" },
   { type: "wallet", label: "Wallet", icon: Wallet, configRoute: "/wallets" },
@@ -86,7 +87,23 @@ const DEMO_CONFIGS: DemoConfig[] = [
   // No configRoute: like flow and card, connect's theme comes from the prospect
   // and apps/connections owns its config, so there is nothing to edit here.
   { type: "connections", label: "Connections", icon: Link2, configRoute: "" },
-];
+  // Same: apps/accounts owns its config and reads the theme through the
+  // prospect. A kind missing from this list is created but never listed.
+  { type: "accounts", label: "Accounts", icon: Users, configRoute: "" },
+] as const satisfies readonly DemoConfig[];
+
+/**
+ * Compile-time guard: every prospect-bindable demo type needs a row above.
+ * Accounts shipped without one - the demo was created, the toast said so, and
+ * the table simply never listed it. This turns the next omission into a build
+ * error instead of a phantom demo.
+ */
+type MissingDemoRow = Exclude<
+  ProspectDemoType,
+  (typeof DEMO_CONFIGS)[number]["type"]
+>;
+type AssertNever<T extends never> = T;
+export type _EveryProspectDemoTypeHasARow = AssertNever<MissingDemoRow>;
 
 function formatLastViewed(iso: string | null | undefined): string {
   if (!iso) return "-";
