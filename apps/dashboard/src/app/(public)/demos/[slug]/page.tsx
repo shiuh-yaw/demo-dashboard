@@ -8,7 +8,7 @@ import {
   getDemoBySlug,
   type LandingDemo,
 } from "@/lib/landing/demos";
-import { DemoHero } from "../../_components/demo-card";
+import { DemoHero } from "../../_components/demo-hero";
 import { clearThemeUrl } from "@/lib/share-links/launch-url";
 
 function LaunchCta({

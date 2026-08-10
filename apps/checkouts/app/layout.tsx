@@ -28,8 +28,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Payment Widget",
-  description: "Accept crypto payments with Dynamic SDK",
+  // "Checkouts" is the demo's name in the shared catalog, the landing card,
+  // the nav grid and the OG image - the app must not call itself something
+  // else ("Payment Widget") in the one place a shared link shows a title.
+  title: "Checkouts - Dynamic Demos",
+  description: "Embedded payment widget for crypto deposits and purchases.",
 };
 
 interface RootLayoutProps {

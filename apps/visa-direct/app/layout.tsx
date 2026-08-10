@@ -13,8 +13,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Fireblocks Liquidity - Dynamic Demos",
+  // Public unfurl copy: describes the product only. Operator-facing details
+  // (per-prospect branding, the demo dashboard) must never appear here - this
+  // string is what a forwarded share link shows in Slack.
   description:
-    "Receive USDC payouts via Visa Direct Push-to-Wallet, powered by Fireblocks custody. Configurable branding via the demo dashboard.",
+    "Receive USDC payouts via Visa Direct Push-to-Wallet, powered by Fireblocks custody.",
 };
 
 export default async function RootLayout({

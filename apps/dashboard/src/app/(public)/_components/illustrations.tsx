@@ -1,372 +1,52 @@
 /**
- * Landing-card hero illustrations — one per demo, in the visual language
- * of apps/flow's scenario illustrations (small hand-crafted SVGs, quiet
- * geometric product metaphors, 1.5 stroke weight, rounded corners).
+ * Public landing-card binding for the shared demo illustrations. The drawings
+ * live in `@dynamic-demos/ui/demo-illustrations` (one source, also consumed by
+ * the operator dashboard and the OG unfurl image); this file only supplies the
+ * public palette and the slug lookup.
  *
- * The dashboard landing has no `--brand-*` tokens, so these use literal
- * values: accent #4779FF on a white/slate palette.
+ * The dashboard landing has no `--brand-*` tokens, so the public surface keeps
+ * its literal white/slate values (accent #4779FF) rather than reading the
+ * operator's `--di-*` custom properties.
  */
 
+import {
+  LIGHT_ILLUSTRATION_TONES,
+  getDemoIllustration as getSharedIllustration,
+  type DemoIllustration,
+} from "@dynamic-demos/ui/demo-illustrations";
 import type { ReactElement } from "react";
 
-const ACCENT = "#4779FF";
-const SURFACE = "#ffffff";
-const BORDER = "#e2e8f0";
-const MUTED_FILL = "#f1f5f9";
-const FG = "#0f172a";
-
-const MONO = "ui-monospace, SFMono-Regular, monospace";
-
-/** Shared outer card frame — same footprint as flow's illustrations. */
-function Frame() {
-  return (
-    <rect
-      x="6"
-      y="14"
-      width="148"
-      height="52"
-      rx="10"
-      fill={SURFACE}
-      stroke={BORDER}
-      strokeWidth="1.5"
-    />
-  );
-}
-
-function Svg({ children }: { children: React.ReactNode }) {
-  return (
-    <svg
-      width="160"
-      height="80"
-      viewBox="0 0 160 80"
-      fill="none"
-      aria-hidden
-      className="block"
-    >
-      {children}
-    </svg>
-  );
-}
-
-/** Wallet — a wallet body with an accent card sliding in and a snap clasp. */
-export function WalletIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-wallet-card" x1="52" y1="0" x2="108" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.6" />
-        </linearGradient>
-      </defs>
-      {/* Card sliding into the wallet (peeks above the body) */}
-      <rect x="52" y="8" width="56" height="30" rx="5" fill="url(#ill-wallet-card)" />
-      <rect x="59" y="14" width="18" height="4" rx="2" fill={SURFACE} fillOpacity="0.85" />
-      {/* Wallet body — drawn over the card so the card sits inside */}
-      <rect x="30" y="22" width="100" height="42" rx="10" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      {/* Masked address inside the wallet */}
-      <text x="42" y="47" fontFamily={MONO} fontSize="11" fontWeight="600" fill={FG}>
-        0x
-      </text>
-      <rect x="58" y="39" width="30" height="8" rx="2" fill={MUTED_FILL} />
-      {/* Snap clasp overlapping the right edge, accent dot */}
-      <rect x="112" y="34" width="26" height="18" rx="9" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      <circle cx="125" cy="43" r="3" fill={ACCENT} />
-    </Svg>
-  );
-}
-
-/** Trade — rising sparkline with a soft gradient fill under the curve. */
-export function TradeIllustration() {
-  const curve =
-    "M18 52 C38 48 48 50 64 44 C80 38 92 44 106 36 C118 29 130 30 142 26";
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-trade-fill" x1="0" y1="26" x2="0" y2="58" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <Frame />
-      {/* Quiet gridlines */}
-      <path d="M18 30 H142" stroke={BORDER} strokeWidth="1" strokeDasharray="2 5" />
-      <path d="M18 44 H142" stroke={BORDER} strokeWidth="1" strokeDasharray="2 5" />
-      {/* Area fill under the curve */}
-      <path d={`${curve} L142 58 L18 58 Z`} fill="url(#ill-trade-fill)" />
-      {/* Price line */}
-      <path d={curve} stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      {/* Last-price marker */}
-      <circle cx="142" cy="26" r="3" fill={SURFACE} stroke={ACCENT} strokeWidth="1.5" />
-      {/* Skeleton price chip */}
-      <rect x="18" y="22" width="24" height="7" rx="2" fill={MUTED_FILL} />
-    </Svg>
-  );
-}
-
-/** Earn — stacked bars growing in width + an accent up-arrow with "%". */
-export function EarnIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-earn-bar" x1="18" y1="0" x2="94" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.55" />
-        </linearGradient>
-      </defs>
-      <Frame />
-      {/* Stacked position bars — growing upward */}
-      <rect x="18" y="49" width="48" height="7" rx="3.5" fill={MUTED_FILL} />
-      <rect x="18" y="39" width="62" height="7" rx="3.5" fill={MUTED_FILL} />
-      <rect x="18" y="29" width="76" height="7" rx="3.5" fill="url(#ill-earn-bar)" />
-      {/* Yield up-arrow + "%" */}
-      <path
-        d="M118 40 L124 34 L130 40"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
+/** Binds a shared drawing to the public palette + a distinct gradient-id namespace. */
+function withLightTones(Illustration: DemoIllustration): () => ReactElement {
+  return function LandingIllustration() {
+    return (
+      <Illustration
+        tones={LIGHT_ILLUSTRATION_TONES}
+        idPrefix="ill"
+        className="block"
       />
-      <path d="M124 34 V50" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" />
-      <text x="135" y="40" fontFamily={MONO} fontSize="9" fontWeight="600" fill={ACCENT}>
-        %
-      </text>
-    </Svg>
-  );
+    );
+  };
 }
 
-/** Flow — order lines + a prominent accent pay pill and check badge. */
-export function FlowIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-flow-pill" x1="18" y1="40" x2="118" y2="56" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.65" />
-        </linearGradient>
-      </defs>
-      <Frame />
-      {/* Order summary skeleton */}
-      <rect x="18" y="24" width="44" height="7" rx="2" fill={MUTED_FILL} />
-      <rect x="118" y="24" width="24" height="7" rx="2" fill={MUTED_FILL} />
-      {/* Pay button */}
-      <rect x="18" y="40" width="100" height="16" rx="8" fill="url(#ill-flow-pill)" />
-      <rect x="48" y="46.5" width="40" height="3" rx="1.5" fill={SURFACE} fillOpacity="0.9" />
-      {/* Confirmed badge */}
-      <circle cx="134" cy="48" r="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      <path
-        d="M130.5 48 L133 50.5 L137.5 45.5"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </Svg>
-  );
-}
-
-/** Remittance — send account → dashed accent path → receive account. */
-export function RemittanceIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-remit-pill" x1="16" y1="0" x2="44" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.55" />
-        </linearGradient>
-      </defs>
-      {/* Sender account */}
-      <rect x="8" y="22" width="52" height="36" rx="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      <text x="16" y="37" fontFamily={MONO} fontSize="10" fontWeight="600" fill={FG}>
-        $
-      </text>
-      <rect x="24" y="29" width="26" height="7" rx="2" fill={MUTED_FILL} />
-      <rect x="16" y="42" width="28" height="8" rx="4" fill="url(#ill-remit-pill)" />
-      {/* Receiver account */}
-      <rect x="100" y="22" width="52" height="36" rx="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      <rect x="108" y="30" width="36" height="7" rx="2" fill={MUTED_FILL} />
-      <rect x="108" y="42" width="24" height="7" rx="2" fill={MUTED_FILL} />
-      {/* Transfer path */}
-      <path d="M64 40 H86" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3" />
-      <path
-        d="M90 36 L96 40 L90 44"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </Svg>
-  );
-}
-
-/** Stablecoin Card — a virtual debit card: accent chip, contactless arcs, masked number, "$" funding badge. */
-export function StablecoinCardIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-card-chip" x1="42" y1="0" x2="56" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.6" />
-        </linearGradient>
-        <linearGradient id="ill-card-number" x1="96" y1="0" x2="110" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.9" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.55" />
-        </linearGradient>
-      </defs>
-      {/* Card body */}
-      <rect x="34" y="18" width="92" height="46" rx="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      {/* Chip */}
-      <rect x="42" y="26" width="14" height="10" rx="2.5" fill="url(#ill-card-chip)" />
-      {/* Contactless arcs */}
-      <path
-        d="M112 26 a8.5 8.5 0 0 1 0 12"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M107 29.5 a4 4 0 0 1 0 5"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* Masked card number — last group highlighted */}
-      <rect x="42" y="48" width="14" height="6" rx="3" fill={MUTED_FILL} />
-      <rect x="60" y="48" width="14" height="6" rx="3" fill={MUTED_FILL} />
-      <rect x="78" y="48" width="14" height="6" rx="3" fill={MUTED_FILL} />
-      <rect x="96" y="48" width="14" height="6" rx="3" fill="url(#ill-card-number)" />
-      {/* Stablecoin funding badge overlapping the card edge */}
-      <circle cx="126" cy="52" r="9" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      <text x="123" y="55.5" fontFamily={MONO} fontSize="10" fontWeight="600" fill={ACCENT}>
-        $
-      </text>
-    </Svg>
-  );
-}
-
-/** Connect - a wallet list with one row picked, and a connected badge. */
-function ConnectIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient id="ill-connect-row" x1="16" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.04" />
-        </linearGradient>
-      </defs>
-      <Frame />
-      {/* Two wallet rows at the same weight as the other cards' skeletons - the
-          previous version stacked three 10px rows and filled the chosen one's
-          label with FG, which read as a redacted line rather than a wallet. */}
-      <rect x="16" y="24" width="104" height="14" rx="5" fill={MUTED_FILL} />
-      <rect x="21" y="28" width="6" height="6" rx="2" fill={BORDER} />
-      <rect x="32" y="30" width="30" height="3" rx="1.5" fill={BORDER} />
-      {/* The picked wallet */}
-      <rect
-        x="16"
-        y="42"
-        width="104"
-        height="14"
-        rx="5"
-        fill="url(#ill-connect-row)"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-      />
-      <rect x="21" y="46" width="6" height="6" rx="2" fill={ACCENT} />
-      <rect x="32" y="48" width="38" height="3" rx="1.5" fill={ACCENT} fillOpacity="0.55" />
-      {/* Connected badge, same treatment as Flow's confirmed badge */}
-      <circle cx="134" cy="49" r="8" fill={SURFACE} stroke={BORDER} strokeWidth="1.5" />
-      <path
-        d="M130.5 49 L133 51.5 L137.5 46.5"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </Svg>
-  );
-}
-
-function AccountsIllustration() {
-  return (
-    <Svg>
-      <defs>
-        <linearGradient
-          id="ill-accounts-card"
-          x1="20"
-          y1="26"
-          x2="20"
-          y2="54"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={ACCENT} stopOpacity="0.06" />
-        </linearGradient>
-      </defs>
-      <Frame />
-
-      {/*
-        Laid out ACROSS the frame, not down it. The frame is 148x52, so a
-        vertical stack put the signer avatars below y=66 - outside the card,
-        which is what made the old version look broken. One wallet on the left,
-        the people who sign it on the right, joined by a bracket.
-
-        Strokes are ACCENT rather than BORDER: at this size the border grey read
-        as almost invisible.
-      */}
-      <rect
-        x="20"
-        y="26"
-        width="58"
-        height="28"
-        rx="7"
-        fill="url(#ill-accounts-card)"
-        stroke={ACCENT}
-        strokeWidth="1.5"
-      />
-      <circle cx="31" cy="40" r="4.5" fill={ACCENT} fillOpacity="0.75" />
-      <rect x="40" y="35.5" width="28" height="3" rx="1.5" fill={ACCENT} fillOpacity="0.55" />
-      <rect x="40" y="41.5" width="17" height="3" rx="1.5" fill={ACCENT} fillOpacity="0.3" />
-
-      {/* One wallet, two signers: the bracket is the whole point of the demo. */}
-      <path
-        d="M78 40 H88 M88 31 V49 M88 31 H99 M88 49 H99"
-        stroke={ACCENT}
-        strokeOpacity="0.45"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-
-      {[31, 49].map((cy) => (
-        <g key={cy}>
-          <circle cx="107" cy={cy} r="8" fill={SURFACE} stroke={ACCENT} strokeWidth="1.5" />
-          <circle cx="107" cy={cy - 2.4} r="2.4" fill={ACCENT} fillOpacity="0.85" />
-          <path
-            d={`M103.2 ${cy + 3.4}a4.2 4.2 0 017.6 0`}
-            stroke={ACCENT}
-            strokeWidth="1.4"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </g>
-      ))}
-    </Svg>
-  );
-}
+export const WalletIllustration = withLightTones(getSharedIllustration("wallet"));
+export const TradeIllustration = withLightTones(getSharedIllustration("trade"));
+export const EarnIllustration = withLightTones(getSharedIllustration("earn"));
+export const FlowIllustration = withLightTones(getSharedIllustration("flow"));
+export const RemittanceIllustration = withLightTones(getSharedIllustration("remittance"));
+export const StablecoinCardIllustration = withLightTones(
+  getSharedIllustration("stablecoin-card"),
+);
+const ConnectIllustration = withLightTones(getSharedIllustration("connections"));
+const AccountsIllustration = withLightTones(getSharedIllustration("accounts"));
 
 /**
- * Slug → illustration lookup for the landing demos. Resolve through
+ * Slug -> illustration lookup for the landing demos. Resolve through
  * `getDemoIllustration` so unknown slugs fall back safely.
  */
 export const DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
-  accounts: AccountsIllustration,
   connections: ConnectIllustration,
+  accounts: AccountsIllustration,
   wallet: WalletIllustration,
   trade: TradeIllustration,
   earn: EarnIllustration,

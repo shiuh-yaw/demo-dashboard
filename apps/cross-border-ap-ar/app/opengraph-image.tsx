@@ -11,5 +11,5 @@ export const contentType = "image/png";
 export const alt = "Cross-border AP/AR - a live product demo by Dynamic";
 
 export default async function Image() {
-  return renderDemoOgImage({ demoLabel: "Cross-border AP/AR" });
+  return renderDemoOgImage({ demoLabel: "Cross-border AP/AR", art: "transfer" });
 }

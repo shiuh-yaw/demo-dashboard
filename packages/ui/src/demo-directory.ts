@@ -2,10 +2,14 @@
  * Cross-demo directory - the entries behind the SiteHeader's "Demos"
  * hover grid, so any scenario page can jump straight to another demo.
  *
- * Mirrors the public catalog (apps/dashboard/src/lib/landing/demos.ts,
- * the canonical list - keep name/tagline/url in sync when the catalog
- * changes). Apps can override via SiteHeader's `demos` prop.
+ * DERIVED from `DEMO_CATALOG`, never hand-written: this used to be a manual
+ * mirror of the dashboard catalog and drifted from it (four taglines diverged
+ * and two demos went missing). To change a name, tagline or URL, edit
+ * `demo-catalog.ts` - the landing cards and this grid then move together.
+ * Apps can still override the rendered set via SiteHeader's `demos` prop.
  */
+
+import { DEMO_CATALOG, type DemoCatalogEntry } from "./demo-catalog";
 
 export interface DemoDirectoryEntry {
   name: string;
@@ -13,45 +17,17 @@ export interface DemoDirectoryEntry {
   href: string;
 }
 
-export const DEMO_DIRECTORY: DemoDirectoryEntry[] = [
-  {
-    name: "Wallet",
-    tagline: "A non-custodial embedded wallet your users control.",
-    href: "https://wallet.dynamic.dev",
-  },
-  {
-    name: "Connections",
-    tagline: "Bring any of 600+ wallets your users already have.",
-    href: "https://connections.dynamic.dev",
-  },
-  {
-    name: "Accounts",
-    tagline: "One wallet, many signers - admin reach kept separate.",
-    href: "https://accounts.dynamic.dev",
-  },
-  {
-    name: "Trade",
-    tagline: "Trade tokens and prediction markets from one portfolio.",
-    href: "https://trade.dynamic.dev",
-  },
-  {
-    name: "Earn",
-    tagline: "Deposit USDC into curated yield vaults in a few taps.",
-    href: "https://earn.dynamic.dev",
-  },
-  {
-    name: "Flow",
-    tagline: "Accept any crypto, settle in stablecoins anywhere.",
-    href: "https://flow.dynamic.dev",
-  },
-  {
-    name: "Remittance",
-    tagline: "Send stablecoins onchain, deliver fiat to banks abroad.",
-    href: "https://remittance.dynamic.dev",
-  },
-  {
-    name: "Stablecoin Card",
-    tagline: "A virtual Visa debit card funded by stablecoins.",
-    href: "https://card.dynamic.dev",
-  },
-];
+/** A demo reaches the nav grid only if it is public AND actually deployed. */
+function isNavigable(
+  demo: DemoCatalogEntry,
+): demo is DemoCatalogEntry & { url: string } {
+  return demo.showOnLanding && typeof demo.url === "string";
+}
+
+export const DEMO_DIRECTORY: DemoDirectoryEntry[] = DEMO_CATALOG.filter(
+  isNavigable,
+).map((demo) => ({
+  name: demo.name,
+  tagline: demo.tagline,
+  href: demo.url,
+}));

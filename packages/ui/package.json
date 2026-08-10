@@ -12,6 +12,10 @@
     "./skeleton": "./src/skeleton.tsx",
     "./dialog": "./src/dialog.tsx",
     "./spinner": "./src/spinner.tsx",
+    "./demo-illustrations": "./src/demo-illustrations.tsx",
+    "./demo-catalog": "./src/demo-catalog.ts",
+    "./dynamic-logo-paths": "./src/dynamic-logo-paths.ts",
+    "./demo-hero-band": "./src/demo-hero-band.tsx",
     "./code-panel.css": "./src/code-panel.css"
   },
   "peerDependencies": {

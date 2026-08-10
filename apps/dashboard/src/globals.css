@@ -188,35 +188,17 @@
   --di-hero-dot: color-mix(in srgb, #0f172a 6%, transparent);
 }
 
-/* Operator demo-illustration glyph palette (light) - class-based SVG recolor. */
-[data-surface="operator"] .di-surface {
-  fill: #ffffff;
-}
-[data-surface="operator"] .di-surface-box {
-  fill: #ffffff;
-  stroke: #e2e8f0;
-}
-[data-surface="operator"] .di-muted {
-  fill: #f1f5f9;
-}
-[data-surface="operator"] .di-fg {
-  fill: #0f172a;
-}
-[data-surface="operator"] .di-accent {
-  fill: #4779ff;
-}
-[data-surface="operator"] .di-accent-stroke {
-  stroke: #4779ff;
-}
-[data-surface="operator"] .di-border-stroke {
-  stroke: #e2e8f0;
-}
-[data-surface="operator"] .di-accent-stop {
-  stop-color: #4779ff;
-}
-[data-surface="operator"] .di-marker {
-  fill: #ffffff;
-  stroke: #4779ff;
+/* Operator demo-illustration palette (light). The shared drawings in
+   @dynamic-demos/ui/demo-illustrations take colors as inline `style` values so
+   one set of markup serves the browser and satori, so these are custom
+   properties rather than fill/stroke classes. Scoping stays on
+   [data-surface="operator"] - the public surface reads its own literals. */
+[data-surface="operator"] {
+  --di-surface: #ffffff;
+  --di-border: #e2e8f0;
+  --di-muted: #f1f5f9;
+  --di-fg: #0f172a;
+  --di-accent: #4779ff;
 }
 
 [data-surface="operator"][data-theme="dark"] {
@@ -273,35 +255,13 @@
   --widget-border: var(--border);
 }
 
-/* Operator demo-illustration glyph palette (dark) - compelling navy + glow. */
-[data-surface="operator"][data-theme="dark"] .di-surface {
-  fill: #212e49;
-}
-[data-surface="operator"][data-theme="dark"] .di-surface-box {
-  fill: #212e49;
-  stroke: rgba(255, 255, 255, 0.16);
-}
-[data-surface="operator"][data-theme="dark"] .di-muted {
-  fill: #33436a;
-}
-[data-surface="operator"][data-theme="dark"] .di-fg {
-  fill: #e2e8f0;
-}
-[data-surface="operator"][data-theme="dark"] .di-accent {
-  fill: #5b8bff;
-}
-[data-surface="operator"][data-theme="dark"] .di-accent-stroke {
-  stroke: #5b8bff;
-}
-[data-surface="operator"][data-theme="dark"] .di-border-stroke {
-  stroke: rgba(255, 255, 255, 0.16);
-}
-[data-surface="operator"][data-theme="dark"] .di-accent-stop {
-  stop-color: #5b8bff;
-}
-[data-surface="operator"][data-theme="dark"] .di-marker {
-  fill: #212e49;
-  stroke: #5b8bff;
+/* Operator demo-illustration palette (dark) - compelling navy + glow. */
+[data-surface="operator"][data-theme="dark"] {
+  --di-surface: #212e49;
+  --di-border: rgba(255, 255, 255, 0.16);
+  --di-muted: #33436a;
+  --di-fg: #e2e8f0;
+  --di-accent: #5b8bff;
 }
 
 @layer base {

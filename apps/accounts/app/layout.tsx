@@ -42,8 +42,12 @@ export async function generateMetadata(): Promise<Metadata> {
     appName:
       config.branding?.name ??
       (config.branding as { appName?: string } | undefined)?.appName,
+    // Leads with the same sentence as the hero and the catalog tagline; the
+    // trailing clause is the extra detail a description can carry that a
+    // tagline cannot. Do not reword the first sentence in isolation - it is
+    // shared copy, and this is the surface that used to drift from it.
     description:
-      "Business accounts on Dynamic - shared MPC wallets with multiple signers, and admin reach kept separate from signing authority.",
+      "A wallet your users share. One team, many signers - administrative reach stays separate from signing authority. Built on Dynamic.",
   });
 }
 

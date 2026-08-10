@@ -5,6 +5,7 @@ import {
   type LandingDemo,
 } from "@/lib/landing/demos";
 import { DEMO_ILLUSTRATIONS } from "@/app/(public)/_components/illustrations";
+import { DEMO_CATALOG, DEMO_DIRECTORY } from "@dynamic-demos/ui";
 
 describe("LANDING_DEMOS config", () => {
   it("contains exactly the catalog demos", () => {
@@ -115,6 +116,55 @@ describe("showOnLanding", () => {
     const hidden = LANDING_DEMOS.find((demo) => !demo.showOnLanding);
     if (hidden) {
       expect(getDemoBySlug(hidden.slug)).toBeUndefined();
+    }
+  });
+});
+
+// The landing cards, the detail pages and every demo app's SiteHeader nav grid
+// must show one wording per demo. These used to be three hand-maintained
+// copies and drifted (four taglines diverged, two demos vanished from the
+// nav), so the shared DEMO_CATALOG is now the only place the words live and
+// the others derive from it. These tests fail if anyone reintroduces a copy.
+describe("demo copy has a single source", () => {
+  it("LANDING_DEMOS takes its public copy from DEMO_CATALOG verbatim", () => {
+    for (const demo of LANDING_DEMOS) {
+      const canonical = DEMO_CATALOG.find((c) => c.slug === demo.slug);
+      expect(canonical, `no catalog entry for ${demo.slug}`).toBeDefined();
+      expect({
+        name: demo.name,
+        tagline: demo.tagline,
+        url: demo.url,
+        showOnLanding: demo.showOnLanding,
+      }).toEqual({
+        name: canonical!.name,
+        tagline: canonical!.tagline,
+        url: canonical!.url,
+        showOnLanding: canonical!.showOnLanding,
+      });
+    }
+  });
+
+  it("the nav grid matches the catalog word for word", () => {
+    for (const entry of DEMO_DIRECTORY) {
+      const canonical = DEMO_CATALOG.find((c) => c.name === entry.name);
+      expect(canonical, `nav entry "${entry.name}" is not in the catalog`).toBeDefined();
+      expect(entry.tagline).toBe(canonical!.tagline);
+      expect(entry.href).toBe(canonical!.url);
+    }
+  });
+
+  it("lists every public, deployed demo in the nav grid", () => {
+    const expected = DEMO_CATALOG.filter((c) => c.showOnLanding && c.url)
+      .map((c) => c.name)
+      .sort();
+    expect(DEMO_DIRECTORY.map((d) => d.name).sort()).toEqual(expected);
+  });
+
+  it("keeps unlisted demos out of the nav grid", () => {
+    const hidden = DEMO_CATALOG.filter((c) => !c.showOnLanding).map((c) => c.name);
+    expect(hidden.length).toBeGreaterThan(0);
+    for (const name of hidden) {
+      expect(DEMO_DIRECTORY.map((d) => d.name)).not.toContain(name);
     }
   });
 });

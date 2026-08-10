@@ -156,6 +156,24 @@ export {
 export { SiteHeader, type SiteHeaderProps } from "./site-header";
 export { SiteFooter, type SiteFooterProps } from "./site-footer";
 export { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
+export { DemoHeroBand, type DemoHeroBandProps } from "./demo-hero-band";
+export {
+  DYNAMIC_LOGO_ICON_PATHS,
+  DYNAMIC_LOGO_TAGLINE_PATHS,
+  DYNAMIC_LOGO_WORDMARK_PATHS,
+  DYNAMIC_LOGO_VIEWBOX,
+  DYNAMIC_LOGO_VIEWBOX_NO_TAGLINE,
+} from "./dynamic-logo-paths";
+export {
+  DEMO_CATALOG,
+  CATEGORY_ACCENTS,
+  CATEGORY_BAND_FROM,
+  OG_BAND_FROM,
+  OG_BAND_TO,
+  getDemoCatalogEntry,
+  type DemoCatalogEntry,
+  type DemoCategory,
+} from "./demo-catalog";
 export {
   BookACallProvider,
   BookACallLink,

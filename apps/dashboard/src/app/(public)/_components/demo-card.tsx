@@ -3,58 +3,10 @@ import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/droplet-client";
 import type { LandingDemo } from "@/lib/landing/demos";
 import { clearThemeUrl } from "@/lib/share-links/launch-url";
-import { getDemoIllustration } from "./illustrations";
 import { TrackedLaunchLink } from "./tracked-launch-link";
+import { DemoHero } from "./demo-hero";
 
 /** Per-category hero tint. */
-const CATEGORY_ACCENTS: Record<LandingDemo["category"], string> = {
-  wallet: "#4779FF",
-  checkout: "#8b5cf6",
-  offramp: "#10b981",
-};
-
-/**
- * Gradient hero band in flow's ScenarioCard idiom — category-tinted
- * gradient, subtle radial dot pattern, centered demo illustration.
- * Shared by the demo card (h-44) and the detail page (taller).
- */
-export function DemoHero({
-  demo,
-  className = "h-44",
-  illustrationClassName,
-}: {
-  demo: LandingDemo;
-  className?: string;
-  illustrationClassName?: string;
-}) {
-  const Illustration = getDemoIllustration(demo.slug);
-  const accent = CATEGORY_ACCENTS[demo.category];
-
-  return (
-    <div
-      className={`relative ${className}`}
-      style={{
-        background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 14%, #ffffff) 0%, #ffffff 100%)`,
-      }}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, color-mix(in srgb, #0f172a 6%, transparent) 1px, transparent 1px)",
-          backgroundSize: "14px 14px",
-        }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className={illustrationClassName}>
-          <Illustration />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function DemoCard({ demo }: { demo: LandingDemo }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#E1E4EA] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)]">

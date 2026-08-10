@@ -12,6 +12,31 @@
  * it - no manual metadata needed).
  */
 
+import {
+  AccountsIllustration,
+  ConnectIllustration,
+  EarnIllustration,
+  FlowIllustration,
+  RemittanceIllustration,
+  StablecoinCardIllustration,
+  TradeIllustration,
+  WalletIllustration,
+  LIGHT_ILLUSTRATION_TONES,
+  type DemoIllustration,
+} from "@dynamic-demos/ui/demo-illustrations";
+import {
+  OG_BAND_FROM,
+  OG_BAND_TO,
+  getDemoCatalogEntry,
+  type DemoCategory,
+} from "@dynamic-demos/ui/demo-catalog";
+import { DemoHeroBand } from "@dynamic-demos/ui/demo-hero-band";
+import {
+  DYNAMIC_LOGO_ICON_PATHS,
+  DYNAMIC_LOGO_TAGLINE_PATHS,
+  DYNAMIC_LOGO_VIEWBOX,
+  DYNAMIC_LOGO_WORDMARK_PATHS,
+} from "@dynamic-demos/ui/dynamic-logo-paths";
 import { ImageResponse } from "next/og";
 import type { CSSProperties } from "react";
 
@@ -20,27 +45,65 @@ export const OG_IMAGE_HEIGHT = 630;
 
 const DEFAULT_SUBTITLE = "Live product demo";
 const FOOTER_LABEL = "demo.dynamic.xyz";
-const FONT_FAMILY = "Inter";
-// Mirrors packages/theme's DEFAULT_BASE_THEME.primaryColor (brand blue) and
-// the dark widget theme's pageBackground/foreground/mutedText/border - kept
-// as local literals rather than a new @dynamic-demos/theme dependency since
-// this is the composer's only use of them.
-const BRAND_BLUE = "#4779FF";
-const BG_FROM = "#0A0A0A";
-const BG_TO = "#161618";
-const FG_WHITE = "#FFFFFF";
-const MUTED_SUBTITLE = "#9A9A9A";
-const MUTED_FOOTER = "#636366";
+// DM Sans is the brand face (the dashboard loads it as --font-dm-sans);
+// Inter was a mismatch. Google serves DM Sans as woff to the old-browser UA
+// below, which satori parses fine - see `loadGoogleFontWeight`.
+const FONT_FAMILY = "DM Sans";
+// Brand gradient card. #4779FF is packages/theme's DEFAULT_BASE_THEME
+// primaryColor; the deeper indigo and violet flank it to give the card
+// actual color rather than the near-black it used to be.
+// The card IS the hero band: the landing's category-tinted gradient and dot
+// texture run full-bleed across all 1200x630 rather than sitting in a tile.
+// That means light values throughout - the illustrations keep their normal
+// landing palette, so every tonal detail survives.
+// Finer + fainter than the landing's 14px/6% grid: at 1200x630 a coarse grid
+// reads as visible polka dots rather than paper texture.
+const BAND_DOT = "rgba(15,23,42,0.065)";
+const BAND_DOT_SPACING = 17;
+const FG_TITLE = "#0F172A";
+const FG_PITCH = "#475569";
+const FG_FOOTER = "#94A3B8";
+// Logo on a light band uses the real lockup colors, not a white knockout.
+const LOGO_ICON = "#4779FF";
+const LOGO_WORDMARK = "#252731";
+/** Fallback tint for demos with no catalog entry. */
+const DEFAULT_CATEGORY: DemoCategory = "wallet";
+
+/**
+ * Which product motif to draw bottom-right. Deliberately a motif vocabulary
+ * rather than a per-app enum: several demos share one (`checkout` covers
+ * flow/checkouts/shop, `transfer` covers remittance/proceeds/cross-border),
+ * and nothing here is prospect-specific. Omit it and the card renders
+ * text-only.
+ */
+export type OgArtKey =
+  | "wallet"
+  | "connect"
+  | "accounts"
+  | "trade"
+  | "earn"
+  | "checkout"
+  | "transfer"
+  | "card";
 
 export interface RenderDemoOgImageOptions {
   /**
-   * Human demo name shown large, e.g. "Trade", "Stablecoin Card". No
-   * prospect/brand copy belongs here - this is the one and only string
-   * that varies per app.
+   * Catalog slug - PREFERRED. The name and the short pitch are then read from
+   * `DEMO_CATALOG`, so the unfurl shows the exact words as the landing card
+   * and the nav grid. Still generic, still prospect-free: catalog copy is
+   * product copy.
    */
-  demoLabel: string;
-  /** Short line under `demoLabel`. Generic by default; do not pass prospect copy. */
+  slug?: string;
+  /**
+   * Human demo name shown large. Only needed for demos with no catalog entry
+   * (deposit, proceeds, shop, cross-border AP/AR). Ignored when `slug`
+   * resolves. No prospect/brand copy belongs here.
+   */
+  demoLabel?: string;
+  /** Overrides the catalog tagline. Generic copy only - never prospect copy. */
   subtitle?: string;
+  /** Product motif drawn in the art tile. Omitted → text-only card. */
+  art?: OgArtKey;
 }
 
 /**
@@ -73,9 +136,13 @@ async function loadGoogleFontWeight(
   });
   if (!cssRes.ok) throw new Error(`google fonts css fetch failed: ${cssRes.status}`);
   const css = await cssRes.text();
-  const match = css.match(/src: url\(([^)]+)\) format\('(?:truetype|opentype)'\)/);
+  // satori parses ttf/otf/woff (NOT woff2). Google returns woff for DM Sans
+  // under this UA and ttf for some other families, so accept all three -
+  // matching only truetype/opentype silently dropped the brand font and fell
+  // back to next/og's default face.
+  const match = css.match(/src: url\(([^)]+)\) format\('(?:truetype|opentype|woff)'\)/);
   const fontUrl = match?.[1];
-  if (!fontUrl) throw new Error("no ttf/otf url in google fonts css response");
+  if (!fontUrl) throw new Error("no ttf/otf/woff url in google fonts css response");
   return fetchFontFile(fontUrl);
 }
 
@@ -100,27 +167,53 @@ async function loadBrandFonts(
   }
 }
 
-/** Dynamic's diamond mark - plain filled paths only (no mask/clipPath) so it renders reliably under satori's limited SVG support. */
-function BrandMark() {
+/**
+ * The full Dynamic lockup - diamond + "dynamic" + "a Fireblocks company" -
+ * in its real colors: blue diamond, near-black wordmark, for the light band.
+ *
+ * Shares its outlines with the React `<DynamicLogo />` via
+ * `@dynamic-demos/ui/dynamic-logo-paths`, so the two can never diverge. The
+ * component wraps these in `<mask>`/`<clipPath>`, which satori does not
+ * support; those masks are plain bounding-box rects that clip nothing, so
+ * this renderer draws the same paths flat. Every glyph here is an outline,
+ * never `<text>` - satori rejects `<text>` outright, and the tagline is far
+ * too small to survive as live type at unfurl scale anyway.
+ */
+function BrandLockup() {
   return (
     <svg
-      width={44}
-      height={44}
-      viewBox="0 0 102 100"
+      width={268}
+      height={60}
+      viewBox={DYNAMIC_LOGO_VIEWBOX}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path
-        d="M43.9405 14.1966C42.0577 15.899 40.2184 17.587 38.3791 19.2462C29.8198 27.0081 21.2461 34.7845 12.6868 42.5464C10.7172 44.321 8.68962 46.0379 6.21308 47.0766C3.27309 48.3174 1.5931 47.5383 0.651729 44.4509C-0.666195 40.1226 0.0434567 36.0974 2.57793 32.3751C4.75033 29.2155 7.47307 26.5753 10.2827 24.0216C14.7579 19.9387 19.262 15.899 23.824 11.9315C25.8226 10.1857 28.0095 8.59873 30.6743 8.06492C38.6688 6.49233 43.7522 13.9802 43.9549 14.1966H43.9405Z"
-        fill={BRAND_BLUE}
-      />
-      <path
-        d="M5.50342 53.7132C10.3696 52.3426 14.0048 49.3273 17.553 46.1533C28.8785 36.0541 40.175 25.9549 51.5439 15.9279C54.0494 13.7205 56.6852 11.5996 59.4804 9.7385C63.0286 7.38683 66.881 7.04057 70.69 9.29125C72.0658 10.0992 73.4127 11.037 74.5279 12.1623C78.3947 16.0721 82.2327 20.0541 85.9547 24.1082C89.923 28.4076 93.8188 32.7791 97.6133 37.2227C98.9167 38.752 99.9884 40.5266 100.857 42.33C102.494 45.6772 102.074 48.9955 100.075 52.1262C98.2939 54.9252 95.8898 57.2191 93.4278 59.3976C83.7678 67.9243 74.1224 76.4509 64.3465 84.862C61.7252 87.1271 58.8431 89.147 55.8597 90.936C50.2549 94.312 44.6356 93.8936 39.5232 89.8972C36.5543 87.5744 33.7446 84.963 31.1957 82.2074C22.9695 73.2913 14.8882 64.2597 6.74893 55.257C6.34342 54.8097 5.96687 54.3192 5.47446 53.7277L5.50342 53.7132Z"
-        fill={BRAND_BLUE}
-      />
+      {DYNAMIC_LOGO_ICON_PATHS.map((d) => (
+        <path key={d} d={d} fill={LOGO_ICON} />
+      ))}
+      {[...DYNAMIC_LOGO_WORDMARK_PATHS, ...DYNAMIC_LOGO_TAGLINE_PATHS].map((d) => (
+        <path key={d} d={d} fill={LOGO_WORDMARK} />
+      ))}
     </svg>
   );
 }
+
+/**
+ * Motif key -> the shared illustration used for it. The drawings live in
+ * `@dynamic-demos/ui/demo-illustrations` alongside the landing and operator
+ * consumers; only the palette differs here. That module documents the
+ * satori constraints it is written to satisfy.
+ */
+const DEMO_ART: Record<OgArtKey, DemoIllustration> = {
+  wallet: WalletIllustration,
+  connect: ConnectIllustration,
+  accounts: AccountsIllustration,
+  trade: TradeIllustration,
+  earn: EarnIllustration,
+  checkout: FlowIllustration,
+  transfer: RemittanceIllustration,
+  card: StablecoinCardIllustration,
+};
 
 /**
  * Renders the generic, unbranded 1200x630 OG/Twitter preview for a demo
@@ -130,10 +223,23 @@ function BrandMark() {
  * failing the whole image request.
  */
 export async function renderDemoOgImage({
+  slug,
   demoLabel,
-  subtitle = DEFAULT_SUBTITLE,
+  subtitle,
+  art,
 }: RenderDemoOgImageOptions): Promise<ImageResponse> {
-  const subsetText = buildOgFontSubsetText(demoLabel, subtitle);
+  const catalog = slug ? getDemoCatalogEntry(slug) : undefined;
+  const label = catalog?.name ?? demoLabel;
+  if (!label) {
+    throw new Error(
+      "renderDemoOgImage needs a `slug` that resolves in DEMO_CATALOG, or an explicit `demoLabel`",
+    );
+  }
+  // Catalog tagline first: the whole point of the shared catalog is that the
+  // card, the nav and the unfurl never say three different things.
+  const pitch = subtitle ?? catalog?.tagline ?? DEFAULT_SUBTITLE;
+  const Art = art ? DEMO_ART[art] : null;
+  const subsetText = buildOgFontSubsetText(label, pitch);
   const loaded = await loadBrandFonts(subsetText);
   const fonts = loaded
     ? [
@@ -147,6 +253,7 @@ export async function renderDemoOgImage({
   // unconditionally, so `{ fontFamily: undefined }` throws inside
   // next/og's renderer. Omitting the key entirely lets satori fall back to
   // its bundled default font.
+  const category = catalog?.category ?? DEFAULT_CATEGORY;
   const rootStyle: CSSProperties = {
     height: "100%",
     width: "100%",
@@ -154,60 +261,88 @@ export async function renderDemoOgImage({
     flexDirection: "column",
     position: "relative",
     padding: 72,
-    background: `linear-gradient(135deg, ${BG_FROM} 0%, ${BG_TO} 100%)`,
   };
   if (loaded) rootStyle.fontFamily = `${FONT_FAMILY}, sans-serif`;
 
   return new ImageResponse(
     (
-      <div style={rootStyle}>
-        {/* Decorative brand-blue glow, top-right - purely ornamental. */}
+      <DemoHeroBand
+        from={OG_BAND_FROM[category]}
+        to={OG_BAND_TO[category]}
+        dotColor={BAND_DOT}
+        dots="svg"
+        width={OG_IMAGE_WIDTH}
+        height={OG_IMAGE_HEIGHT}
+        dotSpacing={BAND_DOT_SPACING}
+        style={rootStyle}
+      >
+        {/* The band centers its children; this fills it and lays the card out
+            normally. Absolute so it stacks over the dot layer. */}
         <div
           style={{
             position: "absolute",
-            top: -140,
-            right: -140,
-            width: 420,
-            height: 420,
-            borderRadius: 420,
-            background: BRAND_BLUE,
-            opacity: 0.18,
-            display: "flex",
-          }}
-        />
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <BrandMark />
-          <div style={{ display: "flex", fontSize: 32, fontWeight: 700, color: FG_WHITE, letterSpacing: -1 }}>
-            Dynamic
-          </div>
-        </div>
-        <div
-          style={{
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
             display: "flex",
             flexDirection: "column",
-            flexGrow: 1,
-            justifyContent: "center",
-            gap: 20,
+            padding: 72,
           }}
         >
+          <div style={{ display: "flex" }}>
+            <BrandLockup />
+          </div>
           <div
             style={{
               display: "flex",
-              fontSize: 92,
-              fontWeight: 700,
-              color: FG_WHITE,
-              lineHeight: 1.05,
-              letterSpacing: -2,
+              flexGrow: 1,
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 44,
             }}
           >
-            {demoLabel}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 22,
+                maxWidth: 540,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 68,
+                  fontWeight: 700,
+                  color: FG_TITLE,
+                  lineHeight: 1.06,
+                  letterSpacing: -1.6,
+                }}
+              >
+                {label}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 27,
+                  fontWeight: 400,
+                  color: FG_PITCH,
+                  lineHeight: 1.38,
+                }}
+              >
+                {pitch}
+              </div>
+            </div>
+            {Art ? (
+              <div style={{ display: "flex", flexShrink: 0 }}>
+                <Art tones={LIGHT_ILLUSTRATION_TONES} idPrefix="og" width={456} height={228} />
+              </div>
+            ) : null}
           </div>
-          <div style={{ display: "flex", fontSize: 30, fontWeight: 400, color: MUTED_SUBTITLE }}>
-            {subtitle}
-          </div>
+          <div style={{ display: "flex", fontSize: 22, color: FG_FOOTER }}>{FOOTER_LABEL}</div>
         </div>
-        <div style={{ display: "flex", fontSize: 22, color: MUTED_FOOTER }}>{FOOTER_LABEL}</div>
-      </div>
+      </DemoHeroBand>
     ),
     {
       width: OG_IMAGE_WIDTH,

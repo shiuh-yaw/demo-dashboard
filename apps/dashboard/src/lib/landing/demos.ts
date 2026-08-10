@@ -6,7 +6,21 @@
  * get public domains; a missing `url` renders as "Coming soon".
  */
 
+import { getDemoCatalogEntry, type DemoCategory } from "@dynamic-demos/ui/demo-catalog";
+
 import type { DemoConfigKind } from "@/lib/services/types";
+
+/**
+ * Public name/tagline/url/visibility come from the shared catalog so the
+ * landing cards and every demo app's nav grid render the same words.
+ * Throws rather than falling back: a typo'd slug must fail the build, not
+ * silently ship a card with no name.
+ */
+function catalogEntry(slug: string) {
+  const entry = getDemoCatalogEntry(slug);
+  if (!entry) throw new Error(`no demo-catalog entry for slug "${slug}"`);
+  return entry;
+}
 
 export interface LandingDemo {
   /** Unique, used for /demos/[slug]. */
@@ -16,7 +30,7 @@ export interface LandingDemo {
   tagline: string;
   /** Longer copy for the detail page. */
   description: string;
-  category: "wallet" | "checkout" | "offramp";
+  category: DemoCategory;
   /** Live deployment; absent → "Coming soon". */
   url?: string;
   /** Publicly listed on the landing page + /demos/[slug]; hidden demos stay operator-only. */
@@ -33,15 +47,10 @@ export interface LandingDemo {
 
 export const LANDING_DEMOS: LandingDemo[] = [
   {
-    slug: "wallet",
-    showOnLanding: true,
+    ...catalogEntry("wallet"),
     kind: "wallet",
-    name: "Wallet",
-    tagline: "A non-custodial embedded wallet your users control.",
     description:
       "Give users a self-custodial wallet they access with just an email or social login - no seed phrases required. They can view balances across multiple chains, sign transactions, and send funds by scanning a recipient's QR code. Built entirely on Dynamic, it's the cleanest way to make the wallet itself the product.",
-    category: "wallet",
-    url: "https://wallet.dynamic.dev",
     highlights: [
       "Email and social login, no seed phrase",
       "Multichain balances and native transfers",
@@ -66,15 +75,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "connections",
-    showOnLanding: true,
+    ...catalogEntry("connections"),
     kind: "connections",
-    name: "Connections",
-    tagline: "Bring any of 600+ wallets your users already have.",
     description:
       "A hosted wallet-connection page an app can hand off to: the user picks from 600+ wallets - installed extension, QR, or mobile deeplink - and lands back on your callback with their public address. Connect-only by design, so there is no signature request and nothing to approve. Drop it in an iframe, a webview, or open it as a redirect.",
-    category: "wallet",
-    url: "https://connections.dynamic.dev",
     highlights: [
       "600+ wallets: extension, QR, and mobile deeplink",
       "Read-only - no signing, no transaction approval",
@@ -95,15 +99,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "accounts",
-    showOnLanding: true,
+    ...catalogEntry("accounts"),
     kind: "accounts",
-    name: "Accounts",
-    tagline: "One wallet, many signers - admin reach kept separate.",
     description:
       "Business accounts put an embedded wallet under a team instead of a person. Create an account, mint wallets it owns outright, then add co-signers so more than one person signs from the same wallet. Administrative reach stays separate from signing authority: an admin manages the roster but cannot sign, a signer signs but cannot manage. Fits company treasuries, B2B platforms provisioning customer wallets, supervised consumer accounts, and agent-assisted wallets.",
-    category: "wallet",
-    url: "https://accounts.dynamic.dev",
     highlights: [
       "Owner / admin / viewer roles, distinct from signing rights",
       "Co-signers share one wallet - two people, the same address",
@@ -121,15 +120,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     resources: [],
   },
   {
-    slug: "trade",
-    showOnLanding: true,
+    ...catalogEntry("trade"),
     kind: "trade",
-    name: "Trade",
-    tagline: "Trade tokens and prediction markets from one unified portfolio.",
     description:
       "A multi-surface trading experience where users sign in, browse live token markets and event markets, and execute swaps. A single portfolio view unifies trading, earning, and prediction positions side by side. Onchain swaps route through Dynamic-backed orchestration for a seamless execution flow.",
-    category: "wallet",
-    url: "https://trade.dynamic.dev",
     highlights: [
       "Live token and prediction markets",
       "Onchain token swaps and spot trades",
@@ -145,15 +139,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     resources: [],
   },
   {
-    slug: "earn",
-    showOnLanding: true,
+    ...catalogEntry("earn"),
     kind: "earn",
-    name: "Earn",
-    tagline: "Deposit USDC into curated yield vaults in a few taps.",
     description:
       "A yield experience where users sign in, deposit USDC into curated vaults, and track their positions over time. Deposits and withdrawals are user-signed onchain transactions, so funds stay fully in the user's control. A single deployment can power many branded vault experiences.",
-    category: "wallet",
-    url: "https://earn.dynamic.dev",
     highlights: [
       "Curated USDC yield vaults",
       "User-signed onchain deposits and withdrawals",
@@ -174,15 +163,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "flow",
+    ...catalogEntry("flow"),
     kind: "flow",
-    showOnLanding: true,
-    name: "Flow",
-    tagline: "Accept any crypto from any source, settle in stablecoins anywhere.",
     description:
       "An interactive showcase for Dynamic's Flow product. Accept any crypto from any source - external wallet, exchange, embedded wallet, or vault - and settle in any stablecoin at any destination. Checkout, deposit, and withdraw scenarios run on the same SDK lifecycle: swap the source or destination and the same call keeps working.",
-    category: "checkout",
-    url: "https://flow.dynamic.dev",
     highlights: [
       "Any crypto in, stablecoins out",
       "Sources: wallets, exchanges, vaults",
@@ -203,15 +187,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "remittance",
-    showOnLanding: true,
+    ...catalogEntry("remittance"),
     kind: "remittance",
-    name: "Remittance",
-    tagline: "Send stablecoins onchain, deliver fiat to bank accounts abroad.",
     description:
       "A cross-border remittance experience where a sender funds USDC onchain and pays out fiat to recipients across Latin America. Payouts settle to local bank rails - PIX in Brazil, SPEI in Mexico, PSE in Colombia, and more. Users track each transfer from send to delivery with live status updates.",
-    category: "offramp",
-    url: "https://remittance.dynamic.dev",
     highlights: [
       "USDC in, local fiat out",
       "PIX, SPEI, PSE, and ACH rails",
@@ -231,15 +210,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "stablecoin-card",
+    ...catalogEntry("stablecoin-card"),
     kind: "card",
-    showOnLanding: true,
-    name: "Stablecoin Card",
-    tagline: "A virtual Visa debit card funded by stablecoins in your wallet.",
     description:
       "A stablecoin-backed debit card experience where users sign in with email or a social login and get an embedded smart wallet - no seed phrases, no gas fees. They apply for a card and receive an instant virtual Visa debit card, then fund it with USDC straight from their wallet. Card balance and full transaction activity live in one view, so spending onchain dollars feels like using any banking app.",
-    category: "offramp",
-    url: "https://card.dynamic.dev",
     highlights: [
       "Instant virtual Visa debit card",
       "Fund the card with USDC from your wallet",
@@ -264,15 +238,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
-    slug: "checkouts",
-    showOnLanding: false,
+    ...catalogEntry("checkouts"),
     kind: "checkout",
-    name: "Checkouts",
-    tagline: "Embedded payment widget for crypto deposits and purchases.",
     description:
       "A configurable checkout widget where end users deposit or purchase with crypto inside a host app. Branded per prospect from the dashboard; internal-only until it gets a public domain.",
-    category: "checkout",
-    url: "https://dynamic-checkouts.vercel.app",
     highlights: [
       "Embeddable payment widget",
       "Crypto deposits and purchases",
@@ -282,15 +251,10 @@ export const LANDING_DEMOS: LandingDemo[] = [
     resources: [],
   },
   {
-    slug: "visa-direct",
-    showOnLanding: false,
+    ...catalogEntry("visa-direct"),
     kind: "visa-direct",
-    name: "Fireblocks Liquidity",
-    tagline: "Stablecoin payouts to bank accounts and embedded wallets.",
     description:
       "A payout experience where Fireblocks Liquidity pushes USDC-funded payments to bank accounts and embedded wallets in near real time. Branded per prospect from the dashboard.",
-    category: "offramp",
-    url: "https://demo-visa-direct.vercel.app",
     highlights: [
       "Real-time stablecoin payouts",
       "Bank and wallet destinations",

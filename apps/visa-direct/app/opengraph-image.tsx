@@ -11,5 +11,5 @@ export const contentType = "image/png";
 export const alt = "Fireblocks Liquidity - a live product demo by Dynamic";
 
 export default async function Image() {
-  return renderDemoOgImage({ demoLabel: "Fireblocks Liquidity" });
+  return renderDemoOgImage({ slug: "visa-direct", art: "card" });
 }

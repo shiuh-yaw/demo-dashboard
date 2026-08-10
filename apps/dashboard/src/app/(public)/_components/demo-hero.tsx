@@ -1,16 +1,16 @@
 /**
- * Operator-surface binding for the shared hero band. The band base and dot
- * color come from operator-scoped CSS vars so it goes dark under the operator
- * dark surface; the public binding passes its own literals.
+ * Public landing binding for the shared hero band. The band itself lives in
+ * `@dynamic-demos/ui/demo-hero-band` (also used by the operator dashboard and
+ * the OG unfurl); this only supplies the public palette and the illustration.
  */
 
 import { CATEGORY_ACCENTS } from "@dynamic-demos/ui/demo-catalog";
 import { DemoHeroBand } from "@dynamic-demos/ui/demo-hero-band";
 
 import type { LandingDemo } from "@/lib/landing/demos";
-import { getOperatorDemoIllustration } from "./illustrations";
+import { getDemoIllustration } from "./illustrations";
 
-export function OperatorDemoHero({
+export function DemoHero({
   demo,
   className = "h-44",
   illustrationClassName,
@@ -19,15 +19,15 @@ export function OperatorDemoHero({
   className?: string;
   illustrationClassName?: string;
 }) {
-  const Illustration = getOperatorDemoIllustration(demo.slug);
+  const Illustration = getDemoIllustration(demo.slug);
   const accent = CATEGORY_ACCENTS[demo.category];
 
   return (
     <DemoHeroBand
       className={className}
-      from={`color-mix(in srgb, ${accent} 14%, var(--di-hero-base))`}
-      to="var(--di-hero-base)"
-      dotColor="var(--di-hero-dot)"
+      from={`color-mix(in srgb, ${accent} 14%, #ffffff)`}
+      to="#ffffff"
+      dotColor="color-mix(in srgb, #0f172a 6%, transparent)"
     >
       <div className={illustrationClassName}>
         <Illustration />

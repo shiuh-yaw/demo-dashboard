@@ -11,5 +11,5 @@ export const contentType = "image/png";
 export const alt = "Wallet - a live product demo by Dynamic";
 
 export default async function Image() {
-  return renderDemoOgImage({ demoLabel: "Wallet" });
+  return renderDemoOgImage({ slug: "wallet", art: "wallet" });
 }

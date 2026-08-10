@@ -11,5 +11,5 @@ export const contentType = "image/png";
 export const alt = "Stablecoin Card - a live product demo by Dynamic";
 
 export default async function Image() {
-  return renderDemoOgImage({ demoLabel: "Stablecoin Card" });
+  return renderDemoOgImage({ slug: "stablecoin-card", art: "card" });
 }
