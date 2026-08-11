@@ -1,8 +1,8 @@
 # @dynamic-demos/connections
 
-Connect-only wallet flow built on the [Dynamic](https://www.dynamic.xyz/docs/javascript/reference/quickstart) JavaScript SDK, styled as a branded login screen that credits **Fireblocks** as the wallet-connection provider. Supports **EVM** and **Solana** external wallets. On a successful connection it redirects back to a caller-supplied callback with the connection details as URL params.
+Hosted wallet connection built on the [Dynamic](https://www.dynamic.xyz/docs/javascript/reference/quickstart) JavaScript SDK. **This page** links the SDK so the integrator's app does not have to - that is the point of hosting it. Styled as a branded login screen that credits **Fireblocks** as the wallet-connection provider. Supports **EVM** and **Solana** external wallets. On a successful connection it redirects back to a caller-supplied callback with the connection details as URL params.
 
-> Connect-only means we only ever read the public wallet address. The user is never asked to sign a message or approve a transaction.
+> The hosted redirect flow reads only the public wallet address - it asks for no signature. Native hosts running the headless engine can additionally call `sign()` and `signTransaction()` (sign only, no broadcast). See the [Connections docs](https://www.dynamic.xyz/docs/connections/overview).
 
 Ported from [dynamic-labs-oss/iframe-fb](https://github.com/dynamic-labs-oss/iframe-fb). See `AGENTS.md` for the invariants, security notes, and gotchas - read that before changing anything here.
 
@@ -35,7 +35,7 @@ Full table in `AGENTS.md`. The short version:
 - **In:** `redirect_uri` (alias `redirect_url`) - where to return to; `nonce` - echoed back if present. Also `wallet`, `chain`, `embedded`, `returnScheme`, `debug`.
 - **Out:** `address`, `chain` (`evm` | `solana`), `walletName`, `walletImage`, and `nonce` only if one came in.
 
-> **Security:** `redirect_uri` is caller-supplied, so it's an open-redirect surface. Set `NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES` for a strict scheme allow-list, and allow-list permitted `http(s)` hosts before exposing this to untrusted callers. See the Security section of `AGENTS.md`.
+> **Security:** `redirect_uri` is caller-supplied, so it's an open-redirect surface. Dangerous schemes are refused and opaque targets are rejected structurally, but allow-list the permitted `http(s)` hosts before exposing this to untrusted callers. See the Security section of `AGENTS.md`.
 
 ## Flow
 
@@ -49,11 +49,15 @@ Non-installed wallets connect over a minted pairing URI - a QR on desktop, a dee
 
 ## Native hosts
 
-`native/` carries the iOS (Swift), Android (Kotlin), and React Native harnesses from upstream. They're **reference material for integrators** - excluded from `tsconfig.json`, eslint, and the Next build. The integration panel on `/` reads them off disk (`lib/native-sources.ts`) so the guide can't drift from them.
+The headless engine (`/headless`) is driven by a native host over the JS bridge
+in `lib/bridge.ts`: native calls `window.headlessConnect.*`, the engine posts
+back via `window.webkit.messageHandlers.headless` (iOS) or `walletNative`
+(Android). Drive it from a browser at `/headless-test`.
 
-The React Native harness has no surface in the app today - the panel tabs cover Web / iOS / Android only. See `AGENTS.md` → Gotchas.
-
-Repoint `engineURL` in `FireblocksHeadlessConnect.{swift,kt}` at your own deployment; it still references upstream's.
+Integration guides live at
+[dynamic.xyz/docs/connections](https://www.dynamic.xyz/docs/connections/overview)
+- iOS, Android, React Native and Flutter. This repo ships no native harnesses:
+they duplicated those guides, and nothing in the demo rendered them.
 
 ## Theming
 

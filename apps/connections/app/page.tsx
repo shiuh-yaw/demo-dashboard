@@ -20,7 +20,6 @@ import {
 import { ConnectFlowLazy } from "@/components/connect-flow-lazy";
 import { PlatformPanel } from "@/components/platform-panel";
 import { getConnectConfig } from "@/lib/connections-config";
-import { loadNativeSources } from "@/lib/native-sources";
 
 export default async function Home() {
   const { config, isBranded } = await getConnectConfig();
@@ -36,7 +35,6 @@ export default async function Home() {
 
   // The panel renders the upstream integration guide itself (components/
   // docs-sections.tsx) rather than a paraphrase of it; the tabs pick a section.
-  const native = await loadNativeSources();
 
   return (
     <ScenarioLayout
@@ -45,8 +43,8 @@ export default async function Home() {
         <ScenarioHero
           logo={chrome.heroLogo}
           title="Let users bring the wallet they already have."
-          titleAccent="Read-only by design."
-          pitch="Connect-only login across 600+ EVM and Solana wallets. Dynamic returns just the public address - nothing signed, no custody - then redirects back to you. Drop it in an iframe or a native webview."
+          titleAccent="No SDK required."
+          pitch="A hosted page you point users at: 600+ EVM and Solana wallets, on web, iOS, Android and Flutter. Redirect back with the address, or go headless to sign messages and transactions. You never hold keys."
         />
       }
       demo={
@@ -58,7 +56,7 @@ export default async function Home() {
           </div>
         </div>
       }
-      panel={<PlatformPanel sources={native} />}
+      panel={<PlatformPanel />}
       footer={chrome.footer}
     />
   );

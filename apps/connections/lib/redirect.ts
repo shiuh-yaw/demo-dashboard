@@ -1,8 +1,7 @@
 import {
-  ALLOWED_REDIRECT_SCHEMES,
+  ALLOWED_REDIRECT_HOSTS,
   BLOCKED_REDIRECT_SCHEMES,
   DEFAULT_CALLBACK_PATH,
-  REDIRECT_BASE_URL,
 } from "./config";
 
 export type ConnectedWallet = {
@@ -21,10 +20,9 @@ export function getIncomingNonce(): string | null {
 // The integrator supplies where to send the user back via `redirect_uri`
 // (alias `redirect_url`) - `http(s)` for a web callback, or a custom app scheme
 // (e.g. `fbconnectdemo:`) so a native host embedding this page can catch the
-// result. By default we accept any scheme except the dangerous ones (see
-// isSchemeAllowed); a strict allow-list can be forced via env. Anything rejected
-// falls back to the configured default. NOTE: a production deployment should ALSO
-// allow-list the permitted `http(s)` hosts to avoid an open redirect.
+// result. We accept any scheme except the dangerous ones; `http(s)` targets
+// are additionally checked against a host allow-list - see isRedirectAllowed.
+// Anything rejected falls back to the same-origin `/callback` page.
 export function getRedirectBase(): string {
   const params = new URLSearchParams(window.location.search);
   const candidate = params.get("redirect_uri") ?? params.get("redirect_url");
@@ -41,33 +39,50 @@ export function getRedirectBase(): string {
   return defaultRedirectBase();
 }
 
-// With no env override, fall back to the same-origin `/callback` page, which
-// renders the params we hand back. Resolved here rather than in config.ts
-// because it needs `window.location.origin`, which does not exist on the server.
+// The same-origin `/callback` page, which renders the params we hand back.
+// Resolved here rather than in config.ts because it needs
+// `window.location.origin`, which does not exist on the server.
 function defaultRedirectBase(): string {
-  if (REDIRECT_BASE_URL) return REDIRECT_BASE_URL;
   return new URL(DEFAULT_CALLBACK_PATH, window.location.origin).toString();
 }
 
-// Whether a parsed redirect target is safe to navigate to.
-//
-// - A configured allow-list, when present, is authoritative (strict mode).
-// - Otherwise accept `http(s)`, plus any custom app scheme that is BOTH not on
-//   the dangerous block-list AND hierarchical (`scheme://host`). The host
-//   requirement is the important part: script/data vectors (`javascript:`,
-//   `data:`, `vbscript:`) are opaque - they carry no host - so they're rejected
-//   structurally, not just because they happen to be on the block-list (which
-//   also catches the `javascript://x` authority-form trick). This avoids relying
-//   on block-list completeness for the XSS-critical decision.
+// Whether a parsed redirect target is safe to navigate to: accept `http(s)`,
+// plus any custom app scheme that is BOTH not on the dangerous block-list AND
+// hierarchical (`scheme://host`). The host requirement is the important part:
+// script/data vectors (`javascript:`, `data:`, `vbscript:`) are opaque - they
+// carry no host - so they're rejected structurally, not just because they
+// happen to be on the block-list (which also catches the `javascript://x`
+// authority-form trick). This avoids relying on block-list completeness for the
+// XSS-critical decision.
 function isRedirectAllowed(parsed: URL): boolean {
   const scheme = parsed.protocol.replace(/:$/, "").toLowerCase();
-  // The block-list is checked first and cannot be overridden. A configured
-  // allow-list narrows what is permitted; it must never be able to widen it
-  // back to a script scheme by naming one.
   if (BLOCKED_REDIRECT_SCHEMES.includes(scheme)) return false;
-  if (ALLOWED_REDIRECT_SCHEMES) return ALLOWED_REDIRECT_SCHEMES.includes(scheme);
-  if (scheme === "http" || scheme === "https") return true;
+  // `http(s)` is the open-redirect surface, so it - and ONLY it - is host
+  // checked. A custom app scheme's "host" is a callback name interpreted by a
+  // native app on the device, not a network address, so filtering it against a
+  // list of web hostnames would be meaningless.
+  if (scheme === "http" || scheme === "https") return isHostAllowed(parsed);
   return parsed.host.length > 0;
+}
+
+/**
+ * Exact hostname match against the configured allow-list.
+ *
+ * Unset means any host, which is an open redirect - permitted so existing
+ * integrations keep working, but warned about loudly, because the failure is
+ * otherwise invisible until someone abuses it.
+ */
+function isHostAllowed(parsed: URL): boolean {
+  if (!ALLOWED_REDIRECT_HOSTS) {
+    console.warn(
+      "[connections] redirect_uri host is not allow-listed: accepting " +
+        `"${parsed.hostname}". Set NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS ` +
+        "to close this open redirect before exposing the flow publicly.",
+    );
+    return true;
+  }
+  // `hostname`, not `host`: port is deliberately ignored.
+  return ALLOWED_REDIRECT_HOSTS.includes(parsed.hostname.toLowerCase());
 }
 
 // The scheme of the resolved redirect target (e.g. "https", "fbapp"). Used to

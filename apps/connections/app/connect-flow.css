@@ -1423,3 +1423,111 @@ a.btn-ghost {
   max-width: none;
   padding: 14px 6px 0;
 }
+
+/* Native-guide link cards. These stand in for the ~600 lines of ported native
+   guide this app used to carry: the canonical versions live in the Dynamic
+   docs, so the panel links out instead of mirroring them. */
+.docs-links {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0 32px;
+}
+
+/* Labels the block that follows the platform cards. Without it the numbered
+   steps read as belonging to all four cards, including the redirect-only one. */
+.docs-subhead {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+  color: var(--fg);
+}
+
+@media (min-width: 640px) {
+  .docs-links {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Heading row: title left, the tab's outbound guide right. The Web tab has a
+   single guide, so a card read as a mostly-empty box and a link on its own line
+   competed with both the title and the body links. */
+.docs-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.docs-section__head .docs-section__title {
+  margin: 0;
+}
+
+/* Muted until hover: a reference, not a call to action. */
+.docs-section__ref {
+  flex: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.docs-section__ref:hover {
+  color: var(--fb-blue);
+}
+
+.docs-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
+  background: var(--brand-surface);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.docs-link:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-row-bg);
+}
+
+.docs-link__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-fg);
+}
+
+/* The arrow marks these as leaving the demo - every other link in the guide
+   stays on this page. */
+.docs-link__title::after {
+  content: " ↗";
+  color: var(--brand-muted);
+  font-weight: 400;
+}
+
+.docs-link__note {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--brand-muted);
+}
+
+/* Pushed to the card's bottom edge so the badges line up across a row even
+   when a mechanism name wraps. */
+.docs-link__tag {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--brand-muted);
+}
+
+.docs-link__tag--on {
+  color: var(--brand-primary);
+}

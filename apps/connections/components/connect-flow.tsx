@@ -16,7 +16,7 @@ import {
 } from "@dynamic-labs-sdk/client";
 import { clearMetaMaskSessionStorage } from "@dynamic-labs-sdk/metamask";
 
-import { DYNAMIC_ENVIRONMENT_ID } from "@/lib/config";
+import { getDynamicEnvironmentId } from "@/lib/config";
 import { buildOpenableDeeplink, mintConnection } from "@/lib/connect-engine";
 import {
   buildRedirectUrl,
@@ -770,14 +770,15 @@ export function ConnectFlow() {
     setSearch("");
   }
 
-  if (!DYNAMIC_ENVIRONMENT_ID) {
+  // Renders to end users, not just us - keep it short, details in the README.
+  if (!getDynamicEnvironmentId()) {
     return (
       <div className="page">
         <main className="card">
           <ErrorBanner
             type="warning"
             title="Missing configuration"
-            message="Set NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID in .env.local (see .env.example) and restart the dev server."
+            message="No Dynamic environment id is configured, so the wallet list cannot load. Set NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID for this deployment - see the README for setup."
           />
         </main>
       </div>

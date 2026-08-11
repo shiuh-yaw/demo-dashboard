@@ -8,7 +8,9 @@ status: experimental
 
 # @dynamic-demos/connections
 
-Connect-only wallet flow: the user picks a wallet, we read its **public address**, and we redirect back to a caller-supplied URL with the result. Nothing is ever signed - no message, no transaction, no custody. It exists to be embedded: an integrator drops it in an iframe or a native webview and treats it as a hosted "log in with your wallet" screen over 600+ EVM and Solana wallets.
+Hosted wallet connection: the user picks a wallet, we read its **public address**, and we redirect back to a caller-supplied URL with the result. The selling point is that the integrator's app links no wallet SDK - this page does, on their behalf - so "No SDK required" in the hero is about their client, not about us. It exists to be embedded: an integrator drops it in an iframe or a native webview and treats it as a hosted "log in with your wallet" screen over 600+ EVM and Solana wallets.
+
+**This hosted page signs nothing** - no message, no transaction, no custody. Signing is a capability of the *headless native engine* (iOS / Android / Flutter), which runs the SDK behind a hidden web view and exposes `sign()` and `signTransaction()`; upstream is adding `sendTransaction` (broadcast) in [PR #44](https://github.com/dynamic-labs-oss/iframe-fb/pull/44). Do not describe the product as "connect-only" or "read-only" - that was true before the headless engine shipped and is now wrong. See the [Connections docs](https://www.dynamic.xyz/docs/connections/overview).
 
 Ported from [dynamic-labs-oss/iframe-fb](https://github.com/dynamic-labs-oss/iframe-fb) (Vite SPA → Next App Router). The vendored upstream is the first commit on the porting branch, so the port is reviewable as a diff against it.
 
@@ -20,7 +22,7 @@ Ported from [dynamic-labs-oss/iframe-fb](https://github.com/dynamic-labs-oss/ifr
 - **Manual address entry** - detects EVM vs Solana live as you type; rejects Tron explicitly (its Base58 range overlaps Solana's).
 - **Redirect hand-off** - explicitly confirmed, never automatic. The connected screen shows wallet / chain / address and waits for **Continue**, so the user can verify which account came back (a wallet may hold several) and swap wallets first. See the contract below.
 - **Headless engine** (`/headless`) - the same connect logic with no UI, driven by a native host over a JS bridge so native can render its own wallet list. Verifiable in a browser at `/headless-test`.
-- **Integration guide** - the scenario page's right column, tabbed Web / iOS / Android with a Basic / Headless toggle inside the native tabs. Quotes the harnesses in `native/` verbatim (`components/docs-sections.tsx`).
+- **Integration guide** - the scenario page's right column (`components/docs-sections.tsx`): the Web integration inline, and link cards out to the published iOS / Android / React Native / Flutter guides at [dynamic.xyz/docs/connections](https://www.dynamic.xyz/docs/connections/overview).
 
 ## Routes
 
@@ -40,7 +42,7 @@ Ported from [dynamic-labs-oss/iframe-fb](https://github.com/dynamic-labs-oss/ifr
 
 | Param | Meaning |
 |---|---|
-| `redirect_uri` (alias `redirect_url`) | Where to send the user after connecting. Falls back to `NEXT_PUBLIC_CONNECT_REDIRECT_BASE_URL`, then to the same-origin `/callback` page. |
+| `redirect_uri` (alias `redirect_url`) | Where to send the user after connecting. Falls back to the same-origin `/callback` page. |
 | `nonce` | Opaque value echoed back unchanged; if absent, none is returned. |
 | `wallet` | Skip the picker and go straight into that wallet's flow. |
 | `chain` | `evm` \| `solana` - preselect a chain. |
@@ -52,18 +54,19 @@ Ported from [dynamic-labs-oss/iframe-fb](https://github.com/dynamic-labs-oss/ifr
 
 ## Security
 
-- **`redirect_uri` is an open-redirect surface.** It is caller-supplied and flows into `window.location.assign`. Default (permissive) mode accepts `http(s)` plus any hierarchical custom app scheme not on `BLOCKED_REDIRECT_SCHEMES` (`javascript:`, `data:`, `vbscript:`, `file:`, `blob:`, `about:`). Script/data vectors are rejected structurally - they carry no host - rather than relying on block-list completeness.
-- Set `NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES` for a strict scheme allow-list. **Any deployment reachable by untrusted callers should set it and should additionally allow-list permitted `http(s)` hosts** - host allow-listing is not implemented yet. This is inherited upstream behaviour, deliberately preserved on the port for parity; tightening it is a follow-up.
+- **`redirect_uri` is an open-redirect surface.** It is caller-supplied and flows into `window.location.assign`. Accepted targets are `http(s)` plus any hierarchical custom app scheme not on `BLOCKED_REDIRECT_SCHEMES` (`javascript:`, `data:`, `vbscript:`, `file:`, `blob:`, `about:`). Script/data vectors are rejected structurally - they carry no host - rather than relying on block-list completeness.
+- Set `NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS` for the `http(s)` hosts you accept. **Host allow-listing is the open-redirect control** - scheme validation is not, since `https://evil.example` passes every scheme rule. Unset means any host is accepted, with a `console.warn`, so existing integrations keep working (matches upstream [PR #28](https://github.com/dynamic-labs-oss/iframe-fb/pull/28)). Exact hostname match: no wildcards, no implicit subdomains, port ignored. Custom app schemes are never host-filtered - their "host" is a callback name the OS routes to an app, not a network address.
 - `returnScheme` is validated against `/^[a-z][a-z0-9.+-]{1,32}$/` and the block-list before it is used to build a URL.
-- Connect-only is a security property, not just a UX one: the flow never calls a signing API, so a compromised or hostile caller cannot get a signature out of it.
+- **A native host must not trust the bridge blindly.** The JS bridge is attached to the hidden WebView whatever page it shows, so the host has to deny top-level navigation away from the engine origin and drop bridge messages from any other origin or subframe - otherwise forged `connected` messages are accepted. The published guides carry the implementation; see upstream [PR #26](https://github.com/dynamic-labs-oss/iframe-fb/pull/26).
+- Bridge identifiers are fixed by those guides: `window.headlessConnect.*` in, `window.webkit.messageHandlers.headless` / `walletNative` out. Renaming either side silently breaks every integrator.
+- The hosted page never calling a signing API is a security property, not just a UX one: a compromised or hostile caller cannot get a signature out of *this* surface. Signing lives in the native headless engine, where the wallet app itself prompts the user.
 
 ## Environment
 
 See `.env.example`. All sandbox by default (D-005); nothing here is a secret.
 
 - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - optional; falls back to the workspace default via `resolveCredentials()` (D-003).
-- `NEXT_PUBLIC_CONNECT_REDIRECT_BASE_URL` - default callback. Unset means the same-origin `/callback` page, which shows the returned params; an external default hid the flow's only output.
-- `NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES` - strict scheme allow-list. See Security.
+- `NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS` - comma-separated `http(s)` hosts accepted in `redirect_uri` (bare hostnames, no scheme/path/wildcards). The open-redirect control; unset accepts any host with a warning. See Security.
 - `NEXT_PUBLIC_TRACK_URL` - GTM ingest. No-op when unset.
 - `DASHBOARD_API_URL` - dashboard base for branding/theme configs.
 
@@ -80,7 +83,7 @@ Dynamic dashboard setup: enable **EVM** and **Solana**, add the app origin to **
 
 **Invariants:**
 
-- **Connect-only.** Never add a signing or transaction call to this app. It's the app's entire premise and its security story.
+- **No signing on the hosted page.** Never add a signing or transaction call to this Next app. Signing belongs to the native headless engine, where the wallet prompts the user directly; adding it here would hand any caller who can frame this page a signature oracle.
 - **The hand-off is user-confirmed.** Do not restore an automatic redirect on the connected screen; the user must be able to inspect the returned account and change wallet before anything leaves the page.
 - **UI is built from `@dynamic-demos/ui`** (`ListRow`, `Input`, `Button`, `Spinner`, `Skeleton`, `ErrorBanner`, `FireblocksLogomark`). Two deliberate exceptions: deeplink actions stay real `<a>` elements, because iOS ignores universal links opened programmatically inside a webview and only honours a genuine anchor tap; and the connected-wallet summary row stays bespoke, because `ListRow` renders a `<button>` and that row is read-only. `--widget-*` aliases in `app/globals.css` are what make these components themeable here.
 - `/connect` and `/headless` stay chromeless - see Routes.
@@ -93,10 +96,8 @@ Dynamic dashboard setup: enable **EVM** and **Solana**, add the app origin to **
 
 - **SDK pinned to 1.19.1, not `catalog:`.** The catalog is on 0.25.0, which predates the APIs this flow needs (`react-hooks`, `evm/base-account`, `solana` Phantom redirect, MetaMask URI connectors). `apps/wallet` is on the same pin; `react-hooks` and `metamask` only publish up to 1.20.0, so treat 1.19.1 as the shared floor when bumping.
 - **The flow loads with `ssr: false`** (`components/connect-flow-lazy.tsx`). It reads `window.location` during render for the incoming params, and wallet discovery is browser-only, so there is nothing to server-render. Don't "fix" this by adding `typeof window` guards throughout.
-- **`/` reads `native/` off disk** - upstream used Vite's `?raw` imports, which Next has no equivalent for; `lib/native-sources.ts` reads them server-side instead. That route is dynamic (it reads headers for theming), so the reads happen per-request and `outputFileTracingIncludes` in `next.config.ts` must keep those files in the bundle. Add a file there and you must add it to both.
 - **There is no `/docs` route, and no `headless.html`.** Both existed earlier and were removed; anything still pointing at them is stale. The guide lives only in the scenario page's panel, and the engine is the `/headless` route.
-- **The React Native section has no surface.** `docs-sections.tsx` still authors it, but the tabs cover Web / iOS / Android only and the route that exposed it is gone. `sources.rn` is still read and serialized for nothing. Either add a tab (`PLATFORMS` + `HAS_MODES` + `sectionFor` in `components/platform-panel.tsx`) or drop the section and its loader entry.
-- **`native/` is reference material only.** Excluded from `tsconfig.json`, eslint, and the Next build. It has its own nested `package.json` files; the `apps/*` workspace glob is not recursive, so pnpm ignores them.
+- **No native harnesses ship here.** They duplicated the published guides and nothing in the demo rendered them, so `native/` was removed along with its `tsconfig`/eslint excludes and `outputFileTracingIncludes`. Integration guidance lives at [dynamic.xyz/docs/connections](https://www.dynamic.xyz/docs/connections/overview).
 - **The headless engine boots explicitly**, not on import (`startHeadlessEngine()`), and guards against React strict-mode double-invocation - re-announcing `ready` would make a native host think a second engine came up.
 - **Webview detection is a heuristic.** `lib/runtime-env.ts` sniffs the UA because iOS gives no reliable flag; `ASWebAuthenticationSession` keeps the Safari token and can't be told apart from a real tab. Hosts should pass `?embedded=1`. Use `?debug` on a real device to see the raw signals.
 - **Deeplinks are rendered as real `<a>` taps, not `location.href`.** Inside a WKWebView iOS ignores universal links opened programmatically but honours a genuine anchor tap.
@@ -133,4 +134,3 @@ The funnel is `wallet_selected` → `wallet_connected` → `handoff_confirmed`. 
 - Non-installed wallets connect by QR/deeplink only; there's no in-app-browser hand-off beyond what the catalogue offers.
 - `app/opengraph-image.tsx` emits the shared generic unfurl via `renderDemoOgImage`. It takes no config and no request data, so branded (`?theme=`/`?share=`) and bare URLs unfurl byte-identically - a forwarded prospect link must not reveal who it is for. `noindex` on branded URLs comes free from `createConfigForwardingMiddleware`, but that only stops crawlers, not link previews.
 - `lib/__tests__/redirect.test.ts` covers the pure redirect helpers: scheme allow/block decisions (including the `javascript://host` authority form and opaque-scheme rejection), chain detection, Tron rejection, and the outgoing param contract. The block-list is checked before any configured allow-list, so a deployment naming a script scheme still cannot navigate to it.
-- `native/` harnesses are carried over essentially verbatim; edits were `/headless.html` → `/headless` (the route moved) and every hardcoded host → `https://connections.dynamic.dev`. That domain has no Vercel project yet, so the harnesses will not connect until it exists; point `baseURLString` / `flowUrl` / `engineURL` at `http://localhost:4013` to run them before then. Otherwise unverified against these routes.

@@ -29,7 +29,7 @@ import {
 import { addWalletConnectSolanaExtension } from "@dynamic-labs-sdk/solana/wallet-connect";
 import { createDynamicClientSingleton } from "@dynamic-demos/dynamic/client-singleton";
 
-import { BLOCKED_REDIRECT_SCHEMES, DYNAMIC_ENVIRONMENT_ID } from "./config";
+import { BLOCKED_REDIRECT_SCHEMES, getDynamicEnvironmentId } from "./config";
 
 /**
  * The host app's custom scheme, passed by FireblocksHeadlessConnect as
@@ -53,7 +53,7 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
   create: () =>
     createDynamicClient({
       autoInitialize: false,
-      environmentId: DYNAMIC_ENVIRONMENT_ID,
+      environmentId: getDynamicEnvironmentId(),
       metadata: {
         name: "Fireblocks",
         // Must be https - MetaMask's SDK-URI mint fails on a custom scheme.

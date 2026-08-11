@@ -78,10 +78,11 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ...catalogEntry("connections"),
     kind: "connections",
     description:
-      "A hosted wallet-connection page an app can hand off to: the user picks from 600+ wallets - installed extension, QR, or mobile deeplink - and lands back on your callback with their public address. Connect-only by design, so there is no signature request and nothing to approve. Drop it in an iframe, a webview, or open it as a redirect.",
+      "A hosted page you point users at instead of building a wallet picker per platform - no wallet SDK in your app. They pick from 600+ wallets (extension, QR, or mobile deeplink) and land back on your callback with their public address. Run the same engine headless inside a native app and the wallet can sign messages and transactions too. Embeds in an iframe or a webview.",
     highlights: [
       "600+ wallets: extension, QR, and mobile deeplink",
-      "Read-only - no signing, no transaction approval",
+      "No wallet SDK in your app",
+      "Sign messages and transactions from native headless hosts",
       "Returns the address to your own redirect_uri",
       "Embeddable in an iframe or native webview",
     ],

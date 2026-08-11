@@ -1,7 +1,7 @@
 {
   "name": "@dynamic-demos/connections",
   "version": "0.1.0",
-  "description": "Connect-only wallet flow - embeddable in an iframe or native webview, redirects back with the connected address",
+  "description": "Hosted wallet connection for 600+ EVM and Solana wallets, with no wallet SDK in the integrator's app - redirects back with the address; headless native hosts can also sign",
   "private": true,
   "scripts": {
     "dev": "next dev -p 4013",
@@ -23,6 +23,7 @@
     "@dynamic-labs-sdk/react-hooks": "1.19.1",
     "@dynamic-labs-sdk/solana": "1.19.1",
     "@dynamic-labs-sdk/wallet-connect": "1.19.1",
+    "@solana/web3.js": "1.98.1",
     "@t3-oss/env-nextjs": "0.13.8",
     "@tanstack/react-query": "catalog:",
     "next": "catalog:",

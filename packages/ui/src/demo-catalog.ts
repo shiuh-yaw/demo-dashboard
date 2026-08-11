@@ -45,7 +45,10 @@ export const DEMO_CATALOG: DemoCatalogEntry[] = [
     category: "wallet",
     name: "Connections",
     tagline: "Bring any of 600+ wallets your users already have.",
-    url: "https://connections.dynamic.dev",
+    // The canonical hosted page. `connections.dynamic.dev` is the previous home
+    // (the Connections docs say so outright) and still resolves, so a stale
+    // link here fails silently rather than 404ing.
+    url: "https://connect.dynamicauth.com",
     showOnLanding: true,
   },
   {

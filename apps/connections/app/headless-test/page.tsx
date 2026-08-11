@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 /**
  * Desktop stand-in for the native host: embeds `/headless` in a hidden iframe
- * and drives it through the same `window.fbHeadless.*` API iOS and Android use,
+ * and drives it through the same `window.headlessConnect.*` API iOS and Android use,
  * so the engine is verifiable in a browser before touching Swift or Kotlin.
  */
 export default function Page() {

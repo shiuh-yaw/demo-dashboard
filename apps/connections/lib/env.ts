@@ -29,25 +29,15 @@ export const env = createEnv({
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string().optional(),
 
     /**
-     * Where to send the user after a successful connection when the caller
-     * supplies no `redirect_uri`. See lib/redirect.ts for the contract.
+     * Comma-separated allow-list of `http(s)` hosts accepted in `redirect_uri`.
+     * Bare hostnames only - no scheme, no path, no wildcards. Port is ignored.
      *
-     * Deliberately has no default: unset means the same-origin `/callback`
-     * page, which shows the params we handed back. An external default sent the
-     * user off-site and hid the only interesting output of the flow.
+     * This is the open-redirect control. Scheme validation alone does not
+     * provide it: `https://` to an attacker's host passes every scheme check.
+     * Unset means permissive (any host, with a console warning) so existing
+     * integrations keep working - matches upstream iframe-fb PR #28.
      */
-    NEXT_PUBLIC_CONNECT_REDIRECT_BASE_URL: z.string().url().optional(),
-
-    /**
-     * Comma-separated strict allow-list of URL schemes accepted in
-     * `redirect_uri`. Unset means permissive mode: http(s) plus any custom app
-     * scheme that is hierarchical and not on the dangerous block-list.
-     *
-     * Deployments that expose this flow publicly SHOULD set this, and SHOULD
-     * additionally allow-list permitted `http(s)` hosts - reading a redirect
-     * target from a query param is an open-redirect surface.
-     */
-    NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES: z.string().optional(),
+    NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS: z.string().optional(),
 
     /** Dashboard ingest base URL for GTM analytics. Optional - no-op when unset. */
     NEXT_PUBLIC_TRACK_URL: z.string().url().optional(),
@@ -57,10 +47,8 @@ export const env = createEnv({
     DASHBOARD_API_URL: process.env.DASHBOARD_API_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
-    NEXT_PUBLIC_CONNECT_REDIRECT_BASE_URL:
-      process.env.NEXT_PUBLIC_CONNECT_REDIRECT_BASE_URL,
-    NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES:
-      process.env.NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES,
+    NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS:
+      process.env.NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS,
     NEXT_PUBLIC_TRACK_URL: process.env.NEXT_PUBLIC_TRACK_URL,
   },
 });

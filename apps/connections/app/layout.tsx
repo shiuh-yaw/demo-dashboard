@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
     demoName: "Connections",
     appName: config.branding?.appName,
     description:
-      "Connect-only wallet flow built on the Dynamic JavaScript SDK. Reads the public wallet address and hands it back to the caller - never asks for a signature.",
+      "A hosted wallet-connect page for 600+ EVM and Solana wallets, with no wallet SDK in your app. Redirect back with the address, or go headless to sign messages and transactions.",
   });
 }
 

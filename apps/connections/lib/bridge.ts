@@ -1,7 +1,7 @@
 // The JS→native channel for the headless engine.
 //
-// On iOS the hidden WKWebView installs `window.webkit.messageHandlers.fb`, and
-// native drives the engine by calling `window.fbHeadless.*` via
+// On iOS the hidden WKWebView installs `window.webkit.messageHandlers.headless`, and
+// native drives the engine by calling `window.headlessConnect.*` via
 // `evaluateJavaScript`. On a desktop test page the engine is loaded in an
 // iframe and messages are relayed with `postMessage` to the parent, so the same
 // engine is verifiable in a browser before any Swift exists.
@@ -43,6 +43,13 @@ export type HostMessage =
   | { type: "fallback"; requestId: string; reason: string }
   // Terminal failure with a stable code.
   | { type: "error"; requestId: string; code: string; message: string; sessionId: string }
+  // Message-signature result. `signature` is a hex string.
+  | { type: "signed"; requestId: string; signature: string; message: string }
+  | { type: "signFailed"; requestId: string; code: string; message: string }
+  // Transaction-signature result. `signedTransaction` is RLP hex (EVM) or
+  // base64 (Solana). Signed only - never broadcast.
+  | { type: "signedTx"; requestId: string; signedTransaction: string; chain: string }
+  | { type: "signTxFailed"; requestId: string; code: string; message: string }
   // Diagnostic timeline event (observability parity with the visible flow).
   | {
       type: "event";
@@ -56,12 +63,12 @@ export type HostMessage =
 export function sendToHost(msg: HostMessage): void {
   const json = JSON.stringify(msg);
   const w = window as unknown as {
-    webkit?: { messageHandlers?: { fb?: { postMessage: (m: string) => void } } };
-    fbNative?: { postMessage: (m: string) => void };
+    webkit?: { messageHandlers?: { headless?: { postMessage: (m: string) => void } } };
+    walletNative?: { postMessage: (m: string) => void };
   };
-  // iOS: the WKScriptMessageHandler named "fb".
+  // iOS: the WKScriptMessageHandler named "headless".
   try {
-    const wk = w.webkit?.messageHandlers?.fb;
+    const wk = w.webkit?.messageHandlers?.headless;
     if (wk?.postMessage) {
       wk.postMessage(json);
       return;
@@ -69,10 +76,10 @@ export function sendToHost(msg: HostMessage): void {
   } catch {
     /* fall through */
   }
-  // Android: the @JavascriptInterface named "fbNative".
+  // Android: the @JavascriptInterface named "walletNative".
   try {
-    if (w.fbNative?.postMessage) {
-      w.fbNative.postMessage(json);
+    if (w.walletNative?.postMessage) {
+      w.walletNative.postMessage(json);
       return;
     }
   } catch {

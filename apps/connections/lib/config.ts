@@ -1,62 +1,72 @@
-// Public, non-secret configuration. The Dynamic environment ID is a public
-// client identifier (safe to ship to the browser); it is still read from an env
-// var so it is not hard-coded across environments. `resolveCredentials()` owns
-// the per-app → workspace-default fallback chain (D-003), so this module reads
-// the resolved value rather than the raw env var.
+// Public, non-secret configuration. The Dynamic environment id is a public
+// client identifier, safe to ship to the browser.
 import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 
 import { env } from "./env";
 
-export const DYNAMIC_ENVIRONMENT_ID = (() => {
+// Resolved lazily: a module-scope const can latch the pre-hydration value.
+let cachedEnvironmentId: string | undefined;
+
+export function getDynamicEnvironmentId(): string {
+  if (cachedEnvironmentId) return cachedEnvironmentId;
   try {
-    return resolveCredentials().environmentId;
+    cachedEnvironmentId = resolveCredentials({
+      appEnvironmentId: env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
+    }).environmentId;
   } catch {
-    // resolveCredentials throws when neither the per-app nor the workspace
-    // default env id is set. The flow renders a "missing configuration" notice
-    // for the empty string, which is a better failure than a boot crash.
+    // Not cached - a later call can still succeed.
     return "";
   }
-})();
+  return cachedEnvironmentId;
+}
 
-// Where we redirect after a successful connection when no `redirect_uri` is
-// supplied. Undefined means the same-origin `/callback` page - resolved at call
-// time in lib/redirect.ts, since it needs `window.location.origin`. Set your
-// real callback endpoint via env before going live.
-export const REDIRECT_BASE_URL: string | undefined =
-  env.NEXT_PUBLIC_CONNECT_REDIRECT_BASE_URL;
-
-// Same-origin stand-in for an integrator's callback endpoint.
+// Resolved at call time in lib/redirect.ts, which needs
+// `window.location.origin`.
 export const DEFAULT_CALLBACK_PATH = "/callback";
 
-// How we validate the scheme of a caller-supplied `redirect_uri`.
+// Allow-list of `http(s)` hosts accepted in `redirect_uri`, or null for
+// permissive mode.
 //
-// Default (no env set): accept `http(s)` and ANY custom app scheme, so a native
-// host can use its own scheme (`fbconnectdemo://`, `myapp://`, …) WITHOUT us
-// hard-coding it here - only the genuinely dangerous schemes below are refused.
-// A custom scheme just hands off to an app registered for it on the device; it
-// can't phish on a web page or run script, so it's safe to allow openly. (An
-// `http(s)` target to an arbitrary host is the real open-redirect surface - a
-// deployment exposed publicly should additionally allow-list permitted hosts.)
-//
-// Locked-down deployments set NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES
-// (comma-separated) to switch to a strict allow-list instead.
-export const ALLOWED_REDIRECT_SCHEMES: string[] | null = (() => {
-  const configured = env.NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_SCHEMES;
-  if (!configured) return null; // null = permissive (block-list) mode
-  return configured
+// Scheme validation is NOT an open-redirect control: `https://evil.example`
+// satisfies every scheme rule we have. Only a host allow-list closes it, which
+// is what upstream iframe-fb added in PR #28. Bare hostnames, comma-separated;
+// port and case are ignored, and there are no wildcards - `example.com` does
+// NOT match `sub.example.com`, so subdomains must be listed explicitly.
+export const ALLOWED_REDIRECT_HOSTS: string[] | null = (() => {
+  const configured = env.NEXT_PUBLIC_CONNECT_ALLOWED_REDIRECT_HOSTS;
+  if (!configured) return null; // null = permissive (any host)
+  const hosts = configured
     .split(",")
-    .map((s) => s.trim().toLowerCase())
+    .map((h) => h.trim().toLowerCase())
     .filter(Boolean);
+  return hosts.length > 0 ? hosts : null;
 })();
 
-// Never allowed as a redirect target - script / data / local-file vectors.
+// Never allowed as a redirect target, and never overridable by the allow-list.
+//
+// Two families:
+//   1. Script / data / local-file vectors, which can execute or read locally.
+//   2. Authority-bearing schemes that hand off to ANOTHER app or a
+//      browser-internal page. These are hierarchical and carry a host, so the
+//      permissive branch in isRedirectAllowed would otherwise wave them
+//      through - `intent://` in particular can launch an arbitrary Android
+//      activity. Added to match upstream iframe-fb PR #27.
 export const BLOCKED_REDIRECT_SCHEMES = [
+  // 1. script / data / local file
   "javascript",
   "data",
   "vbscript",
   "file",
   "blob",
   "about",
+  // 2. app / browser hand-off
+  "intent",
+  "android-app",
+  "market",
+  "content",
+  "chrome",
+  "chrome-extension",
+  "ftp",
 ];
 
 // Wallets to surface first, in this order. Matched case-insensitively against a

@@ -4,10 +4,13 @@
 // WKWebView (or a desktop test iframe). Native renders the wallet list itself
 // and drives this engine over a JS bridge:
 //
-//   native → JS:  window.fbHeadless.connect({ requestId, walletKey, chain })
-//                 window.fbHeadless.cancel(requestId)
+//   native → JS:  window.headlessConnect.connect({ requestId, walletKey, chain })
+//                 window.headlessConnect.cancel(requestId)
+//                 window.headlessConnect.onDeeplinkFailed(requestId)
+//                 window.headlessConnect.sign({ requestId, message })
+//                 window.headlessConnect.signTx({ requestId, transaction })
 //   JS → native:  see bridge.ts HostMessage (ready / deeplink / connected /
-//                 fallback / error / event)
+//                 fallback / error / event / signed / signedTx / *Failed)
 //
 // For WalletConnect-protocol wallets (MetaMask, Rainbow, Trust, …) the
 // connection is relay-based - mint a URI, the wallet approves out-of-band, the
@@ -17,12 +20,28 @@
 
 import {
   connectWithWalletProvider,
+  getDefaultClient,
+  getWalletAccounts,
   getWalletOptionsCatalogue,
   logout,
+  signMessage,
   waitForClientInitialized,
 } from "@dynamic-labs-sdk/client";
+import {
+  getLastKnownNetworkRegistry,
+  getWalletProviderFromWalletAccount,
+} from "@dynamic-labs-sdk/client/core";
 import { clearMetaMaskSessionStorage } from "@dynamic-labs-sdk/metamask";
-import { completePhantomRedirect } from "@dynamic-labs-sdk/solana";
+import { isEvmWalletAccount } from "@dynamic-labs-sdk/evm";
+import {
+  completePhantomRedirect,
+  isSolanaWalletAccount,
+  signTransaction as signSolanaTx,
+} from "@dynamic-labs-sdk/solana";
+import {
+  Transaction as SolanaTransaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 
 import { buildOpenableDeeplink, mintConnection } from "./connect-engine";
 import { normalizeChain } from "./redirect";
@@ -38,6 +57,11 @@ const sessionId = mintSessionId();
 // Monotonic guard so a newer connect() (or cancel) abandons an older attempt's
 // async continuation - mirrors the visible flow's wcAttemptId.
 let attempt = 0;
+
+// The address the last successful connect() returned. sign()/signTx() act on
+// this account, not "whatever is in the registry" - a host may have connected
+// several wallets over one engine lifetime.
+let lastConnectedAddress: string | undefined;
 
 function mintSessionId(): string {
   try {
@@ -211,6 +235,7 @@ async function connect(params: ConnectParams): Promise<void> {
       const account = await connectWithWalletProvider({ walletProviderKey: opt.walletProviderKey });
       if (superseded()) return;
       if (!account?.address) return fail(requestId, "unknown", "no account returned");
+      lastConnectedAddress = account.address;
       sendToHost({
         type: "connected",
         requestId,
@@ -251,6 +276,7 @@ async function connect(params: ConnectParams): Promise<void> {
       return fail(requestId, "unknown", "no account returned");
     }
 
+    lastConnectedAddress = account.address;
     sendToHost({
       type: "connected",
       requestId,
@@ -307,6 +333,143 @@ let started = false;
  * mode double-invokes effects, and re-announcing `ready` would make the host
  * think a second engine came up.
  */
+// Resolve the account sign()/signTx() act on: the one the last connect()
+// returned, not merely the first in the registry.
+function connectedAccount() {
+  const target = lastConnectedAddress?.toLowerCase();
+  if (!target) return undefined;
+  return getWalletAccounts().find((a) => a.address.toLowerCase() === target);
+}
+
+// Phantom's signing path calls getPhantomCluster(), which throws "No networks
+// found for chain SOL" when the environment registers no Solana networks.
+// Pre-seeding a sentinel networkId bypasses that lookup.
+async function seedSolanaNetwork(account: {
+  walletProviderKey: string;
+}): Promise<void> {
+  await getLastKnownNetworkRegistry(getDefaultClient()).setNetworkId({
+    walletProviderKey: account.walletProviderKey,
+    networkId: "_phantom_default_",
+  });
+}
+
+// The host calls this when it could not open the wallet deeplink. Falls back
+// immediately instead of leaving the caller on the startup timeout.
+function onDeeplinkFailed(requestId: string): void {
+  fallback(requestId, "wallet not installed");
+}
+
+/** Sign a message with the connected wallet. Returns a hex signature. */
+async function sign(params: { requestId: string; message: string }): Promise<void> {
+  const { requestId, message } = params;
+  try {
+    const account = connectedAccount();
+    if (!account) {
+      sendToHost({
+        type: "signFailed",
+        requestId,
+        code: "no_wallet",
+        message: "no wallet connected - call connect() first",
+      });
+      return;
+    }
+    if (isSolanaWalletAccount(account)) await seedSolanaNetwork(account);
+    const { signature } = await signMessage({ walletAccount: account, message });
+    sendToHost({ type: "signed", requestId, signature, message });
+    emit("signed", requestId);
+  } catch (e) {
+    sendToHost({
+      type: "signFailed",
+      requestId,
+      code: classify(e),
+      message: e instanceof Error ? e.message : String(e),
+    });
+  }
+}
+
+/**
+ * Sign a transaction with the connected wallet. Signs only - never broadcasts.
+ *
+ * `transaction` is a JSON tx object for EVM (`chainId` required) or a base64
+ * serialised Solana transaction. The result is RLP hex or base64 respectively.
+ */
+async function signTx(params: { requestId: string; transaction: string }): Promise<void> {
+  const { requestId, transaction } = params;
+  const failTx = (code: string, message: string) =>
+    sendToHost({ type: "signTxFailed", requestId, code, message });
+  try {
+    const account = connectedAccount();
+    if (!account) {
+      failTx("no_wallet", "no wallet connected - call connect() first");
+      return;
+    }
+
+    if (isSolanaWalletAccount(account)) {
+      await seedSolanaNetwork(account);
+      const binaryStr = atob(transaction);
+      const txBytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) txBytes[i] = binaryStr.charCodeAt(i);
+
+      let solTx: VersionedTransaction | SolanaTransaction;
+      try {
+        solTx = VersionedTransaction.deserialize(txBytes);
+      } catch {
+        solTx = SolanaTransaction.from(txBytes);
+      }
+
+      const { signedTransaction } = await signSolanaTx({
+        walletAccount: account,
+        transaction: solTx,
+      });
+      const signed =
+        signedTransaction instanceof VersionedTransaction
+          ? signedTransaction.serialize()
+          : signedTransaction.serialize({
+              requireAllSignatures: false,
+              verifySignatures: false,
+            });
+      let binary = "";
+      for (const b of new Uint8Array(signed)) binary += String.fromCharCode(b);
+      sendToHost({
+        type: "signedTx",
+        requestId,
+        signedTransaction: btoa(binary),
+        chain: "solana",
+      });
+      emit("signed_tx", requestId, { chain: "solana" });
+      return;
+    }
+
+    if (!isEvmWalletAccount(account)) {
+      failTx("unsupported_chain", "connected wallet is neither EVM nor Solana");
+      return;
+    }
+
+    const txParams = JSON.parse(transaction) as Record<string, unknown>;
+    // Fail loud rather than sign on whatever network the wallet happens to be
+    // on - a silent wrong-chain signature is the worst outcome here.
+    if (txParams.chainId === undefined || txParams.chainId === null) {
+      failTx("missing_chain_id", "chainId is required for EVM transactions");
+      return;
+    }
+
+    const provider = getWalletProviderFromWalletAccount(
+      { walletAccount: account },
+      getDefaultClient(),
+    ) as unknown as {
+      request: (args: { method: string; params: unknown[] }) => Promise<string>;
+    };
+    const signedHex = await provider.request({
+      method: "eth_signTransaction",
+      params: [{ from: account.address, ...txParams }],
+    });
+    sendToHost({ type: "signedTx", requestId, signedTransaction: signedHex, chain: "evm" });
+    emit("signed_tx", requestId, { chain: "evm" });
+  } catch (e) {
+    failTx(classify(e), e instanceof Error ? e.message : String(e));
+  }
+}
+
 export function startHeadlessEngine(): void {
   if (started) return;
   started = true;
@@ -317,10 +480,13 @@ export function startHeadlessEngine(): void {
   getClient();
 
   // Expose the API native calls.
-  (window as unknown as { fbHeadless: unknown }).fbHeadless = {
+  (window as unknown as { headlessConnect: unknown }).headlessConnect = {
     connect,
     cancel,
     handleReturnURL,
+    onDeeplinkFailed,
+    sign,
+    signTx,
     sessionId,
   };
 

@@ -6,7 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import type { HostMessage } from "@/lib/bridge";
 
 // A local stand-in for the native side: it embeds the headless engine in a
-// hidden iframe, calls window.fbHeadless.* on it (the same API iOS drives via
+// hidden iframe, calls window.headlessConnect.* on it (the same API iOS drives via
 // evaluateJavaScript), and listens for the engine's postMessage bridge output.
 
 type LogLine = { t: number; text: string };
@@ -18,6 +18,8 @@ export function HeadlessTest() {
   const [chain, setChain] = useState<"evm" | "solana" | "">("");
   const [deeplink, setDeeplink] = useState<string | null>(null);
   const [result, setResult] = useState<HostMessage | null>(null);
+  const [connected, setConnected] = useState(false);
+  const [message, setMessage] = useState("Hello from Connections");
   const [log, setLog] = useState<LogLine[]>([]);
   const reqRef = useRef(0);
 
@@ -36,7 +38,16 @@ export function HeadlessTest() {
       append(JSON.stringify(msg));
       if (msg.type === "ready") setReady(true);
       if (msg.type === "deeplink") setDeeplink(msg.url);
-      if (msg.type === "connected" || msg.type === "error" || msg.type === "fallback") {
+      if (msg.type === "connected") setConnected(true);
+      if (
+        msg.type === "connected" ||
+        msg.type === "error" ||
+        msg.type === "fallback" ||
+        msg.type === "signed" ||
+        msg.type === "signFailed" ||
+        msg.type === "signedTx" ||
+        msg.type === "signTxFailed"
+      ) {
         setResult(msg);
       }
     };
@@ -44,23 +55,54 @@ export function HeadlessTest() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  const drive = (method: "connect" | "cancel", arg: unknown) => {
+  type EngineApi = {
+    connect: (p: unknown) => void;
+    cancel: (id: string) => void;
+    sign: (p: unknown) => void;
+    signTx: (p: unknown) => void;
+  };
+
+  const drive = (method: keyof EngineApi, arg: unknown) => {
     const win = iframeRef.current?.contentWindow as unknown as {
-      fbHeadless?: { connect: (p: unknown) => void; cancel: (id: string) => void };
+      headlessConnect?: EngineApi;
     };
-    if (!win?.fbHeadless) {
+    if (!win?.headlessConnect) {
       append("engine not ready");
       return;
     }
-    if (method === "connect") win.fbHeadless.connect(arg);
-    else win.fbHeadless.cancel(arg as string);
+    if (method === "cancel") win.headlessConnect.cancel(arg as string);
+    else win.headlessConnect[method](arg);
   };
+
+  const nextId = () => `req-${++reqRef.current}`;
 
   const connect = () => {
     setDeeplink(null);
     setResult(null);
-    const requestId = `req-${++reqRef.current}`;
-    drive("connect", { requestId, walletKey, chain: chain || undefined });
+    setConnected(false);
+    drive("connect", { requestId: nextId(), walletKey, chain: chain || undefined });
+  };
+
+  // Signing needs a live wallet session, so both buttons stay disabled until a
+  // `connected` message arrives - calling them earlier just returns no_wallet.
+  const signMsg = () => {
+    setResult(null);
+    drive("sign", { requestId: nextId(), message });
+  };
+
+  // A deliberately minimal EVM transaction. chainId is required: the engine
+  // refuses to sign without one rather than sign on whatever network the wallet
+  // happens to be on. Signed only - nothing is broadcast.
+  const signTransaction = () => {
+    setResult(null);
+    drive("signTx", {
+      requestId: nextId(),
+      transaction: JSON.stringify({
+        to: "0x0000000000000000000000000000000000000000",
+        value: "0x0",
+        chainId: 1,
+      }),
+    });
   };
 
   return (
@@ -87,6 +129,21 @@ export function HeadlessTest() {
         </button>
       </div>
 
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="message to sign"
+          style={{ padding: 8, flex: 1, minWidth: 220 }}
+        />
+        <button onClick={signMsg} disabled={!connected} style={{ padding: "8px 14px" }}>
+          Sign message
+        </button>
+        <button onClick={signTransaction} disabled={!connected} style={{ padding: "8px 14px" }}>
+          Sign transaction
+        </button>
+      </div>
+
       {deeplink && (
         <div style={{ marginTop: 20 }}>
           <p>Scan with the wallet app on your phone (proves the headless round-trip):</p>
@@ -103,7 +160,12 @@ export function HeadlessTest() {
           style={{
             marginTop: 20,
             padding: 12,
-            background: result.type === "connected" ? "#eafaf1" : "#fdecea",
+            background:
+              result.type === "connected" ||
+              result.type === "signed" ||
+              result.type === "signedTx"
+                ? "#eafaf1"
+                : "#fdecea",
             border: "1px solid #ccc",
             whiteSpace: "pre-wrap",
             wordBreak: "break-all",

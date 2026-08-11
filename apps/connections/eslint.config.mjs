@@ -18,8 +18,6 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
-      // Upstream native host harnesses - reference material, not app code.
-      "native/**",
     ],
   },
   {

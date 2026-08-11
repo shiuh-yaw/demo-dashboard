@@ -1,63 +1,44 @@
 "use client";
 
 /**
- * Two-axis switcher for the scenario page's right column: platform across
- * (Web / iOS / Android) and integration mode within (Basic / Headless).
+ * Switcher for the scenario page's right column: Web (the flow this demo runs,
+ * documented inline) or Mobile (links to the canonical native guides).
  *
- * The content is the upstream integration guide itself - `DocsSection` from
- * components/docs-sections.tsx - not a paraphrase of it. Upstream's sections
- * already map onto these two axes, so the tabs replace that guide's left nav:
+ * This used to be a two-axis switcher - platform across, Basic/Headless within
+ * - over ~600 lines of native guide ported from upstream. That copy drifted:
+ * it never gained Flutter or signing. The native guides now live only in the
+ * Dynamic docs, so the mode axis has nothing left to select and is gone.
  *
- *   web              -> Web            (mode is not meaningful; toggle hidden)
- *   ios              -> iOS  / Basic
- *   ios-headless     -> iOS  / Headless
- *   android          -> Android / Basic
- *   android-headless -> Android / Headless
- *
- * React Native has no tab and no longer has any surface - the standalone /docs
- * route that carried it was removed. Its section is still authored, so adding a
- * tab back is a one-line change.
- *
- * Deep links: `?platform=ios&mode=headless`, or `#ios-headless`.
+ * Deep links: `?platform=mobile`, or `#mobile`. The old `?platform=ios` and
+ * `#ios-headless` forms still resolve to Mobile rather than 404-ing a tab.
  */
 
 import { useEffect, useState } from "react";
 
-import { DocsSection, type DocsSources, type Section } from "./docs-sections";
+import { DocsSection } from "./docs-sections";
 
-export type Platform = "web" | "ios" | "android";
-export type Mode = "basic" | "headless";
+export type Platform = "web" | "mobile";
 
 const PLATFORMS: Array<{ id: Platform; label: string }> = [
   { id: "web", label: "Web" },
-  { id: "ios", label: "iOS" },
-  { id: "android", label: "Android" },
+  { id: "mobile", label: "Mobile" },
 ];
 
-const MODES: Array<{ id: Mode; label: string; hint: string }> = [
-  { id: "basic", label: "Basic", hint: "Host the visible flow" },
-  { id: "headless", label: "Headless", hint: "Your UI, no web chrome" },
-];
-
-/** Web is a single guide upstream - there is no headless variant of it. */
-const HAS_MODES: Record<Platform, boolean> = {
-  web: false,
-  ios: true,
-  android: true,
+/**
+ * Old deep links kept working: `?platform=ios`, `#android-headless` and the
+ * rest all land on Mobile, which is where that content went.
+ */
+const LEGACY_PLATFORMS: Record<string, Platform> = {
+  ios: "mobile",
+  android: "mobile",
+  rn: "mobile",
+  "react-native": "mobile",
+  flutter: "mobile",
 };
 
-function sectionFor(platform: Platform, mode: Mode): Section {
-  if (platform === "web") return "web";
-  return mode === "headless"
-    ? (`${platform}-headless` as Section)
-    : (platform as Section);
-}
-
-function isPlatform(v: string): v is Platform {
-  return PLATFORMS.some((p) => p.id === v);
-}
-function isMode(v: string): v is Mode {
-  return MODES.some((m) => m.id === v);
+function resolvePlatform(v: string): Platform | null {
+  if (PLATFORMS.some((p) => p.id === v)) return v as Platform;
+  return LEGACY_PLATFORMS[v] ?? null;
 }
 
 // Two axes need visible hierarchy, or adjacent identical pill rows read as one
@@ -77,38 +58,21 @@ const platformPill = (active: boolean) =>
     ? "bg-(--brand-surface) text-(--brand-fg) shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
     : "text-(--brand-muted) hover:text-(--brand-fg)");
 
-// Secondary axis - deliberately lighter: no filled container, smaller type, and
-// the active item marked by weight + colour rather than a raised chip.
-const modeRow =
-  "inline-flex items-center rounded-full border border-(--brand-border) overflow-hidden";
-const modePill = (active: boolean) =>
-  `px-2.5 py-1 text-[11px] font-medium transition-colors ${focusRing} ` +
-  (active
-    ? "bg-(--brand-fg) text-(--brand-surface)"
-    : "text-(--brand-muted) hover:text-(--brand-fg)");
 
-export function PlatformPanel({
-  sources,
-}: {
-  sources: DocsSources;
-}) {
+export function PlatformPanel() {
   const [platform, setPlatform] = useState<Platform>("web");
-  const [mode, setMode] = useState<Mode>("basic");
 
-  // Read after mount so server and client agree on web/basic during hydration.
+  // Read after mount so server and client agree on `web` during hydration.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash.replace("#", "").toLowerCase();
-    const [hashPlatform, hashMode] = hash.split("-");
-
-    const p = (params.get("platform") ?? hashPlatform ?? "").toLowerCase();
-    if (p && isPlatform(p)) setPlatform(p);
-
-    const m = (params.get("mode") ?? hashMode ?? "").toLowerCase();
-    if (m && isMode(m)) setMode(m);
+    // `#android-headless` -> "android": the mode suffix no longer selects
+    // anything, but the platform half still tells us where to land.
+    const [hashPlatform] = hash.split("-");
+    const raw = (params.get("platform") ?? hashPlatform ?? "").toLowerCase();
+    const resolved = raw ? resolvePlatform(raw) : null;
+    if (resolved) setPlatform(resolved);
   }, []);
-
-  const showModes = HAS_MODES[platform];
 
   return (
     <div className="flex flex-col gap-5">
@@ -128,31 +92,6 @@ export function PlatformPanel({
           ))}
         </div>
 
-        {showModes ? (
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="text-[10px] font-semibold uppercase tracking-[0.08em] text-(--brand-muted)"
-            >
-              Mode
-            </span>
-            <div role="tablist" aria-label="Integration mode" className={modeRow}>
-              {MODES.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === m.id}
-                  onClick={() => setMode(m.id)}
-                  title={m.hint}
-                  className={modePill(mode === m.id)}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </div>
 
       {/*
@@ -163,7 +102,7 @@ export function PlatformPanel({
         upstream's margins own the vertical rhythm.
       */}
       <div>
-        <DocsSection section={sectionFor(platform, mode)} sources={sources} />
+        <DocsSection section={platform} />
       </div>
     </div>
   );

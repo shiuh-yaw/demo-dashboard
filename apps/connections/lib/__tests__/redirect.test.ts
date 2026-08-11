@@ -14,6 +14,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const DEFAULT_CALLBACK_PATH = "/callback";
 const BLOCKED_REDIRECT_SCHEMES = [
+  "intent",
+  "android-app",
+  "market",
+  "content",
+  "chrome",
+  "chrome-extension",
+  "ftp",
   "javascript",
   "data",
   "vbscript",
@@ -23,24 +30,20 @@ const BLOCKED_REDIRECT_SCHEMES = [
 ];
 
 const cfg = {
-  ALLOWED_REDIRECT_SCHEMES: null as string[] | null,
+  ALLOWED_REDIRECT_HOSTS: null as string[] | null,
   BLOCKED_REDIRECT_SCHEMES,
   DEFAULT_CALLBACK_PATH,
-  REDIRECT_BASE_URL: undefined as string | undefined,
 };
 
 vi.mock("../config", () => ({
-  get ALLOWED_REDIRECT_SCHEMES() {
-    return cfg.ALLOWED_REDIRECT_SCHEMES;
+  get ALLOWED_REDIRECT_HOSTS() {
+    return cfg.ALLOWED_REDIRECT_HOSTS;
   },
   get BLOCKED_REDIRECT_SCHEMES() {
     return cfg.BLOCKED_REDIRECT_SCHEMES;
   },
   get DEFAULT_CALLBACK_PATH() {
     return cfg.DEFAULT_CALLBACK_PATH;
-  },
-  get REDIRECT_BASE_URL() {
-    return cfg.REDIRECT_BASE_URL;
   },
 }));
 
@@ -78,8 +81,7 @@ const WALLET = {
 };
 
 beforeEach(() => {
-  cfg.ALLOWED_REDIRECT_SCHEMES = null;
-  cfg.REDIRECT_BASE_URL = undefined;
+  cfg.ALLOWED_REDIRECT_HOSTS = null;
   setLocation("");
 });
 
@@ -132,34 +134,9 @@ describe("getRedirectBase - scheme safety", () => {
     expect(getRedirectBase()).toBe(DEFAULT);
   });
 
-  it("prefers the configured default over same-origin /callback", () => {
-    cfg.REDIRECT_BASE_URL = "https://configured.example/done";
+  it("always resolves to the same-origin /callback when no redirect_uri", () => {
     setLocation("");
-    expect(getRedirectBase()).toBe("https://configured.example/done");
-  });
-});
-
-describe("getRedirectBase - strict allow-list mode", () => {
-  it("is authoritative: rejects https when not listed", () => {
-    cfg.ALLOWED_REDIRECT_SCHEMES = ["fbconnectdemo"];
-    setLocation(`?redirect_uri=${encodeURIComponent("https://ok.example/cb")}`);
-    expect(getRedirectBase()).toBe(`${ORIGIN}${DEFAULT_CALLBACK_PATH}`);
-  });
-
-  it("accepts a listed scheme", () => {
-    cfg.ALLOWED_REDIRECT_SCHEMES = ["fbconnectdemo"];
-    setLocation(
-      `?redirect_uri=${encodeURIComponent("fbconnectdemo://wallet-callback")}`,
-    );
-    expect(getRedirectBase()).toBe("fbconnectdemo://wallet-callback");
-  });
-
-  it("cannot widen back to a blocked scheme by listing one", () => {
-    // The block-list wins over the allow-list, so a misconfigured deployment
-    // that names a script scheme still cannot navigate to it.
-    cfg.ALLOWED_REDIRECT_SCHEMES = ["javascript"];
-    setLocation(`?redirect_uri=${encodeURIComponent("javascript://x/")}`);
-    expect(getRedirectBase()).toBe(`${ORIGIN}${DEFAULT_CALLBACK_PATH}`);
+    expect(getRedirectBase()).toBe(DEFAULT);
   });
 });
 
@@ -285,5 +262,114 @@ describe("buildRedirectUrl", () => {
     );
     const external = new URL(buildRedirectUrl(WALLET, null));
     expect(external.searchParams.has("from")).toBe(false);
+  });
+});
+
+/**
+ * Open-redirect control (upstream iframe-fb PR #28).
+ *
+ * Scheme validation does NOT provide this: `https://evil.example` satisfies
+ * every scheme rule, so without a host allow-list the flow will happily send a
+ * user - and the connected address in the query string - to any site that asks.
+ */
+describe("redirect_uri host allow-list", () => {
+  const ownCallback = `${ORIGIN}/callback`;
+
+  it("sends the user anywhere when no allow-list is configured", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    cfg.ALLOWED_REDIRECT_HOSTS = null;
+    setLocation(`?redirect_uri=${encodeURIComponent("https://evil.example/cb")}`);
+    expect(getRedirectBase()).toBe("https://evil.example/cb");
+    // Permissive is a deliberate compatibility choice, but it must be loud -
+    // an open redirect that logs nothing is invisible until it is abused.
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("accepts an allow-listed host", () => {
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example", "other.example"];
+    setLocation(`?redirect_uri=${encodeURIComponent("https://ok.example/cb")}`);
+    expect(getRedirectBase()).toBe("https://ok.example/cb");
+  });
+
+  it("falls back to the default for a host that is not allow-listed", () => {
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example"];
+    setLocation(`?redirect_uri=${encodeURIComponent("https://evil.example/cb")}`);
+    expect(getRedirectBase()).toBe(ownCallback);
+  });
+
+  it("does not treat the allow-list as a suffix match", () => {
+    // `evil-ok.example` and `ok.example.attacker.com` both contain the allowed
+    // host as a substring; neither is it.
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example"];
+    for (const host of ["evil-ok.example", "ok.example.attacker.com"]) {
+      setLocation(`?redirect_uri=${encodeURIComponent(`https://${host}/cb`)}`);
+      expect(getRedirectBase()).toBe(ownCallback);
+    }
+  });
+
+  it("does not match subdomains implicitly", () => {
+    cfg.ALLOWED_REDIRECT_HOSTS = ["example.com"];
+    setLocation(`?redirect_uri=${encodeURIComponent("https://sub.example.com/cb")}`);
+    expect(getRedirectBase()).toBe(ownCallback);
+  });
+
+  it("ignores port and case", () => {
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example"];
+    setLocation(`?redirect_uri=${encodeURIComponent("https://OK.example:8443/cb")}`);
+    expect(getRedirectBase()).toBe("https://OK.example:8443/cb");
+  });
+
+  it("still host-checks plain http", () => {
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example"];
+    setLocation(`?redirect_uri=${encodeURIComponent("http://evil.example/cb")}`);
+    expect(getRedirectBase()).toBe(ownCallback);
+  });
+
+  it("never host-filters a custom app scheme", () => {
+    // A native scheme's "host" is a callback name the OS routes to an app, not
+    // a network address, so a list of web hostnames must not apply to it.
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example"];
+    setLocation(
+      `?redirect_uri=${encodeURIComponent("fbconnectdemo://wallet-callback")}`,
+    );
+    expect(getRedirectBase()).toBe("fbconnectdemo://wallet-callback");
+  });
+
+  it("keeps refusing script schemes regardless of the host list", () => {
+    cfg.ALLOWED_REDIRECT_HOSTS = ["ok.example"];
+    setLocation(`?redirect_uri=${encodeURIComponent("javascript://ok.example/%0aalert(1)")}`);
+    expect(getRedirectBase()).toBe(ownCallback);
+  });
+});
+
+/**
+ * Authority-bearing schemes (upstream iframe-fb PR #27).
+ *
+ * These are hierarchical and carry a host, so the permissive branch would wave
+ * them through on structure alone - but they hand off to another app or a
+ * browser-internal page rather than to a web callback. `intent://` can launch
+ * an arbitrary Android activity.
+ */
+describe("app hand-off schemes are refused", () => {
+  const ownCallback = `${ORIGIN}/callback`;
+
+  it.each([
+    "intent://scan/#Intent;scheme=zxing;end",
+    "android-app://com.evil.app",
+    "market://details?id=com.evil.app",
+    "content://com.evil.provider/secret",
+    "chrome://settings",
+    "chrome-extension://abcdefghijklmnop/page.html",
+    "ftp://files.example/x",
+  ])("refuses %s", (uri) => {
+    cfg.ALLOWED_REDIRECT_HOSTS = null;
+    setLocation(`?redirect_uri=${encodeURIComponent(uri)}`);
+    expect(getRedirectBase()).toBe(ownCallback);
+  });
+
+  it("still allows an ordinary custom app scheme", () => {
+    setLocation(`?redirect_uri=${encodeURIComponent("myapp://wallet-callback")}`);
+    expect(getRedirectBase()).toBe("myapp://wallet-callback");
   });
 });
