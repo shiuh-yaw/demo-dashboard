@@ -50,7 +50,13 @@ export type Screen =
       networkId: number;
     }
   | { type: "add-wallet" }
-  | { type: "settings" };
+  | { type: "settings" }
+  | {
+      type: "sign-message";
+      walletAddress: string;
+      chain: string;
+      returnToTxHistory?: { networkId: number };
+    };
 
 // =============================================================================
 // NAVIGATION HOOK
@@ -95,6 +101,11 @@ export interface NavigationReturn {
   ) => void;
   goToAddWallet: () => void;
   goToSettings: () => void;
+  goToSignMessage: (
+    walletAddress: string,
+    chain: string,
+    returnToTxHistory?: { networkId: number },
+  ) => void;
 }
 
 const TRANSITION_DURATION = 150;
@@ -249,6 +260,22 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     transitionTo({ type: "settings" });
   }, [transitionTo]);
 
+  const goToSignMessage = useCallback(
+    (
+      walletAddress: string,
+      chain: string,
+      returnToTxHistory?: { networkId: number },
+    ) => {
+      transitionTo({
+        type: "sign-message",
+        walletAddress,
+        chain,
+        returnToTxHistory,
+      });
+    },
+    [transitionTo],
+  );
+
   // Screen is ready when it matches expected state for auth
   // - Logged in: should NOT be on auth/otp-verify screens
   // - Logged out: should be on auth or otp-verify screens
@@ -274,5 +301,6 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     goToScanQr,
     goToAddWallet,
     goToSettings,
+    goToSignMessage,
   };
 }

@@ -558,6 +558,26 @@ const { transactionHash } = await sendTon({
   ],
 };
 
+/** Signing a message - the sign screen only. */
+export const WALLET_SIGNING_STEPS: StepSource[] = [
+  {
+    num: "01",
+    title: "Sign a message",
+    prose:
+      "The cheapest proof that an embedded wallet really signs: no network, no gas, nothing to fund. The same call any Dynamic wallet uses, routed to the right chain signer for the account.",
+    filename: "components/screens/sign-message-screen.tsx",
+    lang: "typescript",
+    code: `import { signMessage } from "@dynamic-labs-sdk/client";
+
+const { signature } = await signMessage({
+  walletAccount,
+  message: "Anything you want signed",
+});`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/reference/wallets/sign-message",
+  },
+];
+
 export async function buildCodeSteps(
   sources: StepSource[],
 ): Promise<CodeStep[]> {

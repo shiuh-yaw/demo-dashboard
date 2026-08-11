@@ -20,7 +20,7 @@ function fakeStorage(): MinimalStorage {
 }
 
 describe("WALLET_MILESTONES taxonomy", () => {
-  it("is exactly the seven documented event names", () => {
+  it("is exactly the eight documented event names", () => {
     expect(WALLET_MILESTONES).toEqual([
       "signed_in",
       "authenticated",
@@ -29,6 +29,7 @@ describe("WALLET_MILESTONES taxonomy", () => {
       "send_completed",
       "backup_completed",
       "receive_viewed",
+      "message_signed",
     ]);
   });
 

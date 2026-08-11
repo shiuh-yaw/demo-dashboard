@@ -35,6 +35,7 @@ import { TxHistoryScreen } from "@/components/screens/tx-history-screen";
 import { ScanQrScreen } from "@/components/screens/scan-qr-screen";
 import { AddWalletScreen } from "@/components/screens/add-wallet-screen";
 import { SettingsScreen } from "@/components/screens/settings-screen";
+import { SignMessageScreen } from "@/components/screens/sign-message-screen";
 
 export function WalletApp() {
   const isClientReady = useClientInitialized();
@@ -174,6 +175,15 @@ export function WalletApp() {
       )}
 
       {screen.type === "settings" && <SettingsScreen navigation={navigation} />}
+
+      {screen.type === "sign-message" && (
+        <SignMessageScreen
+          walletAddress={screen.walletAddress}
+          chain={screen.chain}
+          navigation={navigation}
+          returnToTxHistory={screen.returnToTxHistory}
+        />
+      )}
     </div>
   );
 }

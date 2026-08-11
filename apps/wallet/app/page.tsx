@@ -37,6 +37,7 @@ import {
   WALLET_SDK_STEPS,
   WALLET_SEND_STEPS_BY_CHAIN,
   WALLET_SETTINGS_STEPS,
+  WALLET_SIGNING_STEPS,
   WALLET_TX_STEPS,
 } from "@/lib/code-steps";
 import { SEND_CHAINS } from "@/lib/send-chains";
@@ -74,6 +75,7 @@ export default async function Home() {
     accountSteps,
     txSteps,
     settingsSteps,
+    signingSteps,
     ...sendStepsList
   ] = await Promise.all([
     buildCodeSteps(WALLET_SDK_STEPS),
@@ -81,6 +83,7 @@ export default async function Home() {
     buildCodeSteps(WALLET_ACCOUNT_STEPS),
     buildCodeSteps(WALLET_TX_STEPS),
     buildCodeSteps(WALLET_SETTINGS_STEPS),
+    buildCodeSteps(WALLET_SIGNING_STEPS),
     ...SEND_CHAINS.map((chain) =>
       buildCodeSteps(WALLET_SEND_STEPS_BY_CHAIN[chain]),
     ),
@@ -131,6 +134,9 @@ export default async function Home() {
             ),
             settings: (
               <CodePanel sdkSteps={settingsSteps} notice={builtWithNotice} />
+            ),
+            signing: (
+              <CodePanel sdkSteps={signingSteps} notice={builtWithNotice} />
             ),
             ...Object.fromEntries(
               SEND_CHAINS.map((chain, i) => [

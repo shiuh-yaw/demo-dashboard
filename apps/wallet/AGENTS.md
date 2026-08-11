@@ -54,6 +54,7 @@ GTM Phase 09 pilot - `apps/wallet` is the first demo instrumented with `@dynamic
 | `send_completed` | Transaction send resolves successfully; does NOT fire if `sendFn` throws. | `{ asset, amount }` |
 | `backup_completed` | Google Drive key-share backup resolves successfully (`trackedBackup`); does NOT fire on failure. | none |
 | `receive_viewed` | Wallet-list (`DashboardScreen`) mount. This app has no dedicated receive/QR screen - the wallet list, where addresses are shown with a copy button to receive funds, stands in for it. | none |
+| `message_signed` | A message signs successfully on the sign-message screen (`components/screens/sign-message-screen.tsx`); does NOT fire on failure. Session-deduped via `useMilestoneOnce`. | none |
 
 ## Theming
 

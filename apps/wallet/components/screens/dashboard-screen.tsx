@@ -69,6 +69,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
     navigation.goToScanQr(address, chain, networkId);
   };
 
+  const handleSignMessage = (address: string, chain: string) => {
+    navigation.goToSignMessage(address, chain);
+  };
+
   return (
     <WidgetCard
       icon={
@@ -104,6 +108,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             onSetupMfa={handleSetupMfa}
             onRowClick={handleRowClick}
             onScan={handleScan}
+            onSignMessage={handleSignMessage}
           />
         )}
 

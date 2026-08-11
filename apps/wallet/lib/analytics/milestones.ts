@@ -14,6 +14,7 @@ export const WALLET_MILESTONES = [
   "send_completed",
   "backup_completed",
   "receive_viewed",
+  "message_signed",
 ] as const;
 
 export type WalletMilestone = (typeof WALLET_MILESTONES)[number];

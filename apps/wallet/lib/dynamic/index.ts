@@ -112,6 +112,7 @@ export { onEvent, offEvent } from "./events";
 
 // Initialization
 export { getInitStatus, waitForClientInitialized } from "./init";
+export { signMessage } from "./sign-message";
 
 // Types
 export type {

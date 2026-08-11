@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Send,
   ScanLine,
+  PenLine,
 } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import {
@@ -171,6 +172,21 @@ export function TxHistoryScreen({
                 </button>
               </Tooltip>
             )}
+
+            <Tooltip content="Sign message">
+              <button
+                type="button"
+                onClick={() =>
+                  navigation.goToSignMessage(walletAddress, chain, {
+                    networkId: activeNetworkId,
+                  })
+                }
+                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
+                aria-label="Sign message"
+              >
+                <PenLine className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
 
             <Tooltip content="Send transaction">
               <button

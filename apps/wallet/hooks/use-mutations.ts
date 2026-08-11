@@ -23,8 +23,10 @@ import {
   completeSocialAuthentication,
   signInWithExternalJwt,
   logout,
+  signMessage,
   type OTPVerification,
   type Chain,
+  type WalletAccount,
 } from "@/lib/dynamic";
 import {
   sendTransaction,
@@ -263,5 +265,26 @@ export function useSendTransaction() {
 export function useSign7702() {
   return useMutation({
     mutationFn: (params: Sign7702Params) => sign7702Authorization(params),
+  });
+}
+
+// =============================================================================
+// MESSAGE SIGNING
+// =============================================================================
+
+/**
+ * Sign an arbitrary message with a wallet account. No gas, no network - the
+ * cheapest proof the embedded wallet controls its key.
+ *
+ * @example
+ * ```tsx
+ * const sign = useSignMessage();
+ * const { signature } = await sign.mutateAsync({ walletAccount, message });
+ * ```
+ */
+export function useSignMessage() {
+  return useMutation({
+    mutationFn: (params: { walletAccount: WalletAccount; message: string }) =>
+      signMessage(params),
   });
 }

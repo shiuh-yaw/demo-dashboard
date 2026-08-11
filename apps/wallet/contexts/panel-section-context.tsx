@@ -18,6 +18,7 @@ export type PanelSection =
   | "wallets"
   | "transactions"
   | "settings"
+  | "signing"
   | `send-${SendChain}`;
 
 export const { PanelSectionProvider, usePanelSection, usePanelSectionEffect } =

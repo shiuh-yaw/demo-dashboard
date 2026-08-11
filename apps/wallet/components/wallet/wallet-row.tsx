@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Shield, Zap, ScanLine } from "lucide-react";
+import { Send, Shield, Zap, ScanLine, PenLine } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import { Tooltip } from "@dynamic-demos/ui";
 import { CopyButton } from "@dynamic-demos/ui";
@@ -19,6 +19,7 @@ interface WalletRowProps {
   onSetupMfa?: (address: string, chain: string) => void;
   onRowClick?: (address: string, chain: string, networkId: number) => void;
   onScan?: (address: string, chain: string, networkId: number) => void;
+  onSignMessage?: (address: string, chain: string) => void;
 }
 
 /**
@@ -39,6 +40,7 @@ export function WalletRow({
   onSetupMfa,
   onRowClick,
   onScan,
+  onSignMessage,
 }: WalletRowProps) {
   const { networkData } = useActiveNetwork(walletAccount);
   const { needsSetup: needsMfaSetup, requiresMfa } = useMfaStatus();
@@ -172,6 +174,23 @@ export function WalletRow({
               aria-label="Scan QR to send"
             >
               <ScanLine className="w-4 h-4" />
+            </button>
+          </Tooltip>
+        )}
+
+        {/* Sign message - always available; the cheapest proof the key signs. */}
+        {onSignMessage && (
+          <Tooltip content="Sign message">
+            <button
+              type="button"
+              onClick={() => onSignMessage(walletAccount.address, chain)}
+              className={cn(
+                "p-1.5 rounded-full transition-colors cursor-pointer",
+                "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
+              )}
+              aria-label="Sign message"
+            >
+              <PenLine className="w-4 h-4" />
             </button>
           </Tooltip>
         )}
