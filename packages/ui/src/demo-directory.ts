@@ -17,11 +17,18 @@ export interface DemoDirectoryEntry {
   href: string;
 }
 
-/** A demo reaches the nav grid only if it is public AND actually deployed. */
+/**
+ * A demo reaches the nav grid only if it is public, actually deployed, and not
+ * flagged as banner-only (`showInNav: false`).
+ */
 function isNavigable(
   demo: DemoCatalogEntry,
 ): demo is DemoCatalogEntry & { url: string } {
-  return demo.showOnLanding && typeof demo.url === "string";
+  return (
+    demo.showOnLanding &&
+    typeof demo.url === "string" &&
+    demo.showInNav !== false
+  );
 }
 
 export const DEMO_DIRECTORY: DemoDirectoryEntry[] = DEMO_CATALOG.filter(

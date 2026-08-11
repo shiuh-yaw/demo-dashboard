@@ -6,6 +6,7 @@ import { Button } from "@/components/droplet-client";
 import {
   LANDING_DEMOS,
   getDemoBySlug,
+  PLAYGROUND_SLUG,
   type LandingDemo,
 } from "@/lib/landing/demos";
 import { DemoHero } from "../../_components/demo-hero";
@@ -45,7 +46,10 @@ interface DemoPageProps {
 }
 
 export function generateStaticParams() {
-  return LANDING_DEMOS.filter((demo) => demo.showOnLanding).map((demo) => ({
+  // Playground is banner-only (launches straight out), so it has no detail page.
+  return LANDING_DEMOS.filter(
+    (demo) => demo.showOnLanding && demo.slug !== PLAYGROUND_SLUG,
+  ).map((demo) => ({
     slug: demo.slug,
   }));
 }
@@ -55,7 +59,7 @@ export async function generateMetadata({
 }: DemoPageProps): Promise<Metadata> {
   const { slug } = await params;
   const demo = getDemoBySlug(slug);
-  if (!demo) return {};
+  if (!demo || slug === PLAYGROUND_SLUG) return {};
   const title = `${demo.name} - Dynamic Demos`;
   return {
     title,
@@ -80,7 +84,8 @@ export async function generateMetadata({
 export default async function DemoDetailPage({ params }: DemoPageProps) {
   const { slug } = await params;
   const demo = getDemoBySlug(slug);
-  if (!demo) notFound();
+  // Playground is banner-only: it has no detail page.
+  if (!demo || slug === PLAYGROUND_SLUG) notFound();
 
   return (
     <article className="mx-auto max-w-3xl px-6 pt-8 pb-16">

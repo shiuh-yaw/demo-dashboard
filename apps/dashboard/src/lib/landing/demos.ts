@@ -164,6 +164,35 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
+    ...catalogEntry("playground"),
+    // No `kind`: an external showcase hosted by Dynamic, not an
+    // operator-configurable demo built in this dashboard.
+    description:
+      "Dynamic's interactive playground - the fastest way to see the login and embedded-wallet experience end to end. Sign in with email, social, or an external wallet, get a self-custodial embedded wallet, and explore the full auth and wallet UI live in the browser. Tweak the configuration as you go to preview how it would feel inside your own app.",
+    highlights: [
+      "Live login with email, social, and external wallets",
+      "Self-custodial embedded wallet, no seed phrase",
+      "Change the widget config and preview instantly",
+      "The quickest way to feel the full Dynamic UX",
+    ],
+    stack: [
+      "Email + social login",
+      "Embedded MPC wallets",
+      "Configurable auth widget",
+      "Multichain support",
+    ],
+    resources: [
+      {
+        label: "Dynamic docs",
+        url: "https://www.dynamic.xyz/docs",
+      },
+      {
+        label: "Open the playground",
+        url: "https://playground.dynamic.xyz",
+      },
+    ],
+  },
+  {
     ...catalogEntry("flow"),
     kind: "flow",
     description:
@@ -279,3 +308,10 @@ export function getDemoBySlug(slug: string): LandingDemo | undefined {
   // Hidden demos 404 publicly - detail pages must never resolve them.
   return LANDING_DEMOS.find((demo) => demo.slug === slug && demo.showOnLanding);
 }
+
+/**
+ * Playground is a general sandbox, surfaced as a launch-only banner on the
+ * landing page - not a product demo. It has no card and no detail page (the
+ * banner links straight out to the hosted playground).
+ */
+export const PLAYGROUND_SLUG = "playground";

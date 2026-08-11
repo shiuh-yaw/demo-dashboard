@@ -1,7 +1,13 @@
-import { LANDING_DEMOS } from "@/lib/landing/demos";
+import {
+  LANDING_DEMOS,
+  getDemoBySlug,
+  PLAYGROUND_SLUG,
+} from "@/lib/landing/demos";
 import { DemoCard } from "./_components/demo-card";
+import { PlaygroundBanner } from "./_components/playground-banner";
 
 export default function LandingPage() {
+  const playground = getDemoBySlug(PLAYGROUND_SLUG);
   return (
     <>
       {/* Hero */}
@@ -20,11 +26,16 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Playground rides its own featured banner, not a product card. */}
+      {playground && <PlaygroundBanner demo={playground} />}
+
       {/* Demo grid */}
       <section className="mx-auto max-w-6xl px-6 pt-4 pb-16">
         <h2 className="sr-only">Demos</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {LANDING_DEMOS.filter((demo) => demo.showOnLanding).map((demo) => (
+          {LANDING_DEMOS.filter(
+            (demo) => demo.showOnLanding && demo.slug !== PLAYGROUND_SLUG,
+          ).map((demo) => (
             <DemoCard key={demo.slug} demo={demo} />
           ))}
         </div>

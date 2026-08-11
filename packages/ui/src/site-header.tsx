@@ -14,7 +14,7 @@
  */
 
 import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Phone } from "lucide-react";
 import { DynamicLogo } from "./dynamic-logo";
 import { DEMO_DIRECTORY, type DemoDirectoryEntry } from "./demo-directory";
 import { BookACallLink } from "./book-a-call";
@@ -109,17 +109,26 @@ export function SiteHeader({
   // The hover grid only appears on demo pages - the catalog page IS the
   // grid, so its "Demos" pill stays a plain label (no chevron, no panel).
   const demosCrumb = onDemoPage ? (
-    <div className="group relative">
-      <a
-        href={homeHref}
-        className="flex items-center gap-0.5 rounded-md px-1 py-0.5 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+    // CSS-only toggle so the header stays a server component (no JS): desktop
+    // opens the panel on hover; mobile taps the label to toggle a checkbox. The
+    // panel is an anchored dropdown on desktop and a full-width overlay below
+    // the bar on mobile, instead of a panel that runs off-screen.
+    <div className="group/demos relative">
+      <input
+        type="checkbox"
+        id="site-demos-menu"
+        className="peer sr-only"
+        aria-label="Toggle demos menu"
+      />
+      <label
+        htmlFor="site-demos-menu"
+        className="flex cursor-pointer select-none items-center gap-0.5 rounded-md px-1 py-0.5 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-800 peer-checked:[&>svg]:rotate-180 dark:text-slate-400 dark:hover:text-slate-200 sm:group-hover/demos:[&>svg]:rotate-180"
       >
         Demos
-        <ChevronDown className="h-3.5 w-3.5 transition-transform duration-150 group-hover:rotate-180" />
-      </a>
-      {/* pt-2 bridges the hover gap between crumb and panel. */}
-      <div className="invisible absolute left-0 top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        <div className="grid w-[440px] grid-cols-2 gap-1 rounded-xl border border-[#E7E9EE] bg-white p-2 dark:border-[#2C2C30] dark:bg-[#161618] shadow-[0_12px_32px_-12px_rgba(24,39,75,0.32)]">
+        <ChevronDown className="h-3.5 w-3.5 transition-transform duration-150" />
+      </label>
+      <div className="fixed inset-x-0 top-16 z-50 hidden px-4 pt-2 peer-checked:block sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:px-0 sm:group-hover/demos:block">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-1 overflow-y-auto rounded-xl border border-[#E7E9EE] bg-white p-2 shadow-[0_12px_32px_-12px_rgba(24,39,75,0.32)] dark:border-[#2C2C30] dark:bg-[#161618] sm:max-h-none sm:w-[440px] sm:grid-cols-2 sm:overflow-visible">
           {demos.map((demo) => (
             <a
               key={demo.name}
@@ -148,7 +157,7 @@ export function SiteHeader({
   return (
     <header className={`${sticky ? "sticky top-0 z-40 " : ""}border-b border-[#E7E9EE] bg-[#F4F5F7]/90 backdrop-blur dark:border-[#2C2C30] dark:bg-[#0A0A0A]/90`}>
       <div
-        className={`mx-auto flex h-20 items-center justify-between gap-4 px-4 sm:px-6 ${
+        className={`mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 ${
           fullWidth ? "" : "max-w-6xl"
         }`}
       >
@@ -161,7 +170,7 @@ export function SiteHeader({
                 <DynamicLogo
                   wordmark
                   tagline={false}
-                  className="h-7 w-auto sm:hidden"
+                  className="h-6 w-auto sm:hidden"
                 />
                 <DynamicLogo wordmark className="hidden h-[34px] w-auto sm:block" />
               </>
@@ -170,12 +179,14 @@ export function SiteHeader({
           <div className="flex items-center gap-1.5 max-[380px]:hidden">
             {isBranded ? null : demosCrumb}
             {onDemoPage && (
-              <>
+              // Desktop-only breadcrumb: on mobile the Demos dropdown already
+              // covers navigation, so the demo-name chip is dropped to declutter.
+              <span className="hidden items-center gap-1.5 sm:flex">
                 <span className="text-sm font-medium text-slate-400">/</span>
                 <span className="rounded-md bg-[#4779FF]/10 px-2 py-0.5 text-sm font-semibold text-[#4779FF]">
                   {chip}
                 </span>
-              </>
+              </span>
             )}
           </div>
         </div>
@@ -191,14 +202,19 @@ export function SiteHeader({
           <div className="flex items-center gap-2 sm:gap-3">{trailing}</div>
         ) : (
         <nav className="flex items-center gap-2 text-sm sm:gap-3">
-          <BookACallLink className="hidden h-10 items-center whitespace-nowrap rounded-md bg-white px-3 font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30] sm:inline-flex">
-            Book a call
+          {/* Mobile: a compact phone icon. sm+: the full "Book a call" button. */}
+          <BookACallLink
+            aria-label="Book a call"
+            className="inline-flex h-8 w-8 items-center justify-center whitespace-nowrap rounded-md bg-white font-semibold text-[#0A0B0C] shadow-[inset_0_0_0_1px_#E7E9EE,0_4px_4px_-4px_rgba(24,39,75,0.08)] transition-shadow hover:shadow-[inset_0_0_0_1px_#D7DAE2,0_4px_4px_-4px_rgba(24,39,75,0.16)] dark:bg-[#161618] dark:text-white dark:shadow-[inset_0_0_0_1px_#2C2C30] sm:h-10 sm:w-auto sm:px-3"
+          >
+            <Phone className="h-4 w-4 sm:hidden" aria-hidden="true" />
+            <span className="hidden text-sm sm:inline">Book a call</span>
           </BookACallLink>
           <a
             href="https://app.dynamic.xyz/"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-10 items-center whitespace-nowrap rounded-md bg-[#678BFF] px-3 font-semibold text-white shadow-[0_4px_4px_-4px_rgba(24,39,75,0.32)] transition-colors hover:bg-[#5578F0]"
+            className="inline-flex h-8 items-center whitespace-nowrap rounded-md bg-[#678BFF] px-2.5 text-[13px] font-semibold text-white shadow-[0_4px_4px_-4px_rgba(24,39,75,0.32)] transition-colors hover:bg-[#5578F0] sm:h-10 sm:px-3 sm:text-sm"
           >
             <span className="sm:hidden">Free account</span>
             <span className="hidden sm:inline">Get a free account</span>

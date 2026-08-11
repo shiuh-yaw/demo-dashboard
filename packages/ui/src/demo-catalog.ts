@@ -27,6 +27,12 @@ export interface DemoCatalogEntry {
   url?: string;
   /** Publicly listed; hidden demos stay operator-only and never reach the nav. */
   showOnLanding: boolean;
+  /**
+   * Appears in the SiteHeader "Demos" nav grid. Defaults to true. Set false for
+   * a demo surfaced some other way on the landing - Playground rides a banner,
+   * not a product card, so it stays out of the product nav.
+   */
+  showInNav?: boolean;
   /** Drives the hero-band tint on the landing card AND the OG unfurl. */
   category: DemoCategory;
 }
@@ -74,6 +80,16 @@ export const DEMO_CATALOG: DemoCatalogEntry[] = [
     tagline: "Deposit USDC into curated yield vaults in a few taps.",
     url: "https://earn.dynamic.dev",
     showOnLanding: true,
+  },
+  {
+    slug: "playground",
+    category: "wallet",
+    name: "Playground",
+    tagline: "Try Dynamic's login and embedded wallet, live and configurable.",
+    url: "https://playground.dynamic.xyz",
+    showOnLanding: true,
+    // Banner-only on the landing; keep it out of the product nav grid.
+    showInNav: false,
   },
   {
     slug: "flow",

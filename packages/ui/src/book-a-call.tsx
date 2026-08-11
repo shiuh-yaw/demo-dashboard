@@ -22,9 +22,12 @@ export {
 export function BookACallLink({
   className,
   children,
+  "aria-label": ariaLabel,
 }: {
   className?: string;
   children: ReactNode;
+  /** Accessible name - required when children are icon-only (mobile). */
+  "aria-label"?: string;
 }) {
   return (
     <a
@@ -32,6 +35,7 @@ export function BookACallLink({
       target="_blank"
       rel="noreferrer"
       className={className}
+      aria-label={ariaLabel}
     >
       {children}
     </a>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   LANDING_DEMOS,
   getDemoBySlug,
+  PLAYGROUND_SLUG,
   type LandingDemo,
 } from "@/lib/landing/demos";
 import { DEMO_ILLUSTRATIONS } from "@/app/(public)/_components/illustrations";
@@ -16,6 +17,7 @@ describe("LANDING_DEMOS config", () => {
       "connections",
       "earn",
       "flow",
+      "playground",
       "remittance",
       "stablecoin-card",
       "trade",
@@ -81,8 +83,10 @@ describe("LANDING_DEMOS config", () => {
     }
   });
 
-  it("has a dedicated illustration for every demo", () => {
+  it("has a dedicated illustration for every card demo", () => {
     for (const demo of LANDING_DEMOS) {
+      // Playground is banner-only (no card, no detail page), so no illustration.
+      if (demo.slug === PLAYGROUND_SLUG) continue;
       expect(DEMO_ILLUSTRATIONS[demo.slug], demo.slug).toBeDefined();
     }
   });
@@ -154,10 +158,22 @@ describe("demo copy has a single source", () => {
   });
 
   it("lists every public, deployed demo in the nav grid", () => {
-    const expected = DEMO_CATALOG.filter((c) => c.showOnLanding && c.url)
+    const expected = DEMO_CATALOG.filter(
+      (c) => c.showOnLanding && c.url && c.showInNav !== false,
+    )
       .map((c) => c.name)
       .sort();
     expect(DEMO_DIRECTORY.map((d) => d.name).sort()).toEqual(expected);
+  });
+
+  it("keeps banner-only demos out of the nav grid", () => {
+    const bannerOnly = DEMO_CATALOG.filter((c) => c.showInNav === false).map(
+      (c) => c.name,
+    );
+    expect(bannerOnly.length).toBeGreaterThan(0);
+    for (const name of bannerOnly) {
+      expect(DEMO_DIRECTORY.map((d) => d.name)).not.toContain(name);
+    }
   });
 
   it("keeps unlisted demos out of the nav grid", () => {
