@@ -94,8 +94,8 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
     resources: [
       {
-        label: "Connecting external wallets docs",
-        url: "https://www.dynamic.xyz/docs/javascript/building-ui/connecting-external-wallets",
+        label: "Connections docs",
+        url: "https://www.dynamic.xyz/docs/connections/overview",
       },
     ],
   },
