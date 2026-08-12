@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { cn } from "@dynamic-demos/utils";
+import { iconButtonHoverClassName } from "./button";
 import { Tooltip } from "./tooltip";
 
 /** Copy icon SVG */
@@ -102,9 +103,10 @@ function CopyButton({
       type="button"
       onClick={handleCopy}
       className={cn(
-        "rounded hover:bg-black/5",
+        "rounded",
         "text-[var(--widget-muted,#9a9a9a)] hover:text-[var(--widget-fg,#000000)]",
         "transition-colors cursor-pointer",
+        iconButtonHoverClassName,
         styles.button,
         className
       )}

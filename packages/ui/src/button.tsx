@@ -31,8 +31,14 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
 }
 
-const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none outline-none cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-out hover:[&_svg]:scale-115";
+/**
+ * The icon lift on hover. Exported so bare `<button>` icon controls - toolbar
+ * actions, header controls, copy buttons - move like `Button` does.
+ */
+export const iconButtonHoverClassName =
+  "[&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-out hover:[&_svg]:scale-115";
+
+const BUTTON_BASE = `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none outline-none cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 ${iconButtonHoverClassName}`;
 
 /**
  * Button variants using Tailwind v4 CSS variable syntax.

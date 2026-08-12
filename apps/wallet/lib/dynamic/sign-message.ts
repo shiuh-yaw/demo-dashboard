@@ -12,12 +12,21 @@ import {
   type WalletAccount,
 } from "@dynamic-labs-sdk/client";
 import { getClient } from "./client";
+import { mintMfaToken, type MfaMethod } from "./mfa";
 
 export async function signMessage(params: {
   walletAccount: WalletAccount;
   message: string;
+  /** Factor to present when MFA gates signing (WalletWaasSign). */
+  stepUp?: { method: MfaMethod; code?: string };
 }): Promise<{ signature: string }> {
+  const { walletAccount, message, stepUp } = params;
   const client = getClient();
   if (!client) throw new Error("Dynamic client not initialized");
-  return sdkSignMessage(params, client);
+
+  // Mint a single-use MFA token right before the signature, same step-up
+  // the send flow uses.
+  if (stepUp) await mintMfaToken(stepUp);
+
+  return sdkSignMessage({ walletAccount, message }, client);
 }

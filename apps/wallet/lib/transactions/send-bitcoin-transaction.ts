@@ -13,7 +13,7 @@ import {
   sendBitcoin,
   type BitcoinWalletAccount,
 } from "@dynamic-labs-sdk/bitcoin";
-import { getMfaDevices, authenticateTotpMfaDevice } from "@/lib/dynamic";
+import { mintMfaToken, type MfaMethod } from "@/lib/dynamic";
 
 // =============================================================================
 // TYPES
@@ -26,7 +26,7 @@ interface SendBitcoinTransactionParams {
   /** Recipient Bitcoin address */
   recipient: string;
   /** TOTP code for MFA-protected transactions */
-  mfaCode?: string;
+  stepUp?: { method: MfaMethod; code?: string };
 }
 
 // =============================================================================
@@ -45,17 +45,9 @@ export async function sendBitcoinTransaction({
   walletAccount,
   amount,
   recipient,
-  mfaCode,
+  stepUp,
 }: SendBitcoinTransactionParams): Promise<string> {
-  if (mfaCode) {
-    const devices = await getMfaDevices();
-    if (devices.length > 0) {
-      await authenticateTotpMfaDevice({
-        code: mfaCode,
-        createMfaTokenOptions: { singleUse: true },
-      });
-    }
-  }
+  if (stepUp) await mintMfaToken(stepUp);
 
   const amountInSats = BigInt(
     Math.round(parseFloat(amount) * SATS_PER_BTC),

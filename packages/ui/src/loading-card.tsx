@@ -15,6 +15,8 @@ export interface LoadingCardProps {
   message?: string;
   /** Called when close button is clicked */
   onClose?: () => void;
+  /** Called when the header back arrow is clicked (replaces the icon) */
+  onBack?: () => void;
 }
 
 /**
@@ -26,9 +28,16 @@ export function LoadingCard({
   subtitle,
   message,
   onClose,
+  onBack,
 }: LoadingCardProps) {
   return (
-    <WidgetCard icon={icon} title={title} subtitle={subtitle} onClose={onClose}>
+    <WidgetCard
+      icon={icon}
+      title={title}
+      subtitle={subtitle}
+      onClose={onClose}
+      onBack={onBack}
+    >
       <div className="flex flex-col items-center justify-center py-8 gap-3">
         <Spinner size="lg" />
         {message && <p className="text-sm text-(--widget-muted)">{message}</p>}

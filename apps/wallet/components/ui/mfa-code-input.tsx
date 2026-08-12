@@ -67,7 +67,7 @@ export function MfaCodeInput({
     <div className="p-3 bg-(--brand-row-bg) border border-(--brand-border) rounded-(--brand-radius)">
       <div className="flex items-center gap-2 mb-2">
         <Shield className="w-4 h-4 text-(--brand-accent)" />
-        <span className="text-xs font-medium text-(--brand-fg)">
+        <span className="text-sm font-medium text-(--brand-fg)">
           Security Verification
         </span>
       </div>

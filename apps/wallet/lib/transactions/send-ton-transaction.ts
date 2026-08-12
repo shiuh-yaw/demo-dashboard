@@ -13,7 +13,7 @@ import {
   sendTon,
   type TonWalletAccount,
 } from "@dynamic-labs-sdk/ton";
-import { getMfaDevices, authenticateTotpMfaDevice } from "@/lib/dynamic";
+import { mintMfaToken, type MfaMethod } from "@/lib/dynamic";
 
 // =============================================================================
 // TYPES
@@ -26,7 +26,7 @@ interface SendTonTransactionParams {
   /** Recipient TON address */
   recipient: string;
   /** TOTP code for MFA-protected transactions */
-  mfaCode?: string;
+  stepUp?: { method: MfaMethod; code?: string };
 }
 
 // =============================================================================
@@ -45,17 +45,9 @@ export async function sendTonTransaction({
   walletAccount,
   amount,
   recipient,
-  mfaCode,
+  stepUp,
 }: SendTonTransactionParams): Promise<string> {
-  if (mfaCode) {
-    const devices = await getMfaDevices();
-    if (devices.length > 0) {
-      await authenticateTotpMfaDevice({
-        code: mfaCode,
-        createMfaTokenOptions: { singleUse: true },
-      });
-    }
-  }
+  if (stepUp) await mintMfaToken(stepUp);
 
   const amountInNanotons = BigInt(
     Math.round(parseFloat(amount) * NANOTONS_PER_TON),

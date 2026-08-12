@@ -50,7 +50,14 @@ export type Screen =
       networkId: number;
     }
   | { type: "add-wallet" }
-  | { type: "settings" }
+  // Scoped to one wallet when opened from that wallet's gear; unscoped from
+  // the dashboard gear, where it holds app-level demo controls.
+  | {
+      type: "settings";
+      walletAddress?: string;
+      chain?: string;
+      returnToTxHistory?: { networkId: number };
+    }
   | {
       type: "sign-message";
       walletAddress: string;
@@ -100,7 +107,11 @@ export interface NavigationReturn {
     networkId: number,
   ) => void;
   goToAddWallet: () => void;
-  goToSettings: () => void;
+  goToSettings: (walletScope?: {
+    walletAddress: string;
+    chain: string;
+    returnToTxHistory?: { networkId: number };
+  }) => void;
   goToSignMessage: (
     walletAddress: string,
     chain: string,
@@ -256,9 +267,16 @@ export function useNavigation(isLoggedIn: boolean): NavigationReturn {
     transitionTo({ type: "add-wallet" });
   }, [transitionTo]);
 
-  const goToSettings = useCallback(() => {
-    transitionTo({ type: "settings" });
-  }, [transitionTo]);
+  const goToSettings = useCallback(
+    (walletScope?: {
+      walletAddress: string;
+      chain: string;
+      returnToTxHistory?: { networkId: number };
+    }) => {
+      transitionTo({ type: "settings", ...walletScope });
+    },
+    [transitionTo],
+  );
 
   const goToSignMessage = useCallback(
     (

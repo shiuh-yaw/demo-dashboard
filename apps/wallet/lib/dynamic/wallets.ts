@@ -38,6 +38,10 @@ import {
   isTonWalletAccount as sdkIsTonWalletAccount,
   type TonWalletAccount,
 } from "@dynamic-labs-sdk/ton";
+import {
+  isTronWalletAccount as sdkIsTronWalletAccount,
+  type TronWalletAccount,
+} from "@dynamic-labs-sdk/tron";
 import { getClient, createSafeWrapper } from "./client";
 
 /**
@@ -90,6 +94,7 @@ export const isBitcoinWalletAccount = sdkIsBitcoinWalletAccount;
 
 /** Check if wallet account is TON */
 export const isTonWalletAccount = sdkIsTonWalletAccount;
+export const isTronWalletAccount = sdkIsTronWalletAccount;
 
 export type {
   WalletAccount,
@@ -98,5 +103,6 @@ export type {
   SuiWalletAccount,
   BitcoinWalletAccount,
   TonWalletAccount,
+  TronWalletAccount,
   Chain,
 };

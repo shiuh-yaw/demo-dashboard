@@ -116,10 +116,13 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
 
         <div className="flex items-center gap-2">
           <CreateWalletButtons className="flex-1" navigation={navigation} />
+          {/* Muted at rest to match Add Wallet beside it; `danger` still
+              brings the red on hover. */}
           <Button
             variant="outline"
             size="icon"
             danger
+            className="text-(--brand-muted)"
             onClick={handleLogout}
             loading={logoutMutation.isPending}
             aria-label="Sign out"

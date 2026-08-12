@@ -26,6 +26,7 @@ import {
   signMessage,
   type OTPVerification,
   type Chain,
+  type MfaMethod,
   type WalletAccount,
 } from "@/lib/dynamic";
 import {
@@ -284,7 +285,10 @@ export function useSign7702() {
  */
 export function useSignMessage() {
   return useMutation({
-    mutationFn: (params: { walletAccount: WalletAccount; message: string }) =>
-      signMessage(params),
+    mutationFn: (params: {
+      walletAccount: WalletAccount;
+      message: string;
+      stepUp?: { method: MfaMethod; code?: string };
+    }) => signMessage(params),
   });
 }

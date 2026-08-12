@@ -19,10 +19,10 @@
 
 import type { SignAuthorizationReturnType } from "viem/accounts";
 import {
-  authenticateTotpMfaDevice,
-  getMfaDevices,
+  mintMfaToken,
   signEip7702Authorization,
   type EvmWalletAccount,
+  type MfaMethod,
   type NetworkData,
 } from "@/lib/dynamic";
 
@@ -38,8 +38,8 @@ export interface Sign7702Params {
   walletAccount: EvmWalletAccount;
   /** The network to sign for */
   networkData: NetworkData;
-  /** TOTP code from authenticator app */
-  mfaCode?: string;
+  /** Factor to present when MFA gates signing */
+  stepUp?: { method: MfaMethod; code?: string };
 }
 
 /**
@@ -56,20 +56,11 @@ export interface Sign7702Params {
 export async function sign7702Authorization({
   walletAccount,
   networkData,
-  mfaCode,
+  stepUp,
 }: Sign7702Params): Promise<SignAuthorizationReturnType> {
   try {
-    // 1. Authenticate MFA if provided (singleUse: true - only 1 signature needed)
-    if (mfaCode) {
-      const devices = await getMfaDevices();
-
-      if (devices.length > 0) {
-        await authenticateTotpMfaDevice({
-          code: mfaCode,
-          createMfaTokenOptions: { singleUse: true },
-        });
-      }
-    }
+    // 1. Mint the single-use token this signature consumes
+    if (stepUp) await mintMfaToken(stepUp);
 
     // 2. Sign the EIP-7702 authorization using the SDK abstraction
     const signedAuth = await signEip7702Authorization({

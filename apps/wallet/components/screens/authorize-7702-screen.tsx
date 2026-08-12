@@ -23,7 +23,7 @@ import { useSign7702 } from "@/hooks/use-mutations";
 import { use7702Authorization } from "@/hooks/use-7702-authorization";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useActiveNetwork } from "@/hooks/use-active-network";
-import { useMfaStatus, isMfaRequiredError } from "@/hooks/use-mfa-status";
+import { useSignStepUp, isMfaRequiredError } from "@/hooks/use-mfa-status";
 import {
   isEvmWalletAccount,
   isNetworkSponsored,
@@ -56,12 +56,17 @@ export function Authorize7702Screen({
   const [mfaCode, setMfaCode] = useState("");
   const { walletAccounts } = useWalletAccounts();
   const sign = useSign7702();
+  // The 7702 authorization is itself a WalletWaasSign signature.
   const {
-    isMfaEnabled,
-    hasDevice,
-    needsSetup,
+    requiresStepUp,
+    stepUpMethod,
+    canUseTotpInstead,
+    switchToTotp,
+    needsEnrollment: needsSetup,
     isLoading: mfaLoading,
-  } = useMfaStatus();
+  } = useSignStepUp();
+  // Only TOTP has a code to collect; passkey prompts on submit.
+  const requiresMfaCode = requiresStepUp && stepUpMethod === "totp";
 
   // Find the ZeroDev wallet for this address
   const zerodevWallet = walletAccounts.find(
@@ -98,8 +103,6 @@ export function Authorize7702Screen({
     e.preventDefault();
     if (!zerodevWallet || !networkData) return;
 
-    // If MFA is enabled and user has device, require code
-    const requiresMfaCode = isMfaEnabled && hasDevice;
     if (requiresMfaCode && !mfaCode.trim()) return;
 
     try {
@@ -107,7 +110,10 @@ export function Authorize7702Screen({
       const signedAuth = await sign.mutateAsync({
         walletAccount: zerodevWallet,
         networkData,
-        mfaCode: requiresMfaCode ? mfaCode : undefined,
+        stepUp:
+          requiresStepUp && stepUpMethod
+            ? { method: stepUpMethod, code: mfaCode || undefined }
+            : undefined,
       });
       onSuccess(signedAuth);
     } catch (error) {
@@ -272,7 +278,7 @@ export function Authorize7702Screen({
               </p>
             </div>
 
-            {isMfaEnabled && hasDevice ? (
+            {requiresMfaCode ? (
               <div className="space-y-2">
                 {fromMfaSetup && (
                   <p className="text-xs text-(--brand-muted) text-center">
@@ -287,10 +293,23 @@ export function Authorize7702Screen({
                   autoFocus
                 />
               </div>
-            ) : !isMfaEnabled ? (
-              <p className="text-xs text-(--brand-muted)">
-                MFA not enabled for this environment.
-              </p>
+            ) : requiresStepUp && stepUpMethod === "passkey" ? (
+              <div className="flex items-center gap-2 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) p-3">
+                <span className="text-xs text-(--brand-muted)">
+                  You&apos;ll confirm with your passkey.
+                </span>
+                {/* Passkeys are device-bound; the code is the way through
+                    on a device that doesn't hold one. */}
+                {canUseTotpInstead && (
+                  <button
+                    type="button"
+                    onClick={switchToTotp}
+                    className="ml-auto shrink-0 cursor-pointer text-xs font-medium text-(--brand-accent) hover:underline"
+                  >
+                    Use a code
+                  </button>
+                )}
+              </div>
             ) : null}
 
             <div className="flex gap-2">
@@ -308,7 +327,7 @@ export function Authorize7702Screen({
                 type="submit"
                 className="flex-1"
                 loading={sign.isPending}
-                disabled={isMfaEnabled && hasDevice && mfaCode.length !== 6}
+                disabled={requiresMfaCode && mfaCode.length !== 6}
               >
                 {sign.isPending ? "Signing..." : "Sign Authorization"}
               </Button>

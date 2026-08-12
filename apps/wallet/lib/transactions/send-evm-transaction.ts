@@ -24,8 +24,8 @@ import {
   createWalletClientForWalletAccount,
   createKernelClientForWalletAccount,
   switchActiveNetwork,
-  authenticateTotpMfaDevice,
-  getMfaDevices,
+  mintMfaToken,
+  type MfaMethod,
 } from "@/lib/dynamic";
 
 // =============================================================================
@@ -38,7 +38,7 @@ export interface SendEvmTransactionParams {
   recipient: string;
   networkData: NetworkData;
   /** TOTP code for MFA-protected transactions (ZeroDev only) */
-  mfaCode?: string;
+  stepUp?: { method: MfaMethod; code?: string };
   /** EIP-7702 authorization (for first tx after signing smart account) */
   eip7702Auth?: SignAuthorizationReturnType;
   /** ERC-20 token contract address (omit for native ETH transfer) */
@@ -103,7 +103,7 @@ export async function sendEvmTransaction({
   amount,
   recipient,
   networkData,
-  mfaCode,
+  stepUp,
   eip7702Auth,
   tokenAddress,
   tokenDecimals,
@@ -123,17 +123,8 @@ export async function sendEvmTransaction({
 
   // ZeroDev wallet - authenticate MFA first, then use kernel client
   if (walletAccount.walletProviderKey.includes("zerodev")) {
-    // Authenticate MFA if code provided and user has device
-    if (mfaCode) {
-      const devices = await getMfaDevices();
-
-      if (devices.length > 0) {
-        await authenticateTotpMfaDevice({
-          code: mfaCode,
-          createMfaTokenOptions: { singleUse: true },
-        });
-      }
-    }
+    // Mint the single-use token the kernel client's signature consumes
+    if (stepUp) await mintMfaToken(stepUp);
 
     // Create kernel client with auth (if available)
     const kernelClient = await createKernelClientForWalletAccount({

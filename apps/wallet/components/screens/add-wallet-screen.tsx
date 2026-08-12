@@ -2,7 +2,11 @@
 
 import { Plus } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
-import { WidgetCard, Spinner } from "@dynamic-demos/ui";
+import {
+  WidgetCard,
+  Spinner,
+  iconButtonHoverClassName,
+} from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
 import { useCreateWallet } from "@/hooks/use-mutations";
 import { useChainOptions } from "@/hooks/use-chain-options";
@@ -60,6 +64,8 @@ export function AddWalletScreen({ navigation }: AddWalletScreenProps) {
                   "hover:bg-(--brand-row-hover) rounded-(--brand-radius)",
                   "transition-colors cursor-pointer",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
+                  // Only the + lifts; the chain logo is an <img>, not an svg.
+                  iconButtonHoverClassName,
                 )}
               >
                 {chain.icon ? (

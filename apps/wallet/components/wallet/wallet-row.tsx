@@ -2,12 +2,11 @@
 
 import { Send, Shield, Zap, ScanLine, PenLine } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
-import { Tooltip } from "@dynamic-demos/ui";
-import { CopyButton } from "@dynamic-demos/ui";
+import { Tooltip, CopyButton, iconButtonHoverClassName } from "@dynamic-demos/ui";
 import { useActiveNetwork } from "@/hooks/use-active-network";
 import { use7702Authorization } from "@/hooks/use-7702-authorization";
 import { useGasSponsorship } from "@/hooks/use-gas-sponsorship";
-import { useMfaStatus } from "@/hooks/use-mfa-status";
+import { useSignStepUp } from "@/hooks/use-mfa-status";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { isEvmWalletAccount, type WalletAccount } from "@/lib/dynamic";
 
@@ -27,7 +26,7 @@ interface WalletRowProps {
  * Uses SDK data for all display info
  *
  * Action button scenarios:
- * 1. MFA setup needed (Shield) - if MFA required but no device
+ * 1. MFA setup needed (Shield) - only if MFA enrollment is required and no device
  * 2. Smart account needed (Zap) - if MFA enabled AND sponsored network AND not authorized
  *    (Without MFA, SDK handles authorization automatically during transaction)
  * 3. Send transaction (Send) - all other cases
@@ -43,7 +42,7 @@ export function WalletRow({
   onSignMessage,
 }: WalletRowProps) {
   const { networkData } = useActiveNetwork(walletAccount);
-  const { needsSetup: needsMfaSetup, requiresMfa } = useMfaStatus();
+  const { needsEnrollment, requiresStepUp } = useSignStepUp();
   const { walletAccounts } = useWalletAccounts();
 
   const isEvm = isEvmWalletAccount(walletAccount);
@@ -71,10 +70,12 @@ export function WalletRow({
   // Only show authorize button when MFA is enabled - without MFA, SDK handles auth automatically
   // Note: zerodevWallet existence implies EVM (hook filters by isEvmWalletAccount)
   const canAuthorize =
-    !!zerodevWallet && isSponsored && !isAuthorized && requiresMfa;
+    !!zerodevWallet && isSponsored && !isAuthorized && requiresStepUp;
 
-  // Determine which action button to show (priority order)
-  const showMfaSetup = needsMfaSetup && onSetupMfa;
+  // Determine which action button to show (priority order).
+  // 2FA required with nothing enrolled: enrollment is the only thing that can
+  // happen, so the row offers it alone - send/sign/scan would dead-end.
+  const showMfaSetup = needsEnrollment && onSetupMfa;
   const showAuthorize =
     !showMfaSetup && !isLoading && canAuthorize && onAuthorize;
   const showSend = !showMfaSetup && !showAuthorize;
@@ -156,7 +157,7 @@ export function WalletRow({
         />
 
         {/* Scan-to-send — needs networkData for the target networkId */}
-        {onScan && networkData && (
+        {onScan && networkData && !showMfaSetup && (
           <Tooltip content="Scan to send">
             <button
               type="button"
@@ -169,7 +170,8 @@ export function WalletRow({
               }
               className={cn(
                 "p-1.5 rounded-full transition-colors cursor-pointer",
-                "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
+                iconButtonHoverClassName,
+                "text-(--brand-muted) hover:text-(--brand-fg)",
               )}
               aria-label="Scan QR to send"
             >
@@ -178,15 +180,16 @@ export function WalletRow({
           </Tooltip>
         )}
 
-        {/* Sign message - always available; the cheapest proof the key signs. */}
-        {onSignMessage && (
+        {/* Sign message - the cheapest proof the key signs. */}
+        {onSignMessage && !showMfaSetup && (
           <Tooltip content="Sign message">
             <button
               type="button"
               onClick={() => onSignMessage(walletAccount.address, chain)}
               className={cn(
                 "p-1.5 rounded-full transition-colors cursor-pointer",
-                "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
+                iconButtonHoverClassName,
+                "text-(--brand-muted) hover:text-(--brand-fg)",
               )}
               aria-label="Sign message"
             >
@@ -203,7 +206,8 @@ export function WalletRow({
               onClick={() => onSetupMfa?.(walletAccount.address, chain)}
               className={cn(
                 "p-1.5 rounded-full transition-colors cursor-pointer",
-                "text-(--brand-accent) hover:bg-(--brand-accent)/10",
+                iconButtonHoverClassName,
+                "text-(--brand-accent)",
               )}
               aria-label="Set up authenticator"
             >
@@ -217,7 +221,8 @@ export function WalletRow({
               onClick={onAuthorize}
               className={cn(
                 "p-1.5 rounded-full transition-colors cursor-pointer",
-                "text-(--brand-accent) hover:bg-(--brand-accent)/10",
+                iconButtonHoverClassName,
+                "text-(--brand-accent)",
               )}
               aria-label="Enable smart account"
             >
@@ -231,7 +236,8 @@ export function WalletRow({
               onClick={onSend}
               className={cn(
                 "p-1.5 rounded-full transition-colors cursor-pointer",
-                "text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5",
+                iconButtonHoverClassName,
+                "text-(--brand-muted) hover:text-(--brand-fg)",
               )}
               aria-label="Send transaction"
             >

@@ -3,18 +3,21 @@
 import type { SignAuthorizationReturnType } from "viem/accounts";
 import {
   type WalletAccount,
+  type MfaMethod,
   type NetworkData,
   isEvmWalletAccount,
   isSolanaWalletAccount,
   isSuiWalletAccount,
   isBitcoinWalletAccount,
   isTonWalletAccount,
+  isTronWalletAccount,
 } from "@/lib/dynamic";
 import { sendEvmTransaction } from "./send-evm-transaction";
 import { sendSolanaTransaction } from "./send-solana-transaction";
 import { sendSuiTransaction } from "./send-sui-transaction";
 import { sendBitcoinTransaction } from "./send-bitcoin-transaction";
 import { sendTonTransaction } from "./send-ton-transaction";
+import { sendTronTransaction } from "./send-tron-transaction";
 
 // =============================================================================
 // TYPES
@@ -26,7 +29,7 @@ export interface SendTransactionParams {
   recipient: string;
   networkData: NetworkData;
   /** TOTP code for MFA-protected transactions (all WaaS wallets) */
-  mfaCode?: string;
+  stepUp?: { method: MfaMethod; code?: string };
   /** EIP-7702 authorization (for first tx after signing smart account, EVM only) */
   eip7702Auth?: SignAuthorizationReturnType;
   /** Token contract/mint address for token transfers (omit for native transfers) */
@@ -52,7 +55,7 @@ export async function sendTransaction({
   amount,
   recipient,
   networkData,
-  mfaCode,
+  stepUp,
   eip7702Auth,
   tokenAddress,
   tokenDecimals,
@@ -65,7 +68,7 @@ export async function sendTransaction({
       amount,
       recipient,
       networkData,
-      mfaCode,
+      stepUp,
       eip7702Auth,
       tokenAddress,
       tokenDecimals,
@@ -82,7 +85,7 @@ export async function sendTransaction({
       amount,
       recipient,
       rpcUrl,
-      mfaCode,
+      stepUp,
       tokenAddress,
       tokenDecimals,
       sponsored,
@@ -95,7 +98,7 @@ export async function sendTransaction({
       walletAccount,
       amount,
       recipient,
-      mfaCode,
+      stepUp,
     });
   }
 
@@ -105,7 +108,7 @@ export async function sendTransaction({
       walletAccount,
       amount,
       recipient,
-      mfaCode,
+      stepUp,
     });
   }
 
@@ -115,7 +118,17 @@ export async function sendTransaction({
       walletAccount,
       amount,
       recipient,
-      mfaCode,
+      stepUp,
+    });
+  }
+
+  // Tron Chain
+  if (isTronWalletAccount(walletAccount)) {
+    return sendTronTransaction({
+      walletAccount,
+      amount,
+      recipient,
+      stepUp,
     });
   }
 

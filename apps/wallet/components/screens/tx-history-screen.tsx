@@ -12,6 +12,8 @@ import {
   Send,
   ScanLine,
   PenLine,
+  Settings,
+  Shield,
 } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import {
@@ -21,6 +23,8 @@ import {
   Spinner,
   CopyButton,
   Tooltip,
+  iconButtonHoverClassName,
+  widgetHeaderTrailingIconButtonClassName,
 } from "@dynamic-demos/ui";
 import { NetworkSelector } from "@/components/wallet/network-selector";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
@@ -28,6 +32,7 @@ import { useActiveNetwork } from "@/hooks/use-active-network";
 import { useNetworks } from "@/hooks/use-networks";
 import { getTransactionHistory, type Chain } from "@/lib/dynamic";
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
+import { useSignStepUp } from "@/hooks/use-mfa-status";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
 interface TxHistoryScreenProps {
@@ -38,6 +43,12 @@ interface TxHistoryScreenProps {
 }
 
 const PAGE_SIZE = 10;
+
+/** Toolbar icon button - same metrics and hover lift as the wallet row. */
+const toolbarIconClass = cn(
+  "p-1.5 rounded-full transition-colors cursor-pointer",
+  iconButtonHoverClassName,
+);
 
 /**
  * Transaction history screen — works for every registered chain
@@ -56,6 +67,9 @@ export function TxHistoryScreen({
   // Q-017: transaction-flow screens share the transactions panel.
   usePanelSectionEffect("transactions");
 
+  // Same rule as the wallet row: 2FA required with nothing enrolled means
+  // enrollment is the only offer.
+  const { needsEnrollment } = useSignStepUp();
   const [offset, setOffset] = useState<string | undefined>(undefined);
   const queryClient = useQueryClient();
 
@@ -121,6 +135,25 @@ export function TxHistoryScreen({
       subtitle={truncateAddress(walletAddress)}
       onBack={navigation.goToDashboard}
       className="overflow-visible"
+      trailing={
+        // Per-wallet settings, same affordance the wallet list uses for
+        // app-level ones: backup and export belong to this wallet.
+        <button
+          type="button"
+          onClick={() =>
+            navigation.goToSettings({
+              walletAddress,
+              chain,
+              returnToTxHistory: { networkId: activeNetworkId },
+            })
+          }
+          className={widgetHeaderTrailingIconButtonClassName}
+          aria-label="Backup & recovery"
+          title="Backup & recovery"
+        >
+          <Settings className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+        </button>
+      }
     >
       <div className="space-y-2">
         {/* Toolbar: network selector + action icons */}
@@ -147,32 +180,54 @@ export function TxHistoryScreen({
             </div>
           )}
 
-          {/* Right: icon actions */}
-          <div className="flex items-center gap-0.5">
+          {/* Right: icon actions. Same metrics as the dashboard wallet
+              row so the two toolbars read as one control set. */}
+          <div className="flex items-center gap-0">
             <CopyButton
               text={walletAddress}
               label="Copy address"
               showTooltip
-              className="rounded-full"
+              className="rounded-full p-1.5"
             />
 
             {/* Scan-to-send only where address validation supports the
                 chain (EVM + Solana; see lib/validate-address.ts). */}
-            {(chain === "EVM" || chain === "SOL") && (
+            {(chain === "EVM" || chain === "SOL") && !needsEnrollment && (
               <Tooltip content="Scan to send">
                 <button
                   type="button"
                   onClick={() =>
                     navigation.goToScanQr(walletAddress, chain, activeNetworkId)
                   }
-                  className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
+                  className={cn(
+                    toolbarIconClass,
+                    "text-(--brand-muted) hover:text-(--brand-fg)",
+                  )}
                   aria-label="Scan QR to send"
                 >
-                  <ScanLine className="w-3.5 h-3.5" />
+                  <ScanLine className="w-4 h-4" />
                 </button>
               </Tooltip>
             )}
 
+            {needsEnrollment && (
+              <Tooltip content="Set up authenticator">
+                <button
+                  type="button"
+                  onClick={() => navigation.goToSetupMfa(walletAddress, chain)}
+                  className={cn(
+                    toolbarIconClass,
+                    "text-(--brand-accent)",
+                  )}
+                  aria-label="Set up authenticator"
+                >
+                  <Shield className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            )}
+
+            {!needsEnrollment && (
+            <>
             <Tooltip content="Sign message">
               <button
                 type="button"
@@ -181,10 +236,13 @@ export function TxHistoryScreen({
                     networkId: activeNetworkId,
                   })
                 }
-                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
+                className={cn(
+                  toolbarIconClass,
+                  "text-(--brand-muted) hover:text-(--brand-fg)",
+                )}
                 aria-label="Sign message"
               >
-                <PenLine className="w-3.5 h-3.5" />
+                <PenLine className="w-4 h-4" />
               </button>
             </Tooltip>
 
@@ -196,23 +254,31 @@ export function TxHistoryScreen({
                     networkId: activeNetworkId,
                   })
                 }
-                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5"
+                className={cn(
+                  toolbarIconClass,
+                  "text-(--brand-muted) hover:text-(--brand-fg)",
+                )}
                 aria-label="Send transaction"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </Tooltip>
+            </>
+            )}
 
             <Tooltip content="Refresh">
               <button
                 type="button"
                 onClick={handleRefresh}
                 disabled={isFetching}
-                className="p-2 rounded-full transition-colors cursor-pointer text-(--brand-muted) hover:text-(--brand-fg) hover:bg-black/5 disabled:opacity-50"
+                className={cn(
+                  toolbarIconClass,
+                  "text-(--brand-muted) hover:text-(--brand-fg) disabled:opacity-50",
+                )}
                 aria-label="Refresh transactions"
               >
                 <RefreshCw
-                  className={cn("w-3.5 h-3.5", isFetching && "animate-spin")}
+                  className={cn("w-4 h-4", isFetching && "animate-spin")}
                 />
               </button>
             </Tooltip>

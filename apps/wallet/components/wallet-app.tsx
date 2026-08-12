@@ -117,10 +117,7 @@ export function WalletApp() {
 
       {screen.type === "setup-mfa" && (
         <SetupMfaScreen
-          onSuccess={() => {
-            // Always go to send-tx - it will handle authorization internally if needed
-            navigation.goToSendTx(screen.walletAddress, screen.chain, true);
-          }}
+          onSuccess={navigation.goToDashboard}
           onCancel={navigation.goToDashboard}
         />
       )}
@@ -174,7 +171,14 @@ export function WalletApp() {
         <AddWalletScreen navigation={navigation} />
       )}
 
-      {screen.type === "settings" && <SettingsScreen navigation={navigation} />}
+      {screen.type === "settings" && (
+        <SettingsScreen
+          navigation={navigation}
+          walletAddress={screen.walletAddress}
+          chain={screen.chain}
+          returnToTxHistory={screen.returnToTxHistory}
+        />
+      )}
 
       {screen.type === "sign-message" && (
         <SignMessageScreen

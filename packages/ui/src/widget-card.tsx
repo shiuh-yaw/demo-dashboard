@@ -3,6 +3,7 @@
 import { forwardRef, type ReactNode, type HTMLAttributes } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
+import { iconButtonHoverClassName } from "./button";
 
 const surfaceClass =
   "bg-[var(--widget-bg,#ffffff)] text-[var(--widget-fg,#000000)] rounded-[var(--widget-radius-lg,22px)] overflow-hidden border border-[var(--widget-border,#e7e8ed)] shadow-[0px_8px_8px_-4px_rgba(10,13,18,0.03),0px_3px_3px_-1.5px_rgba(10,13,18,0.04)]";
@@ -10,7 +11,8 @@ const surfaceClass =
 const headerRuleClass = "border-b border-[var(--widget-border,#e7e8ed)]";
 
 const headerIconBtnClass =
-  "flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all hover:bg-[var(--widget-row-hover,#eef1f1)]";
+  "flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all hover:bg-[var(--widget-row-hover,#eef1f1)] " +
+  iconButtonHoverClassName;
 
 const mutedIconClass = "h-4 w-4 text-[var(--widget-muted,#9a9a9a)]";
 
@@ -165,12 +167,10 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
 
             {rightActions ? (
               <div
-                className={cn(
-                  "absolute right-3 z-10 flex items-center gap-0.5",
-                  icon
-                    ? "top-2.5"
-                    : "top-1/2 -translate-y-1/2",
-                )}
+                // Centered, not top-anchored: trailing controls differ in
+                // box size (24px close, 32px cog), so a shared top offset
+                // puts their centers on different lines.
+                className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5"
               >
                 {trailing}
                 {onClose ? (
@@ -205,6 +205,7 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
 WidgetCard.displayName = "WidgetCard";
 
 export const widgetHeaderTrailingIconButtonClassName =
-  "shrink-0 flex h-8 w-8 items-center justify-center rounded-[max(0.375rem,calc(var(--widget-radius-lg,22px)-0.5rem))] text-[var(--widget-muted,#9a9a9a)] transition-colors hover:bg-[var(--widget-row-hover,#eef1f1)] hover:text-[var(--widget-fg,#000000)] cursor-pointer";
+  "shrink-0 flex h-8 w-8 items-center justify-center rounded-[max(0.375rem,calc(var(--widget-radius-lg,22px)-0.5rem))] text-[var(--widget-muted,#9a9a9a)] transition-colors hover:bg-[var(--widget-row-hover,#eef1f1)] hover:text-[var(--widget-fg,#000000)] cursor-pointer " +
+  iconButtonHoverClassName;
 
 export { WidgetCard };

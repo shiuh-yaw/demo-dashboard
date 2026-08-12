@@ -14,7 +14,7 @@ import {
   signAndExecuteTransaction,
   type SuiWalletAccount,
 } from "@dynamic-labs-sdk/sui";
-import { getMfaDevices, authenticateTotpMfaDevice } from "@/lib/dynamic";
+import { mintMfaToken, type MfaMethod } from "@/lib/dynamic";
 
 // =============================================================================
 // TYPES
@@ -27,7 +27,7 @@ interface SendSuiTransactionParams {
   /** Recipient SUI address */
   recipient: string;
   /** TOTP code for MFA-protected transactions */
-  mfaCode?: string;
+  stepUp?: { method: MfaMethod; code?: string };
 }
 
 // =============================================================================
@@ -46,17 +46,9 @@ export async function sendSuiTransaction({
   walletAccount,
   amount,
   recipient,
-  mfaCode,
+  stepUp,
 }: SendSuiTransactionParams): Promise<string> {
-  if (mfaCode) {
-    const devices = await getMfaDevices();
-    if (devices.length > 0) {
-      await authenticateTotpMfaDevice({
-        code: mfaCode,
-        createMfaTokenOptions: { singleUse: true },
-      });
-    }
-  }
+  if (stepUp) await mintMfaToken(stepUp);
 
   const amountInMist = BigInt(
     Math.round(parseFloat(amount) * MIST_PER_SUI),

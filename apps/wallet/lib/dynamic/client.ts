@@ -21,6 +21,7 @@ import { addSolanaExtension } from "@dynamic-labs-sdk/solana";
 import { addSuiExtension } from "@dynamic-labs-sdk/sui";
 import { addBitcoinExtension } from "@dynamic-labs-sdk/bitcoin";
 import { addTonExtension } from "@dynamic-labs-sdk/ton";
+import { addTronExtension } from "@dynamic-labs-sdk/tron";
 import { addZerodevExtension } from "@dynamic-labs-sdk/zerodev";
 import {
   createDynamicClientSingleton,
@@ -32,6 +33,21 @@ import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 // =============================================================================
 // SINGLETON CLIENT
 // =============================================================================
+
+/**
+ * Chains this app can actually create an embedded wallet for - one entry per
+ * WaaS extension registered below, in display order.
+ *
+ * `getNetworksData()` reads `projectSettings.networks` and is NOT filtered by
+ * registered extensions, so a chain enabled in the dashboard shows up here
+ * whether or not we can serve it. Without this list, enabling e.g. Tempo or
+ * Midnight puts a row in Add Wallet that dead-ends on click.
+ *
+ * Only add a chain whose package ships a WaaS extension: Stellar and Aleo
+ * (like Aptos, Tron, Starknet) are injected/external-wallet only - their
+ * dists contain no WaaS code at all.
+ */
+export const WAAS_CHAINS = ["EVM", "SOL", "SUI", "BTC", "TON", "TRON"] as const;
 
 const singleton = createDynamicClientSingleton<DynamicClient>({
   create: () => {
@@ -51,6 +67,9 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
     addBitcoinExtension(client);
     // SDK 1.x: addTonExtension takes (params?, client?) - params first.
     addTonExtension(undefined, client);
+    // Tron does have embedded wallets - addTronExtension calls
+    // addWaasTronExtension internally, despite the docs page not saying so.
+    addTronExtension(client);
     addZerodevExtension(client);
   },
 });

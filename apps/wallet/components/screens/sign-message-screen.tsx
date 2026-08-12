@@ -12,13 +12,16 @@
  */
 
 import { useState } from "react";
-import { PenLine } from "lucide-react";
+import { PenLine, Shield } from "lucide-react";
 import { Button, CopyButton, Spinner, WidgetCard } from "@dynamic-demos/ui";
 import { truncateAddress } from "@dynamic-demos/utils";
 import { ErrorMessage } from "@/components/error-message";
+import { MfaCodeInput } from "@/components/ui/mfa-code-input";
+import { SetupMfaScreen } from "@/components/screens/setup-mfa-screen";
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import { useWalletAccounts } from "@/hooks/use-wallet-accounts";
 import { useSignMessage } from "@/hooks/use-mutations";
+import { useSignStepUp, isMfaRequiredError } from "@/hooks/use-mfa-status";
 import { useMilestoneOnce } from "@/hooks/use-milestone-once";
 import type { NavigationReturn } from "@/hooks/use-navigation";
 
@@ -36,6 +39,8 @@ export function SignMessageScreen({
   usePanelSectionEffect("signing");
 
   const [message, setMessage] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [showMfaSetup, setShowMfaSetup] = useState(false);
 
   const { walletAccounts } = useWalletAccounts();
   const signable =
@@ -46,6 +51,16 @@ export function SignMessageScreen({
     ) ?? null;
   const sign = useSignMessage();
   const milestoneOnce = useMilestoneOnce();
+  const {
+    requiresStepUp,
+    stepUpMethod,
+    canUseTotpInstead,
+    switchToTotp,
+    needsEnrollment: needsMfaSetup,
+    refetch: refetchMfaStatus,
+  } = useSignStepUp();
+  // Passkey step-up has no code to type - the SDK prompts the OS instead.
+  const requiresMfa = requiresStepUp && stepUpMethod === "totp";
 
   const address = signable?.address ?? walletAddress;
   const signature = sign.data?.signature;
@@ -53,12 +68,27 @@ export function SignMessageScreen({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!signable || !message.trim() || sign.isPending) return;
+    if (requiresMfa && mfaCode.length !== 6) return;
 
     void sign
-      .mutateAsync({ walletAccount: signable, message })
+      .mutateAsync({
+        walletAccount: signable,
+        message,
+        stepUp:
+          requiresStepUp && stepUpMethod
+            ? { method: stepUpMethod, code: mfaCode || undefined }
+            : undefined,
+      })
       .then(() => milestoneOnce("message_signed"))
-      .catch(() => {
-        // Rendered below from the mutation's error.
+      .catch((error) => {
+        // MFA enforced but no device yet - route into setup, same as send.
+        if (isMfaRequiredError(error)) {
+          setShowMfaSetup(true);
+          return;
+        }
+        // Otherwise the error renders below; drop the spent code so the
+        // user can enter a fresh one.
+        setMfaCode("");
       });
   };
 
@@ -68,6 +98,20 @@ export function SignMessageScreen({
     returnToTxHistory
       ? navigation.goToTxHistory(walletAddress, chain, returnToTxHistory.networkId)
       : navigation.goToDashboard();
+
+  // Action-MFA is enforced but the user has no device - detour through the
+  // shared setup screen, then drop back into signing.
+  if (showMfaSetup) {
+    return (
+      <SetupMfaScreen
+        onSuccess={() => {
+          refetchMfaStatus();
+          setShowMfaSetup(false);
+        }}
+        onCancel={() => setShowMfaSetup(false)}
+      />
+    );
+  }
 
   if (signature) {
     return (
@@ -111,6 +155,7 @@ export function SignMessageScreen({
               onClick={() => {
                 sign.reset();
                 setMessage("");
+                setMfaCode("");
               }}
             >
               Sign another
@@ -155,26 +200,83 @@ export function SignMessageScreen({
           />
         </div>
 
-        {/* One spinner, wearing its own label. `Button`'s `loading` swaps the
-            children out for a bare spinner, so a second line underneath was
-            the only way to say anything - and then there were two. */}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={!signable || !message.trim() || sign.isPending}
-        >
-          {sign.isPending ? (
-            <>
-              <Spinner size="sm" className="border-white/30 border-t-white" />
-              Signing with your wallet…
-            </>
-          ) : (
-            <>
-              <PenLine className="h-4 w-4" />
-              Sign Message
-            </>
-          )}
-        </Button>
+        {needsMfaSetup ? (
+          // MFA required (env or demo toggle) but no authenticator yet -
+          // set one up before a code can be entered.
+          <Button
+            type="button"
+            className="w-full"
+            onClick={() => setShowMfaSetup(true)}
+          >
+            <Shield className="h-4 w-4" />
+            Set up 2FA to sign
+          </Button>
+        ) : (
+          <>
+            {/* Step-up: MFA gates the WalletWaasSign action, so a fresh TOTP
+                code is required before the signature. */}
+            {requiresMfa && (
+              <MfaCodeInput
+                value={mfaCode}
+                onChange={setMfaCode}
+                disabled={sign.isPending}
+                contained
+              />
+            )}
+
+            {/* Passkey has no code - say so, since the OS prompt only
+                appears after the button is pressed. */}
+            {requiresStepUp && stepUpMethod === "passkey" && (
+              <div className="flex items-center gap-2 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) p-3">
+                <Shield className="h-4 w-4 shrink-0 text-(--brand-accent)" />
+                <span className="text-xs text-(--brand-muted)">
+                  You&apos;ll confirm with your passkey when you sign.
+                </span>
+                {/* A passkey lives on the device that made it - offer the
+                    code to anyone who arrived on a different one. */}
+                {canUseTotpInstead && (
+                  <button
+                    type="button"
+                    onClick={switchToTotp}
+                    className="ml-auto shrink-0 cursor-pointer text-xs font-medium text-(--brand-accent) hover:underline"
+                  >
+                    Use a code
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* One spinner, wearing its own label. `Button`'s `loading` swaps
+                the children out for a bare spinner, so a second line
+                underneath was the only way to say anything - and then there
+                were two. */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={
+                !signable ||
+                !message.trim() ||
+                sign.isPending ||
+                (requiresMfa && mfaCode.length !== 6)
+              }
+            >
+              {sign.isPending ? (
+                <>
+                  <Spinner
+                    size="sm"
+                    className="border-white/30 border-t-white"
+                  />
+                  Signing with your wallet…
+                </>
+              ) : (
+                <>
+                  <PenLine className="h-4 w-4" />
+                  Sign Message
+                </>
+              )}
+            </Button>
+          </>
+        )}
 
         <ErrorMessage error={sign.error} />
       </form>

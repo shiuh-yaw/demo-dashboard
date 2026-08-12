@@ -15,6 +15,9 @@
  * ```
  */
 
+// Client
+export { WAAS_CHAINS } from "./client";
+
 // Auth
 export { isSignedIn, logout, getAuthenticatedIdentity } from "./auth";
 export type { AuthenticatedIdentity } from "./auth";
@@ -38,6 +41,7 @@ export {
   isSuiWalletAccount,
   isBitcoinWalletAccount,
   isTonWalletAccount,
+  isTronWalletAccount,
 } from "./wallets";
 
 // Networks
@@ -103,6 +107,16 @@ export {
   getMfaDevices,
   registerTotpMfaDevice,
   isMfaRequiredForAction,
+  isMfaOnboardingPending,
+  isRecoveryCodesPending,
+  isPasskeySupported,
+  mintMfaToken,
+  deleteMfaFactor,
+  authenticatePasskeyMFA,
+  registerPasskey,
+  getPasskeys,
+  getMfaRecoveryCodes,
+  acknowledgeRecoveryCodes,
   getMfaSettings,
   MFAAction,
 } from "./mfa";
@@ -115,6 +129,7 @@ export { getInitStatus, waitForClientInitialized } from "./init";
 export { signMessage } from "./sign-message";
 
 // Types
+export type { MfaMethod } from "./mfa";
 export type {
   WalletAccount,
   EvmWalletAccount,
@@ -122,6 +137,7 @@ export type {
   SuiWalletAccount,
   BitcoinWalletAccount,
   TonWalletAccount,
+  TronWalletAccount,
   Chain,
 } from "./wallets";
 export type { NetworkData } from "./networks";

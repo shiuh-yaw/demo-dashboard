@@ -58,6 +58,8 @@ export interface ErrorCardProps {
   error?: Error | null;
   /** Called when close/back button is clicked */
   onClose?: () => void;
+  /** Called when the header back arrow is clicked (replaces the icon) */
+  onBack?: () => void;
   /** Show back button (default true) */
   showBackButton?: boolean;
   /** Back button text (default "Back") */
@@ -73,6 +75,7 @@ export function ErrorCard({
   message,
   error,
   onClose,
+  onBack,
   showBackButton = true,
   backButtonText = "Back",
 }: ErrorCardProps) {
@@ -83,7 +86,12 @@ export function ErrorCard({
   const errorMessage = message || error?.message;
 
   return (
-    <WidgetCard icon={icon ?? defaultIcon} title={title} onClose={onClose}>
+    <WidgetCard
+      icon={icon ?? defaultIcon}
+      title={title}
+      onClose={onClose}
+      onBack={onBack}
+    >
       <div className="space-y-4">
         {errorMessage && (
           <p className="text-sm text-(--widget-error)">{errorMessage}</p>

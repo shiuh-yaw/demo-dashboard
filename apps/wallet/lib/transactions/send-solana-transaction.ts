@@ -27,8 +27,8 @@ import {
   type SolanaWalletAccount,
   signAndSendTransaction,
   signAndSendSponsoredTransaction,
-  getMfaDevices,
-  authenticateTotpMfaDevice,
+  mintMfaToken,
+  type MfaMethod,
 } from "@/lib/dynamic";
 import { createSolanaTransaction } from "./create-solana-transaction";
 import { createSolanaTokenTransaction } from "./create-solana-token-transaction";
@@ -46,7 +46,7 @@ interface SendSolanaTransactionParams {
   /** Solana RPC endpoint URL */
   rpcUrl: string;
   /** TOTP code for MFA-protected transactions */
-  mfaCode?: string;
+  stepUp?: { method: MfaMethod; code?: string };
   /** SPL token address (omit for native SOL transfer) */
   tokenAddress?: string;
   /** Token decimals (e.g., 6 for USDC, 9 for most SPL tokens) */
@@ -66,7 +66,7 @@ interface SendSolanaTransactionParams {
  * @param amount - Amount as string (e.g., "0.001" SOL or "1.5" tokens)
  * @param recipient - Destination Solana address
  * @param rpcUrl - RPC endpoint for the Solana network
- * @param mfaCode - Optional TOTP code for MFA-protected transactions
+ * @param stepUp - Optional factor to present for MFA-protected transactions
  * @param tokenAddress - SPL token address (omit for native SOL)
  * @param tokenDecimals - Token decimals (required when tokenAddress is set)
  * @param sponsored - If true, use Dynamic's SVM gas sponsorship to cover fees
@@ -79,22 +79,13 @@ export async function sendSolanaTransaction({
   amount,
   recipient,
   rpcUrl,
-  mfaCode,
+  stepUp,
   tokenAddress,
   tokenDecimals,
   sponsored = false,
 }: SendSolanaTransactionParams): Promise<string> {
-  // Authenticate MFA if code provided and user has device
-  if (mfaCode) {
-    const devices = await getMfaDevices();
-
-    if (devices.length > 0) {
-      await authenticateTotpMfaDevice({
-        code: mfaCode,
-        createMfaTokenOptions: { singleUse: true },
-      });
-    }
-  }
+  // Mint the single-use token this signature consumes
+  if (stepUp) await mintMfaToken(stepUp);
 
   // Build the appropriate transaction
   const transaction = tokenAddress

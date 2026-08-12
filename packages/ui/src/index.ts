@@ -11,6 +11,7 @@
 // Core components
 export {
   Button,
+  iconButtonHoverClassName,
   type ButtonProps,
   type ButtonVariant,
   type ButtonSize,

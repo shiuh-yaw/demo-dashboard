@@ -2,7 +2,13 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, CheckCircle, ArrowLeft, Send } from "lucide-react";
+import {
+  ExternalLink,
+  CheckCircle,
+  ArrowLeft,
+  Send,
+  Shield,
+} from "lucide-react";
 import {
   WidgetCard,
   Button,
@@ -34,7 +40,7 @@ import {
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import { sendSectionForChain } from "@/lib/send-chains";
 import type { NavigationReturn } from "@/hooks/use-navigation";
-import { useMfaStatus, isMfaRequiredError } from "@/hooks/use-mfa-status";
+import { useSignStepUp, isMfaRequiredError } from "@/hooks/use-mfa-status";
 import { SetupMfaScreen } from "@/components/screens/setup-mfa-screen";
 import type { SignAuthorizationReturnType } from "@/lib/transactions/sign-7702-authorization";
 import { trackedSend } from "@/lib/analytics/flows";
@@ -228,11 +234,18 @@ export function SendTxScreen({
   const sendTx = useSendTransaction();
   const { milestone } = useTrack();
   const milestoneOnce = useMilestoneOnce();
+  // A tx signature is a WalletWaasSign action - same gate as message signing.
   const {
-    requiresMfa,
+    requiresStepUp,
+    stepUpMethod,
+    canUseTotpInstead,
+    switchToTotp,
+    needsEnrollment,
     isLoading: mfaLoading,
     refetch: refetchMfaStatus,
-  } = useMfaStatus();
+  } = useSignStepUp();
+  // Only TOTP collects a code up front; passkey prompts on submit.
+  const requiresMfa = requiresStepUp && stepUpMethod === "totp";
 
   const isEvm = chain === "EVM";
 
@@ -385,8 +398,9 @@ export function SendTxScreen({
       return { view: "result" };
     }
 
-    // Show MFA setup if user requested it
-    if (showMfaSetup) {
+    // Show MFA setup if user requested it, or if a step-up is required with
+    // nothing enrolled - a code prompt would be unanswerable.
+    if (showMfaSetup || needsEnrollment) {
       return { view: "mfa-setup" };
     }
 
@@ -468,7 +482,10 @@ export function SendTxScreen({
             amount,
             recipient,
             networkData,
-            mfaCode: requiresMfa ? mfaCode : undefined,
+            stepUp:
+              requiresStepUp && stepUpMethod
+                ? { method: stepUpMethod, code: mfaCode || undefined }
+                : undefined,
             eip7702Auth: signedAuth ?? undefined,
             tokenAddress: isTokenTransfer
               ? effectiveTokenAddress.trim()
@@ -603,14 +620,16 @@ export function SendTxScreen({
             {/* Amount + inline asset selector */}
             {!useManualEntry ? (
               <div className="flex flex-col gap-1.5">
-                <label className="flex items-center justify-between text-xs font-medium text-(--brand-muted) tracking-[-0.12px]">
+                {/* Same weight as every other field label (the `Input`
+                    component's); only the balance shortcut stays muted. */}
+                <label className="flex items-center justify-between text-sm font-medium text-(--brand-fg)">
                   <span>Amount</span>
                   {selectedToken && (
                     <button
                       type="button"
                       onClick={() => setAmount(String(selectedToken.balance))}
                       disabled={sendTx.isPending || !selectedToken.balance}
-                      className="font-normal transition-colors hover:text-(--brand-fg) disabled:cursor-default disabled:hover:text-(--brand-muted)"
+                      className="text-xs font-normal text-(--brand-muted) transition-colors hover:text-(--brand-fg) disabled:cursor-default disabled:hover:text-(--brand-muted)"
                       title="Use max balance"
                     >
                       Balance: {selectedToken.balance}
@@ -709,6 +728,26 @@ export function SendTxScreen({
                     : undefined
                 }
               />
+            )}
+
+            {/* Passkey prompts on submit - say so, and offer the code to
+                anyone whose passkey lives on another device. */}
+            {requiresStepUp && stepUpMethod === "passkey" && (
+              <div className="flex items-center gap-2 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) p-3">
+                <Shield className="h-4 w-4 shrink-0 text-(--brand-accent)" />
+                <span className="text-xs text-(--brand-muted)">
+                  You&apos;ll confirm with your passkey.
+                </span>
+                {canUseTotpInstead && (
+                  <button
+                    type="button"
+                    onClick={switchToTotp}
+                    className="ml-auto shrink-0 cursor-pointer text-xs font-medium text-(--brand-accent) hover:underline"
+                  >
+                    Use a code
+                  </button>
+                )}
+              </div>
             )}
 
             <Button
