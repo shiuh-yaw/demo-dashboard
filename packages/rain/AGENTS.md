@@ -58,3 +58,10 @@ first**:
 - The client never reads env; `apps/dashboard/src/lib/rain/client.ts` is the
   only sanctioned env-reader (holds `RAIN_API_KEY`).
 - No card-secret crypto here - the RSA/AES reveal is client-side (widget).
+- `./client` shares the consuming app's React context, so this package's
+  `@dynamic-labs-sdk/client` + `react-hooks` devDependencies must stay pinned
+  to the exact versions `apps/card` pins. Leaving `client` unpinned lets pnpm
+  satisfy the `react-hooks` peer from the highest version anywhere in the
+  workspace, which forks a second `react-hooks` copy - `useRainCardStore()`
+  then reads a different context than `<DynamicProvider>` writes and throws
+  `MissingProviderError` at runtime. Typecheck and tests do not catch it.
