@@ -63,7 +63,7 @@ catalogs:
 
 overrides:
   ufo: 1.6.2
-  axios: 1.13.6
+  axios: 1.18.1
   next: 15.5.22
   react: 19.1.6
   react-dom: 19.1.6
@@ -229,7 +229,7 @@ importers:
         version: 1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)
       '@dynamic-labs-sdk/evm':
         specifier: 1.19.1
-        version: 1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(@types/react@19.2.5)(@upstash/redis@1.34.8)(@vercel/blob@2.4.1)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))(zod@3.25.76)
+        version: 1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(@types/react@19.2.5)(@upstash/redis@1.34.8)(@vercel/blob@2.4.1)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))(zod@3.25.76)
       '@dynamic-labs-sdk/react-hooks':
         specifier: 1.19.1
         version: 1.19.1(@dynamic-labs-sdk/client@1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6))(@tanstack/react-query@5.90.16(react@19.1.6))(react@19.1.6)
@@ -7294,6 +7294,10 @@ packages:
   aes-js@4.0.0-beta.5:
     resolution: {integrity: sha512-G965FqalsNyrPqgEGON7nIx1e/OVENSgiEIzyC63haUMuvNnwIgIjMs52hlTCKhkBny7A2ORNlfY9Zu+jmGk1Q==}
 
+  agent-base@6.0.2:
+    resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
+    engines: {node: '>= 6.0.0'}
+
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
@@ -7413,10 +7417,10 @@ packages:
   axios-retry@4.5.0:
     resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
     peerDependencies:
-      axios: 1.13.6
+      axios: 1.18.1
 
-  axios@1.13.6:
-    resolution: {integrity: sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==}
+  axios@1.18.1:
+    resolution: {integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -8499,6 +8503,10 @@ packages:
     resolution: {integrity: sha512-V+23sDMr12Wnz7iTcDeJr3O6AIxlnvT/bmaAAAP/Xda35C90p9599p0F1eHR/N1KILWSoWVAiOMFjBBXaXSMxg==}
     engines: {node: '>=10.19.0'}
 
+  https-proxy-agent@5.0.1:
+    resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
+    engines: {node: '>= 6'}
+
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
@@ -9578,8 +9586,9 @@ packages:
   proxy-compare@3.0.1:
     resolution: {integrity: sha512-V9plBAt3qjMlS1+nC8771KNf6oJ12gExvaxnNzN/9yVRLdTv/lc+oJlnSzrdYDAvBfTStPCoiaCOTmTs0adv7Q==}
 
-  proxy-from-env@1.1.0:
-    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+  proxy-from-env@2.1.0:
+    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
+    engines: {node: '>=10'}
 
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
@@ -11075,6 +11084,7 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - immer
       - react
+      - supports-color
       - typescript
       - use-sync-external-store
       - utf-8-validate
@@ -11100,6 +11110,7 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - immer
       - react
+      - supports-color
       - typescript
       - use-sync-external-store
       - utf-8-validate
@@ -11125,6 +11136,7 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - immer
       - react
+      - supports-color
       - typescript
       - use-sync-external-store
       - utf-8-validate
@@ -11150,6 +11162,33 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - immer
       - react
+      - supports-color
+      - typescript
+      - use-sync-external-store
+      - utf-8-validate
+      - ws
+      - zod
+
+  '@base-org/account@2.5.2(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(zod@3.25.76)':
+    dependencies:
+      '@coinbase/cdp-sdk': 1.38.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      brotli-wasm: 3.0.1
+      clsx: 1.2.1
+      eventemitter3: 5.0.1
+      idb-keyval: 6.2.1
+      ox: 0.6.9(typescript@5.9.3)(zod@3.25.76)
+      preact: 10.24.2
+      viem: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
+      zustand: 5.0.3(@types/react@19.2.5)(react@19.1.6)(use-sync-external-store@1.2.0(react@19.1.6))
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - debug
+      - encoding
+      - fastestsmallesttextencoderdecoder
+      - immer
+      - react
+      - supports-color
       - typescript
       - use-sync-external-store
       - utf-8-validate
@@ -11195,8 +11234,8 @@ snapshots:
       '@solana/kit': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       abitype: 1.0.6(typescript@5.9.3)(zod@3.25.76)
-      axios: 1.13.6
-      axios-retry: 4.5.0(axios@1.13.6)
+      axios: 1.18.1
+      axios-retry: 4.5.0(axios@1.18.1)
       jose: 6.2.3
       md5: 2.3.0
       uncrypto: 0.1.3
@@ -11207,6 +11246,7 @@ snapshots:
       - debug
       - encoding
       - fastestsmallesttextencoderdecoder
+      - supports-color
       - typescript
       - utf-8-validate
       - ws
@@ -11218,8 +11258,8 @@ snapshots:
       '@solana/kit': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       abitype: 1.0.6(typescript@5.9.3)(zod@3.25.76)
-      axios: 1.13.6
-      axios-retry: 4.5.0(axios@1.13.6)
+      axios: 1.18.1
+      axios-retry: 4.5.0(axios@1.18.1)
       jose: 6.2.3
       md5: 2.3.0
       uncrypto: 0.1.3
@@ -11230,6 +11270,7 @@ snapshots:
       - debug
       - encoding
       - fastestsmallesttextencoderdecoder
+      - supports-color
       - typescript
       - utf-8-validate
       - ws
@@ -11241,8 +11282,8 @@ snapshots:
       '@solana/kit': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       abitype: 1.0.6(typescript@5.9.3)(zod@3.25.76)
-      axios: 1.13.6
-      axios-retry: 4.5.0(axios@1.13.6)
+      axios: 1.18.1
+      axios-retry: 4.5.0(axios@1.18.1)
       jose: 6.2.3
       md5: 2.3.0
       uncrypto: 0.1.3
@@ -11253,6 +11294,31 @@ snapshots:
       - debug
       - encoding
       - fastestsmallesttextencoderdecoder
+      - supports-color
+      - typescript
+      - utf-8-validate
+      - ws
+
+  '@coinbase/cdp-sdk@1.38.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+    dependencies:
+      '@solana-program/system': 0.8.1(@solana/kit@3.0.3(typescript@5.9.3))
+      '@solana-program/token': 0.6.0(@solana/kit@3.0.3(typescript@5.9.3))
+      '@solana/kit': 3.0.3(typescript@5.9.3)
+      '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      abitype: 1.0.6(typescript@5.9.3)(zod@3.25.76)
+      axios: 1.18.1
+      axios-retry: 4.5.0(axios@1.18.1)
+      jose: 6.2.3
+      md5: 2.3.0
+      uncrypto: 0.1.3
+      viem: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - fastestsmallesttextencoderdecoder
+      - supports-color
       - typescript
       - utf-8-validate
       - ws
@@ -11264,8 +11330,8 @@ snapshots:
       '@solana/kit': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       abitype: 1.0.6(typescript@5.9.3)(zod@3.25.76)
-      axios: 1.13.6
-      axios-retry: 4.5.0(axios@1.13.6)
+      axios: 1.18.1
+      axios-retry: 4.5.0(axios@1.18.1)
       jose: 6.2.3
       md5: 2.3.0
       uncrypto: 0.1.3
@@ -11276,6 +11342,7 @@ snapshots:
       - debug
       - encoding
       - fastestsmallesttextencoderdecoder
+      - supports-color
       - typescript
       - utf-8-validate
       - ws
@@ -11330,6 +11397,7 @@ snapshots:
       - encoding
       - react
       - react-dom
+      - supports-color
       - typescript
       - utf-8-validate
 
@@ -11356,6 +11424,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - utf-8-validate
 
@@ -11382,6 +11451,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - utf-8-validate
 
@@ -11401,6 +11471,7 @@ snapshots:
       - debug
       - react
       - react-dom
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/client@1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)':
@@ -11420,6 +11491,7 @@ snapshots:
       - debug
       - react
       - react-dom
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/client@1.25.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)':
@@ -11439,6 +11511,7 @@ snapshots:
       - debug
       - react
       - react-dom
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/client@1.3.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)':
@@ -11458,6 +11531,7 @@ snapshots:
       - debug
       - react
       - react-dom
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/droplet@1.19.1(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(next@15.5.22(react-dom@19.1.6(react@19.1.6))(react@19.1.6))(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(tailwindcss@4.1.17)':
@@ -11575,6 +11649,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -11613,6 +11688,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -11651,6 +11727,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -11689,6 +11766,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -11850,9 +11928,9 @@ snapshots:
       - ws
       - zod
 
-  '@dynamic-labs-sdk/evm@1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(@types/react@19.2.5)(@upstash/redis@1.34.8)(@vercel/blob@2.4.1)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))(zod@3.25.76)':
+  '@dynamic-labs-sdk/evm@1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(@types/react@19.2.5)(@upstash/redis@1.34.8)(@vercel/blob@2.4.1)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(viem@2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
-      '@base-org/account': 2.5.2(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))(zod@3.25.76)
+      '@base-org/account': 2.5.2(@types/react@19.2.5)(bufferutil@4.1.0)(react@19.1.6)(typescript@5.9.3)(use-sync-external-store@1.2.0(react@19.1.6))(utf-8-validate@6.0.6)(zod@3.25.76)
       '@dynamic-labs-sdk/assert-package-version': 1.19.1
       '@dynamic-labs-sdk/client': 1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)
       '@dynamic-labs-sdk/metamask': 1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)
@@ -12073,6 +12151,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/metamask@1.25.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)':
@@ -12091,6 +12170,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/react-hooks@1.19.1(@dynamic-labs-sdk/client@1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6))(@tanstack/react-query@5.90.16(react@19.1.6))(react@19.1.6)':
@@ -12150,6 +12230,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12197,6 +12278,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12356,6 +12438,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12380,6 +12463,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - utf-8-validate
 
@@ -12403,6 +12487,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - utf-8-validate
 
@@ -12427,6 +12512,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/ton@1.25.0(@dynamic-labs-wallet/primitives@1.0.79)(@ton/core@0.62.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(@ton/ton@16.0.0(@ton/core@0.62.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))(@tonconnect/sdk@3.4.0)(@tonconnect/ui@2.4.0)(bufferutil@4.1.0)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(utf-8-validate@6.0.6)':
@@ -12450,6 +12536,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - utf-8-validate
 
   '@dynamic-labs-sdk/tron@1.19.1(@dynamic-labs-wallet/primitives@1.0.79)(@types/react@19.2.5)(@upstash/redis@1.34.8)(@vercel/blob@2.4.1)(bufferutil@4.1.0)(ioredis@5.6.1)(react-dom@19.1.6(react@19.1.6))(react@19.1.6)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)':
@@ -12491,6 +12578,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12529,6 +12617,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12566,6 +12655,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12607,6 +12697,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12648,6 +12739,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12689,6 +12781,7 @@ snapshots:
       - react-native-inappbrowser-reborn
       - react-native-keychain
       - react-native-passkey
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12728,6 +12821,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12768,6 +12862,7 @@ snapshots:
       - ioredis
       - react
       - react-dom
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -12832,6 +12927,7 @@ snapshots:
     transitivePeerDependencies:
       - '@dynamic-labs-wallet/forward-mpc-client'
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/browser-wallet-client@0.0.351(@dynamic-labs-wallet/forward-mpc-client@0.9.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0))':
     dependencies:
@@ -12841,6 +12937,7 @@ snapshots:
     transitivePeerDependencies:
       - '@dynamic-labs-wallet/forward-mpc-client'
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/browser-wallet-client@1.0.46(@dynamic-labs-wallet/forward-mpc-client@0.12.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
@@ -12850,6 +12947,7 @@ snapshots:
     transitivePeerDependencies:
       - '@dynamic-labs-wallet/forward-mpc-client'
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/browser-wallet-client@1.0.79(@dynamic-labs-wallet/forward-mpc-client@1.0.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
@@ -12859,45 +12957,50 @@ snapshots:
     transitivePeerDependencies:
       - '@dynamic-labs-wallet/forward-mpc-client'
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/core@0.0.325(@dynamic-labs-wallet/forward-mpc-client@1.0.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0))':
     dependencies:
       '@dynamic-labs-wallet/forward-mpc-client': 1.0.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
       '@dynamic-labs/sdk-api-core': 0.0.900
-      axios: 1.13.6
+      axios: 1.18.1
       uuid: 11.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/core@0.0.351(@dynamic-labs-wallet/forward-mpc-client@0.9.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0))':
     dependencies:
       '@dynamic-labs-wallet/forward-mpc-client': 0.9.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)
       '@dynamic-labs-wallet/primitives': 0.0.351
       '@dynamic-labs/sdk-api-core': 0.0.964
-      axios: 1.13.6
+      axios: 1.18.1
       uuid: 11.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/core@1.0.46(@dynamic-labs-wallet/forward-mpc-client@0.12.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       '@dynamic-labs-wallet/forward-mpc-client': 0.12.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
       '@dynamic-labs-wallet/primitives': 1.0.46
       '@dynamic-labs/sdk-api-core': 0.0.984
-      axios: 1.13.6
+      axios: 1.18.1
       uuid: 11.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/core@1.0.79(@dynamic-labs-wallet/forward-mpc-client@1.0.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       '@dynamic-labs-wallet/forward-mpc-client': 1.0.1(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
       '@dynamic-labs-wallet/primitives': 1.0.79
       '@dynamic-labs/sdk-api-core': 0.0.1083
-      axios: 1.13.6
+      axios: 1.18.1
       uuid: 11.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@dynamic-labs-wallet/forward-mpc-client@0.12.0(@dynamic-labs-wallet/primitives@1.0.79)(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
     dependencies:
@@ -13340,12 +13443,13 @@ snapshots:
 
   '@fireblocks/ts-sdk@14.1.0':
     dependencies:
-      axios: 1.13.6
+      axios: 1.18.1
       jsonwebtoken: 9.0.2
       platform: 1.3.6
       uuid: 8.3.2
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@floating-ui/core@1.7.5':
     dependencies:
@@ -15786,13 +15890,14 @@ snapshots:
 
   '@sats-connect/core@0.10.0(valibot@1.1.0(typescript@5.9.3))':
     dependencies:
-      axios: 1.13.6
+      axios: 1.18.1
       bitcoin-address-validation: 3.0.0
       buffer: 6.0.3
       jsontokens: 4.0.1
       valibot: 1.1.0(typescript@5.9.3)
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@sats-connect/make-default-provider-config@0.0.10(@sats-connect/core@0.10.0(valibot@1.1.0(typescript@5.9.3)))(typescript@5.9.3)':
     dependencies:
@@ -15917,6 +16022,10 @@ snapshots:
     dependencies:
       '@solana/kit': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
 
+  '@solana-program/system@0.8.1(@solana/kit@3.0.3(typescript@5.9.3))':
+    dependencies:
+      '@solana/kit': 3.0.3(typescript@5.9.3)
+
   '@solana-program/token@0.6.0(@solana/kit@3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@6.0.6)))':
     dependencies:
       '@solana/kit': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@6.0.6))
@@ -15932,6 +16041,10 @@ snapshots:
   '@solana-program/token@0.6.0(@solana/kit@3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6)))':
     dependencies:
       '@solana/kit': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+
+  '@solana-program/token@0.6.0(@solana/kit@3.0.3(typescript@5.9.3))':
+    dependencies:
+      '@solana/kit': 3.0.3(typescript@5.9.3)
 
   '@solana/accounts@3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)':
     dependencies:
@@ -16194,6 +16307,32 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - ws
 
+  '@solana/kit@3.0.3(typescript@5.9.3)':
+    dependencies:
+      '@solana/accounts': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/addresses': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/codecs': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/errors': 3.0.3(typescript@5.9.3)
+      '@solana/functional': 3.0.3(typescript@5.9.3)
+      '@solana/instruction-plans': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/instructions': 3.0.3(typescript@5.9.3)
+      '@solana/keys': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/programs': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/rpc': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/rpc-parsed-types': 3.0.3(typescript@5.9.3)
+      '@solana/rpc-spec-types': 3.0.3(typescript@5.9.3)
+      '@solana/rpc-subscriptions': 3.0.3(typescript@5.9.3)
+      '@solana/rpc-types': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/signers': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/sysvars': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/transaction-confirmation': 3.0.3(typescript@5.9.3)
+      '@solana/transaction-messages': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/transactions': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+      - ws
+
   '@solana/kit@3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       '@solana/accounts': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
@@ -16320,7 +16459,7 @@ snapshots:
       typescript: 5.9.3
       ws: 8.18.3(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
-  '@solana/rpc-subscriptions-channel-websocket@3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0))':
+  '@solana/rpc-subscriptions-channel-websocket@3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       '@solana/errors': 3.0.3(typescript@5.9.3)
       '@solana/functional': 3.0.3(typescript@5.9.3)
@@ -16381,7 +16520,25 @@ snapshots:
       '@solana/promises': 3.0.3(typescript@5.9.3)
       '@solana/rpc-spec-types': 3.0.3(typescript@5.9.3)
       '@solana/rpc-subscriptions-api': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
-      '@solana/rpc-subscriptions-channel-websocket': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0))
+      '@solana/rpc-subscriptions-channel-websocket': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+      '@solana/rpc-subscriptions-spec': 3.0.3(typescript@5.9.3)
+      '@solana/rpc-transformers': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/rpc-types': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/subscribable': 3.0.3(typescript@5.9.3)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+      - ws
+
+  '@solana/rpc-subscriptions@3.0.3(typescript@5.9.3)':
+    dependencies:
+      '@solana/errors': 3.0.3(typescript@5.9.3)
+      '@solana/fast-stable-stringify': 3.0.3(typescript@5.9.3)
+      '@solana/functional': 3.0.3(typescript@5.9.3)
+      '@solana/promises': 3.0.3(typescript@5.9.3)
+      '@solana/rpc-spec-types': 3.0.3(typescript@5.9.3)
+      '@solana/rpc-subscriptions-api': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/rpc-subscriptions-channel-websocket': 3.0.3(typescript@5.9.3)(ws@8.18.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@solana/rpc-subscriptions-spec': 3.0.3(typescript@5.9.3)
       '@solana/rpc-transformers': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@solana/rpc-types': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
@@ -16399,7 +16556,7 @@ snapshots:
       '@solana/promises': 3.0.3(typescript@5.9.3)
       '@solana/rpc-spec-types': 3.0.3(typescript@5.9.3)
       '@solana/rpc-subscriptions-api': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
-      '@solana/rpc-subscriptions-channel-websocket': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0))
+      '@solana/rpc-subscriptions-channel-websocket': 3.0.3(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@solana/rpc-subscriptions-spec': 3.0.3(typescript@5.9.3)
       '@solana/rpc-transformers': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@solana/rpc-types': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
@@ -16635,6 +16792,23 @@ snapshots:
       '@solana/promises': 3.0.3(typescript@5.9.3)
       '@solana/rpc': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@solana/rpc-subscriptions': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.20.1(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+      '@solana/rpc-types': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/transaction-messages': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/transactions': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+      - ws
+
+  '@solana/transaction-confirmation@3.0.3(typescript@5.9.3)':
+    dependencies:
+      '@solana/addresses': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/codecs-strings': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/errors': 3.0.3(typescript@5.9.3)
+      '@solana/keys': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/promises': 3.0.3(typescript@5.9.3)
+      '@solana/rpc': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/rpc-subscriptions': 3.0.3(typescript@5.9.3)
       '@solana/rpc-types': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@solana/transaction-messages': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@solana/transactions': 3.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
@@ -17072,13 +17246,14 @@ snapshots:
     dependencies:
       '@ton/core': 0.62.0(@ton/crypto@3.3.0)
       '@ton/crypto': 3.3.0
-      axios: 1.13.6
+      axios: 1.18.1
       dataloader: 2.2.3
       symbol.inspect: 1.0.1
       teslabot: 1.5.0
       zod: 3.25.76
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   '@tonconnect/isomorphic-eventsource@0.0.2':
     dependencies:
@@ -17124,6 +17299,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-abstract-adapter@1.2.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17133,6 +17309,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-backpack@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17141,6 +17318,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-binance-evm@1.2.0':
@@ -17178,6 +17356,7 @@ snapshots:
       - encoding
       - ioredis
       - react
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -17190,6 +17369,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-bybit@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17199,6 +17379,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-foxwallet@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17208,6 +17389,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-gatewallet@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17217,6 +17399,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-guarda@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17226,6 +17409,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-imtoken@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17235,6 +17419,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-ledger@1.1.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17251,6 +17436,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-metamask-evm@1.1.0':
@@ -17264,6 +17450,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-okxwallet-evm@1.1.0':
@@ -17277,6 +17464,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-onekey@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17286,6 +17474,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-tokenpocket@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17295,6 +17484,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-tomowallet@1.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
@@ -17304,6 +17494,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-tronlink-evm@1.2.0':
@@ -17316,6 +17507,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-trust-evm@1.1.0':
@@ -17329,6 +17521,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   '@tronweb3/tronwallet-adapter-walletconnect@3.0.4(@types/react@19.2.5)(@upstash/redis@1.34.8)(@vercel/blob@2.4.1)(bufferutil@4.1.0)(ioredis@5.6.1)(react@19.1.6)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)':
@@ -17361,6 +17554,7 @@ snapshots:
       - encoding
       - ioredis
       - react
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -17414,6 +17608,7 @@ snapshots:
       - encoding
       - ioredis
       - react
+      - supports-color
       - typescript
       - uploadthing
       - utf-8-validate
@@ -19059,6 +19254,12 @@ snapshots:
 
   aes-js@4.0.0-beta.5: {}
 
+  agent-base@6.0.2:
+    dependencies:
+      debug: 4.4.3
+    transitivePeerDependencies:
+      - supports-color
+
   agent-base@7.1.4: {}
 
   agentkeepalive@4.6.0:
@@ -19194,18 +19395,20 @@ snapshots:
 
   axe-core@4.11.3: {}
 
-  axios-retry@4.5.0(axios@1.13.6):
+  axios-retry@4.5.0(axios@1.18.1):
     dependencies:
-      axios: 1.13.6
+      axios: 1.18.1
       is-retry-allowed: 2.2.0
 
-  axios@1.13.6:
+  axios@1.18.1:
     dependencies:
       follow-redirects: 1.16.0
       form-data: 4.0.5
-      proxy-from-env: 1.1.0
+      https-proxy-agent: 5.0.1
+      proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   axobject-query@4.1.0: {}
 
@@ -20521,6 +20724,13 @@ snapshots:
     dependencies:
       quick-lru: 5.1.1
       resolve-alpn: 1.2.1
+
+  https-proxy-agent@5.0.1:
+    dependencies:
+      agent-base: 6.0.2
+      debug: 4.4.3
+    transitivePeerDependencies:
+      - supports-color
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -21850,7 +22060,7 @@ snapshots:
 
   proxy-compare@3.0.1: {}
 
-  proxy-from-env@1.1.0: {}
+  proxy-from-env@2.1.0: {}
 
   psl@1.15.0:
     dependencies:
@@ -22164,6 +22374,7 @@ snapshots:
       valibot: 1.1.0(typescript@5.9.3)
     transitivePeerDependencies:
       - debug
+      - supports-color
       - typescript
 
   saxes@6.0.0:
@@ -22610,7 +22821,7 @@ snapshots:
   tronweb@6.1.1(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     dependencies:
       '@babel/runtime': 7.26.10
-      axios: 1.13.6
+      axios: 1.18.1
       bignumber.js: 9.1.2
       ethereum-cryptography: 2.2.1
       ethers: 6.13.5(bufferutil@4.1.0)(utf-8-validate@6.0.6)
@@ -22621,12 +22832,13 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   tronweb@6.2.2(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     dependencies:
       '@babel/runtime': 7.26.10
-      axios: 1.13.6
+      axios: 1.18.1
       bignumber.js: 9.1.2
       ethereum-cryptography: 2.2.1
       ethers: 6.13.5(bufferutil@4.1.0)(utf-8-validate@6.0.6)
@@ -22637,6 +22849,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - debug
+      - supports-color
       - utf-8-validate
 
   ts-algebra@2.0.0: {}

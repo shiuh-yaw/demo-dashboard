@@ -34,7 +34,7 @@
   "pnpm": {
     "overrides": {
       "ufo": "1.6.2",
-      "axios": "1.13.6",
+      "axios": "1.18.1",
       "next": "15.5.22",
       "react": "19.1.6",
       "react-dom": "19.1.6",
