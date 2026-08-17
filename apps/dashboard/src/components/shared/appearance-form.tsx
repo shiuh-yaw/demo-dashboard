@@ -232,6 +232,7 @@ export function AppearanceForm({
               previewBackground={
                 theme.pageBackground || DEFAULT_APPEARANCE_THEME.pageBackground
               }
+              websiteUrl={companyUrl}
             />
           )}
           {!hideShowPoweredBy && (

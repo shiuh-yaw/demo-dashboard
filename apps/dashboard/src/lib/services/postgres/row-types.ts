@@ -46,7 +46,8 @@ export interface TeamMembershipRow {
 
 export interface ProspectRow {
   id: string;
-  ownerId: string;
+  /** Null for an AUTO prospect nobody has claimed yet. */
+  ownerId: string | null;
   teamId: string | null;
   createdById: string | null;
   status: string;

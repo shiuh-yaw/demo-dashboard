@@ -17,6 +17,7 @@
  */
 
 import { prisma as defaultPrisma } from "@dynamic-demos/db";
+import { readStoredCompany } from "@/lib/enrichment/stored";
 import {
   isProspectInReadScope,
   type AnalyticsReadScope,
@@ -25,6 +26,9 @@ import {
   type CatalogFunnel,
   type CatalogDemoTimeseriesPoint,
   type ContactCompany,
+  type ContactsFilter,
+  type ContactDemoSummary,
+  type ContactDetail,
   type ContactView,
   type DemoConfigKind,
   type DemoKindTimeseriesPoint,
@@ -101,6 +105,9 @@ export interface AnalyticsSessionWhere {
       name?: string;
     };
   };
+  /** Alternatives at the top level - used by the contacts read to accept a
+   * scoped prospect OR an unattributed (share-link-less) session. */
+  OR?: AnalyticsSessionWhere[];
 }
 
 /**
@@ -118,6 +125,23 @@ export interface AnalyticsPrismaClient {
     }): Promise<AnalyticsSessionRow[]>;
     count(args: { where: AnalyticsSessionWhere }): Promise<number>;
   };
+  /** Optional so existing session-only fakes stay valid; domain-matched
+   * attribution is skipped when absent. */
+  prospect?: {
+    findUnique(args: {
+      where: { id: string };
+      select: { domain: true };
+    }): Promise<{ domain: string | null } | null>;
+    findFirst(args: {
+      where: { domain: string };
+      select: { id: true };
+    }): Promise<{ id: string } | null>;
+  };
+}
+
+/** Domain half of an email address, lowercased. */
+function emailDomainOf(email: string | null | undefined): string | null {
+  return email?.split("@")[1]?.trim().toLowerCase() || null;
 }
 
 const INCLUDE = { shareLink: true, events: true } as const;
@@ -183,6 +207,28 @@ function orgScopeWhere(
   const days = RANGE_DAYS[range];
   if (days != null) where.startedAt = { gte: new Date(now.getTime() - days * DAY_MS) };
   return where;
+}
+
+/**
+ * Contacts-scope where clause. Unlike `orgScopeWhere` above, this ALSO matches
+ * sessions with no share link - a viewer who opened a demo directly rather than
+ * through a share link belongs to no prospect, but is still a person who tried
+ * the product. Those sessions were previously dropped, so a lead could post to
+ * Slack (which only needs an authenticated email) and never appear on the
+ * Contacts page.
+ *
+ * Deliberately separate from `orgScopeWhere`: the analytics aggregates are
+ * per-prospect engagement measures and stay share-link-only, so widening the
+ * contacts read does not silently move every number on the Analytics page.
+ */
+function contactsScopeWhere(scope: AnalyticsReadScope): AnalyticsSessionWhere {
+  if (scope === "all") return { isInternal: false };
+  // Unattributed sessions are visible to every operator - they belong to no
+  // prospect, so no prospect scope can grant or withhold them.
+  return {
+    isInternal: false,
+    OR: [{ shareLink: { prospectId: { in: [...scope] } } }, { shareLinkId: null }],
+  };
 }
 
 /**
@@ -345,35 +391,6 @@ function buildCatalogDemoTimeseries(
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-/**
- * Defensive enrichment reader. Phase 10 writes `enrichment` as opaque Json;
- * this tolerates several plausible shapes (`{ company: { name, domain } }`,
- * `{ company: "Acme" }`, `{ companyName, companyDomain }`, ipinfo `{ org }`)
- * and returns null when nothing company-like is present. Raw IP / geo are
- * never read here.
- */
-function readCompany(enrichment: unknown): ContactCompany | null {
-  if (!enrichment || typeof enrichment !== "object") return null;
-  const e = enrichment as Record<string, unknown>;
-  let name: string | null = null;
-  let domain: string | null = null;
-
-  const c = e.company;
-  if (typeof c === "string") {
-    name = c;
-  } else if (c && typeof c === "object") {
-    const co = c as Record<string, unknown>;
-    if (typeof co.name === "string") name = co.name;
-    if (typeof co.domain === "string") domain = co.domain;
-  }
-  if (!name && typeof e.companyName === "string") name = e.companyName;
-  if (!domain && typeof e.companyDomain === "string") domain = e.companyDomain;
-  if (!name && typeof e.org === "string") name = e.org;
-
-  if (!name && !domain) return null;
-  return { name: name ?? null, domain: domain ?? null };
-}
-
 /** Pull captured identity from the `authenticated` milestone props. */
 function readIdentity(row: AnalyticsSessionRow): {
   email: string | null;
@@ -413,7 +430,7 @@ function toSessionView(row: AnalyticsSessionRow): VisitorSessionView {
     anonId: row.anonId,
     startedAt: toIso(row.startedAt),
     lastSeenAt: toIso(row.lastSeenAt),
-    company: readCompany(row.enrichment),
+    company: readStoredCompany(row.enrichment),
     email: identity.email,
     dynamicUserId: identity.dynamicUserId,
     milestones: readMilestones(row),
@@ -452,6 +469,74 @@ function groupSessionsByContact<T extends VisitorSessionView>(
 }
 
 /**
+ * Per-demo engagement for one contact. Duration is wall-clock between a
+ * session's first and last event, the same measure `avgDurationSec` uses
+ * elsewhere; "furthest milestone" is the last entry of the first-seen-ordered
+ * list, so it reads as how deep into the demo they actually got.
+ */
+function summarizeDemos(
+  sessions: readonly VisitorSessionView[],
+): ContactDemoSummary[] {
+  const byDemo = new Map<string, VisitorSessionView[]>();
+  for (const s of sessions) {
+    const list = byDemo.get(s.demoSlug);
+    if (list) list.push(s);
+    else byDemo.set(s.demoSlug, [s]);
+  }
+
+  const out: ContactDemoSummary[] = [];
+  for (const [demoSlug, group] of byDemo) {
+    let totalMs = 0;
+    for (const s of group) {
+      totalMs += Math.max(
+        0,
+        new Date(s.lastSeenAt).getTime() - new Date(s.startedAt).getTime(),
+      );
+    }
+    const milestones = group.flatMap((s) => s.milestones);
+    out.push({
+      demoSlug,
+      sessions: group.length,
+      totalDurationSec: Math.round(totalMs / 1000),
+      avgDurationSec: Math.round(totalMs / group.length / 1000),
+      lastViewedAt: group
+        .map((s) => s.lastSeenAt)
+        .reduce((max, v) => (v > max ? v : max)),
+      furthestMilestone: milestones[milestones.length - 1] ?? null,
+    });
+  }
+  return out.sort((a, b) => b.lastViewedAt.localeCompare(a.lastViewedAt));
+}
+
+/**
+ * Picks the company to show for a contact. One `anonId` can authenticate as
+ * two different people (same browser, two logins), and those sessions merge
+ * into one group - so taking the first non-null company can surface the OTHER
+ * person's employer. When the contact has an email, only a company whose domain
+ * matches it counts; a domainless result (legacy enrichment stored no domain)
+ * is accepted since there is nothing to contradict. An anonymous contact has
+ * no identity to cross-check, so any company it carries stands.
+ */
+function pickContactCompany(
+  email: string | null,
+  group: readonly VisitorSessionView[],
+): ContactCompany | null {
+  const companies = group
+    .map((v) => v.company)
+    .filter((c): c is ContactCompany => Boolean(c));
+  if (companies.length === 0) return null;
+
+  const emailDomain = email?.split("@")[1]?.toLowerCase();
+  if (!emailDomain) return companies[0]!;
+
+  return (
+    companies.find((c) => c.domain?.toLowerCase() === emailDomain) ??
+    companies.find((c) => !c.domain) ??
+    null
+  );
+}
+
+/**
  * Aggregate fields shared by `ContactView` and `OrgContactView` - the single
  * grouping-to-view projection both `listProspectContacts` and
  * `listAllContacts` build on, so the aggregate math (first/last seen, demo
@@ -463,7 +548,7 @@ function contactViewFromGroup(
   group: VisitorSessionView[],
 ): ContactView {
   const email = group.map((v) => v.email).find(Boolean) ?? null;
-  const company = group.map((v) => v.company).find(Boolean) ?? null;
+  const company = pickContactCompany(email, group);
   const firstSeenAt = group
     .map((v) => v.startedAt)
     .reduce((min, s) => (s < min ? s : min));
@@ -478,7 +563,9 @@ function contactViewFromGroup(
  * (cross-prospect) contacts reads need this; per-prospect reads already know
  * the prospect from their input. */
 interface ScopedSessionView extends VisitorSessionView {
-  prospectId: string;
+  /** Null for an unattributed session - the viewer opened the demo directly
+   * rather than through a share link, so it belongs to no prospect. */
+  prospectId: string | null;
 }
 
 export class PostgresAnalyticsService implements AnalyticsService {
@@ -487,6 +574,55 @@ export class PostgresAnalyticsService implements AnalyticsService {
   constructor(client?: AnalyticsPrismaClient) {
     this.client =
       client ?? (defaultPrisma as unknown as AnalyticsPrismaClient);
+  }
+
+  /**
+   * Sessions that belong to a prospect by COMPANY DOMAIN rather than by share
+   * link. An inbound lead arrives with no share link, so `shareLink.prospectId`
+   * - the only attribution the schema carries - is null forever, and the
+   * auto-created prospect showed "No Viewers Yet" while the contact showed
+   * "belongs to no prospect yet". Matched on the captured email's domain,
+   * which is the same key the prospect was created from.
+   */
+  private async findByProspectDomain(
+    prospectId: string,
+  ): Promise<AnalyticsSessionRow[]> {
+    if (!this.client.prospect) return [];
+    const prospect = await this.client.prospect.findUnique({
+      where: { id: prospectId },
+      select: { domain: true },
+    });
+    const domain = prospect?.domain?.trim().toLowerCase();
+    if (!domain) return [];
+
+    const rows = await this.client.visitorSession.findMany({
+      where: { isInternal: false, shareLinkId: null },
+      include: INCLUDE,
+    });
+    // Resolved through the view, not the raw column: identity also arrives on
+    // the `authenticated` milestone, and matching only `identifiedEmail`
+    // silently misses those sessions.
+    return rows.filter((r) => {
+      const view = toSessionView(r);
+      return (
+        emailDomainOf(view.identifiedEmail) === domain ||
+        emailDomainOf(view.email) === domain
+      );
+    });
+  }
+
+  /** The prospect owning a contact's email domain, if one exists. The contact
+   * key IS the captured email when the viewer identified. */
+  private async prospectIdForEmailDomain(
+    contactKey: string,
+  ): Promise<string | null> {
+    const domain = emailDomainOf(contactKey);
+    if (!domain || !this.client.prospect) return null;
+    const match = await this.client.prospect.findFirst({
+      where: { domain },
+      select: { id: true },
+    });
+    return match?.id ?? null;
   }
 
   private findByProspect(
@@ -677,7 +813,15 @@ export class PostgresAnalyticsService implements AnalyticsService {
     scope: AnalyticsReadScope,
   ): Promise<ContactView[]> {
     if (!isProspectInReadScope(scope, prospectId)) return [];
-    const views = (await this.findByProspect(prospectId)).map(toSessionView);
+    const [linked, byDomain] = await Promise.all([
+      this.findByProspect(prospectId),
+      this.findByProspectDomain(prospectId),
+    ]);
+    const seen = new Set(linked.map((r) => r.id));
+    const views = [
+      ...linked,
+      ...byDomain.filter((r) => !seen.has(r.id)),
+    ].map(toSessionView);
     const byContact = groupSessionsByContact(views);
     const contacts = Array.from(byContact.entries()).map(([key, group]) =>
       contactViewFromGroup(key, group),
@@ -706,29 +850,40 @@ export class PostgresAnalyticsService implements AnalyticsService {
     scope: AnalyticsReadScope,
   ): Promise<Map<string, ScopedSessionView[]>> {
     const rows = await this.client.visitorSession.findMany({
-      where: orgScopeWhere(scope),
+      where: contactsScopeWhere(scope),
       include: INCLUDE,
     });
-    const views: ScopedSessionView[] = rows
-      .filter((r) => r.shareLink != null)
-      .map((r) => ({ ...toSessionView(r), prospectId: r.shareLink!.prospectId }));
+    const views: ScopedSessionView[] = rows.map((r) => ({
+      ...toSessionView(r),
+      prospectId: r.shareLink?.prospectId ?? null,
+    }));
     return groupSessionsByContact(views);
   }
 
   async listAllContacts(
     scope: AnalyticsReadScope,
     page?: PageOptions,
+    filter?: ContactsFilter,
   ): Promise<Page<OrgContactView>> {
     const limit = clampLimit(page?.limit);
     const byContact = await this.scopedContactGroups(scope);
 
-    const all: OrgContactView[] = Array.from(byContact.entries()).map(
-      ([key, group]) => ({
+    const all: OrgContactView[] = Array.from(byContact.entries())
+      .filter(
+        // Applied before pagination so pages stay full and the cursor holds.
+        ([, group]) =>
+          filter?.includeAnonymous !== false ||
+          group.some((v) => v.email !== null),
+      )
+      .map(([key, group]) => ({
         ...contactViewFromGroup(key, group),
         id: key,
-        prospectIds: Array.from(new Set(group.map((v) => v.prospectId))).sort(),
-      }),
-    );
+        // Unattributed sessions contribute no prospect; a contact seen only
+        // that way has an empty list, which the UI labels "Direct".
+        prospectIds: Array.from(
+          new Set(group.map((v) => v.prospectId).filter((p): p is string => p !== null)),
+        ).sort(),
+      }));
     // Newest-first, same order as listProspectContacts; ties broken by id so
     // the cursor position is deterministic across calls.
     all.sort(
@@ -754,6 +909,39 @@ export class PostgresAnalyticsService implements AnalyticsService {
   ): Promise<VisitorSessionView[]> {
     const group = (await this.scopedContactGroups(scope)).get(contactKey) ?? [];
     return [...group].sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt));
+  }
+
+  async getContactDetail(
+    contactKey: string,
+    scope: AnalyticsReadScope,
+  ): Promise<ContactDetail | null> {
+    const group = (await this.scopedContactGroups(scope)).get(contactKey);
+    // Out of scope or no such contact - the caller renders a 404 either way,
+    // so an unknown key never reveals whether the contact exists elsewhere.
+    if (!group || group.length === 0) return null;
+
+    const sessions = [...group].sort((a, b) =>
+      b.lastSeenAt.localeCompare(a.lastSeenAt),
+    );
+    const linkedIds = new Set(
+      sessions.map((s) => s.prospectId).filter((p): p is string => p !== null),
+    );
+    // No share link means no attribution in the schema, but an inbound lead
+    // still has a company - and that company now has a prospect. Resolve it
+    // by domain so the contact links to it instead of reading "Direct".
+    if (linkedIds.size === 0) {
+      const byDomain = await this.prospectIdForEmailDomain(contactKey);
+      if (byDomain) linkedIds.add(byDomain);
+    }
+    return {
+      contact: {
+        ...contactViewFromGroup(contactKey, sessions),
+        id: contactKey,
+        prospectIds: Array.from(linkedIds).sort(),
+      },
+      sessions,
+      demos: summarizeDemos(sessions),
+    };
   }
 
   async prospectTimeseries(

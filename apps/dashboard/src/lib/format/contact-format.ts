@@ -7,7 +7,11 @@
  * node environment, unlike the client components that consume it.
  */
 
-import type { ContactView, VisitorSessionView } from "@/lib/services";
+import type {
+  ContactCompany,
+  ContactView,
+  VisitorSessionView,
+} from "@/lib/services";
 
 export function formatShortDate(iso: string): string {
   const d = new Date(iso);
@@ -45,8 +49,13 @@ export function formatDuration(startedAt: string, lastSeenAt: string): string {
  * sessions with no milestone events. */
 export function milestoneLabel(session: VisitorSessionView): string {
   const last = session.milestones[session.milestones.length - 1];
-  if (!last) return "Viewed";
-  return last
+  return formatMilestoneName(last);
+}
+
+/** Raw milestone event name -> display text; "Viewed" for none. */
+export function formatMilestoneName(raw: string | null | undefined): string {
+  if (!raw) return "Viewed";
+  return raw
     .split(/[-_]/)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
@@ -54,4 +63,14 @@ export function milestoneLabel(session: VisitorSessionView): string {
 
 export function companyLabel(contact: ContactView): string {
   return contact.company?.name ?? contact.company?.domain ?? "Unknown company";
+}
+
+/** Industry + employee band as one line ("Banking · 1001-5000 employees").
+ * Empty string when the enrichment carried neither. */
+export function companyProfileLine(company: ContactCompany | null): string {
+  if (!company) return "";
+  const parts: string[] = [];
+  if (company.industry) parts.push(company.industry);
+  if (company.sizeBand) parts.push(`${company.sizeBand} employees`);
+  return parts.join(" · ");
 }

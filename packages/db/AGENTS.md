@@ -107,13 +107,18 @@ Redis. If a demo app needs data, add an endpoint under
 
 - `DATABASE_URL` - Supabase pooler URL, port 6543, runtime - required
 - `DIRECT_URL` - Supabase direct URL, port 5432, migrations only - required
-- On a Vercel preview branch, `client.ts` falls back to `POSTGRES_PRISMA_URL`
-  (injected by the Supabase branch integration) when `DATABASE_URL` is unset,
-  so runtime targets the per-PR branch DB. Prod/local always set `DATABASE_URL`
-  and never hit the fallback.
+- On a Vercel preview branch, `POSTGRES_PRISMA_URL` (injected by the Supabase
+  branch integration) takes precedence over `DATABASE_URL` in both `client.ts`
+  and `scripts/db-build.sh`, so runtime, migrations and the seed all target the
+  per-PR branch DB even if a `DATABASE_URL` reaches Preview scope. Prod/local
+  use `DATABASE_URL`.
 - `prisma/seed.ts` (`pnpm prisma:seed`) seeds synthetic, idempotent fixtures.
-  It refuses to run unless `VERCEL_ENV=preview` or `ALLOW_SEED=true` - a guard
-  because `.env.local` points at prod. Never seeds production.
+  `src/seed-guard.ts` refuses unless the resolved CONNECTION is provably
+  disposable: on a preview it must be the injected branch DB, and anywhere else
+  `ALLOW_SEED` must equal the target's Supabase project ref (`ALLOW_SEED=true`
+  is rejected - it passed no matter where `DATABASE_URL` pointed, which is how
+  production once got seeded). The refusal message prints the exact value to
+  set. Never seeds production.
 
 D-013: the pooler URL is mandatory at runtime to avoid exhausting
 serverless connections; the direct URL is mandatory for migrations because

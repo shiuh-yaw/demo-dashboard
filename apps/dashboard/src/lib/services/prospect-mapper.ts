@@ -66,7 +66,7 @@ export function prospectToProfile(prospect: Prospect): ProspectProfile {
     companyUrl: prospect.companyUrl ?? undefined,
     prospect: settings,
     demos: {},
-    ownerId: prospect.ownerId,
+    ownerId: prospect.ownerId ?? undefined,
     createdById: prospect.createdById,
     teamId: prospect.teamId,
     createdAt: prospect.createdAt.toISOString(),

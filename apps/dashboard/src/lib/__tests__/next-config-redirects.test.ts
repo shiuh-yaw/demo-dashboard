@@ -31,4 +31,22 @@ describe("next.config redirects", () => {
       permanent: true,
     });
   });
+
+  it("redirects the retired prospect list to the Overview", async () => {
+    const redirects = await nextConfig.redirects!();
+
+    expect(
+      redirects.find((r) => r.source === "/dashboard/prospects"),
+    ).toMatchObject({ destination: "/dashboard", permanent: true });
+  });
+
+  it("leaves the prospect hub and the create page alone", async () => {
+    const redirects = await nextConfig.redirects!();
+    const sources = redirects.map((r) => r.source);
+
+    // An over-broad source here would swallow every hub route, so the
+    // absence of a wildcard is the actual assertion.
+    expect(sources).not.toContain("/dashboard/prospects/:path*");
+    expect(sources).not.toContain("/dashboard/prospects/:id");
+  });
 });

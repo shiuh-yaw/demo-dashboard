@@ -10,7 +10,8 @@ import type { WidgetConfig } from "@/lib/widget-config";
 type AiStyleImportProps = {
   config: WidgetConfig;
   setConfig: React.Dispatch<React.SetStateAction<WidgetConfig | null>>;
-  setToast: (message: string) => void;
+  /** `ok` false means the import failed - callers MUST NOT render it as success. */
+  setToast: (message: string, ok?: boolean) => void;
   /** Pre-filled company URL - when provided, shows simplified UI */
   companyUrl?: string;
 };
@@ -52,10 +53,13 @@ export function AiStyleImport({
             }
           : prev
       );
-      setToast("Theme imported successfully!");
+      setToast("Theme imported successfully!", true);
     } catch (err) {
       console.error("Failed to import theme:", err);
-      setToast(err instanceof Error ? err.message : "Failed to import theme");
+      setToast(
+        err instanceof Error ? err.message : "Failed to import theme",
+        false,
+      );
     } finally {
       setIsImporting(false);
     }

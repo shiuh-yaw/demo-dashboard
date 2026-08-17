@@ -6,4 +6,8 @@ export class StubContactService implements ContactService {
   async recordSighting(): Promise<RecordSightingResult> {
     throw new Error("ContactService requires a database");
   }
+
+  async listEmails(): Promise<string[]> {
+    throw new Error("ContactService requires a database");
+  }
 }

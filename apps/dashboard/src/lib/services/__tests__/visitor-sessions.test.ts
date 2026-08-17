@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import type { EnrichmentResult } from "@/lib/enrichment/types";
 import { PostgresVisitorSessionService } from "@/lib/services/postgres/visitor-sessions";
 import type {
   TrackBatchInput,
@@ -13,6 +14,13 @@ import type {
 } from "@/lib/services/types";
 
 import { createFakeVisitorSessionPrisma } from "./fake-prisma-visitor-sessions";
+
+const SAMPLE_ENRICHMENT: EnrichmentResult = {
+  company: { name: "Acme Corp", domain: "acme.com" },
+  provider: "ipinfo",
+  confidence: "medium",
+  enrichedAt: "2026-01-01T00:00:00.000Z",
+};
 
 const baseMeta: VisitorSessionMeta = {
   geo: { country: "US", region: "NY", city: "New York" },
@@ -218,6 +226,173 @@ describe("PostgresVisitorSessionService", () => {
     // makeBatch()'s event ts (1_000) is newer than the raced-in row's
     // lastSeenAt (500), so it should still advance forward.
     expect(session!.lastSeenAt.getTime()).toBe(1_000);
+  });
+
+  describe("setEnrichment (Phase GTM-10 write-once)", () => {
+    it("writes the result onto a session with null enrichment", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(makeBatch(), baseMeta);
+
+      await svc.setEnrichment(
+        "11111111-1111-1111-1111-111111111111",
+        SAMPLE_ENRICHMENT,
+      );
+
+      const session = client.__sessions.get(
+        "11111111-1111-1111-1111-111111111111",
+      );
+      expect(session!.enrichment).toEqual(SAMPLE_ENRICHMENT);
+    });
+
+    it("never overwrites an existing enrichment result (idempotent under retries)", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(makeBatch(), baseMeta);
+      await svc.setEnrichment(
+        "11111111-1111-1111-1111-111111111111",
+        SAMPLE_ENRICHMENT,
+      );
+
+      const secondResult: EnrichmentResult = {
+        company: { name: "Different Corp" },
+        provider: "ipinfo",
+        confidence: "low",
+        enrichedAt: "2026-02-02T00:00:00.000Z",
+      };
+      await svc.setEnrichment(
+        "11111111-1111-1111-1111-111111111111",
+        secondResult,
+      );
+
+      const session = client.__sessions.get(
+        "11111111-1111-1111-1111-111111111111",
+      );
+      expect(session!.enrichment).toEqual(SAMPLE_ENRICHMENT);
+    });
+
+    it("reports false (no write) when the session does not exist", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+
+      await expect(
+        svc.setEnrichment("nonexistent-session", SAMPLE_ENRICHMENT),
+      ).resolves.toBe(false);
+      expect(client.__sessions.size).toBe(0);
+    });
+
+    it("reports true on the write and false on a repeat", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(makeBatch(), baseMeta);
+      const id = "11111111-1111-1111-1111-111111111111";
+
+      await expect(svc.setEnrichment(id, SAMPLE_ENRICHMENT)).resolves.toBe(true);
+      await expect(svc.setEnrichment(id, SAMPLE_ENRICHMENT)).resolves.toBe(false);
+    });
+
+    it("overwrite replaces existing enrichment - the operator-initiated path", async () => {
+      // Without this, a row holding company-less legacy enrichment could never
+      // be repaired: the null-only guard refuses it on every attempt.
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(makeBatch(), baseMeta);
+      const id = "11111111-1111-1111-1111-111111111111";
+      client.__sessions.set(id, {
+        ...client.__sessions.get(id)!,
+        enrichment: { city: "Tel Aviv" },
+      });
+
+      await expect(
+        svc.setEnrichment(id, SAMPLE_ENRICHMENT, { overwrite: true }),
+      ).resolves.toBe(true);
+      expect(client.__sessions.get(id)!.enrichment).toEqual(SAMPLE_ENRICHMENT);
+    });
+  });
+
+  describe("listUnenriched (backfill input)", () => {
+    const SESSION_ID = "11111111-1111-1111-1111-111111111111";
+
+    it("returns sessions that captured an email and have no enrichment", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(
+        makeBatch({ identity: { userId: "user_1", email: "jo@acme.com" } }),
+        baseMeta,
+      );
+
+      expect(await svc.listUnenriched(100)).toEqual([
+        { id: SESSION_ID, email: "jo@acme.com" },
+      ]);
+    });
+
+    it("excludes sessions that never captured an email", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(makeBatch(), baseMeta);
+
+      expect(await svc.listUnenriched(100)).toEqual([]);
+    });
+
+    it("excludes already-enriched sessions so a re-run never pays twice", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(
+        makeBatch({ identity: { userId: "user_1", email: "jo@acme.com" } }),
+        baseMeta,
+      );
+      await svc.setEnrichment(SESSION_ID, SAMPLE_ENRICHMENT);
+
+      expect(await svc.listUnenriched(100)).toEqual([]);
+    });
+
+    it("includes a row whose stored enrichment carries NO company", async () => {
+      // The bug this covers: eligibility asked "is a company readable?" while
+      // the write guard asked "is the column null?". Legacy geo-only
+      // enrichment answered yes/no, so it was enriched and then refused.
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(
+        makeBatch({ identity: { userId: "user_1", email: "jo@acme.com" } }),
+        baseMeta,
+      );
+      const row = client.__sessions.get(SESSION_ID)!;
+      client.__sessions.set(SESSION_ID, {
+        ...row,
+        enrichment: { city: "Tel Aviv", country: "IL" },
+      });
+
+      expect(await svc.listUnenriched(100)).toEqual([
+        { id: SESSION_ID, email: "jo@acme.com" },
+      ]);
+    });
+
+    it("excludes a row whose enrichment carries a company under a legacy shape", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(
+        makeBatch({ identity: { userId: "user_1", email: "jo@acme.com" } }),
+        baseMeta,
+      );
+      const row = client.__sessions.get(SESSION_ID)!;
+      client.__sessions.set(SESSION_ID, {
+        ...row,
+        enrichment: { org: "AS13335 Cloudflare" },
+      });
+
+      expect(await svc.listUnenriched(100)).toEqual([]);
+    });
+
+    it("honours the limit", async () => {
+      const client = createFakeVisitorSessionPrisma();
+      const svc = new PostgresVisitorSessionService(client);
+      await svc.upsertFromBatch(
+        makeBatch({ identity: { userId: "user_1", email: "jo@acme.com" } }),
+        baseMeta,
+      );
+
+      expect(await svc.listUnenriched(0)).toEqual([]);
+    });
   });
 
   it("persists identity on the create path when batch.identity is present", async () => {

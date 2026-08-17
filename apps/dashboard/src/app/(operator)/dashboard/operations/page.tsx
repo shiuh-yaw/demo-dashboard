@@ -13,6 +13,10 @@ import {
   TeamsAdmin,
   type TeamWithMembers,
 } from "./teams/components/teams-admin";
+import {
+  EnrichmentBackfill,
+  ProspectBackfill,
+} from "./components/enrichment-backfill";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +82,8 @@ export default async function AdminPage() {
         initialUsersPage={initialUsersPage}
         actorRole={actor.role}
       />
+      <EnrichmentBackfill />
+      <ProspectBackfill />
     </div>
   );
 }

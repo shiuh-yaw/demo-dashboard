@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   companyLabel,
+  companyProfileLine,
   formatDateTime,
   formatDuration,
   formatShortDate,
@@ -110,5 +111,29 @@ describe("companyLabel", () => {
 
   it("falls back to Unknown company when neither is captured", () => {
     expect(companyLabel(contact(null))).toBe("Unknown company");
+  });
+});
+
+describe("companyProfileLine", () => {
+  it("joins industry and employee band", () => {
+    expect(
+      companyProfileLine({
+        name: "Acme Inc",
+        domain: "acme.com",
+        industry: "Banking",
+        sizeBand: "1001-5000",
+      }),
+    ).toBe("Banking · 1001-5000 employees");
+  });
+
+  it("renders industry alone when no size band was resolved", () => {
+    expect(
+      companyProfileLine({ name: "Acme Inc", domain: null, industry: "Retail" }),
+    ).toBe("Retail");
+  });
+
+  it("is empty for legacy enrichment carrying neither field", () => {
+    expect(companyProfileLine({ name: "Acme Inc", domain: "acme.com" })).toBe("");
+    expect(companyProfileLine(null)).toBe("");
   });
 });

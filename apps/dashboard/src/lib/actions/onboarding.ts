@@ -80,7 +80,7 @@ export async function getGettingStartedState(): Promise<GettingStartedState> {
       hasShare: false,
       dismissed: true,
       canCreateProspect: false,
-      demoHref: "/dashboard/prospects",
+      demoHref: "/dashboard",
     };
   }
 
@@ -108,7 +108,7 @@ export async function getGettingStartedState(): Promise<GettingStartedState> {
     profiles.items[0]?.id;
   const demoHref = demoProspectId
     ? `/dashboard/prospects/${demoProspectId}/demos`
-    : "/dashboard/prospects";
+    : "/dashboard";
 
   return {
     profileComplete: Boolean(user.displayName && user.schedulingUrl),

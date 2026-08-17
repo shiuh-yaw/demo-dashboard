@@ -46,4 +46,6 @@ export const keys = {
   onboardingChecklist: ["onboardingChecklist"] as const,
   /** Prospect-picker combobox options (visibility-scoped) - single value, not a list. */
   prospectOptions: ["prospectOptions"] as const,
+  /** Unassigned inbound count behind the top-bar badge. */
+  inboundCount: ["inboundCount"] as const,
 };

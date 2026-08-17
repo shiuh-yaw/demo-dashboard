@@ -19,13 +19,18 @@ import { toContactRows, type ContactRow } from "./contact-row";
 /** One page of the org-wide contacts list, scoped to the caller's active scope. */
 export async function listAllContactsAction(
   cursor: string | null,
+  includeAnonymous = false,
 ): Promise<Page<ContactRow>> {
   const user = await getSessionUser();
   if (!user) return { items: [], nextCursor: null };
 
   const scope = await resolveActiveScope(user);
   const readScope = await resolveAnalyticsReadScope(user, scope);
-  const page = await services.analytics.listAllContacts(readScope, { cursor });
+  const page = await services.analytics.listAllContacts(
+    readScope,
+    { cursor },
+    { includeAnonymous },
+  );
   return toContactRows(page);
 }
 

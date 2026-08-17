@@ -18,6 +18,7 @@
  */
 
 import { cache } from "react";
+import { Prisma } from "@dynamic-demos/db";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { type ProspectScope } from "@/lib/prospect-scope";
@@ -25,6 +26,7 @@ import {
   getSessionUser,
   canMutateProspect,
   canReassignProspect,
+  isUnclaimedAuto,
   canViewProspect,
   visibleProspectIds,
   prospectScopeWhere,
@@ -34,7 +36,7 @@ import {
 } from "@/lib/auth/gtm";
 import { canCreateRecord } from "@/lib/auth/policy";
 import { normalizeLogoUrl } from "@/lib/normalize-logo";
-import { extractThemeFromUrl } from "@/lib/actions/extract-theme";
+import { importProspectTheme } from "@/lib/prospects/theme-import";
 import { prospectService, services } from "@/lib/services";
 import type { GtmUser, Page, Prospect, Team } from "@/lib/services";
 import { MAX_PAGE_LIMIT } from "@/lib/services/postgres/pagination";
@@ -747,69 +749,22 @@ export async function createProspectProfile(
     // `after()`). Failure is swallowed - the prospect stays valid without
     // branding. Skipped entirely when no website was supplied.
     if (website) {
-      after(async () => {
-        try {
-          const res = await extractThemeFromUrl(website);
-          if (!res.success || !res.data) return;
-          const update = await extractedToProspectUpdate(res.data);
-          if (Object.keys(update).length === 0) return;
-          await prospectService.update(created.id, update);
-          revalidatePath("/dashboard");
-          revalidatePath("/dashboard/prospects");
-          revalidatePath(`/dashboard/prospects/${created.id}`);
-        } catch (err) {
-          console.error(
-            "[prospect-create:theme-import] background import failed",
-            err,
-          );
-        }
-      });
+      after(() =>
+        importProspectTheme(created.id, website, {
+          update: (id, input) => prospectService.update(id, input),
+          revalidate: revalidatePath,
+          logger: { error: (line, err) => console.error(line, err) },
+        }),
+      );
     }
 
     revalidatePath("/dashboard");
-    revalidatePath("/dashboard/prospects");
 
     return { success: true, data: prospectToProfile(created) };
   } catch (err) {
     console.error("Failed to create prospect profile:", err);
     return { success: false, error: "Failed to create prospect profile" };
   }
-}
-
-/**
- * Map an `extractThemeFromUrl` result onto a prospect-row update: derived
- * logo (normalized, best-effort) plus every color/radius token the extractor
- * returned. Only defined fields are written so a partial extraction never
- * blanks existing columns.
- */
-async function extractedToProspectUpdate(data: {
-  theme: Partial<WidgetTheme>;
-  branding: Partial<WidgetBranding>;
-}): Promise<UpdateProspectInput> {
-  const t = data.theme;
-  const update: UpdateProspectInput = {};
-  const logo = data.branding.logo;
-  if (logo) {
-    update.logo = "custom";
-    update.logoUrl = await normalizeLogoUrl(logo);
-  }
-  const set = (key: keyof UpdateProspectInput, value: string | undefined) => {
-    if (value) (update as Record<string, unknown>)[key] = value;
-  };
-  set("primaryColor", t.primaryColor);
-  set("primaryHoverColor", t.primaryHoverColor);
-  set("accentColor", t.accentColor);
-  set("pageBackground", t.pageBackground);
-  set("background", t.background);
-  set("foreground", t.foreground);
-  set("mutedTextColor", t.mutedTextColor);
-  set("borderColor", t.borderColor);
-  set("rowBackground", t.rowBackground);
-  set("rowHoverBackground", t.rowHoverBackground);
-  set("gradientFrom", t.gradientFrom);
-  set("gradientTo", t.gradientTo);
-  set("borderRadius", t.borderRadius);
-  return update;
 }
 
 /**
@@ -959,7 +914,7 @@ export async function updateProspectProfile(
     };
     await updateProspectDemoConfigs(await resolveProspectDemos(id), merged);
 
-    revalidatePath("/dashboard/prospects");
+    revalidatePath("/dashboard");
     // "layout" so the hub header + breadcrumb (rendered in the hub layout)
     // and every sub-tab under this id refresh, not just the settings page.
     revalidatePath(`/dashboard/prospects/${id}`, "layout");
@@ -1020,6 +975,79 @@ export async function reassignProspectOwner(
   } catch (err) {
     console.error("Failed to reassign prospect owner:", err);
     return { success: false, error: "Failed to reassign prospect owner" };
+  }
+}
+
+/**
+ * How many inbound prospects are sitting unassigned - created from a lead's
+ * email domain and owned by nobody. Drives the Overview inbound banner.
+ *
+ * Deliberately NOT scoped: an unclaimed prospect belongs to no operator and no
+ * team, so no scope can grant or withhold it. Anyone who can see the dashboard
+ * can pick one up.
+ */
+export async function countUnassignedProspects(): Promise<number> {
+  const user = await getSessionUser();
+  if (!user || user.role === "VIEWER") return 0;
+  try {
+    const ids = await prospectService.listIds({
+      status: "AUTO",
+      ownerId: null,
+      createdById: null,
+    });
+    return ids.length;
+  } catch (err) {
+    // A banner is never worth failing the page over.
+    console.error("Failed to count unassigned prospects:", err);
+    return 0;
+  }
+}
+
+/**
+ * Claim an unclaimed AUTO prospect - one created from an inbound lead's email
+ * domain, owned by nobody. Any non-VIEWER may take it (see
+ * `canMutateProspect`); claiming records the actor as creator and flips the
+ * status to ACTIVE, which moves the row out of the unclaimed queue and into
+ * the normal Prospects list.
+ *
+ * Deliberately narrow: it refuses anything that is not an unclaimed AUTO row,
+ * so it can never be used to take a legacy orphan or someone else's prospect -
+ * that path stays `reassignProspectOwner`, with its stricter guard.
+ */
+export async function claimProspect(
+  id: string,
+): Promise<ActionResult<ProspectProfile>> {
+  try {
+    const actor = await getSessionUser();
+    if (!actor) {
+      return { success: false, error: "Authentication required" };
+    }
+    if (actor.role === "VIEWER") {
+      return { success: false, error: "Viewers cannot claim prospects" };
+    }
+
+    const prospect = await prospectService.get(id);
+    if (!prospect) {
+      return { success: false, error: "Prospect profile not found" };
+    }
+    if (!isUnclaimedAuto(prospect)) {
+      return { success: false, error: "This prospect has already been claimed" };
+    }
+
+    const updated = await prospectService.update(id, {
+      createdById: actor.id,
+      status: "ACTIVE",
+    });
+
+    // Claiming reshapes visibility (switcher, lists, scope) exactly like a
+    // reassignment does.
+    revalidatePath("/", "layout");
+    revalidatePath(`/dashboard/prospects/${id}`, "layout");
+
+    return { success: true, data: await toResolvedProfile(updated) };
+  } catch (err) {
+    console.error("Failed to claim prospect:", err);
+    return { success: false, error: "Failed to claim prospect" };
   }
 }
 
@@ -1149,7 +1177,7 @@ export async function deleteProspectProfile(
     await deleteProspectDemoConfigs(await resolveProspectDemos(id));
     await prospectService.delete(id);
 
-    revalidatePath("/dashboard/prospects");
+    revalidatePath("/dashboard");
 
     return { success: true, data: { deleted: true } };
   } catch (err) {
@@ -1225,9 +1253,21 @@ export async function getAllProspectProfiles(
     cursor: cursor ?? undefined,
   });
 
+  // The "Unclaimed" queue: AUTO prospects created from inbound leads (open to
+  // everyone - they belong to nobody) plus, for admins only, legacy orphan
+  // rows whose attribution was lost. Both are unpaginated and bounded.
   const isAdmin = user.role === "OWNER" || user.role === "ADMIN";
-  const orphaned = !cursor && isAdmin
-    ? (await prospectService.list({ where: { ownerId: "" }, limit: MAX_PAGE_LIMIT })).items
+  const unclaimedClauses: Prisma.ProspectWhereInput[] = [
+    { status: "AUTO", ownerId: null, createdById: null },
+  ];
+  if (isAdmin) unclaimedClauses.push({ ownerId: "" });
+  const orphaned = !cursor
+    ? (
+        await prospectService.list({
+          where: { OR: unclaimedClauses },
+          limit: MAX_PAGE_LIMIT,
+        })
+      ).items
     : [];
 
   // Batch-resolve every listed prospect's demo map in one query - avoids an
@@ -1432,7 +1472,7 @@ export async function deleteProspectDemo(
 
     await deleteProspectDemoConfigs({ [demoType]: demoId });
 
-    revalidatePath("/dashboard/prospects");
+    revalidatePath("/dashboard");
     revalidatePath(`/dashboard/prospects/${id}`);
 
     return { success: true, data: await toResolvedProfile(prospect) };
@@ -1479,11 +1519,13 @@ export async function createMissingDemos(
       profile.id,
       profile.name,
       profile.prospect,
-      prospect.ownerId,
+      // DemoConfig.ownerId is required, but an unclaimed AUTO prospect has no
+      // owner - fall back to the acting user, who was already authorized above.
+      prospect.ownerId ?? user.dynamicUserId ?? "",
       createOptions,
     );
 
-    revalidatePath("/dashboard/prospects");
+    revalidatePath("/dashboard");
     revalidatePath(`/dashboard/prospects/${id}`);
 
     return { success: true, data: await toResolvedProfile(prospect) };

@@ -217,7 +217,7 @@ export const visibleProspectIds = cache(async function visibleProspectIds(
   const memberships = await deps.teams.membershipsForUser(user.id);
   const teamIds = memberships.map((m) => m.teamId);
   const ids = await deps.prospects.listIds({
-    OR: [ownWhere(user), { teamId: { in: teamIds } }],
+    OR: [ownWhere(user), { teamId: { in: teamIds } }, unclaimedAutoWhere()],
   });
   return new Set(ids);
 });
@@ -370,6 +370,27 @@ function ownWhere(user: Pick<GtmUser, "id" | "dynamicUserId">): { OR: OwnClause[
 }
 
 /**
+ * An AUTO prospect nobody has claimed: created from an inbound lead's email
+ * domain, belonging to no operator and no team. Visible to everyone so it can
+ * be claimed - it is a queue item, not someone's record.
+ *
+ * Gated on `status: AUTO` rather than on "has no owner". A legacy row whose
+ * attribution was simply lost is also ownerless, and `canMutateRecord` keeps
+ * those global-ADMIN-only on purpose; AUTO is what distinguishes "nobody owns
+ * this yet" from "we no longer know who owned this".
+ */
+function unclaimedAutoWhere(): {
+  status: "AUTO";
+  ownerId: null;
+  createdById: null;
+} {
+  // `createdById` matters as much as `ownerId`: claiming sets createdById (see
+  // `reassignProspectOwner`), so a predicate keyed on ownerId alone would keep
+  // treating a claimed row as unclaimed.
+  return { status: "AUTO", ownerId: null, createdById: null };
+}
+
+/**
  * Prospect visibility as a Prisma where fragment, given an already-enforced
  * `ProspectScope` (see `enforceScope` in lib/actions/prospects.ts, which
  * downgrades a non-admin "all" or a non-member "team" request to "mine"
@@ -384,16 +405,36 @@ export function prospectScopeWhere(
   if (!scope) return NONE_WHERE;
   switch (scope.kind) {
     case "all":
-      return isAdminRole(user) ? {} : NONE_WHERE;
+      return isAdminRole(user) ? withoutUnclaimedAuto({}) : NONE_WHERE;
     case "team":
-      return scope.teamId ? { teamId: scope.teamId } : NONE_WHERE;
-    case "mine":
       return scope.teamId
-        ? { AND: [ownWhere(user), { teamId: scope.teamId }] }
-        : ownWhere(user);
+        ? withoutUnclaimedAuto({ teamId: scope.teamId })
+        : NONE_WHERE;
+    case "mine":
+      return withoutUnclaimedAuto(
+        scope.teamId
+          ? { AND: [ownWhere(user), { teamId: scope.teamId }] }
+          : ownWhere(user),
+      );
     default:
       return NONE_WHERE;
   }
+}
+
+/**
+ * Excludes unclaimed AUTO rows from a scope fragment. Every scope is a
+ * curated working set: auto-created leads live in their own queue until
+ * someone claims them, at which point the status flips to ACTIVE and the row
+ * enters these lists normally. Without this they would flood the Prospects
+ * list, which is the thing holding them separately is meant to prevent.
+ */
+function withoutUnclaimedAuto(
+  base: Prisma.ProspectWhereInput,
+): Prisma.ProspectWhereInput {
+  const notAuto: Prisma.ProspectWhereInput = {
+    NOT: { status: "AUTO", ownerId: null, createdById: null },
+  };
+  return Object.keys(base).length === 0 ? notAuto : { AND: [base, notAuto] };
 }
 
 /**
@@ -477,14 +518,30 @@ async function membershipForTeam(
   return memberships.find((m) => m.teamId === teamId) ?? null;
 }
 
+/**
+ * Whether a prospect is an unclaimed AUTO row - see `unclaimedAutoWhere` for
+ * why the AUTO check carries the weight rather than ownerless-ness alone.
+ */
+export function isUnclaimedAuto(
+  prospect: Pick<Prospect, "status" | "ownerId"> & { createdById?: string | null },
+): boolean {
+  return (
+    prospect.status === "AUTO" && !prospect.ownerId && !prospect.createdById
+  );
+}
+
 /** Guard for Prospect edit/delete. Record's team is on the row (may be null). */
 export async function canMutateProspect(
   user: GtmUser,
-  prospect: Pick<Prospect, "teamId" | "createdById" | "ownerId">,
+  prospect: Pick<Prospect, "teamId" | "createdById" | "ownerId" | "status">,
   deps: MutateDeps = defaultMutateDeps,
 ): Promise<boolean> {
   if (user.role === "OWNER" || user.role === "ADMIN") return true;
   if (user.role === "VIEWER") return false;
+  // An unclaimed AUTO prospect is a queue item, not a record with an owner to
+  // protect: any non-VIEWER may claim it. `canMutateRecord` would refuse it as
+  // an orphan, which is the right answer for every OTHER ownerless row.
+  if (isUnclaimedAuto(prospect)) return true;
   const membership = prospect.teamId
     ? await membershipForTeam(user, prospect.teamId, deps)
     : null;

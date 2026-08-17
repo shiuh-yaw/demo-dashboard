@@ -74,12 +74,30 @@ function createFakeShareLinkService(
   };
 }
 
-function createFakeVisitorSessionService(): Pick<
-  VisitorSessionService,
-  "upsertFromBatch"
-> & { upsertFromBatch: ReturnType<typeof vi.fn> } {
+function createFakeVisitorSessionService(
+  results: Array<{ created: boolean }> = [{ created: true }],
+): Pick<VisitorSessionService, "upsertFromBatch"> & {
+  upsertFromBatch: ReturnType<typeof vi.fn>;
+} {
+  const upsertFromBatch = vi.fn();
+  results.forEach((result) => upsertFromBatch.mockResolvedValueOnce(result));
+  upsertFromBatch.mockResolvedValue(results[results.length - 1]);
+  return { upsertFromBatch };
+}
+
+/** Captures the callback instead of running it, so tests can assert
+ * whether `after()` was invoked at all without depending on Next's
+ * request-scoped implementation. */
+function createCapturingAfter(): {
+  after: (cb: () => void | Promise<void>) => void;
+  callbacks: Array<() => void | Promise<void>>;
+} {
+  const callbacks: Array<() => void | Promise<void>> = [];
   return {
-    upsertFromBatch: vi.fn().mockResolvedValue({ created: true }),
+    after: (cb) => {
+      callbacks.push(cb);
+    },
+    callbacks,
   };
 }
 
@@ -97,6 +115,12 @@ interface BuildHandlerOpts {
   ipRateLimiter?: TrackRateLimiter;
   resolvedShareLink?: { id: string; prospect?: { id: string } } | null;
   logger?: TrackLogger;
+  upsertResults?: Array<{ created: boolean }>;
+  onEmailIdentified?: (params: {
+    sessionId: string;
+    domain: string;
+  }) => void | Promise<void>;
+  after?: (cb: () => void | Promise<void>) => void;
   onBatchIngested?: (args: {
     batch: TrackBatch;
     created: boolean;
@@ -109,7 +133,9 @@ function buildHandler(opts: BuildHandlerOpts = {}) {
   const shareLinkService = createFakeShareLinkService(
     opts.resolvedShareLink ?? null,
   );
-  const visitorSessionService = createFakeVisitorSessionService();
+  const visitorSessionService = createFakeVisitorSessionService(
+    opts.upsertResults,
+  );
   const rateLimiter = opts.rateLimiter ?? createFakeRateLimiter();
   const ipRateLimiter = opts.ipRateLimiter ?? createFakeRateLimiter();
   const logger = opts.logger ?? createCapturingLogger();
@@ -122,6 +148,8 @@ function buildHandler(opts: BuildHandlerOpts = {}) {
     rateLimiter,
     ipRateLimiter,
     logger,
+    onEmailIdentified: opts.onEmailIdentified,
+    after: opts.after,
     onBatchIngested: opts.onBatchIngested,
   });
 
@@ -423,6 +451,74 @@ describe("createTrackHandler POST", () => {
     expect(line).toContain("attributed=true");
     expect(line).toContain("internal=false");
     expect(line).toMatch(/durMs=\d+/);
+  });
+
+  describe("enrichment after() hook (Phase GTM-10)", () => {
+    it("fires with the email domain when a batch carries an identified email", async () => {
+      const onEmailIdentified = vi.fn();
+      const { after, callbacks } = createCapturingAfter();
+      const { handlers } = buildHandler({ onEmailIdentified, after });
+
+      await handlers.POST(
+        buildRequest({
+          body: validBatch({
+            identity: { userId: "user_1", email: "Jane@DBS.com.sg" },
+          }),
+        }),
+      );
+
+      expect(callbacks).toHaveLength(1);
+      await callbacks[0]();
+      expect(onEmailIdentified).toHaveBeenCalledTimes(1);
+      expect(onEmailIdentified).toHaveBeenCalledWith({
+        sessionId: validBatch().sessionId,
+        domain: "dbs.com.sg",
+      });
+    });
+
+    it("does not fire when the batch carries no identity email", async () => {
+      const onEmailIdentified = vi.fn();
+      const { after, callbacks } = createCapturingAfter();
+      const { handlers } = buildHandler({ onEmailIdentified, after });
+
+      await handlers.POST(buildRequest({ body: validBatch() }));
+
+      expect(callbacks).toHaveLength(0);
+      expect(onEmailIdentified).not.toHaveBeenCalled();
+    });
+
+    it("does not fire when no onEmailIdentified hook is configured", async () => {
+      const { after, callbacks } = createCapturingAfter();
+      const { handlers } = buildHandler({ after });
+
+      await handlers.POST(
+        buildRequest({
+          body: validBatch({
+            identity: { userId: "user_1", email: "jane@dbs.com.sg" },
+          }),
+        }),
+      );
+
+      expect(callbacks).toHaveLength(0);
+    });
+
+    it("never writes the identified email to the logger", async () => {
+      const onEmailIdentified = vi.fn();
+      const { after } = createCapturingAfter();
+      const logger = createCapturingLogger();
+      const { handlers } = buildHandler({ onEmailIdentified, after, logger });
+
+      await handlers.POST(
+        buildRequest({
+          body: validBatch({
+            identity: { userId: "user_1", email: "jane@dbs.com.sg" },
+          }),
+        }),
+      );
+
+      expect(logger.lines.join("\n")).not.toContain("jane@dbs.com.sg");
+      expect(logger.lines.join("\n")).not.toContain("dbs.com.sg");
+    });
   });
 });
 

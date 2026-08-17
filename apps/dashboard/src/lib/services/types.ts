@@ -8,6 +8,7 @@
 import type { TransactionState } from "@dynamic-demos/transactions";
 import type { Prisma, Contact, ContactAppearance } from "@dynamic-demos/db";
 
+import type { EnrichmentResult } from "@/lib/enrichment/types";
 import type {
   Transaction,
   TransactionStatus,
@@ -268,8 +269,15 @@ export type ProspectBorderRadius = "xs" | "sm" | "md" | "lg";
  */
 export type ProspectLogoKind = "custom" | "dynamic";
 
-/** Lifecycle state. Mirrors the Prisma `ProspectStatus` enum. */
-export type ProspectStatus = "ACTIVE" | "ARCHIVED";
+/**
+ * Lifecycle state. Mirrors the Prisma `ProspectStatus` enum - keep in step
+ * with `packages/db/prisma/schema.prisma`, since this is a hand-written mirror
+ * and nothing enforces the correspondence.
+ *
+ * `AUTO`: created from an inbound lead's email domain rather than curated by
+ * an operator. Held out of the main Prospects list and ownerless until claimed.
+ */
+export type ProspectStatus = "ACTIVE" | "ARCHIVED" | "AUTO";
 
 /**
  * Prospect row as it lives in Postgres (mirrors the Prisma `Prospect` model).
@@ -282,7 +290,9 @@ export type ProspectStatus = "ACTIVE" | "ARCHIVED";
  */
 export interface Prospect {
   id: string;
-  ownerId: string;
+  /** Null for an AUTO prospect created from an inbound lead that nobody has
+   * claimed yet. Claiming sets this and flips `status` to ACTIVE. */
+  ownerId: string | null;
   /** Owning team; null until a prospect is explicitly assigned to one. */
   teamId: string | null;
   /** Resolved creator (FK -> User); null for legacy rows not yet reconciled. */
@@ -315,7 +325,9 @@ export interface Prospect {
 }
 
 export interface CreateProspectInput {
-  ownerId: string;
+  /** Null for an AUTO prospect created from an inbound lead - nobody owns it
+   * until it is claimed. Every operator-initiated create still passes one. */
+  ownerId: string | null;
   /** Null when omitted; a prospect belongs to no team until explicitly assigned. */
   teamId?: string | null;
   createdById?: string | null;
@@ -1103,6 +1115,41 @@ export interface VisitorSessionService {
     batch: TrackBatchInput,
     meta: VisitorSessionMeta,
   ): Promise<UpsertVisitorSessionResult>;
+
+  /**
+   * Persists `result` onto `VisitorSession.enrichment`.
+   *
+   * Default (ingest path) is write-once: the row is updated only while the
+   * column is null, so retried batches and duplicate hook calls are
+   * idempotent. `overwrite` replaces whatever is there and is for
+   * operator-initiated enrichment, where the click IS the instruction - it
+   * also repairs rows holding legacy enrichment that carries no company, which
+   * the null-only guard could never touch.
+   *
+   * Returns whether this call actually wrote, so callers can tell a real
+   * persist apart from a no-op instead of assuming success.
+   */
+  setEnrichment(
+    sessionId: string,
+    result: EnrichmentResult,
+    opts?: { overwrite?: boolean },
+  ): Promise<boolean>;
+
+  /**
+   * Sessions that captured an email but carry NO company, most recently seen
+   * first - the input to the admin bulk backfill. "No company" is the same
+   * predicate the read layer uses (`hasStoredCompany`), not merely "the column
+   * is null", so rows holding legacy company-less enrichment are included.
+   * Bounded by `limit`; the caller reports what it processed rather than
+   * silently sweeping an unbounded set.
+   */
+  listUnenriched(limit: number): Promise<UnenrichedSession[]>;
+}
+
+/** A session the backfill can act on: its id plus the email it captured. */
+export interface UnenrichedSession {
+  id: string;
+  email: string | null;
 }
 
 // =============================================================================
@@ -1140,6 +1187,11 @@ export function isProspectInReadScope(
 export interface ContactCompany {
   name: string | null;
   domain: string | null;
+  /** Profile fields from the Claude domain enrichment; absent for enrichment
+   * written by earlier providers, so every consumer must tolerate absence. */
+  industry?: string | null;
+  sizeBand?: string | null;
+  summary?: string | null;
 }
 
 /** One session row, read-only and PII-bounded (company + captured identity). */
@@ -1169,6 +1221,20 @@ export interface VisitorSessionView {
   identifiedEmail: string | null;
 }
 
+/**
+ * Content filter for the contacts list, kept separate from `PageOptions` -
+ * that carries pagination, this carries what qualifies as a row. Applied
+ * BEFORE pagination: filtering client-side would hand back short pages and
+ * break the cursor.
+ */
+export interface ContactsFilter {
+  /** Include viewers who never identified (no captured email), keyed by
+   * `anonId` and rendered as "Unknown User". Defaults to true at the service
+   * layer; the workspace Contacts view opts out so the list leads with people
+   * an operator can actually act on. */
+  includeAnonymous?: boolean;
+}
+
 /** A viewer rolled up across their sessions on one prospect ("who viewed"). */
 export interface ContactView {
   /** Stable identity key: captured email when present, else `anonId`. */
@@ -1180,6 +1246,28 @@ export interface ContactView {
   sessionCount: number;
   /** Distinct demo kinds this viewer touched, alphabetical. */
   demoSlugs: string[];
+}
+
+/** Per-demo engagement for one contact, on their detail page. */
+export interface ContactDemoSummary {
+  demoSlug: string;
+  sessions: number;
+  totalDurationSec: number;
+  avgDurationSec: number;
+  /** ISO; most recent session on this demo. */
+  lastViewedAt: string;
+  /** Furthest milestone reached on this demo, raw event name; null when the
+   * contact only ever viewed. */
+  furthestMilestone: string | null;
+}
+
+/** Everything the contact detail page renders, in one scoped read. */
+export interface ContactDetail {
+  contact: OrgContactView;
+  /** Newest first. */
+  sessions: VisitorSessionView[];
+  /** Most-recently-viewed demo first. */
+  demos: ContactDemoSummary[];
 }
 
 /**
@@ -1398,6 +1486,7 @@ export interface AnalyticsService {
   listAllContacts(
     scope: AnalyticsReadScope,
     page?: PageOptions,
+    filter?: ContactsFilter,
   ): Promise<Page<OrgContactView>>;
   /**
    * Sessions for one contact (an `OrgContactView.key`) across every prospect
@@ -1405,6 +1494,16 @@ export interface AnalyticsService {
    * Contacts workspace view's inline expand. A contact's sessions may span
    * more than one prospect here, unlike the single-prospect method.
    */
+  /**
+   * Everything the contact detail page needs in one scoped read: the rolled-up
+   * contact, its sessions newest-first, and per-demo engagement. Null when the
+   * key is unknown OR out of scope - the caller 404s either way, so an unknown
+   * key never reveals that the contact exists for someone else.
+   */
+  getContactDetail(
+    contactKey: string,
+    scope: AnalyticsReadScope,
+  ): Promise<ContactDetail | null>;
   listAllContactSessions(
     contactKey: string,
     scope: AnalyticsReadScope,
@@ -1520,6 +1619,12 @@ export interface RecordSightingResult {
 
 export interface ContactService {
   recordSighting(input: RecordSightingInput): Promise<RecordSightingResult>;
+  /**
+   * Captured emails, most recently seen first - the input to the admin
+   * prospect backfill. Bounded by `limit`; the caller reports what it
+   * processed rather than silently sweeping an unbounded set.
+   */
+  listEmails(limit: number): Promise<string[]>;
 }
 
 // =============================================================================

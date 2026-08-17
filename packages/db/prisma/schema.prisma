@@ -20,6 +20,9 @@ datasource db {
 enum ProspectStatus {
   ACTIVE
   ARCHIVED
+  /// Created automatically from an inbound lead's email domain, not curated by
+  /// an operator. Held out of the main Prospects list until claimed.
+  AUTO
 }
 
 /// Team-owned workspace. Seeded default has slug "gtm".
@@ -70,7 +73,9 @@ model ProspectTheme {
 /// A company we sell to. Owns identity + theme; demo configs reference it.
 model Prospect {
   id                 String              @id @default(cuid())
-  ownerId            String
+  /// Nullable: an AUTO prospect created from an inbound lead has no owner
+  /// until someone claims it. Claiming sets this and flips status to ACTIVE.
+  ownerId            String?
   /// Nullable, no default: a prospect belongs to no team until explicitly assigned.
   teamId             String?
   createdById        String?

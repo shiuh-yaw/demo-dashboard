@@ -528,7 +528,7 @@ const checkoutEntry: DemoEditorEntry = {
 // share view (see DASHBOARD_EDITABLE_KINDS in demo-editor-metadata).
 const flowEntry: DemoEditorEntry = {
   appearanceMode: "none",
-  backHref: "/dashboard/prospects",
+  backHref: "/dashboard",
 };
 
 // Card has no in-dashboard editor - like flow, its theme comes from the
@@ -536,7 +536,7 @@ const flowEntry: DemoEditorEntry = {
 // shared insights + share view (see DASHBOARD_EDITABLE_KINDS).
 const cardEntry: DemoEditorEntry = {
   appearanceMode: "none",
-  backHref: "/dashboard/prospects",
+  backHref: "/dashboard",
 };
 
 // Connect has no in-dashboard editor - like flow and card, its theme comes from
@@ -544,7 +544,7 @@ const cardEntry: DemoEditorEntry = {
 // shared insights + share view (see DASHBOARD_EDITABLE_KINDS).
 const connectEntry: DemoEditorEntry = {
   appearanceMode: "none",
-  backHref: "/dashboard/prospects",
+  backHref: "/dashboard",
 };
 
 // Accounts has no in-dashboard editor - like flow, card, and connections its
@@ -552,7 +552,7 @@ const connectEntry: DemoEditorEntry = {
 // page renders the shared insights + share view (see DASHBOARD_EDITABLE_KINDS).
 const accountsEntry: DemoEditorEntry = {
   appearanceMode: "none",
-  backHref: "/dashboard/prospects",
+  backHref: "/dashboard",
 };
 
 export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {

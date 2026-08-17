@@ -11,9 +11,12 @@
  * imports @dynamic-demos/db.
  */
 
-import { prisma as defaultPrisma } from "@dynamic-demos/db";
+import { Prisma, prisma as defaultPrisma } from "@dynamic-demos/db";
+import type { EnrichmentResult } from "@/lib/enrichment/types";
+import { hasStoredCompany } from "@/lib/enrichment/stored";
 import type {
   TrackBatchInput,
+  UnenrichedSession,
   UpsertVisitorSessionResult,
   VisitorSessionMeta,
   VisitorSessionService,
@@ -39,6 +42,10 @@ interface VisitorSessionRow {
   identifiedEmail: string | null;
   identityTraits: unknown | null;
 }
+
+/** How many recent email-carrying sessions `listUnenriched` scans per requested
+ * row, since the "no company" test runs in memory rather than in SQL. */
+const UNENRICHED_SCAN_FACTOR = 5;
 
 /** "heartbeat"-named events advance `lastSeenAt` but are never persisted. */
 const HEARTBEAT_EVENT_NAME = "heartbeat";
@@ -114,6 +121,26 @@ export interface VisitorSessionPrismaClient {
         identityTraits?: Record<string, unknown>;
       };
     }): Promise<VisitorSessionRow>;
+    /** Conditional write - see `setEnrichment`'s write-once comment. The
+     * `enrichment` predicate is absent on an overwrite. */
+    updateMany(args: {
+      where: { id: string; enrichment?: { equals: typeof Prisma.DbNull } };
+      data: { enrichment: EnrichmentResult };
+    }): Promise<{ count: number }>;
+    /** Backfill read - see `listUnenriched`. `enrichment` is selected because
+     * the "no company" test cannot be expressed in SQL. */
+    findMany(args: {
+      where: { identifiedEmail: { not: null } };
+      select: { id: true; identifiedEmail: true; enrichment: true };
+      orderBy: { lastSeenAt: "desc" };
+      take: number;
+    }): Promise<
+      Array<{
+        id: string;
+        identifiedEmail: string | null;
+        enrichment: unknown;
+      }>
+    >;
   };
   trackEvent: {
     createMany(args: {
@@ -234,5 +261,46 @@ export class PostgresVisitorSessionService implements VisitorSessionService {
     }
 
     return { created };
+  }
+
+  async setEnrichment(
+    sessionId: string,
+    result: EnrichmentResult,
+    opts?: { overwrite?: boolean },
+  ): Promise<boolean> {
+    // Write-once via the `enrichment: { equals: Prisma.DbNull }` predicate -
+    // a bare JS `null` is rejected by Prisma's JsonNullableFilter for a
+    // nullable Json column; DbNull is the required sentinel for that filter.
+    // A call racing against a prior write (or replaying after one landed)
+    // affects zero rows instead of overwriting the first result.
+    //
+    // `overwrite` drops that predicate. SQL cannot express "the stored JSON has
+    // no company", so a null-only guard silently refuses every row holding
+    // legacy company-less enrichment; operator-initiated runs replace instead.
+    const { count } = await this.client.visitorSession.updateMany({
+      where: opts?.overwrite
+        ? { id: sessionId }
+        : { id: sessionId, enrichment: { equals: Prisma.DbNull } },
+      data: { enrichment: result },
+    });
+    return count > 0;
+  }
+
+  async listUnenriched(limit: number): Promise<UnenrichedSession[]> {
+    // "Carries no company" is a property of the stored JSON that SQL cannot
+    // filter on, so scan a bounded window of the most recent sessions that
+    // captured an email and apply the shared predicate in memory. The window
+    // is a multiple of `limit`: a run reports what it processed, and one where
+    // `scanned` comes back at the cap is a signal to run it again.
+    const rows = await this.client.visitorSession.findMany({
+      where: { identifiedEmail: { not: null } },
+      select: { id: true, identifiedEmail: true, enrichment: true },
+      orderBy: { lastSeenAt: "desc" },
+      take: limit * UNENRICHED_SCAN_FACTOR,
+    });
+    return rows
+      .filter((r) => !hasStoredCompany(r.enrichment))
+      .slice(0, limit)
+      .map((r) => ({ id: r.id, email: r.identifiedEmail }));
   }
 }

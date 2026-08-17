@@ -13,13 +13,15 @@
  */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, Trash2 } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
 import type { ProspectProfile, ProspectTheme } from "@/lib/types/dashboard";
 import {
   updateProspectProfile,
   reassignProspectOwner,
   reassignProspectTeam,
+  deleteProspectProfile,
 } from "@/lib/actions/prospects";
 import type { AdminUserView } from "@/lib/actions/team-views";
 import type { Team } from "@/lib/services";
@@ -92,6 +94,32 @@ export function ProspectSettings({
 }: ProspectSettingsProps) {
   const [profile, setProfile] = useState(initialProfile);
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (deleteConfirmText !== profile.name || isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const result = await deleteProspectProfile(profile.id);
+      if (result.success) {
+        // The prospect this page renders is gone - leave before a refetch
+        // renders a 404 shell. Overview is the prospects list.
+        router.push("/dashboard");
+      } else {
+        setDeleteError(result.error);
+        setIsDeleting(false);
+      }
+    } catch {
+      setDeleteError("Failed to delete prospect");
+      setIsDeleting(false);
+    }
+  }
+
   // Bumped on save failure to force a fresh UnsavedChangesBar instance (key) instead of an incorrect stale "saved" state.
   const [barGen, setBarGen] = useState(0);
 
@@ -191,7 +219,10 @@ export function ProspectSettings({
 
         const result = await updateProspectProfile(profile.id, {
           name: name.trim(),
-          companyUrl: companyUrl.trim() || undefined,
+          // null, not undefined: the mapper treats undefined as "field not
+          // submitted" and leaves the stored value alone, so clearing the
+          // field used to report success and change nothing.
+          companyUrl: companyUrl.trim() || null,
           prospect: {
             logo: branding.logo ? "custom" : "dynamic",
             logoUrl: branding.logo || undefined,
@@ -290,8 +321,12 @@ export function ProspectSettings({
                 typeof fn === "function" ? fn(aiImportConfig as never) : fn;
               handleAiImport(result as AppearanceConfig);
             }}
-            setToast={(message) => {
-              if (message) toastSuccess(message);
+            setToast={(message, ok) => {
+              if (!message) return;
+              // A failed import used to surface as a success toast, which read
+              // as "it ran and changed nothing".
+              if (ok === false) toastError(message);
+              else toastSuccess(message);
             }}
             companyUrl={companyUrl || undefined}
           />
@@ -304,6 +339,7 @@ export function ProspectSettings({
             previewBackground={
               theme.pageBackground || DEFAULT_APPEARANCE_THEME.pageBackground
             }
+            websiteUrl={companyUrl || undefined}
           />
         </div>
       </SettingsSection>
@@ -356,6 +392,71 @@ export function ProspectSettings({
             <p className="text-xs text-muted-foreground">
               Only the current owner or an admin can reassign this prospect.
             </p>
+          )}
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Danger zone"
+        description="Deleting a prospect also deletes its demos. This cannot be undone."
+      >
+        <div className={cn(SECTION_CARD, "space-y-4")}>
+          {!confirmingDelete ? (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
+                Permanently delete <span className="font-medium text-foreground">{profile.name}</span>,
+                its demo configs and its share links. Sessions already recorded
+                against it are not removed.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={isDeleting}
+                className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-foreground">
+                Type <span className="font-medium">{profile.name}</span> to confirm.
+              </p>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={profile.name}
+                aria-label={`Type ${profile.name} to confirm deletion`}
+                autoFocus
+              />
+              {deleteError && (
+                <p className="text-sm text-destructive">{deleteError}</p>
+              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleDelete}
+                  // Exact match required: this removes the demos too, so a
+                  // stray click must not be enough.
+                  disabled={deleteConfirmText !== profile.name || isDeleting}
+                  className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
+                  {isDeleting ? "Deleting..." : "Delete permanently"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setConfirmingDelete(false);
+                    setDeleteConfirmText("");
+                    setDeleteError(null);
+                  }}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </SettingsSection>

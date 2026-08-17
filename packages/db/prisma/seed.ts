@@ -2,15 +2,19 @@
  * Synthetic seed for ephemeral preview branch databases.
  *
  * SAFETY: this must never run against production. `.env.local` points at the
- * prod database, so we refuse unless VERCEL_ENV is "preview" (the per-PR
- * Supabase branch) or ALLOW_SEED=true is set explicitly for local dev against
- * a throwaway DB. The build wires it to run only on Vercel preview.
+ * prod database, so `assertSeedTargetAllowed` refuses unless the CONNECTION
+ * itself is provably disposable - see `src/seed-guard.ts`. The build wires it
+ * to run only on Vercel preview.
  *
- * Data is entirely synthetic - no real prospects, contacts, or PII. Idempotent
- * via fixed ids + upserts, so re-running on the same branch is a no-op.
+ * Data is synthetic - invented people, no PII. One real company DOMAIN
+ * (fireblocks.com, the operator's own) is seeded so enrichment has something
+ * resolvable to work on. Idempotent via fixed ids + upserts, so re-running on
+ * the same branch is a no-op.
  */
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "../src/client";
+import { assertSeedTargetAllowed } from "../src/seed-guard";
 
 // Real admin so logging into a preview with this email (matched by
 // getOrCreateByEmail) owns the seeded prospects. Keyed on email so the seed
@@ -35,16 +39,110 @@ const PROSPECTS = [
 
 const KINDS = ["wallet", "trade", "flow", "card"] as const;
 
+/**
+ * Viewers who identified themselves. Without these the Contacts page is empty:
+ * it hides unidentified viewers by default, and every downstream feature
+ * (company enrichment, auto-prospects, the claim queue) keys off a captured
+ * business email.
+ *
+ * Addresses are invented. Domains are RFC 2606 `.example` ones - which cannot
+ * resolve to a real company - EXCEPT `fireblocks.com`, included deliberately so
+ * the enrichment path has a domain the model can actually recognise. See that
+ * entry's comment.
+ */
+interface SeedViewer {
+  key: string;
+  email: string;
+  demoSlug: string;
+  /** Attached to a share link (and so to a prospect) vs. arrived direct. */
+  attributed: boolean;
+  enrichment: Prisma.InputJsonValue | null;
+}
+
+/**
+ * Real, widely-known company domains, one seeded viewer each. Real because the
+ * point is to exercise enrichment end to end: a `.example` domain is
+ * RFC-reserved, so the model cannot recognise one and every Enrich would
+ * report "no confident match". Local-parts are invented - these are seeded
+ * companies, not seeded people.
+ *
+ * All arrive direct and unenriched, so each one is a full test: Enrich
+ * resolves the company AND creates the prospect it belongs to.
+ */
+const ENRICHABLE_COMPANIES: ReadonlyArray<readonly [string, string]> = [
+  ["fireblocks.com", "wallet"],
+  ["stripe.com", "card"],
+  ["coinbase.com", "trade"],
+  ["shopify.com", "card"],
+  ["databricks.com", "flow"],
+  ["figma.com", "wallet"],
+  ["vercel.com", "flow"],
+  ["ramp.com", "card"],
+  ["chainalysis.com", "trade"],
+];
+
+const IDENTIFIED_VIEWERS: SeedViewer[] = [
+  {
+    key: "matched",
+    email: "dana@northwind.example",
+    // Matches a seeded prospect's domain, so the backfill reports "matched"
+    // rather than creating a duplicate.
+    demoSlug: "wallet",
+    attributed: true,
+    enrichment: {
+      company: {
+        name: "Northwind",
+        domain: "northwind.example",
+        industry: "Logistics",
+        sizeBand: "201-500",
+        summary: "Freight forwarding and customs brokerage.",
+      },
+      provider: "seed",
+      confidence: "high",
+      enrichedAt: "2026-08-13T09:00:00.000Z",
+    },
+  },
+  {
+    key: "unenriched",
+    email: "sam@globex.example",
+    // No prospect and no enrichment: the row both the Enrich control and the
+    // prospect backfill have work to do on. Unattributed on purpose - hanging
+    // it off a share link would give it Northwind and defeat the point.
+    demoSlug: "trade",
+    attributed: false,
+    enrichment: null,
+  },
+  {
+    key: "direct",
+    email: "rilee@initech.example",
+    // No share link - the "Direct" case that used to be invisible entirely.
+    demoSlug: "flow",
+    attributed: false,
+    enrichment: null,
+  },
+  {
+    key: "consumer",
+    email: "casual.viewer@gmail.com",
+    // Consumer domain: must never produce a company or a prospect.
+    demoSlug: "card",
+    attributed: false,
+    enrichment: null,
+  },
+  ...ENRICHABLE_COMPANIES.map(([domain, demoSlug]) => ({
+    key: `enrich-${domain.split(".")[0]}`,
+    email: `demo.viewer@${domain}`,
+    demoSlug,
+    attributed: false,
+    enrichment: null,
+  })),
+];
+
+/** Anonymous direct traffic - hidden by default, revealed by the toggle. */
+const ANON_DIRECT_SESSIONS = 3;
+
 async function main() {
-  if (
-    process.env.VERCEL_ENV !== "preview" &&
-    process.env.ALLOW_SEED !== "true"
-  ) {
-    throw new Error(
-      "Refusing to seed outside a Vercel preview branch. Set ALLOW_SEED=true " +
-        "only when DATABASE_URL points at a throwaway database (never prod).",
-    );
-  }
+  const target = assertSeedTargetAllowed(process.env);
+  console.log(`Seeding database ${target}.`);
 
   const owner = await prisma.user.upsert({
     where: { email: OWNER_EMAIL },
@@ -136,8 +234,127 @@ async function main() {
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Identified viewers. The block above produces pageview-only sessions, so
+  // on its own every contact reads "Unknown User" and the Contacts page -
+  // which hides those by default - renders empty.
+  // ---------------------------------------------------------------------
+  const northwindLink = await prisma.shareLink.findUnique({
+    where: { id: "seed-link-seed-demo-seed-prospect-northwind-wallet" },
+  });
+
+  for (const viewer of IDENTIFIED_VIEWERS) {
+    const sessionId = `seed-session-identified-${viewer.key}`;
+    const anonId = `seed-anon-identified-${viewer.key}`;
+
+    await prisma.visitorSession.upsert({
+      where: { id: sessionId },
+      update: {},
+      create: {
+        id: sessionId,
+        // Attributed sessions hang off a real share link; direct ones have
+        // none, which is exactly what makes them "Direct" in the UI.
+        shareLinkId: viewer.attributed ? (northwindLink?.id ?? null) : null,
+        demoSlug: viewer.demoSlug,
+        anonId,
+        isInternal: false,
+        identifiedEmail: viewer.email,
+        identifiedUserId: `seed-dyn-${viewer.key}`,
+        enrichment: viewer.enrichment ?? undefined,
+      },
+    });
+
+    // The `authenticated` milestone is what the contacts read groups on -
+    // identifiedEmail alone does not name a contact.
+    await prisma.trackEvent.upsert({
+      where: { id: `seed-event-auth-${viewer.key}` },
+      update: {},
+      create: {
+        id: `seed-event-auth-${viewer.key}`,
+        sessionId,
+        ts: new Date(),
+        type: "milestone",
+        name: "authenticated",
+        path: "/",
+        props: { email: viewer.email, dynamicUserId: `seed-dyn-${viewer.key}` },
+      },
+    });
+
+    // Contact rows are the prospect backfill's input - it sweeps captured
+    // emails, not sessions.
+    const contact = await prisma.contact.upsert({
+      where: { email: viewer.email },
+      update: {},
+      create: {
+        email: viewer.email,
+        dynamicUserId: `seed-dyn-${viewer.key}`,
+        sightingCount: 1,
+        notifiedAt: new Date(),
+      },
+    });
+    const appearance = await prisma.contactAppearance.findFirst({
+      where: { contactId: contact.id, demoSlug: viewer.demoSlug },
+    });
+    if (!appearance) {
+      await prisma.contactAppearance.create({
+        data: { contactId: contact.id, demoSlug: viewer.demoSlug, prospectId: null },
+      });
+    }
+  }
+
+  // Anonymous direct traffic: hidden behind the Contacts toggle by default.
+  for (let i = 0; i < ANON_DIRECT_SESSIONS; i++) {
+    const sessionId = `seed-session-anon-direct-${i}`;
+    await prisma.visitorSession.upsert({
+      where: { id: sessionId },
+      update: {},
+      create: {
+        id: sessionId,
+        shareLinkId: null,
+        demoSlug: "wallet",
+        anonId: `seed-anon-direct-${i}`,
+        isInternal: false,
+      },
+    });
+    await prisma.trackEvent.upsert({
+      where: { id: `seed-event-anon-direct-${i}` },
+      update: {},
+      create: {
+        id: `seed-event-anon-direct-${i}`,
+        sessionId,
+        ts: new Date(),
+        type: "pageview",
+        name: "pageview",
+        path: "/",
+      },
+    });
+  }
+
+  // An unclaimed AUTO prospect, so the Prospects "Unclaimed" queue and its
+  // Claim button are populated without having to run the backfill first.
+  // Unowned by design: ownerId and createdById both null.
+  await prisma.prospect.upsert({
+    where: { id: "seed-prospect-auto-initech" },
+    update: {},
+    create: {
+      id: "seed-prospect-auto-initech",
+      ownerId: null,
+      createdById: null,
+      teamId: null,
+      status: "AUTO",
+      name: "Initech",
+      domain: "initech.example",
+      companyUrl: "https://initech.example",
+      primaryColor: "#7C3AED",
+      logo: "dynamic",
+    },
+  });
+
   console.log(
-    `Seeded ${PROSPECTS.length} prospects, ${PROSPECTS.length * KINDS.length} demo configs + sessions.`,
+    `Seeded ${PROSPECTS.length} prospects (+1 unclaimed AUTO), ` +
+      `${PROSPECTS.length * KINDS.length} demo configs, ` +
+      `${IDENTIFIED_VIEWERS.length} identified viewers, ` +
+      `${ANON_DIRECT_SESSIONS} anonymous direct sessions.`,
   );
 }
 

@@ -2,9 +2,9 @@
 
 /**
  * Contacts (enriched viewers) for a prospect: who has viewed the demos, by
- * company (IP enrichment) and captured identity (email), with first/last seen,
- * which demos, and session count. Read-only projection from the analytics read
- * layer - no raw IPs, PII bounded per Phase 10.
+ * company (email-domain enrichment) and captured identity (email), with
+ * first/last seen, which demos, and session count. Read-only projection from
+ * the analytics read layer - no raw IPs, PII bounded per Phase 10.
  *
  * Thin wrapper around the shared `ContactsTable` (row list + inline-expand to
  * sessions) - see `@/components/shared/contacts-table` for the interaction;
@@ -13,7 +13,7 @@
 
 import { ContactsTable } from "@/components/shared/contacts-table";
 import type { ContactView } from "@/lib/services";
-import { listContactSessionsAction } from "./contacts/actions";
+import { enrichContactAction } from "@/lib/actions/enrich-contact";
 
 export interface ProspectContactsProps {
   prospectId: string;
@@ -36,7 +36,7 @@ export function ProspectContacts({ prospectId, contacts }: ProspectContactsProps
         contacts={contacts}
         emptyTitle="No Viewers Yet"
         emptyDescription="Share a demo link with this prospect. Viewers show up here as they engage."
-        fetchSessions={(contact) => listContactSessionsAction(prospectId, contact.key)}
+        onEnrich={(contact) => enrichContactAction(contact.key)}
       />
     </section>
   );

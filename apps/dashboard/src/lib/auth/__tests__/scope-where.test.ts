@@ -125,6 +125,11 @@ function matches(where: Record<string, unknown>, row: object): boolean {
       if (!(cond as Record<string, unknown>[]).every((c) => matches(c, r))) return false;
       continue;
     }
+    if (key === "NOT") {
+      // Prisma semantics: NOT { a, b } excludes rows where a AND b both hold.
+      if (matches(cond as Record<string, unknown>, r)) return false;
+      continue;
+    }
     if (key === "prospect") {
       const prospect = r.prospect as Record<string, unknown> | null;
       if (!prospect) return false;
@@ -146,13 +151,43 @@ function rowsMatchedBy(where: Record<string, unknown>): string[] {
 }
 
 describe("prospectScopeWhere", () => {
-  it("admin + all -> {} (unscoped)", () => {
+  it("admin + all -> unscoped apart from unclaimed AUTO rows", () => {
     const where = prospectScopeWhere(mkUser("ADMIN"), { kind: "all" });
-    expect(where).toEqual({});
+    expect(where).toEqual({ NOT: { status: "AUTO", ownerId: null, createdById: null } });
+    // Every curated row still matches - the exclusion is narrow.
+    expect(rowsMatchedBy(where as Record<string, unknown>)).toEqual(
+      prospects.map((p) => p.id),
+    );
   });
 
-  it("owner + all -> {}", () => {
-    expect(prospectScopeWhere(mkUser("OWNER"), { kind: "all" })).toEqual({});
+  it("owner + all -> same", () => {
+    expect(prospectScopeWhere(mkUser("OWNER"), { kind: "all" })).toEqual({
+      NOT: { status: "AUTO", ownerId: null, createdById: null },
+    });
+  });
+
+  it("no scope shows an unclaimed AUTO prospect - it lives in its own queue", () => {
+    const rows = [
+      mkProspect({ id: "p-auto", status: "AUTO", ownerId: null, createdById: null }),
+      mkProspect({ id: "p-normal", createdById: "u1" }),
+    ];
+    const where = prospectScopeWhere(mkUser("ADMIN"), { kind: "all" });
+    const ids = rows
+      .filter((p) => matches(where as Record<string, unknown>, p))
+      .map((p) => p.id);
+    expect(ids).toEqual(["p-normal"]);
+  });
+
+  it("an AUTO prospect that HAS been claimed is listed normally", () => {
+    // Claiming records createdById and flips the status to ACTIVE; either
+    // alone is enough to stop the exclusion applying.
+    const rows = [
+      mkProspect({ id: "p-claimed", status: "AUTO", ownerId: null, createdById: "u1" }),
+    ];
+    const where = prospectScopeWhere(mkUser("ADMIN"), { kind: "all" });
+    expect(
+      rows.filter((p) => matches(where as Record<string, unknown>, p)).map((p) => p.id),
+    ).toEqual(["p-claimed"]);
   });
 
   it("non-admin + all fails closed (defense in depth - enforceScope should never let this through)", () => {
@@ -179,9 +214,11 @@ describe("prospectScopeWhere", () => {
     expect(rowsMatchedBy(where as Record<string, unknown>)).toEqual(["p-own"]);
   });
 
-  it("team -> { teamId }", () => {
+  it("team -> teamId, still excluding unclaimed AUTO", () => {
     const where = prospectScopeWhere(mkUser("MEMBER"), { kind: "team", teamId: "team-1" });
-    expect(where).toEqual({ teamId: "team-1" });
+    expect(where).toEqual({
+      AND: [{ teamId: "team-1" }, { NOT: { status: "AUTO", ownerId: null, createdById: null } }],
+    });
     expect(rowsMatchedBy(where as Record<string, unknown>)).toEqual(["p-team"]);
   });
 

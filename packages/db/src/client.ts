@@ -15,8 +15,9 @@
  *        dashboard API; importing this client from any other app is a bug.
  *
  * Preview branch DBs: on a Vercel preview the Supabase branch integration
- * injects POSTGRES_PRISMA_URL (pooled) but not DATABASE_URL, so fall back to
- * it. Production/local keep their own DATABASE_URL and never hit the fallback.
+ * injects POSTGRES_PRISMA_URL (pooled), and it takes precedence there so a
+ * DATABASE_URL that reached Preview scope cannot point a preview at
+ * production. Everywhere else DATABASE_URL is authoritative.
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -25,7 +26,9 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const databaseUrl =
-  process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL;
+  process.env.VERCEL_ENV === "preview"
+    ? (process.env.POSTGRES_PRISMA_URL ?? process.env.DATABASE_URL)
+    : (process.env.DATABASE_URL ?? process.env.POSTGRES_PRISMA_URL);
 
 export const prisma: PrismaClient =
   globalForPrisma.prisma ??

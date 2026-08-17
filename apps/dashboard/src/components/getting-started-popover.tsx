@@ -64,7 +64,7 @@ function buildItems(state: GettingStartedState): ChecklistItemView[] {
       id: "prospect",
       label: "Create your first prospect",
       description: "Add the account you're demoing to.",
-      href: "/dashboard/prospects",
+      href: "/dashboard",
       complete: completion.prospect,
     },
     {

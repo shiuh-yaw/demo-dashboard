@@ -146,6 +146,8 @@ export type {
   ContactView,
   OrgContactView,
   ContactCompany,
+  ContactDetail,
+  ContactDemoSummary,
   VisitorSessionView,
   ContactService,
   RecordSightingInput,

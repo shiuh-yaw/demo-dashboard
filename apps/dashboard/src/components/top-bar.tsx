@@ -10,6 +10,7 @@ import AuthMenu from "./auth-menu";
 import { TeamSwitcher } from "./team-switcher";
 import { Breadcrumbs } from "./breadcrumbs";
 import { GettingStartedPopover } from "./getting-started-popover";
+import { InboundBadge } from "./inbound-badge";
 import { TooltipProvider } from "@/components/droplet-client";
 import type { OperatorTheme } from "@/lib/operator-prefs";
 
@@ -101,6 +102,7 @@ export function TopBar({
             <ThemeIcon className="h-4 w-4" />
           </button>
         )}
+        <InboundBadge />
         <GettingStartedPopover />
         <div className="h-4 border-l border-border-divider" />
         <AuthMenu user={user} />

@@ -12,6 +12,8 @@
  * into a demo's render path, so all work happens server-side only.
  */
 
+import { after as nextAfter } from "next/server";
+
 import { trackBatchSchema, type TrackBatch } from "@dynamic-demos/analytics";
 
 import type {
@@ -56,6 +58,19 @@ export interface CreateTrackHandlerOptions {
   logger?: TrackLogger;
   /** Cookie name the dashboard's own launch flow sets to mark self-views. Defaults to `dd_internal`. */
   internalCookieName?: string;
+  /**
+   * Phase GTM-10 enrichment hook - fired via `after()` when a batch carries an
+   * identified email, passing only its domain (never the full email). The
+   * enrichment side skips consumer domains and `setEnrichment` is write-once,
+   * so a repeat identify is a no-op. Omitted by default (no enrichment wired)
+   * so existing callers/tests are unaffected.
+   */
+  onEmailIdentified?: (params: {
+    sessionId: string;
+    domain: string;
+  }) => void | Promise<void>;
+  /** Injectable to avoid depending on Next's request-scoped `after()` in unit tests; defaults to `next/server`'s `after`. */
+  after?: (callback: () => void | Promise<void>) => void;
   /**
    * Fired right after a successful upsert, alongside the derived
    * `prospectId` (from the resolved share link, if any) and `isInternal`.
@@ -119,6 +134,8 @@ export function createTrackHandler(
     ipRateLimiter,
     logger = DEFAULT_LOGGER,
     internalCookieName = "dd_internal",
+    onEmailIdentified,
+    after = nextAfter,
     onBatchIngested,
   } = opts;
 
@@ -245,6 +262,20 @@ export function createTrackHandler(
       onBatchIngested?.({ batch, created, prospectId, isInternal });
     } catch {
       // a post-ingest hook must never break the tracker's response
+    }
+
+    // Enrichment (Phase GTM-10) - fire when a batch carries an identified
+    // email so its domain can be resolved to a company. Runs post-response
+    // via `after()`, so a failure can never affect the response already on
+    // its way to the tracker; only the domain (never the full email) is
+    // passed on, in memory.
+    const email = batch.identity?.email;
+    if (email && onEmailIdentified) {
+      const domain = email.split("@")[1]?.toLowerCase();
+      if (domain) {
+        const sessionId = batch.sessionId;
+        after(() => onEmailIdentified({ sessionId, domain }));
+      }
     }
 
     return jsonResponse({ ok: true }, 200, corsHeaders);

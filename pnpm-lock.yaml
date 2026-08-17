@@ -2221,6 +2221,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 2.1.9(@types/node@20.19.25)(jsdom@26.0.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(lightningcss@1.30.2)
 
   packages/dynamic:
     dependencies:

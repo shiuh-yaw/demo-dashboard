@@ -5,6 +5,8 @@
  */
 
 import type {
+  ContactsFilter,
+  ContactDetail,
   AnalyticsReadScope,
   AnalyticsService,
   AnalyticsTimeRange,
@@ -101,8 +103,16 @@ export class StubAnalyticsService implements AnalyticsService {
   async listAllContacts(
     _scope: AnalyticsReadScope,
     _page?: PageOptions,
+    _filter?: ContactsFilter,
   ): Promise<Page<OrgContactView>> {
     return { items: [], nextCursor: null };
+  }
+
+  async getContactDetail(
+    _contactKey: string,
+    _scope: AnalyticsReadScope,
+  ): Promise<ContactDetail | null> {
+    return null;
   }
 
   async listAllContactSessions(

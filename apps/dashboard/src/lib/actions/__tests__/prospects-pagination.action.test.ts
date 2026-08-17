@@ -97,11 +97,36 @@ describe("getAllProspectProfiles (first page)", () => {
 
     const res = await getAllProspectProfiles();
 
+    // The unclaimed queue is AUTO leads (everyone) plus, for an admin only,
+    // legacy orphan rows.
     expect(prospectService.list).toHaveBeenNthCalledWith(2, {
-      where: { ownerId: "" },
+      where: {
+        OR: [
+          { status: "AUTO", ownerId: null, createdById: null },
+          { ownerId: "" },
+        ],
+      },
       limit: expect.any(Number),
     });
     expect(res.orphaned.map((p) => p.id)).toEqual(["orphan-1"]);
+  });
+
+  it("a non-admin gets the AUTO queue but NOT legacy orphan rows", async () => {
+    gtm.getSessionUser.mockResolvedValue(MEMBER);
+    gtm.resolveActiveScope.mockResolvedValue({ kind: "mine" });
+    gtm.prospectScopeWhere.mockReturnValue({});
+    prospectService.list
+      .mockResolvedValueOnce({ items: [row("p1")], nextCursor: null })
+      .mockResolvedValueOnce({ items: [row("auto-1")], nextCursor: null });
+
+    await getAllProspectProfiles();
+
+    // Legacy orphans stay admin-only; AUTO rows belong to nobody, so anyone
+    // may see and claim them.
+    expect(prospectService.list).toHaveBeenNthCalledWith(2, {
+      where: { OR: [{ status: "AUTO", ownerId: null, createdById: null }] },
+      limit: expect.any(Number),
+    });
   });
 
   it("skips the orphaned fetch when a cursor is supplied (not the first page)", async () => {

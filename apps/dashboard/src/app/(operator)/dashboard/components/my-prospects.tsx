@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Building2, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Building2, ChevronDown, ChevronUp, Inbox, Plus } from "lucide-react";
 import {
   Button,
   EmptyState,
@@ -21,7 +21,7 @@ import { THIN_SCROLLBAR } from "@/components/shared/thin-scrollbar";
 import { displayHost } from "@/lib/display-host";
 import { NO_AUTOFILL } from "@/lib/no-autofill";
 import { setProspectFilter } from "@/lib/actions/scope";
-import { listOverviewRowsPage } from "@/lib/actions/prospects";
+import { claimProspect, listOverviewRowsPage } from "@/lib/actions/prospects";
 import { useInfiniteList } from "@/lib/query/use-infinite-list";
 import { keys } from "@/lib/query/keys";
 import type { OverviewProspectRow } from "@/lib/overview-row";
@@ -37,6 +37,10 @@ export interface MyProspectsProps {
   filter: ProspectFilter;
   isAdmin: boolean;
   onTeam: boolean;
+  /** Unclaimed inbound rows - a bounded, unpaginated set on its own tab. */
+  inbound: OverviewProspectRow[];
+  /** Claiming is a mutation; VIEWERs get the tab read-only. */
+  canClaim: boolean;
 }
 
 type SortKey =
@@ -71,8 +75,18 @@ export function MyProspects({
   filter,
   isAdmin,
   onTeam,
+  inbound,
+  canClaim,
 }: MyProspectsProps) {
   const router = useRouter();
+  // ?inbound=1 deep-links the queue - the top-bar badge points here.
+  const searchParams = useSearchParams();
+  const [onInbound, setOnInbound] = useState(
+    searchParams.get("inbound") === "1",
+  );
+  const [inboundRows, setInboundRows] = useState(inbound);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [claimError, setClaimError] = useState<string | null>(null);
   const {
     items: rows,
     fetchNextPage,
@@ -89,11 +103,15 @@ export function MyProspects({
   const [pending, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
 
+  // The active tab decides the row source: the scoped, paginated list or the
+  // bounded inbound queue. Search and sort apply to whichever is showing.
+  const activeRows = onInbound ? inboundRows : rows;
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const base = !q
-      ? rows
-      : rows.filter(
+      ? activeRows
+      : activeRows.filter(
           (r) =>
             r.name.toLowerCase().includes(q) ||
             (r.domain ?? "").toLowerCase().includes(q),
@@ -109,7 +127,7 @@ export function MyProspects({
       else cmp = a[sortKey] - b[sortKey];
       return cmp * dir;
     });
-  }, [rows, query, sortKey, sortDir]);
+  }, [activeRows, query, sortKey, sortDir]);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -122,11 +140,33 @@ export function MyProspects({
   }
 
   function selectFilter(value: ProspectFilter) {
+    setOnInbound(false);
     if (value === filter) return;
     startTransition(async () => {
       await setProspectFilter(value);
       router.refresh();
     });
+  }
+
+  async function handleClaim(id: string) {
+    if (claimingId) return;
+    setClaimingId(id);
+    setClaimError(null);
+    try {
+      const result = await claimProspect(id);
+      if (result.success) {
+        // It has an owner now, so it leaves the queue and joins the scoped
+        // list - which only a server round-trip can produce.
+        setInboundRows((prev) => prev.filter((r) => r.id !== id));
+        router.refresh();
+      } else {
+        setClaimError(result.error);
+      }
+    } catch {
+      setClaimError("Failed to claim prospect");
+    } finally {
+      setClaimingId(null);
+    }
   }
 
   const filterOptions: { value: ProspectFilter; label: string }[] = [
@@ -164,7 +204,27 @@ export function MyProspects({
     </button>
   );
 
-  const segmented = filterOptions.length > 1 && (
+  // Kept visible while the tab is open even after the last row is claimed,
+  // so claiming the final inbound company doesn't yank the tab out from
+  // under the click.
+  const showInboundTab = inboundRows.length > 0 || onInbound;
+
+  const inboundTab = showInboundTab && (
+    <button
+      type="button"
+      onClick={() => setOnInbound(true)}
+      aria-pressed={onInbound}
+      className={`flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:flex-none ${
+        onInbound
+          ? "bg-card text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      Inbound{inboundRows.length > 0 && ` (${inboundRows.length})`}
+    </button>
+  );
+
+  const segmented = (filterOptions.length > 1 || showInboundTab) && (
     // flex-1 buttons fill the full-width mobile control; sm:flex-none reverts
     // to intrinsic width once the toolbar row has space to spare.
     <div className="flex w-full items-center gap-0.5 overflow-x-auto rounded-lg bg-muted p-0.5 sm:inline-flex sm:w-auto">
@@ -174,9 +234,9 @@ export function MyProspects({
           type="button"
           onClick={() => selectFilter(opt.value)}
           disabled={pending}
-          aria-pressed={filter === opt.value}
+          aria-pressed={!onInbound && filter === opt.value}
           className={`flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:flex-none ${
-            filter === opt.value
+            !onInbound && filter === opt.value
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -184,6 +244,7 @@ export function MyProspects({
           {opt.label}
         </button>
       ))}
+      {inboundTab}
     </div>
   );
 
@@ -197,14 +258,16 @@ export function MyProspects({
       <div className="shrink-0">
         <h2 className="text-base font-semibold text-foreground">Prospects</h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Every account you are working, with at-a-glance engagement.
+          {onInbound
+            ? "Companies that signed into a demo with a work email. Nobody owns these yet."
+            : "Every account you are working, with at-a-glance engagement."}
         </p>
       </div>
 
       <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {segmented}
-          {rows.length > 0 && (
+          {activeRows.length > 0 && (
             <Input
               placeholder="Search prospects"
               value={query}
@@ -229,12 +292,24 @@ export function MyProspects({
         <NewProspectDialog open={createOpen} onOpenChange={setCreateOpen} />
       )}
 
-      {rows.length === 0 ? (
-        <EmptyState
-          icon={Building2}
-          title="No Prospects Yet"
-          description="Create your first prospect to start building branded demos and share links."
-        />
+      {claimError && (
+        <p className="shrink-0 text-xs text-destructive">{claimError}</p>
+      )}
+
+      {activeRows.length === 0 ? (
+        onInbound ? (
+          <EmptyState
+            icon={Inbox}
+            title="No inbound companies waiting"
+            description="When someone signs into a demo with a work email, the company lands here for anyone to claim."
+          />
+        ) : (
+          <EmptyState
+            icon={Building2}
+            title="No Prospects Yet"
+            description="Create your first prospect to start building branded demos and share links."
+          />
+        )
       ) : (
         <div className="lg:min-h-0 lg:flex-1">
           {/* Below sm: stacked cards, no fixed columns to collide or clip. */}
@@ -284,9 +359,24 @@ export function MyProspects({
                     </span>
                   </div>
                 </div>
+                {onInbound && canClaim && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={claimingId === r.id}
+                    // Nested in the card's link - claiming must not navigate.
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleClaim(r.id);
+                    }}
+                    aria-label={`Claim ${r.name}`}
+                  >
+                    {claimingId === r.id ? "Claiming..." : "Claim"}
+                  </Button>
+                )}
               </Link>
             ))}
-            {hasNextPage && (
+            {!onInbound && hasNextPage && (
               <InfiniteScrollSentinel
                 onReach={fetchNextPage}
                 disabled={isFetchingNextPage}
@@ -334,6 +424,13 @@ export function MyProspects({
                   <TableHead className="w-[120px] text-right">
                     {headerButton("updatedAt", "Updated", "right")}
                   </TableHead>
+                  {onInbound && canClaim && (
+                    // Sized for "Claiming...", not "Claim" - the label grows
+                    // mid-click and the narrower column clipped it.
+                    <TableHead className="w-[132px] text-right">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -378,11 +475,29 @@ export function MyProspects({
                     <TableCell className="text-right text-muted-foreground">
                       {formatShortDate(r.updatedAt)}
                     </TableCell>
+                    {onInbound && canClaim && (
+                      // z-10: the row-wide stretched link would otherwise sit
+                      // over this button and swallow the click.
+                      <TableCell className="relative z-10 text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={claimingId === r.id}
+                          onClick={() => void handleClaim(r.id)}
+                          aria-label={`Claim ${r.name}`}
+                          // Fixed width so the row does not reflow when the
+                          // label swaps to "Claiming...".
+                          className="w-[104px] justify-center whitespace-nowrap"
+                        >
+                          {claimingId === r.id ? "Claiming..." : "Claim"}
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
             </table>
-            {hasNextPage && (
+            {!onInbound && hasNextPage && (
               <InfiniteScrollSentinel
                 onReach={fetchNextPage}
                 disabled={isFetchingNextPage}

@@ -85,7 +85,6 @@ export async function setTeamContext(value: string): Promise<void> {
   const store = await cookies();
   store.set(TEAM_CTX_COOKIE, value, COOKIE_OPTS);
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/prospects");
 }
 
 /** Persist the My/Team/All filter. */
@@ -93,5 +92,4 @@ export async function setProspectFilter(value: ProspectFilter): Promise<void> {
   const store = await cookies();
   store.set(PROSPECT_FILTER_COOKIE, value, COOKIE_OPTS);
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/prospects");
 }

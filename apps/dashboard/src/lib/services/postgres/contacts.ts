@@ -47,4 +47,13 @@ export class PostgresContactService implements ContactService {
 
     return { contact, shouldNotify, appearance };
   }
+
+  async listEmails(limit: number): Promise<string[]> {
+    const rows = await this.client.contact.findMany({
+      select: { email: true },
+      orderBy: { lastSeenAt: "desc" },
+      take: limit,
+    });
+    return rows.map((r) => r.email);
+  }
 }

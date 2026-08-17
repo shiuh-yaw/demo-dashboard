@@ -711,7 +711,10 @@ export interface CreateProspectProfileRequest {
  */
 export interface UpdateProspectProfileRequest {
   name?: string;
-  companyUrl?: string;
+  /** Omit to leave unchanged; null to CLEAR. The two are not the same - the
+   * mapper only writes the field when it is present, so sending undefined for
+   * an emptied input silently keeps the old value. */
+  companyUrl?: string | null;
   prospect?: Partial<ProspectSettings>;
 }
 

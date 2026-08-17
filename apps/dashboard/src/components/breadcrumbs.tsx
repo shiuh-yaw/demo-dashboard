@@ -59,7 +59,6 @@ export function buildTrail(
   const path = pathname.replace(/\/+$/, "") || "/";
 
   if (path === "/dashboard") return [{ label: "Overview" }];
-  if (path === "/dashboard/prospects") return [{ label: "Prospects" }];
   if (path.startsWith("/dashboard/prospects/")) {
     // parts: ["", "dashboard", "prospects", id, sub?] - the hub segment
     // (Contacts/Settings) adds a trailing crumb; the name then links back to

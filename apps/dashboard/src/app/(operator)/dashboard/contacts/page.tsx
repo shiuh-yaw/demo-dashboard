@@ -31,7 +31,11 @@ export default async function ContactsPage() {
 
   const scope = await resolveActiveScope(user);
   const readScope = await resolveAnalyticsReadScope(user, scope);
-  const page = await services.analytics.listAllContacts(readScope);
+  // Identified viewers only, matching the client's default toggle state so the
+  // SSR-seeded first page is the one the list actually renders.
+  const page = await services.analytics.listAllContacts(readScope, undefined, {
+    includeAnonymous: false,
+  });
   const initialPage = await toContactRows(page);
 
   return (

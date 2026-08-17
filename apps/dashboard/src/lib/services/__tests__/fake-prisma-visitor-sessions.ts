@@ -141,6 +141,33 @@ export function createFakeVisitorSessionPrisma(): VisitorSessionPrismaClient & {
         sessions.set(where.id, updated);
         return { ...updated };
       },
+      async updateMany({ where, data }) {
+        const existing = sessions.get(where.id);
+        if (!existing) return { count: 0 };
+        // An absent `enrichment` predicate is the overwrite case. When it IS
+        // present it mirrors Prisma's `enrichment: { equals: Prisma.DbNull }`
+        // semantics: matches only while the column is still null, same as the
+        // real write-once guard.
+        if (where.enrichment && existing.enrichment !== null) {
+          return { count: 0 };
+        }
+        sessions.set(where.id, { ...existing, enrichment: data.enrichment });
+        return { count: 1 };
+      },
+      async findMany({ take }) {
+        // Mirrors `listUnenriched`'s SQL half only: sessions with a captured
+        // email, newest first, bounded by `take`. The "carries no company"
+        // test runs in the service, over the `enrichment` this returns.
+        return Array.from(sessions.values())
+          .filter((s) => s.identifiedEmail !== null)
+          .sort((a, b) => b.lastSeenAt.getTime() - a.lastSeenAt.getTime())
+          .slice(0, take)
+          .map((s) => ({
+            id: s.id,
+            identifiedEmail: s.identifiedEmail,
+            enrichment: s.enrichment,
+          }));
+      },
     },
     trackEvent: {
       async createMany({ data, skipDuplicates }) {

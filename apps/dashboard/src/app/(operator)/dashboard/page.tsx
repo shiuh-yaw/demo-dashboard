@@ -23,22 +23,27 @@ export const dynamic = "force-dynamic";
 
 export default async function OverviewPage() {
   const user = await requireUser();
-  const [{ profiles, scope }, scopeCtx] = await Promise.all([
+  const [{ profiles, orphaned, scope }, scopeCtx] = await Promise.all([
     getAllProspectProfiles(),
     getScopeContext(),
   ]);
 
   // First page rows seed the infinite list (one batched summary query for
   // this page); the stat cards span EVERY prospect in scope, not just this
-  // page, via a separate lean org-wide aggregate.
+  // page, via a separate lean org-wide aggregate. Inbound rows are summarized
+  // in the same batch - engagement is what tells an operator whether an
+  // unclaimed company is worth taking.
   const [summaries, stats] = await Promise.all([
-    services.analytics.prospectSummaries(profiles.items.map((p) => p.id)),
+    services.analytics.prospectSummaries(
+      [...profiles.items, ...orphaned].map((p) => p.id),
+    ),
     getOverviewStats(scope),
   ]);
   const initialPage = {
     items: profiles.items.map((p) => toOverviewRow(p, summaries)),
     nextCursor: profiles.nextCursor,
   };
+  const inbound = orphaned.map((p) => toOverviewRow(p, summaries));
 
   return (
     // lg: the outlet no longer needs to scroll this page - it fills the
@@ -71,6 +76,8 @@ export default async function OverviewPage() {
           filter={scopeCtx.filter}
           isAdmin={scopeCtx.isAdmin}
           onTeam={scopeCtx.onTeam}
+          inbound={inbound}
+          canClaim={canCreateRecord(user)}
         />
       </div>
     </div>

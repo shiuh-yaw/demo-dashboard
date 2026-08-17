@@ -16,6 +16,7 @@ import { cn } from "@dynamic-demos/utils";
 import { Field } from "@/app/(operator)/checkouts/components/editor/form-components";
 import { suppressAutofill } from "@/lib/suppress-autofill";
 import { validateLogoFile } from "@/components/shared/logo-field-validation";
+import { LogoOptions } from "@/components/shared/logo-options";
 
 export interface LogoFieldProps {
   /** Current logo value - a URL or a data: URL from a prior upload. */
@@ -24,6 +25,8 @@ export interface LogoFieldProps {
   setToast: (message: string) => void;
   /** Preview swatch background - matches the theme's page background. */
   previewBackground?: string;
+  /** Company website. Enables the candidate picker; omit to hide it. */
+  websiteUrl?: string;
 }
 
 export function LogoField({
@@ -31,6 +34,7 @@ export function LogoField({
   onChange,
   setToast,
   previewBackground,
+  websiteUrl,
 }: LogoFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -181,6 +185,13 @@ export function LogoField({
         className="mt-2"
         {...suppressAutofill}
       />
+      {websiteUrl ? (
+        <LogoOptions
+          websiteUrl={websiteUrl}
+          value={value}
+          onSelect={onChange}
+        />
+      ) : null}
     </div>
   );
 }

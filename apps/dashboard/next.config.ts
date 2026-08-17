@@ -39,6 +39,13 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/prospects/:path*",
         permanent: true,
       },
+      // The prospect list folded into the Overview. Exact source only, so the
+      // prospect hub (`/dashboard/prospects/:id`) and `/new` still resolve.
+      {
+        source: "/dashboard/prospects",
+        destination: "/dashboard",
+        permanent: true,
+      },
       // No known consumer references the public brand-profile API route
       // today (demo apps fetch resolved themes via DemoConfig, D-028), but
       // redirecting costs nothing and protects against an out-of-repo caller.

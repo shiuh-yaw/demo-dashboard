@@ -41,6 +41,8 @@ function matches(row: AnalyticsSessionRow, where: AnalyticsSessionWhere): boolea
       if (!sl.demoConfigId.in.includes(row.shareLink.demoConfigId)) return false;
     }
   }
+  // Top-level OR: any alternative matching is enough (contacts read).
+  if (where.OR && !where.OR.some((alt) => matches(row, alt))) return false;
   const ev = where.events?.some;
   if (ev) {
     const hit = row.events.some((e) => {
@@ -254,10 +256,325 @@ describe("PostgresAnalyticsService", () => {
     const c = contacts[0]!;
     expect(c.key).toBe("jo@acme.com");
     expect(c.email).toBe("jo@acme.com");
-    expect(c.company).toEqual({ name: "Acme", domain: "acme.com" });
+    expect(c.company).toEqual({
+      name: "Acme",
+      domain: "acme.com",
+      industry: null,
+      sizeBand: null,
+      summary: null,
+    });
     expect(c.sessionCount).toBe(2);
     expect(c.demoSlugs).toEqual(["earn", "wallet"]);
     expect(c.lastSeenAt).toBe("2026-07-22T09:00:00.000Z");
+  });
+
+  it("lists a lead who opened a demo directly, with no share link", async () => {
+    // The reported bug: these sessions post to #leads (which only needs an
+    // authenticated email) but were dropped from Contacts for lacking a
+    // share link, so real leads were invisible.
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        {
+          id: "s1",
+          anonId: "a1",
+          demoSlug: "wallet",
+          startedAt: new Date("2026-08-13T10:00:00Z"),
+          lastSeenAt: new Date("2026-08-13T10:05:00Z"),
+          isInternal: false,
+          enrichment: null,
+          shareLink: null,
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "lliam@aleo.org" },
+              ts: new Date("2026-08-13T10:01:00Z"),
+            },
+          ],
+        },
+      ]),
+    );
+
+    const page = await svc.listAllContacts("all");
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]!.email).toBe("lliam@aleo.org");
+    // No prospect to attribute it to - the UI renders this as "Direct".
+    expect(page.items[0]!.prospectIds).toEqual([]);
+  });
+
+  it("excludes anonymous viewers when includeAnonymous is false", async () => {
+    const anon = (id: string): AnalyticsSessionRow => ({
+      id,
+      anonId: `anon_${id}`,
+      demoSlug: "catalog",
+      startedAt: new Date("2026-08-13T10:00:00Z"),
+      lastSeenAt: new Date("2026-08-13T10:05:00Z"),
+      isInternal: false,
+      enrichment: null,
+      shareLink: null,
+      events: [],
+    });
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        anon("s1"),
+        anon("s2"),
+        anon("s3"),
+        {
+          ...anon("s4"),
+          anonId: "anon_known",
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "jo@acme.com" },
+              ts: new Date("2026-08-13T10:01:00Z"),
+            },
+          ],
+        },
+      ]),
+    );
+
+    const hidden = await svc.listAllContacts("all", undefined, {
+      includeAnonymous: false,
+    });
+    expect(hidden.items.map((c) => c.email)).toEqual(["jo@acme.com"]);
+
+    // Default keeps them - only the workspace view opts out.
+    expect((await svc.listAllContacts("all")).items).toHaveLength(4);
+  });
+
+  it("fills a page with identified contacts rather than filtering after paging", async () => {
+    // Filtering after pagination would return a nearly-empty first page while
+    // still reporting a cursor; the filter has to run before the slice.
+    const rows: AnalyticsSessionRow[] = [];
+    for (let i = 0; i < 60; i++) {
+      const identified = i % 3 === 0;
+      rows.push({
+        id: `s${i}`,
+        anonId: `anon_${i}`,
+        demoSlug: "wallet",
+        // Distinct timestamps keep the newest-first order deterministic.
+        startedAt: new Date(Date.UTC(2026, 7, 13, 0, i)),
+        lastSeenAt: new Date(Date.UTC(2026, 7, 13, 1, i)),
+        isInternal: false,
+        enrichment: null,
+        shareLink: null,
+        events: identified
+          ? [
+              {
+                type: "milestone",
+                name: "authenticated",
+                props: { email: `user${i}@acme.com` },
+                ts: new Date(Date.UTC(2026, 7, 13, 0, i)),
+              },
+            ]
+          : [],
+      });
+    }
+    const svc = new PostgresAnalyticsService(fakePrisma(rows));
+
+    const page = await svc.listAllContacts("all", { limit: 10 }, {
+      includeAnonymous: false,
+    });
+    expect(page.items).toHaveLength(10);
+    expect(page.items.every((c) => c.email !== null)).toBe(true);
+    expect(page.nextCursor).not.toBeNull();
+  });
+
+  it("still hides internal self-views that have no share link", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        {
+          id: "s1",
+          anonId: "a1",
+          demoSlug: "wallet",
+          startedAt: new Date("2026-08-13T10:00:00Z"),
+          lastSeenAt: new Date("2026-08-13T10:05:00Z"),
+          isInternal: true,
+          enrichment: null,
+          shareLink: null,
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "operator@dynamic.xyz" },
+              ts: new Date("2026-08-13T10:01:00Z"),
+            },
+          ],
+        },
+      ]),
+    );
+
+    expect((await svc.listAllContacts("all")).items).toEqual([]);
+  });
+
+  it("shows a scoped operator both their prospect's contacts and unattributed leads", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        session({
+          id: "s1",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "in-scope@acme.com" },
+              ts: new Date("2026-07-20T10:01:00Z"),
+            },
+          ],
+        }),
+        session({
+          id: "s2",
+          anonId: "a2",
+          prospectId: "p9",
+          demoConfigId: "d9",
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "out-of-scope@other.com" },
+              ts: new Date("2026-07-20T10:01:00Z"),
+            },
+          ],
+        }),
+        {
+          id: "s3",
+          anonId: "a3",
+          demoSlug: "wallet",
+          startedAt: new Date("2026-07-20T10:00:00Z"),
+          lastSeenAt: new Date("2026-07-20T10:05:00Z"),
+          isInternal: false,
+          enrichment: null,
+          shareLink: null,
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "direct@lead.com" },
+              ts: new Date("2026-07-20T10:01:00Z"),
+            },
+          ],
+        },
+      ]),
+    );
+
+    const emails = (await svc.listAllContacts(new Set(["p1"]))).items
+      .map((c) => c.email)
+      .sort();
+    // Unattributed belongs to no prospect, so no scope withholds it; another
+    // team's prospect is still hidden.
+    expect(emails).toEqual(["direct@lead.com", "in-scope@acme.com"]);
+  });
+
+  it("never shows another identity's company when one browser signed in twice", async () => {
+    // Same anonId, two logins -> one contact group holding two identities.
+    // The group must not surface the other person's employer.
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        session({
+          id: "s1",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          demoSlug: "card",
+          enrichment: {
+            company: { name: "Fireblocks", domain: "fireblocks.com" },
+          },
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "someone@fireblocks.com" },
+              ts: new Date("2026-07-20T10:01:00Z"),
+            },
+          ],
+        }),
+        session({
+          id: "s2",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d2",
+          demoSlug: "wallet",
+          enrichment: { company: { name: "Dynamic", domain: "dynamic.xyz" } },
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "someone@dynamic.xyz" },
+              ts: new Date("2026-07-20T10:02:00Z"),
+            },
+          ],
+        }),
+      ]),
+    );
+
+    const contacts = await svc.listProspectContacts("p1", "all");
+    expect(contacts).toHaveLength(1);
+    const c = contacts[0]!;
+    // Whichever identity keyed the group, the company must match ITS domain.
+    const expected =
+      c.email === "someone@dynamic.xyz" ? "Dynamic" : "Fireblocks";
+    expect(c.company?.name).toBe(expected);
+  });
+
+  it("keeps a domainless (legacy) company - nothing contradicts it", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        session({
+          id: "s1",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          enrichment: { org: "AS13335 Cloudflare" },
+          events: [
+            {
+              type: "milestone",
+              name: "authenticated",
+              props: { email: "jo@acme.com" },
+              ts: new Date("2026-07-20T10:01:00Z"),
+            },
+          ],
+        }),
+      ]),
+    );
+
+    const contacts = await svc.listProspectContacts("p1", "all");
+    expect(contacts[0]!.company?.name).toBe("AS13335 Cloudflare");
+  });
+
+  it("reads the full company profile written by the domain enrichment", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrisma([
+        session({
+          id: "s1",
+          anonId: "a1",
+          prospectId: "p1",
+          demoConfigId: "d1",
+          demoSlug: "wallet",
+          enrichment: {
+            company: {
+              name: "Acme Bank",
+              domain: "acme.com",
+              industry: "Banking",
+              sizeBand: "1001-5000",
+              summary: "Retail bank serving the US Midwest.",
+            },
+            provider: "claude",
+            confidence: "high",
+          },
+        }),
+      ]),
+    );
+    const contacts = await svc.listProspectContacts("p1", "all");
+    expect(contacts[0]!.company).toEqual({
+      name: "Acme Bank",
+      domain: "acme.com",
+      industry: "Banking",
+      sizeBand: "1001-5000",
+      summary: "Retail bank serving the US Midwest.",
+    });
   });
 
   it("collapses two anonIds sharing the same captured email into one contact", async () => {
@@ -1653,5 +1970,100 @@ describe("PostgresAnalyticsService.catalogDemoTimeseries (per-demo launch trend)
   it("returns an empty series for a slug that was never launched", async () => {
     const points = await fixture().catalogDemoTimeseries("nonexistent", "all", NOW);
     expect(points).toEqual([]);
+  });
+});
+
+/** Fake carrying a `prospect` delegate, for the domain-matched attribution an
+ * inbound lead needs: it arrives with no share link, so the only association
+ * between the session and its auto-created prospect is the email domain. */
+function fakePrismaWithProspects(
+  rows: AnalyticsSessionRow[],
+  prospects: { id: string; domain: string | null }[],
+): AnalyticsPrismaClient {
+  return {
+    ...fakePrisma(rows),
+    prospect: {
+      async findUnique({ where }) {
+        const hit = prospects.find((p) => p.id === where.id);
+        return hit ? { domain: hit.domain } : null;
+      },
+      async findFirst({ where }) {
+        const hit = prospects.find((p) => p.domain === where.domain);
+        return hit ? { id: hit.id } : null;
+      },
+    },
+  };
+}
+
+/** A viewer who opened a demo directly - no share link, so no attribution. */
+function directSession(
+  overrides: Partial<AnalyticsSessionRow> & { id: string; anonId: string },
+): AnalyticsSessionRow {
+  return {
+    demoSlug: "wallet",
+    startedAt: new Date("2026-07-20T10:00:00Z"),
+    lastSeenAt: new Date("2026-07-20T10:05:00Z"),
+    isInternal: false,
+    enrichment: null,
+    events: [],
+    shareLink: null,
+    ...overrides,
+  };
+}
+
+describe("domain-matched prospect attribution", () => {
+  const rows = [
+    directSession({
+      id: "s1",
+      anonId: "a1",
+      identifiedEmail: "demo.viewer@ramp.com",
+      // Identity also lands on the milestone; that is what the contact key
+      // is derived from.
+      events: [
+        {
+          type: "milestone",
+          name: "authenticated",
+          props: { email: "demo.viewer@ramp.com" },
+          ts: new Date("2026-07-20T10:01:00Z"),
+        },
+      ],
+    }),
+  ];
+  const prospects = [{ id: "ramp", domain: "ramp.com" }];
+
+  it("lists a share-link-less contact under the prospect for its email domain", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrismaWithProspects(rows, prospects),
+    );
+
+    const contacts = await svc.listProspectContacts("ramp", new Set(["ramp"]));
+
+    expect(contacts.map((c) => c.email)).toEqual(["demo.viewer@ramp.com"]);
+  });
+
+  it("links the contact back to that prospect", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrismaWithProspects(rows, prospects),
+    );
+
+    const detail = await svc.getContactDetail(
+      "demo.viewer@ramp.com",
+      new Set(["ramp"]),
+    );
+
+    expect(detail?.contact.prospectIds).toEqual(["ramp"]);
+  });
+
+  it("leaves a contact unlinked when no prospect owns its domain", async () => {
+    const svc = new PostgresAnalyticsService(
+      fakePrismaWithProspects(rows, [{ id: "other", domain: "acme.com" }]),
+    );
+
+    const detail = await svc.getContactDetail(
+      "demo.viewer@ramp.com",
+      new Set(["other"]),
+    );
+
+    expect(detail?.contact.prospectIds).toEqual([]);
   });
 });
