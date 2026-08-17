@@ -21,7 +21,6 @@ import { addSolanaExtension } from "@dynamic-labs-sdk/solana";
 import { addSuiExtension } from "@dynamic-labs-sdk/sui";
 import { addBitcoinExtension } from "@dynamic-labs-sdk/bitcoin";
 import { addTonExtension } from "@dynamic-labs-sdk/ton";
-import { addTronExtension } from "@dynamic-labs-sdk/tron";
 import { addZerodevExtension } from "@dynamic-labs-sdk/zerodev";
 import {
   createDynamicClientSingleton,
@@ -43,11 +42,17 @@ import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
  * whether or not we can serve it. Without this list, enabling e.g. Tempo or
  * Midnight puts a row in Add Wallet that dead-ends on click.
  *
- * Only add a chain whose package ships a WaaS extension: Stellar and Aleo
- * (like Aptos, Tron, Starknet) are injected/external-wallet only - their
- * dists contain no WaaS code at all.
+ * A `./waas` export in the chain package is necessary but NOT sufficient to
+ * belong here - Tron ships `addWaasTronExtension` yet cannot create a wallet:
+ * it is a Tier 2 chain, meaning its addresses are *derived* from the EVM
+ * wallet by raw signing rather than held in their own MPC wallet, so
+ * `createWaasWalletAccounts({ chains: ["TRON"] })` fails with "Wallet client
+ * not initialized". Only add a chain after creating a wallet on it.
+ *
+ * Stellar, Aleo, Aptos and Starknet don't ship WaaS at all - external wallets
+ * only.
  */
-export const WAAS_CHAINS = ["EVM", "SOL", "SUI", "BTC", "TON", "TRON"] as const;
+export const WAAS_CHAINS = ["EVM", "SOL", "SUI", "BTC", "TON"] as const;
 
 const singleton = createDynamicClientSingleton<DynamicClient>({
   create: () => {
@@ -67,9 +72,6 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
     addBitcoinExtension(client);
     // SDK 1.x: addTonExtension takes (params?, client?) - params first.
     addTonExtension(undefined, client);
-    // Tron does have embedded wallets - addTronExtension calls
-    // addWaasTronExtension internally, despite the docs page not saying so.
-    addTronExtension(client);
     addZerodevExtension(client);
   },
 });

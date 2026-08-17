@@ -41,7 +41,6 @@ export {
   isSuiWalletAccount,
   isBitcoinWalletAccount,
   isTonWalletAccount,
-  isTronWalletAccount,
 } from "./wallets";
 
 // Networks
@@ -137,7 +136,6 @@ export type {
   SuiWalletAccount,
   BitcoinWalletAccount,
   TonWalletAccount,
-  TronWalletAccount,
   Chain,
 } from "./wallets";
 export type { NetworkData } from "./networks";

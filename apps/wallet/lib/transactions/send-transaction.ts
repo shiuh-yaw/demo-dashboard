@@ -10,14 +10,12 @@ import {
   isSuiWalletAccount,
   isBitcoinWalletAccount,
   isTonWalletAccount,
-  isTronWalletAccount,
 } from "@/lib/dynamic";
 import { sendEvmTransaction } from "./send-evm-transaction";
 import { sendSolanaTransaction } from "./send-solana-transaction";
 import { sendSuiTransaction } from "./send-sui-transaction";
 import { sendBitcoinTransaction } from "./send-bitcoin-transaction";
 import { sendTonTransaction } from "./send-ton-transaction";
-import { sendTronTransaction } from "./send-tron-transaction";
 
 // =============================================================================
 // TYPES
@@ -115,16 +113,6 @@ export async function sendTransaction({
   // TON Chain
   if (isTonWalletAccount(walletAccount)) {
     return sendTonTransaction({
-      walletAccount,
-      amount,
-      recipient,
-      stepUp,
-    });
-  }
-
-  // Tron Chain
-  if (isTronWalletAccount(walletAccount)) {
-    return sendTronTransaction({
       walletAccount,
       amount,
       recipient,
