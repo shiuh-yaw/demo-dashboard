@@ -124,7 +124,7 @@ function ContactRowActions({
   );
 }
 
-/** An optional extra column rendered after "Demos" (e.g. "Prospects" org-wide). */
+/** An optional extra column rendered before "Demos" (e.g. "Prospects" org-wide). */
 export interface ContactsTableExtraColumn<C> {
   header: string;
   cell: (contact: C) => ReactNode;
@@ -216,8 +216,8 @@ export function ContactsTable<C extends ContactView>({
           <TableRow>
             <TableHead>Contact</TableHead>
             <TableHead>Company</TableHead>
-            <TableHead>Demos</TableHead>
             {extraColumn && <TableHead>{extraColumn.header}</TableHead>}
+            <TableHead className="text-right">Demos</TableHead>
             <TableHead className="text-right">Sessions</TableHead>
             <TableHead className="text-right">First Seen</TableHead>
             <TableHead className="text-right">Last Seen</TableHead>
@@ -258,14 +258,14 @@ export function ContactsTable<C extends ContactView>({
                     isEnriching={enrichingKeys.has(c.key)}
                   />
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-muted-foreground">
-                  {c.demoSlugs.join(", ") || "-"}
-                </TableCell>
                 {extraColumn && (
                   <TableCell className="whitespace-nowrap text-muted-foreground">
                     {extraColumn.cell(c)}
                   </TableCell>
                 )}
+                <TableCell className="whitespace-nowrap text-right tabular-nums">
+                  {c.demoSlugs.length}
+                </TableCell>
                 <TableCell className="whitespace-nowrap text-right tabular-nums">
                   {c.sessionCount}
                 </TableCell>
