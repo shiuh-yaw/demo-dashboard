@@ -84,6 +84,7 @@ overrides:
   form-data@>=4.0.0 <4.0.6: 4.0.6
   nanoid@<3.3.18: 3.3.18
   valibot@>=1.0.0 <1.2.0: 1.2.0
+  bigint-buffer: npm:@vekexasia/bigint-buffer2@1.1.1
 
 importers:
 
@@ -6433,6 +6434,15 @@ packages:
   '@upstash/redis@1.34.8':
     resolution: {integrity: sha512-eGJgOKc+2Uq4AdSM0lNx+WvFFhQeyhJ32SGNuSniLPg4lNb6m5h2AQ77qL+TgWiMZO8HCQ82Zsc/RlVBevCWTg==}
 
+  '@vekexasia/bigint-buffer2@1.1.1':
+    resolution: {integrity: sha512-uL63NGANn85oKrsrvD0CzgmkuMlWQnGv/J7sz0QQ2CnRaF1nMF0fAoRFH9PFtGRr62ZCA14qkHZATyBZbKYlRQ==}
+    engines: {node: '>= 14.0.0'}
+    peerDependencies:
+      '@vekexasia/bigint-uint8array': '*'
+    peerDependenciesMeta:
+      '@vekexasia/bigint-uint8array':
+        optional: true
+
   '@vercel/blob@2.4.1':
     resolution: {integrity: sha512-8GQbIsNVWu0PnG6AYHSCHupYBW0RzP26mb2V3QSoirG7i1EvISHEnW0QcvX+NUc5htALNg6vvls9nEavlwYHuA==}
     engines: {node: '>=20.0.0'}
@@ -7012,10 +7022,6 @@ packages:
 
   big.js@6.2.2:
     resolution: {integrity: sha512-y/ie+Faknx7sZA5MfGA2xKlu0GDv8RWrXGsmlteyJQ2lvoKv9GBK/fpRMc2qlSoBAgNxrixICFCBefIq8WCQpQ==}
-
-  bigint-buffer@1.1.5:
-    resolution: {integrity: sha512-trfYco6AoZ+rKhKnxA0hgX0HAbVP/s808/EuDSe2JDzUnCp/xAsli35Orvk67UrTEcwuxZqYZDmfA2RXJgxVvA==}
-    engines: {node: '>= 10.0.0'}
 
   bignumber.js@9.1.2:
     resolution: {integrity: sha512-2/mKyZH9K85bzOEfhXDBFZTGd1CTs+5IHpeFQo9luiBG7hghdC851Pj2WAhb6E3R6b9tZj/XKhbg4fum+Kepug==}
@@ -15175,7 +15181,7 @@ snapshots:
     dependencies:
       '@solana/buffer-layout': 4.0.1
       '@solana/web3.js': 1.98.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
-      bigint-buffer: 1.1.5
+      bigint-buffer: '@vekexasia/bigint-buffer2@1.1.1'
       bignumber.js: 9.3.1
     transitivePeerDependencies:
       - bufferutil
@@ -16919,6 +16925,8 @@ snapshots:
     dependencies:
       crypto-js: 4.2.0
 
+  '@vekexasia/bigint-buffer2@1.1.1': {}
+
   '@vercel/blob@2.4.1':
     dependencies:
       '@vercel/oidc': 3.6.2
@@ -18347,10 +18355,6 @@ snapshots:
   bech32@2.0.0: {}
 
   big.js@6.2.2: {}
-
-  bigint-buffer@1.1.5:
-    dependencies:
-      bindings: 1.5.0
 
   bignumber.js@9.1.2: {}
 
