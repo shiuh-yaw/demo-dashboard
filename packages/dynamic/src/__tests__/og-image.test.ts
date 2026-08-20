@@ -74,13 +74,12 @@ describe("renderDemoOgImage", () => {
     );
     try {
       const keys: OgArtKey[] = ["wallet", "connect", "accounts", "trade", "earn", "checkout", "transfer", "card"];
-      const rendered = await Promise.all(
-        keys.map((art) =>
-          renderDemoOgImage({ demoLabel: "Demo", art })
-            .then((r) => r.arrayBuffer())
-            .then((b) => Buffer.from(b).toString("base64")),
-        ),
-      );
+      const rendered: string[] = [];
+      for (const art of keys) {
+        const response = await renderDemoOgImage({ demoLabel: "Demo", art });
+        const buffer = await response.arrayBuffer();
+        rendered.push(Buffer.from(buffer).toString("base64"));
+      }
       expect(new Set(rendered).size).toBe(keys.length);
     } finally {
       fetchSpy.mockRestore();

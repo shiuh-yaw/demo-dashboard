@@ -5,5 +5,13 @@ export default defineConfig({
     globals: false,
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        maxForks: 2,
+        minForks: 1,
+      },
+    },
+    testTimeout: 30000,
   },
 });

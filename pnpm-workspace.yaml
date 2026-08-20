@@ -49,8 +49,8 @@ catalog:
   # Peer required by `@solana/rpc-subscriptions-channel-websocket` (pulled in
   # via @coinbase/cdp-sdk → @solana/kit). Browser code uses native WebSocket,
   # but Node-side codepaths that touch Solana RPC subscriptions throw
-  # `Cannot find module 'ws'` without this. Pinning at the floor of `^8.18.0`.
-  ws: "8.18.0"
+  # `Cannot find module 'ws'` without this. Pinning to the latest compatible 8.x release.
+  ws: "8.21.0"
 
   # Cross-chain SDK
   "@lifi/sdk": "3.14.1"
@@ -64,7 +64,7 @@ catalog:
 
   # Tooling
   typescript: "5.9.3"
-  vitest: "2.1.9"
+  vitest: "3.2.6"
   eslint: "9.39.1"
   # eslint-config-next pinned to match the Next.js patch release.
   "eslint-config-next": "15.5.22"
