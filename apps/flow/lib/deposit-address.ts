@@ -12,6 +12,7 @@
  */
 
 import type { Chain } from "@dynamic-labs-sdk/client";
+import { PublicKey } from "@solana/web3.js";
 import { USDC_BASE, USDC_SOLANA, ETH_ETHEREUM } from "./tokens";
 
 export interface DepositAddressSourceOption {
@@ -34,8 +35,8 @@ export const DEPOSIT_ADDRESS_SOURCE_OPTIONS: readonly DepositAddressSourceOption
   [
     {
       key: "btc",
-      label: "Bitcoin",
-      sublabel: "BTC network",
+      label: "BTC",
+      sublabel: "on Bitcoin",
       chainName: "BTC",
       fromChainId: "1",
       tokenDecimals: 8,
@@ -44,13 +45,15 @@ export const DEPOSIT_ADDRESS_SOURCE_OPTIONS: readonly DepositAddressSourceOption
     },
     {
       key: "eth",
-      label: "Ethereum",
-      sublabel: "ETH network",
+      label: "ETH",
+      sublabel: "on Ethereum",
       chainName: "EVM",
       fromChainId: "1",
       tokenDecimals: ETH_ETHEREUM.decimals,
       symbol: "ETH",
-      logoURI: ETH_ETHEREUM.logoURI ?? "https://api.iconify.design/cryptocurrency/eth.svg",
+      logoURI:
+        ETH_ETHEREUM.logoURI ??
+        "https://api.iconify.design/cryptocurrency/eth.svg",
     },
     {
       key: "usdc-base",
@@ -61,7 +64,9 @@ export const DEPOSIT_ADDRESS_SOURCE_OPTIONS: readonly DepositAddressSourceOption
       tokenAddress: USDC_BASE.address,
       tokenDecimals: USDC_BASE.decimals,
       symbol: "USDC",
-      logoURI: USDC_BASE.logoURI ?? "https://api.iconify.design/cryptocurrency/usdc.svg",
+      logoURI:
+        USDC_BASE.logoURI ??
+        "https://api.iconify.design/cryptocurrency/usdc.svg",
     },
     {
       key: "usdc-solana",
@@ -72,7 +77,9 @@ export const DEPOSIT_ADDRESS_SOURCE_OPTIONS: readonly DepositAddressSourceOption
       tokenAddress: USDC_SOLANA.address,
       tokenDecimals: USDC_SOLANA.decimals,
       symbol: "USDC",
-      logoURI: USDC_SOLANA.logoURI ?? "https://api.iconify.design/cryptocurrency/usdc.svg",
+      logoURI:
+        USDC_SOLANA.logoURI ??
+        "https://api.iconify.design/cryptocurrency/usdc.svg",
     },
     // No TRON entry (fromChainId "728126428", USDT TRC-20): Dynamic's
     // bridging layer rejects TRON -> EVM deposit-address routes.
@@ -95,19 +102,17 @@ export function rawAmountToDecimal(
   return frac ? `${whole}.${frac}` : whole;
 }
 
-/** Screen title for the awaiting screen. Native assets drop the redundant
- *  network suffix; token assets keep the chain ("on Base"). */
-export function depositAddressSendTitle(option: DepositAddressSourceOption): string {
-  return option.sublabel.startsWith("on ")
-    ? `Send ${option.symbol} ${option.sublabel}`
-    : `Send ${option.symbol}`;
+/** Screen title for the awaiting screen. Native assets drop the network,
+ *  which their own ticker already implies ("Send BTC", not on Bitcoin). */
+export function depositAddressSendTitle(
+  option: DepositAddressSourceOption,
+): string {
+  if (!option.tokenAddress) return `Send ${option.symbol}`;
+  return `Send ${option.symbol} ${option.sublabel}`;
 }
 
 export type DepositAddressFlowStatus =
-  | "waiting"
-  | "confirmed"
-  | "expired"
-  | "failed";
+  "waiting" | "confirmed" | "expired" | "failed";
 
 /**
  * Poll classifier for deposit-address flows. There is no submit step:
@@ -144,3 +149,31 @@ export function classifyDepositAddressFlow(flow: {
  */
 export const DEPOSIT_ADDRESS_DESTINATION: string | undefined =
   process.env.NEXT_PUBLIC_FLOW_DEPOSIT_DESTINATION || undefined;
+
+const BTC_ADDRESS_PATTERN =
+  /^(bc1[a-z0-9]{25,62}|[13][a-km-zA-HJ-NP-Z1-9]{25,39})$/;
+const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+
+function isSolanaAddress(address: string): boolean {
+  try {
+    // Rejects the base58 lengths BTC legacy addresses share with
+    // Solana keys - only a real 32-byte key survives.
+    return new PublicKey(address).toBase58() === address;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Shape check for an operator-supplied refund address. The bridge
+ * refunds on the source chain, so an address from the wrong family is
+ * rejected downstream - catch it before the flow is created. BTC and
+ * EVM are format-only (no bech32 / EIP-55 checksum verification), so a
+ * typo inside a well-formed address still passes.
+ */
+export function isValidRefundAddress(chain: Chain, address: string): boolean {
+  if (chain === "BTC") return BTC_ADDRESS_PATTERN.test(address);
+  if (chain === "EVM") return EVM_ADDRESS_PATTERN.test(address);
+  if (chain === "SOL") return isSolanaAddress(address);
+  return false;
+}

@@ -22,12 +22,17 @@ import {
   USDC_BASE,
 } from "@/lib/tokens";
 import { isTestnetSupportedToken } from "@/lib/testnet";
-import { createFlow, settlementFromToken, destination } from "@/lib/checkouts-api";
+import {
+  createFlow,
+  settlementFromToken,
+  destination,
+} from "@/lib/checkouts-api";
 import type { TokenAsset } from "@dynamic-demos/checkouts-widget";
 import { BalanceIllustration } from "./balance-illustration";
 import { hasPendingExchangeRedirect } from "@/lib/exchanges";
 import { logout } from "@/lib/dynamic/flow-sdk";
 import { DEPOSIT_ADDRESS_DESTINATION } from "@/lib/deposit-address";
+import { DEPOSIT_ADDRESS_REFUND_ADDRESSES } from "@/lib/refund-addresses";
 import type { DestinationOverride } from "@/lib/destination-override";
 
 function isOAuthRedirectUrl(): boolean {
@@ -87,7 +92,8 @@ function WidgetStage({
   // URL override wins over the testnet toggle and the wallet-derived
   // chain. Absent an override, behavior is unchanged.
   const settlementToken =
-    destinationOverride?.token ?? settlementTokenForChain(walletChain, isTestnet);
+    destinationOverride?.token ??
+    settlementTokenForChain(walletChain, isTestnet);
   const destinationChainName =
     destinationOverride?.chainFamily ?? (isTestnet ? "EVM" : walletChain);
 
@@ -97,11 +103,15 @@ function WidgetStage({
   const depositAddressFamily = destinationOverride?.chainFamily ?? "EVM";
   const depositAddressDest =
     destinationOverride?.address ?? DEPOSIT_ADDRESS_DESTINATION;
+  const depositAddressEnabled = Boolean(depositAddressDest);
 
-  const handleWalletConnected = useCallback((address: string, chain: string) => {
-    setWalletAddress(address);
-    setWalletChain(chain);
-  }, []);
+  const handleWalletConnected = useCallback(
+    (address: string, chain: string) => {
+      setWalletAddress(address);
+      setWalletChain(chain);
+    },
+    [],
+  );
 
   const createFlowCallback = useCallback(
     ({ amount, currency }: { amount: string; currency: string }) => {
@@ -116,7 +126,10 @@ function WidgetStage({
         currency,
         settlementConfig: {
           settlements: [
-            settlementFromToken(settlementToken, chainFamilyForId(settlementToken.chainId)),
+            settlementFromToken(
+              settlementToken,
+              chainFamilyForId(settlementToken.chainId),
+            ),
           ],
         },
         destinationConfig: {
@@ -163,9 +176,7 @@ function WidgetStage({
 
   const tokenFilter = useCallback(
     (token: TokenAsset) =>
-      isTestnet
-        ? isTestnetSupportedToken(token.chainId, token.symbol)
-        : true,
+      isTestnet ? isTestnetSupportedToken(token.chainId, token.symbol) : true,
     [isTestnet],
   );
 
@@ -205,8 +216,9 @@ function WidgetStage({
         exchangeSettlementChain={destinationChainName}
         exchangeSettlementChainId={settlementToken.chainId}
         createDepositAddressFlow={
-          depositAddressDest ? createDepositAddressFlowCallback : undefined
+          depositAddressEnabled ? createDepositAddressFlowCallback : undefined
         }
+        depositAddressRefundAddresses={DEPOSIT_ADDRESS_REFUND_ADDRESSES}
         depositAddressSettlement={{
           symbol: depositAddressToken.symbol,
           decimals: depositAddressToken.decimals,

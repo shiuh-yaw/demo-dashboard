@@ -31,6 +31,7 @@ describe("attachDepositAddressSource", () => {
       transactionId: "flow-1",
       fromChainId: "1",
       fromChainName: "BTC",
+      refundAddress: "bc1qexample",
     });
 
     expect(attachFlowSourceMock).toHaveBeenCalledOnce();
@@ -43,7 +44,7 @@ describe("attachDepositAddressSource", () => {
     expect(flow.id).toBe("flow-1");
   });
 
-  it("passes refundAddress through when provided", async () => {
+  it("passes the source-chain refundAddress through", async () => {
     await attachDepositAddressSource({
       transactionId: "flow-2",
       fromChainId: "101",

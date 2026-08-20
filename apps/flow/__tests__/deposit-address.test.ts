@@ -16,6 +16,7 @@ import {
   DEPOSIT_ADDRESS_SOURCE_OPTIONS,
   classifyDepositAddressFlow,
   depositAddressSendTitle,
+  isValidRefundAddress,
   rawAmountToDecimal,
   type DepositAddressSourceOption,
 } from "@/lib/deposit-address";
@@ -57,9 +58,19 @@ describe("DEPOSIT_ADDRESS_SOURCE_OPTIONS catalog", () => {
     }
   });
 
+  it("phrases every sublabel as 'on <network>'", () => {
+    for (const opt of DEPOSIT_ADDRESS_SOURCE_OPTIONS) {
+      expect(opt.sublabel).toMatch(/^on \S/);
+    }
+  });
+
   it("uses documented Dynamic ids for BTC and SOL", () => {
-    const btc = DEPOSIT_ADDRESS_SOURCE_OPTIONS.find((o) => o.chainName === "BTC");
-    const sol = DEPOSIT_ADDRESS_SOURCE_OPTIONS.find((o) => o.chainName === "SOL");
+    const btc = DEPOSIT_ADDRESS_SOURCE_OPTIONS.find(
+      (o) => o.chainName === "BTC",
+    );
+    const sol = DEPOSIT_ADDRESS_SOURCE_OPTIONS.find(
+      (o) => o.chainName === "SOL",
+    );
     expect(btc?.fromChainId).toBe("1");
     expect(sol?.fromChainId).toBe("101");
   });
@@ -89,37 +100,57 @@ describe("rawAmountToDecimal", () => {
 describe("classifyDepositAddressFlow", () => {
   it("keeps waiting while quoted", () => {
     expect(
-      classifyDepositAddressFlow({ executionState: "quoted", settlementState: "none" }),
+      classifyDepositAddressFlow({
+        executionState: "quoted",
+        settlementState: "none",
+      }),
     ).toBe("waiting");
   });
 
   it("confirms on source_confirmed", () => {
     expect(
-      classifyDepositAddressFlow({ executionState: "source_confirmed", settlementState: "none" }),
+      classifyDepositAddressFlow({
+        executionState: "source_confirmed",
+        settlementState: "none",
+      }),
     ).toBe("confirmed");
   });
 
   it("confirms on completed settlement", () => {
     expect(
-      classifyDepositAddressFlow({ executionState: "source_confirmed", settlementState: "completed" }),
+      classifyDepositAddressFlow({
+        executionState: "source_confirmed",
+        settlementState: "completed",
+      }),
     ).toBe("confirmed");
   });
 
   it("expires on expired execution state", () => {
-    expect(classifyDepositAddressFlow({ executionState: "expired" })).toBe("expired");
+    expect(classifyDepositAddressFlow({ executionState: "expired" })).toBe(
+      "expired",
+    );
   });
 
   it("fails on failed or cancelled execution, or failed settlement", () => {
-    expect(classifyDepositAddressFlow({ executionState: "failed" })).toBe("failed");
-    expect(classifyDepositAddressFlow({ executionState: "cancelled" })).toBe("failed");
+    expect(classifyDepositAddressFlow({ executionState: "failed" })).toBe(
+      "failed",
+    );
+    expect(classifyDepositAddressFlow({ executionState: "cancelled" })).toBe(
+      "failed",
+    );
     expect(
-      classifyDepositAddressFlow({ executionState: "source_confirmed", settlementState: "failed" }),
+      classifyDepositAddressFlow({
+        executionState: "source_confirmed",
+        settlementState: "failed",
+      }),
     ).toBe("failed");
   });
 
   it("waits on unknown/missing states", () => {
     expect(classifyDepositAddressFlow({})).toBe("waiting");
-    expect(classifyDepositAddressFlow({ executionState: "source_attached" })).toBe("waiting");
+    expect(
+      classifyDepositAddressFlow({ executionState: "source_attached" }),
+    ).toBe("waiting");
   });
 });
 
@@ -136,9 +167,60 @@ describe("depositAddressSendTitle", () => {
   });
 
   it("keeps the chain for token assets", () => {
-    expect(depositAddressSendTitle(byKey("usdc-base"))).toBe("Send USDC on Base");
+    expect(depositAddressSendTitle(byKey("usdc-base"))).toBe(
+      "Send USDC on Base",
+    );
     expect(depositAddressSendTitle(byKey("usdc-solana"))).toBe(
       "Send USDC on Solana",
     );
+  });
+});
+
+describe("isValidRefundAddress", () => {
+  it("accepts an address on the source chain", () => {
+    expect(
+      isValidRefundAddress("BTC", "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"),
+    ).toBe(true);
+    expect(
+      isValidRefundAddress("BTC", "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"),
+    ).toBe(true);
+    expect(
+      isValidRefundAddress("EVM", "0x1111111111111111111111111111111111111111"),
+    ).toBe(true);
+    expect(
+      isValidRefundAddress(
+        "SOL",
+        "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects an address from another chain family", () => {
+    expect(
+      isValidRefundAddress("BTC", "0x1111111111111111111111111111111111111111"),
+    ).toBe(false);
+    expect(
+      isValidRefundAddress(
+        "EVM",
+        "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      ),
+    ).toBe(false);
+    expect(
+      isValidRefundAddress("SOL", "0x1111111111111111111111111111111111111111"),
+    ).toBe(false);
+  });
+
+  it("rejects a legacy BTC address for SOL despite the shared base58 shape", () => {
+    expect(
+      isValidRefundAddress("SOL", "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"),
+    ).toBe(false);
+  });
+
+  it("rejects malformed input and unsupported chains", () => {
+    expect(isValidRefundAddress("EVM", "0xtooshort")).toBe(false);
+    expect(isValidRefundAddress("BTC", "")).toBe(false);
+    expect(
+      isValidRefundAddress("TRON", "TQ2Xu8KcJ8yxL5cV1234567890abcdEFGh"),
+    ).toBe(false);
   });
 });

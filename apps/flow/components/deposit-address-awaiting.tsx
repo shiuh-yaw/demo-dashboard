@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { QrSurface } from "@dynamic-demos/checkouts-widget";
 import {
   rawAmountToDecimal,
@@ -25,7 +26,15 @@ interface DepositAddressAwaitingProps {
   onCancel: () => void;
 }
 
-function CopyRow({ value, display }: { value: string; display: string }) {
+function CopyRow({
+  value,
+  display,
+  label,
+}: {
+  value: string;
+  display: string;
+  label: string;
+}) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,16 +57,21 @@ function CopyRow({ value, display }: { value: string; display: string }) {
   }, [value]);
 
   return (
-    <div className="flex items-center gap-2 rounded-[var(--brand-radius,12px)] bg-[var(--brand-row-bg,#f6f8fa)] px-3 py-2.5">
-      <code className="flex-1 text-[11px] text-[var(--brand-fg,#0e121b)] break-all select-all">
+    <div className="flex items-center gap-2 rounded-[var(--brand-radius,12px)] bg-[var(--brand-row-bg,#f6f8fa)] pl-3 pr-2 py-2">
+      <code className="min-w-0 flex-1 text-[11px] text-[var(--brand-fg,#0e121b)] truncate select-all">
         {display}
       </code>
       <button
         type="button"
         onClick={handleCopy}
-        className="shrink-0 text-[11px] font-medium text-[var(--brand-accent,#0050ff)] hover:opacity-80 transition-opacity cursor-pointer"
+        aria-label={label}
+        className="shrink-0 p-1.5 rounded-[10px] hover:bg-[var(--brand-row-hover,#eef0f3)] transition-colors cursor-pointer"
       >
-        {copied ? "Copied" : "Copy"}
+        {copied ? (
+          <Check className="w-4 h-4 text-green-500" />
+        ) : (
+          <Copy className="w-4 h-4 text-[var(--brand-muted,#99a0ae)]" />
+        )}
       </button>
     </div>
   );
@@ -86,6 +100,7 @@ export function DepositAddressAwaiting({
         }
         onBack={onCancel}
         backLabel="Cancel deposit"
+        layout="side"
       />
 
       <div className="flex flex-col gap-1.5">
@@ -93,9 +108,14 @@ export function DepositAddressAwaiting({
           <CopyRow
             value={exactAmount}
             display={`${exactAmount} ${option.symbol}`}
+            label="Copy amount"
           />
         )}
-        <CopyRow value={depositAddress} display={depositAddress} />
+        <CopyRow
+          value={depositAddress}
+          display={depositAddress}
+          label="Copy deposit address"
+        />
       </div>
 
       <div className="flex items-center gap-2">
@@ -104,7 +124,7 @@ export function DepositAddressAwaiting({
           <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--brand-accent,#0050ff)]" />
         </span>
         <span className="text-xs text-[var(--brand-muted,#99a0ae)]">
-          Waiting for funds - detection is automatic, no signing needed.
+          Waiting for funds - detection is automatic.
         </span>
       </div>
     </div>

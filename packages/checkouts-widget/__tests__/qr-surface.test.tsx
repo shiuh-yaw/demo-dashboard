@@ -37,6 +37,25 @@ describe("QrSurface", () => {
     expect(onBack).toHaveBeenCalledOnce();
   });
 
+  it("keeps title, caption, QR, and back button in the side layout", () => {
+    const onBack = vi.fn();
+    const { container } = render(
+      <QrSurface
+        value="bc1qexampleaddress"
+        title="Send BTC"
+        caption="Scan with any wallet"
+        onBack={onBack}
+        backLabel="Cancel deposit"
+        layout="side"
+      />,
+    );
+    expect(screen.getByText("Send BTC")).toBeTruthy();
+    expect(screen.getByText("Scan with any wallet")).toBeTruthy();
+    expect(container.querySelector("svg[height='124']")).toBeTruthy();
+    fireEvent.click(screen.getByText("Cancel deposit"));
+    expect(onBack).toHaveBeenCalledOnce();
+  });
+
   it("renders the icon when iconUrl is provided", () => {
     const { container } = render(
       <QrSurface

@@ -432,11 +432,12 @@ export async function attachCheckoutTransactionSource(params: {
   return flow;
 }
 
+/** The API rejects a deposit_address source without a refundAddress. */
 export async function attachDepositAddressSource(params: {
   transactionId: string;
   fromChainId: string;
   fromChainName: Chain;
-  refundAddress?: string;
+  refundAddress: string;
 }): Promise<Flow> {
   const { flow } = await sdkAttachFlowSource({
     flowId: params.transactionId,

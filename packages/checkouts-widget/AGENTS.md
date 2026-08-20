@@ -48,7 +48,7 @@ Pre-flow screens (host-mounted before `<PaymentWidget />`):
 Leaf screens (for partial composition):
 
 - `DepositAmountScreen`, `ReviewPaymentScreen`, `TransactionProgressScreen`, `TokenConversionCard`, `ScreenHeader`, `InfoBox`, `ErrorBanner` — escape hatch for hosts that don't want the whole `<PaymentWidget />`. (stable)
-- `QrSurface` / `QrSurfaceProps` - brand-token QR card (back button, icon + title, white QR tile, caption). Extracted from the WalletConnect QR view; used by apps/flow's deposit-address funding source.
+- `QrSurface` / `QrSurfaceProps` - brand-token QR card (back button, icon + title, white QR tile, caption). Extracted from the WalletConnect QR view; used by apps/flow's deposit-address funding source. `layout` (default `"center"`) stacks the icon + title, a 208px QR, and a centered caption in one column; `layout="side"` puts the icon + title + caption in a left column with a compact 124px QR tile on the right, for cards that carry additional rows underneath (apps/flow's awaiting-funds screen). The side layout scales down below the `sm` breakpoint (104px QR, smaller title/caption, tighter padding) so the left copy column keeps a usable width on phones - the QR svg's `size` attribute stays 124 and CSS does the shrinking.
 - `TokenInfo`, `TransactionStep`, `StepStatus`, `ErrorInfo` — screen prop types. (stable)
 
 Helpers:

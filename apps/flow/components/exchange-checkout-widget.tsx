@@ -23,12 +23,7 @@
  * Props mirror `CheckoutWidgetProps` with additional exchange config.
  */
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckoutWidget,
   type CheckoutWidgetProps,
@@ -70,6 +65,10 @@ import {
   rawAmountToDecimal,
   type DepositAddressSourceOption,
 } from "@/lib/deposit-address";
+import {
+  refundAddressForChain,
+  type RefundAddressConfig,
+} from "@/lib/refund-addresses";
 import { SourceCategoryRows } from "./source-category-rows";
 import { DrillInHeader } from "./drill-in-header";
 import { DepositAddressAssetList } from "./deposit-address-asset-list";
@@ -155,6 +154,12 @@ export interface ExchangeCheckoutWidgetProps extends CheckoutWidgetProps {
     currency: string;
   }) => Promise<string>;
   /**
+   * Refund addresses per source chain family. The Flow API requires one
+   * for every deposit_address source, and it must live on the source
+   * chain - sources without a configured address are not offered.
+   */
+  depositAddressRefundAddresses?: readonly RefundAddressConfig[];
+  /**
    * Settlement token for the deposit-address path's confirmation
    * screen (icon, symbol, decimals for the received amount). The
    * settlement lives inside the host's createDepositAddressFlow
@@ -182,6 +187,7 @@ export function ExchangeCheckoutWidget({
   exchangeSettlementChain = "EVM",
   exchangeSettlementChainId = 8453,
   createDepositAddressFlow,
+  depositAddressRefundAddresses = [],
   depositAddressSettlement,
   sourceCategories,
   ...widgetProps
@@ -205,7 +211,8 @@ export function ExchangeCheckoutWidget({
   // wallet picker — captured via onAmountSelected below.
   const hostAmount = widgetProps.amount ? parseFloat(widgetProps.amount) : 0;
   const [userSelectedAmount, setUserSelectedAmount] = useState(0);
-  const effectiveAmount = userSelectedAmount > 0 ? userSelectedAmount : hostAmount;
+  const effectiveAmount =
+    userSelectedAmount > 0 ? userSelectedAmount : hostAmount;
 
   // ---------------------------------------------------------
   // OAuth redirect detection on mount
@@ -359,10 +366,7 @@ export function ExchangeCheckoutWidget({
           redirectUrl: exchangeOAuthReturnUrl(window.location.href),
         });
       } catch (err) {
-        console.error(
-          "[ExchangeCheckoutWidget] OAuth initiation failed:",
-          err,
-        );
+        console.error("[ExchangeCheckoutWidget] OAuth initiation failed:", err);
       }
     },
     [effectiveAmount],
@@ -482,7 +486,9 @@ export function ExchangeCheckoutWidget({
       });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Transfer failed. Please try again.";
+        err instanceof Error
+          ? err.message
+          : "Transfer failed. Please try again.";
       setExchangeError(message);
       setScreen({
         type: "exchange-error",
@@ -505,14 +511,41 @@ export function ExchangeCheckoutWidget({
   // ---------------------------------------------------------
   // Deposit-address source: create flow -> attach -> quote
   // ---------------------------------------------------------
+  const depositAddressOptions = useMemo(
+    () =>
+      DEPOSIT_ADDRESS_SOURCE_OPTIONS.filter((option) =>
+        Boolean(
+          refundAddressForChain(
+            option.chainName,
+            depositAddressRefundAddresses,
+          ),
+        ),
+      ),
+    [depositAddressRefundAddresses],
+  );
+
   const handleDepositAddressSelect = useCallback(
-    async (option: DepositAddressSourceOption) => {
+    async (
+      option: DepositAddressSourceOption,
+      refundAddressOverride?: string,
+    ) => {
       if (!createDepositAddressFlow) return;
       if (depositAddressBusy.current) return;
       if (effectiveAmount <= 0) {
         setScreen({
           type: "deposit-address-error",
           error: "Choose an amount before generating a deposit address.",
+        });
+        return;
+      }
+
+      const refundAddress =
+        refundAddressOverride ??
+        refundAddressForChain(option.chainName, depositAddressRefundAddresses);
+      if (!refundAddress) {
+        setScreen({
+          type: "deposit-address-error",
+          error: `No refund address configured for ${option.chainName}.`,
         });
         return;
       }
@@ -530,6 +563,7 @@ export function ExchangeCheckoutWidget({
           transactionId: flowId,
           fromChainId: option.fromChainId,
           fromChainName: option.chainName,
+          refundAddress,
         });
         const quoted = await getCheckoutTransactionQuote({
           transactionId: flowId,
@@ -589,16 +623,19 @@ export function ExchangeCheckoutWidget({
         depositAddressBusy.current = false;
       }
     },
-    [createDepositAddressFlow, effectiveAmount, widgetProps.currency],
+    [
+      createDepositAddressFlow,
+      depositAddressRefundAddresses,
+      effectiveAmount,
+      widgetProps.currency,
+    ],
   );
 
   const handleDepositAddressCancel = useCallback(() => {
     if (screen.type === "deposit-address-awaiting") {
-      cancelCheckoutTransaction({ transactionId: screen.flowId }).catch(
-        () => {
-          // Best-effort - abandoning the flow is fine either way.
-        },
-      );
+      cancelCheckoutTransaction({ transactionId: screen.flowId }).catch(() => {
+        // Best-effort - abandoning the flow is fine either way.
+      });
     }
     setWalletListShown(false);
     setScreen({ type: "wallet" });
@@ -762,8 +799,7 @@ export function ExchangeCheckoutWidget({
           }
           onClose={() => goToExchangeAssets(screen.exchangeKey)}
           onVerifyWhitelist={async () => {
-            if (!adapter)
-              return { required: false, isWhitelisted: true };
+            if (!adapter) return { required: false, isWhitelisted: true };
             return adapter.checkWhitelisting(
               screen.walletAddress,
               screen.token.symbol,
@@ -800,8 +836,7 @@ export function ExchangeCheckoutWidget({
       exchangeSettlementChainId !== screen.token.chainId
         ? {
             name: widgetProps.destinationToken?.name ?? screen.token.name,
-            symbol:
-              widgetProps.destinationToken?.symbol ?? screen.token.symbol,
+            symbol: widgetProps.destinationToken?.symbol ?? screen.token.symbol,
             amount: amountStr,
             usdValue: usdStr,
             iconUrl:
@@ -813,7 +848,10 @@ export function ExchangeCheckoutWidget({
     const feeBreakdown = {
       itemTotal: { usd: usdStr, token: `${amountStr} ${screen.token.symbol}` },
       networkFee: { usd: "$0.00", token: `0 ${screen.token.symbol}` },
-      totalAmount: { usd: usdStr, token: `${amountStr} ${screen.token.symbol}` },
+      totalAmount: {
+        usd: usdStr,
+        token: `${amountStr} ${screen.token.symbol}`,
+      },
     };
 
     return (
@@ -975,7 +1013,7 @@ export function ExchangeCheckoutWidget({
         <WidgetCard>
           <div className="px-5 py-5">
             <DepositAddressAssetList
-              options={DEPOSIT_ADDRESS_SOURCE_OPTIONS}
+              options={depositAddressOptions}
               onSelected={handleDepositAddressSelect}
               onChangeSource={goToWallet}
             />
