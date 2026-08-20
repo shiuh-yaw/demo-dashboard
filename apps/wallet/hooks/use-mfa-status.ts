@@ -23,6 +23,7 @@ import {
   isMfaOnboardingPending,
   isPasskeySupported,
   isRecoveryCodesPending,
+  isActionProtectedForEnvironment,
   isMfaRequiredForAction,
   MFAAction,
   type MfaMethod,
@@ -148,17 +149,23 @@ export function useMfaStatus(): UseMfaStatusResult {
  */
 function useActionMfaRequired(mfaAction: MFAAction): {
   required: boolean;
+  /** The check itself failed, so `required` is a guess, not the answer. */
+  isUnknown: boolean;
   isLoading: boolean;
   refetch: () => void;
 } {
   const query = useQuery({
     queryKey: ["mfa-required-action", mfaAction],
-    queryFn: async () => {
-      try {
-        return await isMfaRequiredForAction({ mfaAction });
-      } catch {
-        return false;
-      }
+    // Deliberately not caught here: swallowing the throw would report a
+    // protected action as unprotected. Callers decide which way to fail.
+    queryFn: () => {
+      // The environment's policy first. `isMfaRequiredForAction` ends in
+      // `userHasVerifiedMfaMethods`, so on its own it says "not required" to
+      // exactly the user who has enrolled nothing - who then reaches a
+      // backend that enforces the action anyway. Ask it second, for the
+      // legacy `mfa.required` path it also covers.
+      if (isActionProtectedForEnvironment(mfaAction)) return true;
+      return isMfaRequiredForAction({ mfaAction });
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -166,6 +173,7 @@ function useActionMfaRequired(mfaAction: MFAAction): {
 
   return {
     required: query.data ?? false,
+    isUnknown: query.isError,
     isLoading: query.isLoading,
     refetch: query.refetch,
   };
@@ -177,6 +185,9 @@ export function useSignMfaRequired(): {
   isLoading: boolean;
   refetch: () => void;
 } {
+  // Unlike the export gate, an unverifiable check here does NOT force a
+  // prompt: the SDK throws `isMfaRequiredError` on the sign itself, so the
+  // step-up still happens, just after the attempt rather than before it.
   const { required, isLoading, refetch } = useActionMfaRequired(
     MFAAction.WalletWaasSign,
   );
@@ -334,9 +345,16 @@ export function useExportStepUp(): StepUpGate {
     hasPasskey,
     hasTotp,
   );
-  const { required, isLoading: actionLoading } = useActionMfaRequired(
-    MFAAction.WalletWaasExport,
-  );
+  const {
+    required: actionRequired,
+    isUnknown,
+    isLoading: actionLoading,
+  } = useActionMfaRequired(MFAAction.WalletWaasExport);
+
+  // Fail closed: a key reveal on an unverifiable gate asks for the factor.
+  // The worst case is a token nothing consumes; the other way round hands
+  // out a private key because a request failed.
+  const required = actionRequired || isUnknown;
 
   const needsEnrollment = onboardingPending || (required && !hasDevice);
   const requiresStepUp = !onboardingPending && required && hasDevice;

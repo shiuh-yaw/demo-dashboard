@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Shield, Zap, ScanLine, PenLine } from "lucide-react";
+import { Send, Shield, Zap, PenLine } from "lucide-react";
 import { cn, truncateAddress } from "@dynamic-demos/utils";
 import { Tooltip, CopyButton, iconButtonHoverClassName } from "@dynamic-demos/ui";
 import { useActiveNetwork } from "@/hooks/use-active-network";
@@ -17,7 +17,6 @@ interface WalletRowProps {
   onAuthorize?: () => void;
   onSetupMfa?: (address: string, chain: string) => void;
   onRowClick?: (address: string, chain: string, networkId: number) => void;
-  onScan?: (address: string, chain: string, networkId: number) => void;
   onSignMessage?: (address: string, chain: string) => void;
 }
 
@@ -38,7 +37,6 @@ export function WalletRow({
   onAuthorize,
   onSetupMfa,
   onRowClick,
-  onScan,
   onSignMessage,
 }: WalletRowProps) {
   const { networkData } = useActiveNetwork(walletAccount);
@@ -155,30 +153,6 @@ export function WalletRow({
           showTooltip
           className="rounded-full p-1.5"
         />
-
-        {/* Scan-to-send — needs networkData for the target networkId */}
-        {onScan && networkData && !showMfaSetup && (
-          <Tooltip content="Scan to send">
-            <button
-              type="button"
-              onClick={() =>
-                onScan(
-                  walletAccount.address,
-                  chain,
-                  Number(networkData.networkId),
-                )
-              }
-              className={cn(
-                "p-1.5 rounded-full transition-colors cursor-pointer",
-                iconButtonHoverClassName,
-                "text-(--brand-muted) hover:text-(--brand-fg)",
-              )}
-              aria-label="Scan QR to send"
-            >
-              <ScanLine className="w-4 h-4" />
-            </button>
-          </Tooltip>
-        )}
 
         {/* Sign message - the cheapest proof the key signs. */}
         {onSignMessage && !showMfaSetup && (

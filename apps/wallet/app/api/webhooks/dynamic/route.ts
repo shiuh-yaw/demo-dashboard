@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
+import { env } from "@/lib/env";
+import {
+  isDelegationEvent,
+  processDelegationWebhook,
+  type DelegationEvent,
+} from "@/lib/delegation/webhook";
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -10,25 +17,16 @@ import crypto from "crypto";
  * @see https://dynamic.xyz/docs/developer-dashboard/webhooks/events
  */
 interface DynamicWebhookPayload {
-  /** Unique message identifier */
   messageId: string;
-  /** Event identifier */
   eventId: string;
-  /** Event type (e.g., "user.created", "wallet.linked") */
+  /** Event type (e.g. "wallet.delegation.created"). */
   eventName: string;
-  /** ISO timestamp when the event occurred */
   timestamp: string;
-  /** Webhook configuration identifier */
   webhookId: string;
-  /** User identifier (if applicable) */
   userId?: string;
-  /** Environment identifier */
   environmentId: string;
-  /** Environment name (e.g., "sandbox", "live") */
   environmentName: string;
-  /** Whether this is a redelivery attempt */
-  redelivery: boolean;
-  /** Event-specific data payload */
+  redelivery?: boolean;
   data: Record<string, unknown>;
 }
 
@@ -37,35 +35,31 @@ interface DynamicWebhookPayload {
 // =============================================================================
 
 /**
- * Verify Dynamic webhook signature using HMAC SHA256
+ * HMAC-SHA256 over the RAW request body, compared against
+ * `x-dynamic-signature-256: sha256=<hex>`.
  *
- * @see https://docs.dynamic.xyz/guides/webhooks-signature-validation
- *
- * @param secret - Webhook secret from Dynamic dashboard
- * @param signature - Signature from x-dynamic-signature header
- * @param payload - Raw request body (must match exact structure sent by Dynamic)
- * @returns boolean indicating if signature is valid
+ * Must be the raw bytes: re-serializing the parsed JSON changes key order and
+ * whitespace, so the digest would never match.
  */
 function verifySignature({
   secret,
   signature,
-  payload,
+  rawBody,
 }: {
   secret: string;
   signature: string;
-  payload: unknown;
+  rawBody: string;
 }): boolean {
   try {
-    const payloadSignature = crypto
+    const digest = crypto
       .createHmac("sha256", secret)
-      .update(JSON.stringify(payload))
+      .update(rawBody, "utf8")
       .digest("hex");
-
-    const trusted = Buffer.from(`sha256=${payloadSignature}`, "ascii");
-    const untrusted = Buffer.from(signature, "ascii");
-
-    // Use timing-safe comparison to prevent timing attacks
-    return crypto.timingSafeEqual(trusted, untrusted);
+    const expected = Buffer.from(`sha256=${digest}`, "ascii");
+    const received = Buffer.from(signature, "ascii");
+    // timingSafeEqual throws on length mismatch, so check first.
+    if (expected.length !== received.length) return false;
+    return crypto.timingSafeEqual(expected, received);
   } catch {
     return false;
   }
@@ -78,80 +72,85 @@ function verifySignature({
 /**
  * POST /api/webhooks/dynamic
  *
- * Receives and processes webhooks from Dynamic.
- * Verifies signature before processing if DYNAMIC_WEBHOOK_SECRET is set.
+ * Receives Dynamic webhooks for this app. Delegated access
+ * (`wallet.delegation.created` / `.revoked`) is handled here rather than in the
+ * dashboard: the app the user delegates TO is the app that holds the share.
  *
- * Setup in Dynamic Dashboard:
- * 1. Go to Developer Dashboard → Webhooks
- * 2. Add endpoint URL: https://your-domain.com/api/webhooks/dynamic
- * 3. Select events to subscribe to
- * 4. Copy the webhook secret to your environment variables
- *
- * @see https://dynamic.xyz/docs/developer-dashboard/webhooks/overview
+ * Fails closed when `DYNAMIC_WEBHOOK_SECRET` is unset - an endpoint that
+ * accepts unsigned deliveries is worse than one that rejects everything.
  */
 export async function POST(request: NextRequest) {
   try {
-    // Parse the webhook payload
-    const payload = (await request.json()) as DynamicWebhookPayload;
+    const rawBody = await request.text();
 
-    // Get signature from header
-    const signature = request.headers.get("x-dynamic-signature");
-
-    // Get webhook secret from environment
-    const webhookSecret = process.env.DYNAMIC_WEBHOOK_SECRET;
-
-    // Verify signature if secret is configured
-    if (webhookSecret) {
-      if (!signature) {
-        console.error("[Webhook] Missing x-dynamic-signature header");
-        return NextResponse.json(
-          { error: "Missing signature" },
-          { status: 401 },
-        );
-      }
-
-      const isValid = verifySignature({
-        secret: webhookSecret,
-        signature,
-        payload,
-      });
-
-      if (!isValid) {
-        console.error("[Webhook] Invalid signature");
-        return NextResponse.json(
-          { error: "Invalid signature" },
-          { status: 401 },
-        );
-      }
-
-      console.log("[Webhook] Signature verified ✓");
-    } else {
-      console.warn(
-        "[Webhook] DYNAMIC_WEBHOOK_SECRET not set - skipping signature verification",
+    const webhookSecret = env.DYNAMIC_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error(
+        "[security:webhook-signature-failure] reason=missing-DYNAMIC_WEBHOOK_SECRET",
+      );
+      return NextResponse.json(
+        { error: "Webhook receiver not configured" },
+        { status: 401 },
       );
     }
 
-    // Log the webhook event
+    // Dynamic sends `-256`; the bare header is the legacy spelling.
+    const signature =
+      request.headers.get("x-dynamic-signature-256") ??
+      request.headers.get("x-dynamic-signature");
+    if (!signature) {
+      console.error(
+        "[security:webhook-signature-failure] reason=missing-signature-header",
+      );
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
+
+    if (!verifySignature({ secret: webhookSecret, signature, rawBody })) {
+      console.error(
+        "[security:webhook-signature-failure] reason=invalid-signature",
+      );
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    let payload: DynamicWebhookPayload;
+    try {
+      payload = JSON.parse(rawBody) as DynamicWebhookPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
     console.log("[Webhook] Event received:", {
       eventName: payload.eventName,
       eventId: payload.eventId,
       userId: payload.userId,
       environmentName: payload.environmentName,
-      timestamp: payload.timestamp,
-      redelivery: payload.redelivery,
     });
 
-    // Log the full payload for debugging
-    console.log("[Webhook] Payload:", JSON.stringify(payload, null, 2));
+    if (isDelegationEvent(payload.eventName)) {
+      try {
+        const outcome = await processDelegationWebhook(
+          payload as unknown as DelegationEvent,
+          {
+            rsaPrivateKey: env.DELEGATION_RSA_PRIVATE_KEY,
+            encryptionKey: env.DELEGATION_ENC_KEY,
+            logger: { info: (line) => console.log(line) },
+          },
+        );
+        console.log(
+          `[Webhook] delegation outcome=${outcome.kind}${
+            outcome.kind === "skipped" ? ` reason=${outcome.reason}` : ""
+          }`,
+        );
+      } catch (error) {
+        // Ack rather than have Dynamic retry a decrypt that fails
+        // deterministically. Never let material escape in the message.
+        console.error(
+          "[Webhook] delegation-processing-failed:",
+          error instanceof Error ? error.message : "unknown error",
+        );
+      }
+    }
 
-    // TODO: Add your webhook processing logic here
-    // Examples:
-    // - user.created: Add user to your database
-    // - wallet.linked: Update user's wallet info
-    // - user.session.created: Track login events
-    // - wallet.transferred: Handle wallet transfers
-
-    // Acknowledge receipt
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("[Webhook] Error processing webhook:", error);
@@ -165,8 +164,7 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/webhooks/dynamic
  *
- * Health check endpoint for the webhook handler.
- * Useful for verifying the endpoint is accessible.
+ * Health check - useful for confirming a tunnel reaches this app.
  */
 export async function GET() {
   return NextResponse.json({

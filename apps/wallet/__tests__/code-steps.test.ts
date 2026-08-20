@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { assertAuthoredCodeSteps } from "@dynamic-demos/code-highlight/testing";
 import {
   WALLET_ACCOUNT_STEPS,
+  WALLET_DELEGATION_STEPS,
   WALLET_JWT_SETUP_STEPS,
   WALLET_SDK_STEPS,
   WALLET_SEND_STEPS_BY_CHAIN,
   WALLET_SETTINGS_STEPS,
+  WALLET_SIGNING_STEPS,
   WALLET_TX_STEPS,
   buildCodeSteps,
 } from "../lib/code-steps";
@@ -17,6 +19,8 @@ const ALL_STEPS = [
   ...WALLET_ACCOUNT_STEPS,
   ...WALLET_TX_STEPS,
   ...WALLET_SETTINGS_STEPS,
+  ...WALLET_SIGNING_STEPS,
+  ...WALLET_DELEGATION_STEPS,
   ...Object.values(WALLET_SEND_STEPS_BY_CHAIN).flat(),
 ];
 
@@ -27,6 +31,8 @@ describe("wallet code-step content", () => {
     expect(WALLET_ACCOUNT_STEPS.length).toBeGreaterThanOrEqual(3);
     expect(WALLET_TX_STEPS.length).toBeGreaterThanOrEqual(2);
     expect(WALLET_SETTINGS_STEPS.length).toBeGreaterThanOrEqual(3);
+    // Delegation only teaches the loop if both server steps are present.
+    expect(WALLET_DELEGATION_STEPS.length).toBeGreaterThanOrEqual(5);
     for (const chain of SEND_CHAINS) {
       expect(WALLET_SEND_STEPS_BY_CHAIN[chain].length).toBeGreaterThanOrEqual(
         1,

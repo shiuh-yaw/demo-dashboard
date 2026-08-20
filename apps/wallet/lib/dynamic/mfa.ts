@@ -275,6 +275,36 @@ type MfaConfigShape = {
 };
 
 /**
+ * Whether the environment protects an action. Pure, so it can be tested
+ * against a settings payload.
+ */
+export function isActionProtected(
+  mfaConfig: MfaConfigShape | null | undefined,
+  mfaAction: string,
+): boolean {
+  return (
+    mfaConfig?.actions?.some((a) => a.action === mfaAction && a.required) ??
+    false
+  );
+}
+
+/**
+ * The environment's policy for an action, independent of this user.
+ *
+ * NOT interchangeable with `isMfaRequiredForAction`: that one ends in
+ * `userHasVerifiedMfaMethods`, so it answers "not required" for a user with
+ * nothing enrolled - while the backend still enforces the action and rejects
+ * the call. Enrollment decisions must read the policy, not the user.
+ */
+export function isActionProtectedForEnvironment(mfaAction: string): boolean {
+  const client = getClient();
+  return isActionProtected(
+    client?.projectSettings?.security?.mfa as MfaConfigShape | undefined,
+    mfaAction,
+  );
+}
+
+/**
  * Get MFA settings from the environment configuration.
  *
  * This provides direct access to MFA settings from projectSettings,

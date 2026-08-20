@@ -1,0 +1,6 @@
+# Review is requested automatically from the owner of every path a PR touches.
+# Rules are last-match-wins, not additive: a later, more specific line replaces
+# this one rather than adding to it, so any such line must name every owner
+# that path needs.
+
+* @dynamic-labs-oss/solutions-engineering

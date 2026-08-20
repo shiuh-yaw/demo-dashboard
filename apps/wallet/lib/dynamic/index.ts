@@ -106,6 +106,8 @@ export {
   getMfaDevices,
   registerTotpMfaDevice,
   isMfaRequiredForAction,
+  isActionProtected,
+  isActionProtectedForEnvironment,
   isMfaOnboardingPending,
   isRecoveryCodesPending,
   isPasskeySupported,
@@ -119,6 +121,13 @@ export {
   getMfaSettings,
   MFAAction,
 } from "./mfa";
+
+// Delegated access (MPC)
+export {
+  hasDelegatedAccess,
+  delegateWaasKeyShares,
+  revokeWaasDelegation,
+} from "./delegation";
 
 // Events
 export { onEvent, offEvent } from "./events";

@@ -22,6 +22,37 @@ export const env = createEnv({
      * Base Sepolia tokens.
      */
     ALCHEMY_API_KEY: z.string().min(1).optional(),
+    /**
+     * Signing secret for the Dynamic webhook endpoint pointed at this app.
+     * Unset -> /api/webhooks/dynamic fails closed with 401 rather than
+     * accepting unsigned deliveries.
+     */
+    DYNAMIC_WEBHOOK_SECRET: z.string().min(1).optional(),
+    /**
+     * Dynamic API token (`dyn_...`) used to build the delegated signing
+     * client. `DYNAMIC_API_KEY` is the legacy spelling this app already used.
+     */
+    DYNAMIC_API_TOKEN: z.string().min(1).optional(),
+    DYNAMIC_API_KEY: z.string().min(1).optional(),
+    /**
+     * RSA private key (PKCS#8 PEM, raw or base64-wrapped) registered with
+     * Dynamic. Decrypts the `wallet.delegation.created` envelope.
+     */
+    DELEGATION_RSA_PRIVATE_KEY: z.string().min(1).optional(),
+    /**
+     * 32-byte AES-256-GCM key (base64) encrypting delegated materials at rest.
+     * Distinct from the RSA key; never shared across environments.
+     */
+    DELEGATION_ENC_KEY: z.string().min(1).optional(),
+    /**
+     * Vercel's deployment region (system env var, absent locally). Shown on a
+     * delegated signature so the result names where it was produced - a fact
+     * the browser cannot invent, which is the point of the demo.
+     */
+    VERCEL_REGION: z.string().min(1).optional(),
+    /** Upstash Redis, the delegated-access store. */
+    UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   },
   client: {
     /**
@@ -56,5 +87,13 @@ export const env = createEnv({
     NEXT_PUBLIC_TRACK_URL: process.env.NEXT_PUBLIC_TRACK_URL,
     NODE_ENV: process.env.NODE_ENV,
     ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
+    DYNAMIC_WEBHOOK_SECRET: process.env.DYNAMIC_WEBHOOK_SECRET,
+    DYNAMIC_API_TOKEN: process.env.DYNAMIC_API_TOKEN,
+    DYNAMIC_API_KEY: process.env.DYNAMIC_API_KEY,
+    DELEGATION_RSA_PRIVATE_KEY: process.env.DELEGATION_RSA_PRIVATE_KEY,
+    DELEGATION_ENC_KEY: process.env.DELEGATION_ENC_KEY,
+    VERCEL_REGION: process.env.VERCEL_REGION,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   },
 });

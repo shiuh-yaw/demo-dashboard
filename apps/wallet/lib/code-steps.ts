@@ -578,6 +578,91 @@ const { signature } = await signMessage({
   },
 ];
 
+export const WALLET_DELEGATION_STEPS: StepSource[] = [
+  {
+    num: "01",
+    title: "Check delegation status",
+    prose:
+      "Synchronous, so it is safe during render. It answers whether Dynamic has reshared - not whether your server has received the share yet. Those are different questions and they disagree for a few seconds.",
+    filename: "components/screens/delegation-screen.tsx",
+    lang: "typescript",
+    code: `import { hasDelegatedAccess } from "@dynamic-labs-sdk/client/waas";
+
+const isDelegated = hasDelegatedAccess({ walletAccount });`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/delegated-access/triggering-delegation",
+  },
+  {
+    num: "02",
+    title: "Trigger delegation",
+    prose:
+      "Runs an MPC reshare and sends your server one share, encrypted to the RSA public key you registered. Your server holds one share and Dynamic holds the other, so neither can sign alone.",
+    filename: "components/screens/delegation-screen.tsx",
+    lang: "typescript",
+    code: `import { delegateWaasKeyShares } from "@dynamic-labs-sdk/client/waas";
+
+await delegateWaasKeyShares({ walletAccount });
+// Resolved != your server has it. The share arrives by webhook.`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/delegated-access/triggering-delegation",
+  },
+  {
+    num: "03",
+    title: "Receive the share (server)",
+    prose:
+      "Verify the HMAC on x-dynamic-signature-256, then decrypt. Re-encrypt before storing: the share and the per-wallet API key are key material and must never be logged or written in plaintext.",
+    filename: "app/api/webhooks/dynamic/route.ts",
+    lang: "typescript",
+    code: `import { decryptDelegatedWebhookData } from "@dynamic-labs-wallet/node";
+
+const { decryptedDelegatedShare, decryptedWalletApiKey } =
+  decryptDelegatedWebhookData({
+    privateKeyPem: process.env.DELEGATION_RSA_PRIVATE_KEY,
+    encryptedDelegatedKeyShare: body.data.encryptedDelegatedShare,
+    encryptedWalletApiKey: body.data.encryptedWalletApiKey,
+  });`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/delegated-access/receiving-delegation",
+  },
+  {
+    num: "04",
+    title: "Sign on the user's behalf (server)",
+    prose:
+      "Three different keys meet here: the environment-wide apiKey, the per-wallet walletApiKey, and the share. This runs a live ceremony with Dynamic, which is why an exfiltrated copy of your database cannot sign on its own.",
+    filename: "app/api/delegation/sign/route.ts",
+    lang: "typescript",
+    code: `import {
+  createDelegatedEvmWalletClient,
+  delegatedSignMessage,
+} from "@dynamic-labs-wallet/node-evm";
+
+const client = createDelegatedEvmWalletClient({ environmentId, apiKey });
+
+const signature = await delegatedSignMessage(client, {
+  walletId,
+  walletApiKey,
+  keyShare,
+  message: "Signed by your server, on your behalf.",
+});`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/delegated-access/developer-actions",
+  },
+  {
+    num: "05",
+    title: "Revoke",
+    prose:
+      "Another reshare, which invalidates the share your server holds. Revocation is cryptographic, not a flag - the stored bytes stop working whether or not you delete them. Delete them anyway.",
+    filename: "components/screens/delegation-screen.tsx",
+    lang: "typescript",
+    code: `import { revokeWaasDelegation } from "@dynamic-labs-sdk/client/waas";
+
+await revokeWaasDelegation({ walletAccount });
+// wallet.delegation.revoked -> purge the stored materials.`,
+    docsUrl:
+      "https://www.dynamic.xyz/docs/javascript/wallets/embedded-wallets/mpc/delegated-access/revoking-delegation",
+  },
+];
+
 export async function buildCodeSteps(
   sources: StepSource[],
 ): Promise<CodeStep[]> {
