@@ -21,6 +21,7 @@ export type PanelSection =
   | "transactions"
   | "send"
   | "signing"
+  | "policies"
   | "signers"
   | "members";
 

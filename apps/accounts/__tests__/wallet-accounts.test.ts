@@ -5,7 +5,9 @@ import {
 } from "../lib/dynamic/wallet-accounts";
 import type { WalletAccount } from "../lib/dynamic/wallet-accounts";
 
-function account(overrides: Partial<WalletAccount> = {}): WalletAccount {
+function account(
+  overrides: Partial<WalletAccount> & { businessAccountId?: string } = {},
+): WalletAccount {
   return {
     address: "0xAbC0000000000000000000000000000000000001",
     chain: "EVM",

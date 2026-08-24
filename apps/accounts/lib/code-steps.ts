@@ -106,18 +106,15 @@ export const ACCOUNTS_ACCOUNT_STEPS: StepSource[] = [
     num: "01",
     title: "Create a business account",
     prose:
-      "The caller becomes the account's first `owner`. `externalRef` is your own ID for the org - not unique, so treat it as a label rather than a key - and `metadata` is free-form JSON. `createApiClient` reaches the full request shape using the SDK's own transport.",
+      "The caller becomes the account's first `owner`. `externalRef` is your own ID for the org - not unique, so treat it as a label rather than a key - and `metadata` is free-form JSON.",
     filename: "lib/dynamic/business-accounts.ts",
     lang: "typescript",
-    code: `import { createApiClient } from "@dynamic-labs-sdk/client/core";
+    code: `import { createBusinessAccount } from "@dynamic-labs-sdk/client/waas";
 
-const account = await createApiClient({}, client).sdkCreateBusinessAccount({
-  environmentId,
-  createBusinessAccountSdkRequest: {
-    name: "Acme Treasury",
-    externalRef: "acme-org-42",
-    metadata: { websiteUrl: "acme.com" },
-  },
+const account = await createBusinessAccount({
+  name: "Acme Treasury",
+  externalRef: "acme-org-42",
+  metadata: { websiteUrl: "acme.com" },
 });`,
   },
   {
@@ -407,6 +404,108 @@ const tokens = await getTokenBalances({
       "https://www.dynamic.xyz/docs/javascript/reference/wallets/get-token-balances",
   },
   { num: "04", ...SWITCH_NETWORKS_STEP },
+];
+
+/**
+ * Rules the enclave enforces - the policies screen only.
+ *
+ * Snippets teach the generated endpoints rather than this app's sugar: the
+ * SDK's own `createPolicy` / `getPolicy` helpers are not published yet, and a
+ * reader should paste something that works today.
+ */
+export const ACCOUNTS_POLICY_STEPS: StepSource[] = [
+  {
+    num: "01",
+    title: "Read a layer",
+    prose:
+      "One layer per scope, each holding its own rules: the account layer binds every wallet it owns, the wallet layer everyone who signs for one wallet, the signer layer one share set. Reading the layer directly returns raw rules with their ids, which is what makes them editable one at a time.",
+    filename: "lib/dynamic/policies.ts",
+    lang: "typescript",
+    code: `import { getWalletPolicyLayer } from "@dynamic-labs-sdk/client/waas";
+
+const layer = await getWalletPolicyLayer({ walletAccount });
+
+for (const rule of layer.layerContent.rules ?? []) {
+  // rule.ruleId, rule.ruleType, rule.addresses, rule.valueLimit
+}`,
+  },
+  {
+    num: "02",
+    title: "Allow one destination, up to an amount",
+    prose:
+      "A rule per destination: the address it permits, and a `valueLimit` in the asset's smallest unit - omit `asset` to cap the chain's native coin. Allowing an address denies every address no rule names. Pass a `ruleId` to edit that rule in place; omit it and the enclave mints one.",
+    filename: "lib/dynamic/policies.ts",
+    lang: "typescript",
+    code: `import {
+  buildAllowPolicyRule,
+  upsertWalletPolicyRule,
+} from "@dynamic-labs-sdk/client/waas";
+
+await upsertWalletPolicyRule({
+  walletAccount,
+  rule: buildAllowPolicyRule({
+    name: "Allow treasury",
+    chain: "EVM",
+    chainIds: [84532],
+    addresses: ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
+    // 100 USDC - six decimals, not eighteen.
+    valueLimit: { maxPerCall: "100000000", asset: usdcAddress },
+  }),
+});`,
+  },
+  {
+    num: "03",
+    title: "Block an address outright",
+    prose:
+      "A deny rule needs no amount: nothing may reach the address, whatever the transaction is worth. A deny with a `valueLimit` and no addresses is the other useful shape - the cap that applies wherever no destination rule does.",
+    filename: "components/screens/policy-destination-screen.tsx",
+    lang: "typescript",
+    code: `import {
+  buildDenyPolicyRule,
+  upsertWalletPolicyRule,
+} from "@dynamic-labs-sdk/client/waas";
+
+await upsertWalletPolicyRule({
+  walletAccount,
+  rule: buildDenyPolicyRule({
+    name: "Deny 0x1f9a...",
+    chain: "EVM",
+    chainIds: [84532],
+    addresses: ["0x1f9a..."],
+  }),
+});`,
+  },
+  {
+    num: "04",
+    title: "Tighten one signer",
+    prose:
+      "The same builders, written to a signer's own layer with `shareSetId`. Layers only ever tighten - a signer's rules can be stricter than the wallet's, never looser - so this gives one member a shorter leash without touching anyone else. Removing a rule takes its id.",
+    filename: "components/screens/wallet-policies-screen.tsx",
+    lang: "typescript",
+    code: `import {
+  buildAllowPolicyRule,
+  removeSignerPolicyRule,
+  upsertSignerPolicyRule,
+} from "@dynamic-labs-sdk/client/waas";
+
+await upsertSignerPolicyRule({
+  walletAccount,
+  shareSetId: signer.shareSetId,
+  rule: buildAllowPolicyRule({
+    name: "Allow payroll",
+    chain: "EVM",
+    chainIds: [84532],
+    addresses: ["0x..."],
+    valueLimit: { maxPerCall: "5000000", asset: usdcAddress },
+  }),
+});
+
+await removeSignerPolicyRule({
+  walletAccount,
+  shareSetId: signer.shareSetId,
+  ruleId,
+});`,
+  },
 ];
 
 /** Signing a message - the sign screen only. */

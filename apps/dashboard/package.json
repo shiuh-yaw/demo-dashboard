@@ -38,6 +38,7 @@
     "@vercel/blob": "2.4.1",
     "clsx": "catalog:",
     "ioredis": "5.6.1",
+    "jose": "6.2.3",
     "jsonwebtoken": "9.0.2",
     "lucide-react": "0.511.0",
     "nanoid": "5.1.16",

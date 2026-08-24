@@ -33,26 +33,23 @@ function waasBundle(): string {
   return readFileSync(pkg.replace(/package\.json$/, "dist/waas.esm.js"), "utf8");
 }
 
-describe("createBusinessAccount cannot set externalRef or metadata", () => {
-  it("rejects them at the type level", () => {
-    // @ts-expect-error - REMOVE when the wrapper accepts externalRef, then
-    // collapse `createBusinessAccount` in `lib/dynamic/business-accounts.ts`
-    // back onto it (the app reaches the field through `createApiClient` today)
-    // and simplify ACCOUNTS_ACCOUNT_STEPS step 01 in `lib/code-steps.ts`.
-    void (() => createBusinessAccount({ name: "x", externalRef: "acme-1" }));
-
-    // @ts-expect-error - REMOVE when the SDK accepts metadata.
-    void (() => createBusinessAccount({ name: "x", metadata: { a: 1 } }));
+describe("createBusinessAccount carries every field the endpoint takes", () => {
+  it("accepts externalRef and metadata at the type level", () => {
+    void (() =>
+      createBusinessAccount({
+        name: "x",
+        externalRef: "acme-1",
+        metadata: { a: 1 },
+      }));
 
     expect(typeof createBusinessAccount).toBe("function");
   });
 
-  it("drops them at runtime too - only `name` reaches the request", () => {
-    // Matching the compiled request literal: a types-only check would pass
-    // while the value was still being thrown away.
-    expect(waasBundle()).toContain(
-      "createBusinessAccountSdkRequest: { name: params?.name }",
-    );
+  it("forwards them at runtime too", () => {
+    // 1.25.0 compiled to `{ name: params?.name }` and dropped the rest, so the
+    // app reached one layer down through `createApiClient`. Read the bundle
+    // rather than trusting the types: they disagreed here before.
+    expect(waasBundle()).toContain("externalRef: params?.externalRef");
   });
 });
 
@@ -81,16 +78,19 @@ describe("the API never reports who a member or signer is", () => {
     expect(signer.userId).toBeUndefined();
 
     // ...but the add call resolves to a share set alone, so there is no id to
-    // pair the typed address with at invite time.
-    // @ts-expect-error - REMOVE when the call reports the resolved user.
-    void (async () => (await addBusinessAccountSigner({} as never)).userId);
+    // pair the typed address with at invite time. Keyed off the return type
+    // directly: an `as never` argument makes the call itself `never`, which
+    // swallows the assertion.
+    type AddSignerResult = Awaited<ReturnType<typeof addBusinessAccountSigner>>;
+    const reportsUser: "userId" extends keyof AddSignerResult ? true : false =
+      false;
+    // REMOVE, with `lib/business-accounts/member-emails.ts`, when this is true.
+    expect(reportsUser).toBe(false);
   });
 });
 
-describe("listBusinessAccounts takes no filter", () => {
-  it("rejects an externalRefs query at the type level", () => {
-    // @ts-expect-error - REMOVE when the SDK accepts a filter. Until then a
-    // caller wanting one account by ref must list and match locally.
+describe("listBusinessAccounts takes a filter", () => {
+  it("accepts an externalRefs query", () => {
     void (() => listBusinessAccounts({ externalRefs: ["acme-1"] }));
 
     expect(typeof listBusinessAccounts).toBe("function");

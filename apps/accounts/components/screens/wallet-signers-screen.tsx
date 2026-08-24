@@ -14,7 +14,7 @@
  */
 
 import { Plus, X } from "lucide-react";
-import { Button, Spinner, Tooltip, WidgetCard } from "@dynamic-demos/ui";
+import { Button, IconButton, Spinner, Tooltip, WidgetCard } from "@dynamic-demos/ui";
 import { truncateAddress } from "@dynamic-demos/utils";
 import { ErrorMessage } from "@/components/error-message";
 import {
@@ -74,7 +74,15 @@ export function WalletSignersScreen({
     <WidgetCard
       title="Signers"
       subtitle={truncateAddress(address)}
-      onBack={() => navigation.goToWalletTransactions(businessAccountId, wallet)}
+      onBack={() => navigation.goToWalletSettings(businessAccountId, wallet)}
+      trailing={
+        navigation.closeToRoot && (
+          <IconButton label="Close settings" onClick={navigation.closeToRoot}>
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </IconButton>
+        )
+      }
+      className="overflow-visible"
     >
       <div className="flex flex-col gap-3">
         <SectionLabel count={signers.length}>
@@ -102,21 +110,38 @@ export function WalletSignersScreen({
               key={signer.id}
               className="flex shrink-0 items-center gap-2 rounded-(--brand-radius) border border-(--brand-border) bg-(--brand-row-bg) px-3 py-2.5"
             >
-              {emailFor(signer.userId) ? (
-                <span
-                  title={signer.userId ?? undefined}
-                  className="min-w-0 flex-1 truncate text-xs text-(--brand-fg)"
-                >
-                  {emailFor(signer.userId)}
-                </span>
-              ) : (
-                <Mono
-                  title={signer.userId ?? signer.id}
-                  className="min-w-0 flex-1 text-(--brand-fg)"
-                >
-                  {shorten(signer.userId ?? signer.id)}
-                </Mono>
-              )}
+              {/* The row opens this signer's own policy layer: rules belong to
+                  the signer they bind, not to a screen listing everyone. */}
+              <button
+                type="button"
+                disabled={!signer.shareSetId}
+                onClick={() =>
+                  signer.shareSetId &&
+                  navigation.goToWalletPolicies(businessAccountId, wallet, {
+                    shareSetId: signer.shareSetId,
+                    label:
+                      emailFor(signer.userId) ??
+                      shorten(signer.userId ?? signer.id),
+                  })
+                }
+                className="min-w-0 flex-1 text-left disabled:cursor-default"
+              >
+                {emailFor(signer.userId) ? (
+                  <span
+                    title={signer.userId ?? undefined}
+                    className="block truncate text-xs text-(--brand-fg)"
+                  >
+                    {emailFor(signer.userId)}
+                  </span>
+                ) : (
+                  <Mono
+                    title={signer.userId ?? signer.id}
+                    className="min-w-0 text-(--brand-fg)"
+                  >
+                    {shorten(signer.userId ?? signer.id)}
+                  </Mono>
+                )}
+              </button>
 
               {/* Status steps aside mid-decision: it is not what the reader
                   needs while choosing, and it crowds the two buttons that
@@ -181,8 +206,9 @@ export function WalletSignersScreen({
         )}
 
         <p className="text-[11px] leading-relaxed text-(--brand-muted)">
-          Revoking severs only that signer&apos;s share; the wallet and its
-          other signers are untouched.
+          Open a signer to set the rules that bind them. Revoking severs only
+          that signer&apos;s share; the wallet and its other signers are
+          untouched.
         </p>
 
         <ErrorMessage error={removeSigner.error} />

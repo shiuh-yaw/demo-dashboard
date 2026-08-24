@@ -20,8 +20,8 @@
  */
 
 import { useState } from "react";
-import { UserRound } from "lucide-react";
-import { Button, Input, Spinner, WidgetCard } from "@dynamic-demos/ui";
+import { UserRound, X } from "lucide-react";
+import { Button, IconButton, Input, Spinner, WidgetCard } from "@dynamic-demos/ui";
 import { truncateAddress } from "@dynamic-demos/utils";
 import { ErrorMessage } from "@/components/error-message";
 import { EmptyState, Mono, SectionLabel } from "@/components/ui/atoms";
@@ -124,6 +124,14 @@ export function AddSignerScreen({
       title="Add a signer"
       subtitle={truncateAddress(wallet.publicKey ?? wallet.id)}
       onBack={() => navigation.goToWalletSigners(businessAccountId, wallet)}
+      trailing={
+        navigation.closeToRoot && (
+          <IconButton label="Close settings" onClick={navigation.closeToRoot}>
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </IconButton>
+        )
+      }
+      className="overflow-visible"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 

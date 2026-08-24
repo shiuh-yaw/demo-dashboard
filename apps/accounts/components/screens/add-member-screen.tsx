@@ -11,8 +11,9 @@
  * the members list show a person instead of a uuid.
  */
 
+import { X } from "lucide-react";
 import { useState } from "react";
-import { Button, Input, SelectMenu, WidgetCard } from "@dynamic-demos/ui";
+import { Button, IconButton, Input, SelectMenu, WidgetCard } from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import { useAddMember } from "@/hooks/use-business-accounts";
@@ -62,8 +63,16 @@ export function AddMemberScreen({
   return (
     <WidgetCard
       title="Add a member"
-      subtitle="Manages the account. Signing is granted separately, per wallet."
+      subtitle="Administers the account, not its wallets"
       onBack={() => navigation.goToMembers(businessAccountId)}
+      trailing={
+        navigation.closeToRoot && (
+          <IconButton label="Close settings" onClick={navigation.closeToRoot}>
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </IconButton>
+        )
+      }
+      className="overflow-visible"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input

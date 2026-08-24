@@ -9,14 +9,7 @@
  */
 
 import { Crown, UserPlus, UserRound, X } from "lucide-react";
-import {
-  Button,
-  CopyButton,
-  SelectMenu,
-  Spinner,
-  Tooltip,
-  WidgetCard,
-} from "@dynamic-demos/ui";
+import { Button, CopyButton, IconButton, SelectMenu, Spinner, Tooltip, WidgetCard } from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
 import {
   ConfirmPair,
@@ -73,6 +66,14 @@ export function MembersScreen({
       title="Members & roles"
       subtitle="Who administers the account, not who signs"
       onBack={() => navigation.goToAccount(businessAccountId)}
+      trailing={
+        navigation.closeToRoot && (
+          <IconButton label="Close settings" onClick={navigation.closeToRoot}>
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </IconButton>
+        )
+      }
+      className="overflow-visible"
     >
       <div className="flex flex-col gap-3">
         <SectionLabel count={members.length}>Members</SectionLabel>

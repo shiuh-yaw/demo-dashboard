@@ -31,6 +31,7 @@ import {
   ACCOUNTS_ACCOUNT_STEPS,
   ACCOUNTS_ADD_WALLET_STEPS,
   ACCOUNTS_MEMBER_STEPS,
+  ACCOUNTS_POLICY_STEPS,
   ACCOUNTS_RENAME_STEPS,
   ACCOUNTS_SDK_STEPS,
   ACCOUNTS_SEND_STEPS,
@@ -73,6 +74,7 @@ export default async function Home() {
     transactionSteps,
     sendSteps,
     signingSteps,
+    policySteps,
     signerSteps,
     memberSteps,
   ] = await Promise.all([
@@ -84,6 +86,7 @@ export default async function Home() {
       buildCodeSteps(ACCOUNTS_TRANSACTION_STEPS),
       buildCodeSteps(ACCOUNTS_SEND_STEPS),
       buildCodeSteps(ACCOUNTS_SIGNING_STEPS),
+      buildCodeSteps(ACCOUNTS_POLICY_STEPS),
       buildCodeSteps(ACCOUNTS_SIGNER_STEPS),
       buildCodeSteps(ACCOUNTS_MEMBER_STEPS),
     ]);
@@ -151,6 +154,22 @@ export default async function Home() {
               ),
               send: (
                 <CodePanel sdkSteps={sendSteps} notice={ordinaryWalletNotice} />
+              ),
+              policies: (
+                <CodePanel
+                  sdkSteps={policySteps}
+                  notice={
+                    <PanelNotice
+                      eyebrow="Enforced in the enclave"
+                      eyebrowSuffix="not in this app"
+                    >
+                      A rule set here is evaluated wherever the wallet signs,
+                      whether or not this widget is ever opened again. The
+                      wallet layer binds every signer; a signer&apos;s own layer
+                      can only tighten it further.
+                    </PanelNotice>
+                  }
+                />
               ),
               signing: (
                 <CodePanel

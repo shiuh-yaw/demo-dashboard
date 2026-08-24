@@ -1,3 +1,4 @@
+import { addressPlaceholderFor } from "../lib/chains";
 import { describe, expect, it } from "vitest";
 import type { BusinessAccountDetail } from "../lib/dynamic";
 import {
@@ -180,5 +181,23 @@ describe("formatting", () => {
     // Ownership moves by transfer, so it is never an assignable option.
     expect(assignableRole("owner")).toBeNull();
     expect(assignableRole(undefined)).toBeNull();
+  });
+});
+
+describe("addressPlaceholderFor", () => {
+  it("hints hex only where every network of the chain uses it", () => {
+    expect(addressPlaceholderFor("EVM")).toBe("0x...");
+    expect(addressPlaceholderFor("SUI")).toBe("0x...");
+  });
+
+  it("names the chain where the format varies by network or version", () => {
+    // Showing `bc1...` would be wrong on testnet, and wrong beats absent.
+    expect(addressPlaceholderFor("BTC")).toBe("Bitcoin address");
+    expect(addressPlaceholderFor("SOL")).toBe("Solana address");
+    expect(addressPlaceholderFor("TON")).toBe("TON address");
+  });
+
+  it("falls back for a chain this build does not list", () => {
+    expect(addressPlaceholderFor("APTOS")).toBe("Address");
   });
 });

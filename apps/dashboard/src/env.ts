@@ -31,6 +31,18 @@ export const env = createEnv({
      */
     ANTHROPIC_API_KEY: z.string().optional(),
     /**
+     * The demo-only JWT provider: the key every demo signs external-auth
+     * tokens with, and the issuer Dynamic checks them against. Lives here
+     * rather than in each app because a Dynamic environment holds ONE
+     * third-party-auth config - one issuer, one JWKS URL - so the demos
+     * sharing an environment have to share a key. Unset simply means the
+     * Bring Your Own Auth demo is off.
+     */
+    JWT_PROVIDER_KID: z.string().optional(),
+    JWT_PROVIDER_ISSUER: z.string().optional(),
+    JWT_PROVIDER_PUBLIC_KEY: z.string().optional(),
+    JWT_PROVIDER_PRIVATE_KEY: z.string().optional(),
+    /**
      * Redis URL for local development
      * Defaults to redis://localhost:6379
      * In production, use Upstash Redis (UPSTASH_REDIS_REST_URL/TOKEN)
@@ -301,6 +313,10 @@ export const env = createEnv({
     COINBASE_API_ENVIRONMENT: process.env.COINBASE_API_ENVIRONMENT,
     LIFI_API_KEY: process.env.LIFI_API_KEY,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    JWT_PROVIDER_KID: process.env.JWT_PROVIDER_KID,
+    JWT_PROVIDER_ISSUER: process.env.JWT_PROVIDER_ISSUER,
+    JWT_PROVIDER_PUBLIC_KEY: process.env.JWT_PROVIDER_PUBLIC_KEY,
+    JWT_PROVIDER_PRIVATE_KEY: process.env.JWT_PROVIDER_PRIVATE_KEY,
     REDIS_URL: process.env.REDIS_URL,
     NODE_ENV: process.env.NODE_ENV,
     QSTASH_TOKEN: process.env.QSTASH_TOKEN,

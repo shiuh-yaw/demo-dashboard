@@ -104,14 +104,25 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
                 !icon && !onBack && "min-h-9 items-center",
               )}
             >
-              <div className="flex shrink-0 items-center gap-2">
+              <div
+                className={cn(
+                  "flex items-center gap-2",
+                  // Bounded, not shrink-0, in the layouts that hold the title:
+                  // a shrink-0 group sizes to its own content, so a long
+                  // subtitle ran past the header and under the close button
+                  // instead of wrapping inside it. The third layout puts the
+                  // title elsewhere and this is only a spacer, so it keeps its
+                  // intrinsic width there.
+                  onBack || icon ? "min-w-0 flex-1" : "shrink-0",
+                )}
+              >
                 {onBack ? (
                   // Back button rides the icon slot (Add Wallet layout):
                   // boxed arrow, title/subtitle left-aligned beside it.
                   <div
                     className={cn(
                       "flex min-w-0 items-center gap-3",
-                      rightActions && "pr-10",
+                      rightActions && "pr-12",
                     )}
                   >
                     <button
@@ -134,7 +145,7 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
                   <div
                     className={cn(
                       "flex min-w-0 items-center gap-3",
-                      rightActions && "pr-10",
+                      rightActions && "pr-12",
                     )}
                   >
                     <div className="flex h-[38px] w-[38px] min-w-[38px] items-center justify-center rounded-[9px] border border-[var(--widget-border,#e7e8ed)] bg-[var(--widget-row-bg,#f6f8f8)] shadow-[0px_0px_1px_-1px_rgba(0,0,0,0.04),0px_2px_4px_-1px_rgba(0,0,0,0.07)]">
@@ -153,7 +164,7 @@ const WidgetCard = forwardRef<HTMLDivElement, WidgetCardProps>(
                 <div
                   className={cn(
                     "flex min-w-0 flex-1 flex-col items-center justify-center px-2",
-                    rightActions && "pr-10",
+                    rightActions && "pr-12",
                   )}
                 >
                   <HeaderTitle title={title} subtitle={subtitle} />

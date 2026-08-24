@@ -8,12 +8,11 @@
  */
 
 import { Building2, Eye, EyeOff, LogOut, Plus } from "lucide-react";
-import { Button, Spinner, WidgetCard } from "@dynamic-demos/ui";
+import { Button, IconButton, Spinner, WidgetCard } from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
 import { AccountAvatar } from "@/components/ui/account-avatar";
 import {
   EmptyState,
-  headerIconButtonClassName,
   Row,
 } from "@/components/ui/atoms";
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
@@ -54,16 +53,13 @@ export function AccountsScreen({
       title="Accounts"
       subtitle="Manage your accounts"
       trailing={
-        <button
-          type="button"
+        <IconButton
+          label="Sign out"
           onClick={() => void logout.mutateAsync()}
           disabled={logout.isPending}
-          className={headerIconButtonClassName}
-          aria-label="Sign out"
-          title="Sign out"
         >
-          <LogOut className="h-4 w-4" strokeWidth={1.5} aria-hidden />
-        </button>
+          <LogOut className="h-4 w-4" strokeWidth={1.5} />
+        </IconButton>
       }
     >
       <div className="flex flex-col gap-3">

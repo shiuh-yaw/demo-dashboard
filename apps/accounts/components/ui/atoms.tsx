@@ -208,18 +208,3 @@ export function ConfirmPair({
   );
 }
 
-/**
- * Circular icon button for a widget-card header.
- *
- * A circle rather than the shared rounded-square, and it lifts a touch on hover
- * so the affordance is felt as well as seen. Defined here rather than by editing
- * `widgetHeaderTrailingIconButtonClassName` so the change stays in this app
- * instead of restyling every demo's header without asking.
- */
-export const headerIconButtonClassName = cn(
-  "flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full",
-  "text-(--brand-muted) transition-all duration-150 ease-out",
-  "hover:bg-(--brand-row-hover) hover:text-(--brand-fg) hover:scale-110",
-  "active:scale-95",
-  "outline-none focus-visible:ring-1 focus-visible:ring-(--brand-primary)",
-);

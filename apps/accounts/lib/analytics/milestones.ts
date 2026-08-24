@@ -23,6 +23,7 @@ export const ACCOUNTS_MILESTONES = [
   "wallet_message_signed",
   "signer_added",
   "member_added",
+  "policy_updated",
 ] as const;
 
 export type AccountsMilestone = (typeof ACCOUNTS_MILESTONES)[number];

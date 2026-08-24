@@ -31,6 +31,11 @@ import { OtpVerifyScreen } from "@/components/screens/otp-verify-screen";
 import { RenameAccountScreen } from "@/components/screens/rename-account-screen";
 import { SendTransactionScreen } from "@/components/screens/send-transaction-screen";
 import { SignMessageScreen } from "@/components/screens/sign-message-screen";
+import { PolicyAddressesScreen } from "@/components/screens/policy-addresses-screen";
+import { PolicyDestinationScreen } from "@/components/screens/policy-destination-screen";
+import { PolicyLimitsScreen } from "@/components/screens/policy-limits-screen";
+import { WalletPoliciesScreen } from "@/components/screens/wallet-policies-screen";
+import { WalletSettingsScreen } from "@/components/screens/wallet-settings-screen";
 import { WalletSignersScreen } from "@/components/screens/wallet-signers-screen";
 import { WalletTransactionsScreen } from "@/components/screens/wallet-transactions-screen";
 import { WalletsScreen } from "@/components/screens/wallets-screen";
@@ -122,6 +127,51 @@ export function AccountsApp() {
         {screen.type === "wallets" && (
           <WalletsScreen
             businessAccountId={screen.businessAccountId}
+            navigation={navigation}
+          />
+        )}
+
+        {screen.type === "wallet-settings" && (
+          <WalletSettingsScreen
+            businessAccountId={screen.businessAccountId}
+            wallet={screen.wallet}
+            navigation={navigation}
+          />
+        )}
+
+        {screen.type === "wallet-policies" && (
+          <WalletPoliciesScreen
+            businessAccountId={screen.businessAccountId}
+            wallet={screen.wallet}
+            signer={screen.signer}
+            navigation={navigation}
+          />
+        )}
+
+        {screen.type === "policy-addresses" && (
+          <PolicyAddressesScreen
+            businessAccountId={screen.businessAccountId}
+            wallet={screen.wallet}
+            signer={screen.signer}
+            navigation={navigation}
+          />
+        )}
+
+        {screen.type === "policy-limits" && (
+          <PolicyLimitsScreen
+            businessAccountId={screen.businessAccountId}
+            wallet={screen.wallet}
+            signer={screen.signer}
+            navigation={navigation}
+          />
+        )}
+
+        {screen.type === "policy-destination" && (
+          <PolicyDestinationScreen
+            businessAccountId={screen.businessAccountId}
+            wallet={screen.wallet}
+            signer={screen.signer}
+            rule={screen.rule}
             navigation={navigation}
           />
         )}

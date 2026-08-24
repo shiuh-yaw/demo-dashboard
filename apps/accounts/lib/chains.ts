@@ -28,3 +28,24 @@ export const CHAIN_LABELS: Record<WalletChain, string> = {
   SUI: "Sui",
   TON: "TON",
 };
+
+/**
+ * What an address looks like on each chain, for a field the user types one
+ * into.
+ *
+ * A hex hint only where it holds on every network of that chain; the chain's
+ * own name everywhere else, because Bitcoin and TON spell an address
+ * differently across networks and address versions, and a placeholder that
+ * shows the wrong prefix is worse than one that shows none.
+ */
+const ADDRESS_PLACEHOLDERS: Record<WalletChain, string> = {
+  EVM: "0x...",
+  SUI: "0x...",
+  SOL: "Solana address",
+  BTC: "Bitcoin address",
+  TON: "TON address",
+};
+
+export function addressPlaceholderFor(chain: string): string {
+  return ADDRESS_PLACEHOLDERS[chain as WalletChain] ?? "Address";
+}

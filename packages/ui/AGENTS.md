@@ -69,6 +69,7 @@ None. The package is environment-neutral: it reads no `process.env`.
 - No component imports `next/headers`, `next/router`, or any app-specific module.
 - No component holds Dynamic / Fireblocks credentials or talks to a provider directly. Auth helpers receive callbacks; they don't dispatch SDK calls themselves.
 - React 18+ and React DOM are peer deps; the package never bundles React.
+- `WidgetCard`'s header reserves `pr-12` for its trailing slot, which clears one 32px control at `right-3` (12 + 32 + a 4px gap). A slot holding something wider needs that number raised, or the title runs underneath it. Header prose WRAPS rather than truncating - an ellipsis hides words, a second line does not - so the group carrying the title is `min-w-0 flex-1`, not `shrink-0`, which is what previously let it size to its own content and run underneath the slot. A subtitle long enough to wrap is usually a copy problem: shorten it.
 
 ## Integration map
 

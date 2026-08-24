@@ -10,9 +10,9 @@
  * for.
  */
 
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { cn } from "@dynamic-demos/utils";
-import { Spinner, WidgetCard } from "@dynamic-demos/ui";
+import { IconButton, Spinner, WidgetCard } from "@dynamic-demos/ui";
 import { ErrorMessage } from "@/components/error-message";
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import { useCreateAccountWallet } from "@/hooks/use-business-accounts";
@@ -49,6 +49,14 @@ export function AddWalletScreen({
       title="Add Wallet"
       subtitle="Select a chain to create a new wallet"
       onBack={() => navigation.goToWallets(businessAccountId)}
+      trailing={
+        navigation.closeToRoot && (
+          <IconButton label="Close settings" onClick={navigation.closeToRoot}>
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </IconButton>
+        )
+      }
+      className="overflow-visible"
     >
       <div className="space-y-1">
         {chainOptions.length === 0 ? (

@@ -30,6 +30,7 @@ import {
 } from "@dynamic-demos/ui";
 import { truncateAddress } from "@dynamic-demos/utils";
 import { ErrorMessage } from "@/components/error-message";
+import { addressPlaceholderFor } from "@/lib/chains";
 import { Mono } from "@/components/ui/atoms";
 import { usePanelSectionEffect } from "@/contexts/panel-section-context";
 import {
@@ -356,7 +357,7 @@ export function SendTransactionScreen({
           noAutofill
           value={recipient}
           onChange={(event) => setRecipient(event.target.value)}
-          placeholder="Enter address"
+          placeholder={addressPlaceholderFor(signable?.chain ?? wallet.chain)}
           autoFocus
           disabled={send.isPending}
         />

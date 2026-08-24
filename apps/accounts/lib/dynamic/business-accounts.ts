@@ -18,8 +18,6 @@
  */
 
 import type { Chain, WalletAccount } from "@dynamic-labs-sdk/client";
-import { createApiClient } from "@dynamic-labs-sdk/client/core";
-import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
 import {
   addBusinessAccountMember as sdkAddBusinessAccountMember,
   addBusinessAccountSigner as sdkAddBusinessAccountSigner,
@@ -70,19 +68,6 @@ function requireClient() {
 /**
  * Create an account. The caller becomes its first `owner` member.
  *
- * Goes through `createApiClient` rather than the `createBusinessAccount`
- * convenience wrapper, because that wrapper drops two of the three fields the
- * endpoint accepts. Not a types gap - the compiled 1.25.0 wrapper sends
- * `createBusinessAccountSdkRequest: { name: params?.name }`, so a passed
- * `externalRef` or `metadata` is silently discarded.
- *
- * `createApiClient` is an exported entry point (`@dynamic-labs-sdk/client/core`)
- * and the generated `CreateBusinessAccountSdkRequest` declares all three
- * fields, so this is the SDK's own transport - auth, base URL, and error
- * handling included - just one layer below the wrapper. Collapse it back to
- * `sdkCreateBusinessAccount` once that wrapper forwards everything;
- * `__tests__/sdk-surface.test.ts` fails when it does.
- *
  * @see https://www.dynamic.xyz/docs/api-reference/sdk/sdk-%E2%80%94-create-a-business-account
  */
 export async function createBusinessAccount(params: {
@@ -90,33 +75,14 @@ export async function createBusinessAccount(params: {
   externalRef?: string;
   metadata?: Record<string, unknown>;
 }): Promise<BusinessAccount> {
-  const client = requireClient();
-
-  // The wrapper is enough when there is nothing it would drop.
-  if (!params.externalRef && !params.metadata) {
-    return sdkCreateBusinessAccount({ name: params.name });
-  }
-
-  // `getCore(client).environmentId` is the SDK's own accessor but is not
-  // exported; this is the same value, from the same resolver that created the
-  // client (D-003).
-  const { environmentId } = resolveCredentials();
-  const apiClient = createApiClient({}, client);
-  const account = await apiClient.sdkCreateBusinessAccount({
-    environmentId,
-    createBusinessAccountSdkRequest: {
-      name: params.name,
-      externalRef: params.externalRef,
-      metadata: params.metadata,
-    },
-  });
-  return account as BusinessAccount;
+  return sdkCreateBusinessAccount(params);
 }
 
 /**
  * Accounts the signed-in user is a member of, in this environment.
  *
- * Unfiltered - this SDK version takes no query.
+ * Unfiltered on purpose: the widget shows the whole roster. The SDK accepts an
+ * `externalRefs` filter if a caller ever wants one account by ref.
  */
 export async function listBusinessAccounts(): Promise<BusinessAccountList> {
   requireClient();

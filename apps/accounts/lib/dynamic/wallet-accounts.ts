@@ -37,8 +37,12 @@ export function signableWalletsFor(
   walletAccounts: readonly WalletAccount[],
   businessAccountId: string,
 ): WalletAccount[] {
+  // 1.29.0 narrowed `businessAccountId` onto `WaasWalletAccount`; an external
+  // wallet has no such field, and reading it off the union no longer typechecks.
   return walletAccounts.filter(
-    (account) => account.businessAccountId === businessAccountId,
+    (account) =>
+      (account as { businessAccountId?: string }).businessAccountId ===
+      businessAccountId,
   );
 }
 

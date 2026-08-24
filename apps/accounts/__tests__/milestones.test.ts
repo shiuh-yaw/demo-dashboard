@@ -19,7 +19,7 @@ function fakeStorage(): MinimalStorage {
 }
 
 describe("ACCOUNTS_MILESTONES taxonomy", () => {
-  it("is exactly the eight documented event names", () => {
+  it("is exactly the nine documented event names", () => {
     expect(ACCOUNTS_MILESTONES).toEqual([
       "signed_in",
       "authenticated",
@@ -29,6 +29,7 @@ describe("ACCOUNTS_MILESTONES taxonomy", () => {
       "wallet_message_signed",
       "signer_added",
       "member_added",
+      "policy_updated",
     ]);
   });
 

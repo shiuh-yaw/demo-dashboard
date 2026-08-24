@@ -21,7 +21,7 @@ import {
   PenLine,
   RefreshCw,
   Send,
-  Users,
+  Settings,
 } from "lucide-react";
 import {
   Button,
@@ -111,16 +111,16 @@ export function WalletTransactionsScreen({
       title={detail ? accountName(detail) : "Wallet"}
       subtitle={truncateAddress(address)}
       onBack={() => navigation.goToWallets(businessAccountId)}
-      // Signers are the one thing here that is not about moving value, so they
-      // sit in the header rather than competing with the toolbar below.
+      // Administration is a set of pages - signers, rules - so the header
+      // opens the hub rather than one of them.
       trailing={
         <IconButton
-          label="Signers"
+          label="Wallet settings"
           onClick={() =>
-            navigation.goToWalletSigners(businessAccountId, wallet)
+            navigation.goToWalletSettings(businessAccountId, wallet)
           }
         >
-          <Users className="h-4 w-4" strokeWidth={1.5} />
+          <Settings className="h-4 w-4" strokeWidth={1.5} />
         </IconButton>
       }
       className="overflow-visible"
