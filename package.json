@@ -2,6 +2,13 @@
   "name": "dynamic-demos",
   "version": "0.1.0",
   "private": true,
+  "//": {
+    "unfixable-vulnerabilities": {
+      "cacheable-request": "GHSA-8x6c-cv3v-vp6g affects cacheable-request <10.2.7. ably 2.17.1 and the latest ably 2.26.0 both use got 11.x, whose compatible dependency remains cacheable-request 7.x; got 12.x also uses cacheable-request 7.x. The patched cacheable-request line requires a breaking got upgrade outside ably's declared dependency range.",
+      "valibot": "GHSA-vqpr-j7v3-hqw9 affects valibot >=0.31.0 <1.2.0. bitcoinjs-lib 7.0.1 uses valibot 1.2.0, but ecpair 3.0.0 remains the latest release and requires valibot 0.37.x. Forcing valibot 1.x onto ecpair is a breaking major-version override.",
+      "web3-utils": "GHSA-87qp-7cw8-8q9c affects web3-utils <4.2.1. The latest multi-chain validator remains 5.4.5 and requires merkletreejs ^0.3.11; merkletreejs 0.6.0 drops web3-utils but is outside that declared 0.x range and requires a breaking parent override."
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
