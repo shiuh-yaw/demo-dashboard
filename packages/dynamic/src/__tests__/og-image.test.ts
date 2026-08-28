@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { buildOgFontSubsetText, renderDemoOgImage, type OgArtKey } from "../og-image";
 
 describe("buildOgFontSubsetText", () => {
@@ -46,44 +46,48 @@ describe("renderDemoOgImage", () => {
     }
   });
 
-  // satori's failure mode for an unsupported SVG construct is a SILENT no-op
-  // (a component element nested inside <svg> renders nothing at all), so
-  // "it did not throw" proves nothing. Each motif must be shown to change
-  // the rendered pixels versus the artless card.
-  it.each<OgArtKey>(["wallet", "connect", "accounts", "trade", "earn", "checkout", "transfer", "card"])(
-    "actually paints the %s motif",
-    async (art) => {
-      const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(
-        new Error("network disabled in test"),
-      );
-      try {
-        const [withArt, without] = await Promise.all([
-          renderDemoOgImage({ demoLabel: "Demo", art }).then((r) => r.arrayBuffer()),
-          renderDemoOgImage({ demoLabel: "Demo" }).then((r) => r.arrayBuffer()),
-        ]);
-        expect(new Uint8Array(withArt)).not.toEqual(new Uint8Array(without));
-      } finally {
-        fetchSpy.mockRestore();
-      }
-    },
-  );
+  // Rendering a PNG is seconds of blocking CPU each, and CI runners are
+  // slower than laptops. Render every motif plus the artless baseline ONCE
+  // here and assert against the cache: the per-motif checks below used to
+  // render 24 images between them, which pushed the file past vitest's
+  // 60s worker-RPC timeout and failed the run even though every test passed.
+  const MOTIFS: OgArtKey[] = [
+    "wallet", "connect", "accounts", "trade", "earn", "checkout", "transfer", "card",
+  ];
+  const painted = new Map<OgArtKey, Uint8Array>();
+  let artless: Uint8Array;
 
-  it("renders a distinct image per motif", async () => {
+  beforeAll(async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(
       new Error("network disabled in test"),
     );
     try {
-      const keys: OgArtKey[] = ["wallet", "connect", "accounts", "trade", "earn", "checkout", "transfer", "card"];
-      const rendered: string[] = [];
-      for (const art of keys) {
-        const response = await renderDemoOgImage({ demoLabel: "Demo", art });
-        const buffer = await response.arrayBuffer();
-        rendered.push(Buffer.from(buffer).toString("base64"));
-      }
-      expect(new Set(rendered).size).toBe(keys.length);
+      const render = async (art?: OgArtKey) => {
+        const res = art
+          ? await renderDemoOgImage({ demoLabel: "Demo", art })
+          : await renderDemoOgImage({ demoLabel: "Demo" });
+        return new Uint8Array(await res.arrayBuffer());
+      };
+      artless = await render();
+      for (const art of MOTIFS) painted.set(art, await render(art));
     } finally {
       fetchSpy.mockRestore();
     }
+  });
+
+  // satori's failure mode for an unsupported SVG construct is a SILENT no-op
+  // (a component element nested inside <svg> renders nothing at all), so
+  // "it did not throw" proves nothing. Each motif must be shown to change
+  // the rendered pixels versus the artless card.
+  it.each<OgArtKey>(MOTIFS)("actually paints the %s motif", (art) => {
+    expect(painted.get(art)).not.toEqual(artless);
+  });
+
+  it("renders a distinct image per motif", () => {
+    const seen = new Set(
+      MOTIFS.map((art) => Buffer.from(painted.get(art)!).toString("base64")),
+    );
+    expect(seen.size).toBe(MOTIFS.length);
   });
 
   it("never reads prospect/theme data - the label is the only variable input", async () => {

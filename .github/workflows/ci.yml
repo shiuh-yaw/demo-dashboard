@@ -221,7 +221,14 @@ jobs:
         # `turbo run test` no-ops for packages without a test script and runs
         # vitest where defined (currently apps/spark26 only). As more
         # packages add tests, they're picked up automatically.
-        run: pnpm turbo test
+        #
+        # Concurrency is capped because 30 test tasks at turbo's default of 10
+        # put ten vitest instances - each with its own worker pool - on one
+        # container. Starving the main process stretches the worker->main RPC
+        # round trip, and vitest fails the whole run with
+        # `Timeout calling "onTaskUpdate"` at a hardcoded 60s that no config
+        # option exposes. A percentage tracks the runner's real core count.
+        run: pnpm turbo test --concurrency=50%
 
       - name: Spark26-protection script self-test
         run: ./.github/scripts/test-check-spark26-protection.sh
