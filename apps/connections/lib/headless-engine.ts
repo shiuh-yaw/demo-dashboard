@@ -180,7 +180,8 @@ function clearSessions(): void {
       /* best effort */
     }
     try {
-      await clearMetaMaskSessionStorage();
+      const client = getClient();
+      if (client) await clearMetaMaskSessionStorage(client);
     } catch {
       /* best effort */
     }
@@ -254,7 +255,8 @@ async function connect(params: ConnectParams): Promise<void> {
     // a prior session (~10s) before minting, which is the main cause of a slow
     // prompt. Fast + best-effort; harmless for non-MetaMask wallets.
     try {
-      await clearMetaMaskSessionStorage();
+      const client = getClient();
+      if (client) await clearMetaMaskSessionStorage(client);
     } catch {
       /* best effort */
     }

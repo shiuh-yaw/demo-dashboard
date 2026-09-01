@@ -3,7 +3,8 @@
 # = edit this file, then run `pnpm install --no-frozen-lockfile`.
 #
 # spark26 is intentionally NOT migrated to catalog references (D-006 zero-touch).
-# Leave its package.json untouched even when versions match the catalog.
+# Leave its package.json untouched even when versions match the catalog. Its
+# Dynamic SDK pins are kept at the catalog version by hand, not by reference.
 #
 # Inclusion rule: only deps that are byte-identical across all non-spark26
 # consumers belong in the catalog. Drift cases (caret-vs-exact, minor-version
@@ -13,21 +14,34 @@ packages:
   - "packages/*"
 
 catalog:
-  # Dynamic SDK (Phase 1D consolidated all 9 SDK-consuming apps to 0.25.0)
-  "@dynamic-labs-sdk/client": "0.25.0"
-  "@dynamic-labs-sdk/evm": "0.25.0"
-  "@dynamic-labs-sdk/solana": "0.25.0"
-  "@dynamic-labs-sdk/wallet-connect": "0.25.0"
-  "@dynamic-labs-sdk/sui": "0.25.0"
-  "@dynamic-labs-sdk/bitcoin": "0.25.0"
-  "@dynamic-labs-sdk/aptos": "0.25.0"
-  "@dynamic-labs-sdk/tron": "0.25.0"
-  "@dynamic-labs-sdk/starknet": "0.25.0"
-  "@dynamic-labs-sdk/ton": "0.25.0"
-  "@dynamic-labs-sdk/zerodev": "0.25.0"
-  "@dynamic-labs/iconic": "4.61.1"
+  # Dynamic SDK — every consumer, spark26 included, sits on this version.
+  "@dynamic-labs-sdk/client": "1.30.2"
+  "@dynamic-labs-sdk/evm": "1.30.2"
+  "@dynamic-labs-sdk/solana": "1.30.2"
+  "@dynamic-labs-sdk/wallet-connect": "1.30.2"
+  "@dynamic-labs-sdk/sui": "1.30.2"
+  "@dynamic-labs-sdk/bitcoin": "1.30.2"
+  "@dynamic-labs-sdk/aptos": "1.30.2"
+  "@dynamic-labs-sdk/tron": "1.30.2"
+  "@dynamic-labs-sdk/starknet": "1.30.2"
+  "@dynamic-labs-sdk/ton": "1.30.2"
+  "@dynamic-labs-sdk/zerodev": "1.30.2"
+  "@dynamic-labs-sdk/react-hooks": "1.30.2"
+  "@dynamic-labs-sdk/metamask": "1.30.2"
+  "@dynamic-labs-sdk/droplet": "1.30.2"
+  "@dynamic-labs/iconic": "5.4.0"
 
-  # Chain libraries (pinned to versions bundled by @dynamic-labs-sdk/* 0.25.0)
+  # Dynamic Node SDK (server-custodied wallets) — own 1.0.x version line.
+  "@dynamic-labs-wallet/node": "1.0.116"
+  "@dynamic-labs-wallet/node-evm": "1.0.116"
+  "@dynamic-labs-wallet/node-svm": "1.0.116"
+  # Peer of @dynamic-labs-wallet/core; carries the MPC ceremony client.
+  "@dynamic-labs-wallet/forward-mpc-client": "1.0.2"
+
+  # Chain libraries (pinned to versions bundled by @dynamic-labs-sdk/* 1.30.2)
+  # viem floor is set by @dynamic-labs-wallet/node-evm's `^2.45.3` peer;
+  # every other consumer (SDK, zerodev, lifi) wants only `^2.28.x`.
+  viem: "2.55.11"
   "@mysten/sui": "1.45.1"
   "starknet": "6.23.1"
 

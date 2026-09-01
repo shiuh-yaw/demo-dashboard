@@ -16,9 +16,9 @@
     "test:watch": "vitest"
   },
   "peerDependencies": {
-    "@dynamic-labs-sdk/client": ">=0.25.0",
-    "@dynamic-labs-sdk/evm": ">=0.25.0",
-    "@dynamic-labs-sdk/solana": ">=0.25.0",
+    "@dynamic-labs-sdk/client": ">=1.30.2",
+    "@dynamic-labs-sdk/evm": ">=1.30.2",
+    "@dynamic-labs-sdk/solana": ">=1.30.2",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
@@ -39,9 +39,9 @@
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
-    "@dynamic-labs-sdk/client": "1.19.1",
-    "@dynamic-labs-sdk/evm": "1.19.1",
-    "@dynamic-labs-sdk/solana": "1.19.1",
+    "@dynamic-labs-sdk/client": "catalog:",
+    "@dynamic-labs-sdk/evm": "catalog:",
+    "@dynamic-labs-sdk/solana": "catalog:",
     "@testing-library/react": "16.0.1",
     "@types/node": "catalog:",
     "@types/react": "^19.0.0",

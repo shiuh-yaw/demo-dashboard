@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
+  useDynamicClient,
   useInitStatus,
   useGetWalletOptionsCatalogue,
   useConnectWithWalletProvider,
@@ -314,6 +315,7 @@ function WalletTile({
 }
 
 export function ConnectFlow() {
+  const dynamicClient = useDynamicClient();
   const { data: initStatus } = useInitStatus();
   const {
     data: options = [],
@@ -591,7 +593,7 @@ export function ConnectFlow() {
       // await a full logout here - that can hang on mobile and get the flow
       // stuck on "Preparing". Session teardown happens on cancel/error instead.
       try {
-        await clearMetaMaskSessionStorage();
+        await clearMetaMaskSessionStorage(dynamicClient);
       } catch {
         /* best effort */
       }
@@ -671,7 +673,7 @@ export function ConnectFlow() {
   // (which is what forces users to disconnect in the wallet before retrying).
   async function clearStaleSessions() {
     try {
-      await clearMetaMaskSessionStorage();
+      await clearMetaMaskSessionStorage(dynamicClient);
     } catch {
       /* best effort */
     }

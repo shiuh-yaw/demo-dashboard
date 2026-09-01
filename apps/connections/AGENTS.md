@@ -94,7 +94,7 @@ Dynamic dashboard setup: enable **EVM** and **Solana**, add the app origin to **
 
 ## Gotchas
 
-- **SDK pinned to 1.19.1, not `catalog:`.** The catalog is on 0.25.0, which predates the APIs this flow needs (`react-hooks`, `evm/base-account`, `solana` Phantom redirect, MetaMask URI connectors). `apps/wallet` is on the same pin; `react-hooks` and `metamask` only publish up to 1.20.0, so treat 1.19.1 as the shared floor when bumping.
+- **SDK comes from `catalog:`.** This flow needs `react-hooks`, `evm/base-account`, `solana` Phantom redirect and the MetaMask URI connectors, all of which the catalog version carries. `clearMetaMaskSessionStorage(client)` takes the client as a required argument - pass `useDynamicClient()` in components and `getClient()` (null-guarded) in `lib/headless-engine.ts`.
 - **The flow loads with `ssr: false`** (`components/connect-flow-lazy.tsx`). It reads `window.location` during render for the incoming params, and wallet discovery is browser-only, so there is nothing to server-render. Don't "fix" this by adding `typeof window` guards throughout.
 - **There is no `/docs` route, and no `headless.html`.** Both existed earlier and were removed; anything still pointing at them is stale. The guide lives only in the scenario page's panel, and the engine is the `/headless` route.
 - **No native harnesses ship here.** They duplicated the published guides and nothing in the demo rendered them, so `native/` was removed along with its `tsconfig`/eslint excludes and `outputFileTracingIncludes`. Integration guidance lives at [dynamic.xyz/docs/connections](https://www.dynamic.xyz/docs/connections/overview).

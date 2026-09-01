@@ -1,7 +1,7 @@
 {
   "name": "@dynamic-demos/spark26",
   "version": "0.1.0",
-  "description": "Spark26 conference payment microsite — crypto payment for Cvent-registered attendees",
+  "description": "Spark26 conference payment microsite \u2014 crypto payment for Cvent-registered attendees",
   "private": true,
   "scripts": {
     "dev": "concurrently -k -n redis,next -c magenta,cyan \"pnpm dev:redis\" \"pnpm dev:next\"",
@@ -20,11 +20,11 @@
     "@dynamic-demos/types": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
-    "@dynamic-labs-sdk/bitcoin": "0.25.0",
-    "@dynamic-labs-sdk/client": "0.25.0",
-    "@dynamic-labs-sdk/evm": "0.25.0",
-    "@dynamic-labs-sdk/solana": "0.25.0",
-    "@dynamic-labs-sdk/wallet-connect": "0.25.0",
+    "@dynamic-labs-sdk/bitcoin": "1.30.2",
+    "@dynamic-labs-sdk/client": "1.30.2",
+    "@dynamic-labs-sdk/evm": "1.30.2",
+    "@dynamic-labs-sdk/solana": "1.30.2",
+    "@dynamic-labs-sdk/wallet-connect": "1.30.2",
     "@t3-oss/env-nextjs": "0.13.8",
     "@tanstack/react-query": "5.81.2",
     "@upstash/qstash": "2.8.4",
@@ -35,7 +35,7 @@
     "next": "15.5.18",
     "react": "19.1.7",
     "react-dom": "19.1.7",
-    "viem": "2.42.1",
+    "viem": "2.55.11",
     "zod": "3.25.76"
   },
   "devDependencies": {

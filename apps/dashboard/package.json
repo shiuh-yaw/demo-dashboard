@@ -29,7 +29,7 @@
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
     "@dynamic-labs-sdk/client": "catalog:",
-    "@dynamic-labs-sdk/droplet": "1.21.2",
+    "@dynamic-labs-sdk/droplet": "catalog:",
     "@paralleldrive/cuid2": "2.2.2",
     "@t3-oss/env-nextjs": "catalog:",
     "@tanstack/react-query": "catalog:",
@@ -50,7 +50,7 @@
     "sharp": "0.35.2",
     "tailwind-merge": "catalog:",
     "tw-animate-css": "catalog:",
-    "viem": "2.37.2",
+    "viem": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

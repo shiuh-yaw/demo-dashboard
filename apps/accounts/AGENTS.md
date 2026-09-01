@@ -74,7 +74,7 @@ The app is otherwise entirely client-side. This app is one of the **non-consumer
 - `NEXT_PUBLIC_DASHBOARD_API_URL` — dashboard API base, for per-prospect theme configs.
 - `NEXT_PUBLIC_TRACK_URL` — GTM ingest base URL (`@dynamic-demos/analytics`) — optional. Unset → `<GtmTracker>` / `useTrack()` are total no-ops; the app builds and runs unchanged.
 
-SDK versions are direct-pinned to `1.29.0` (exact), not the workspace catalog's `0.25.0`: the business-accounts surface does not exist below 1.20. Bumping this app is independent of the catalog.
+SDK versions come from the workspace catalog. The business-accounts surface requires >= 1.20, which the catalog satisfies; bump the catalog rather than pinning here.
 
 ## Analytics taxonomy
 

@@ -36,7 +36,7 @@
     "react-dom": "catalog:",
     "sonner": "^2.0.7",
     "tailwind-merge": "catalog:",
-    "viem": "2.37.2",
+    "viem": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

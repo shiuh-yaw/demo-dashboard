@@ -20,9 +20,9 @@
     "@dynamic-demos/types": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-demos/utils": "workspace:*",
-    "@dynamic-labs-sdk/client": "1.19.1",
-    "@dynamic-labs-sdk/evm": "1.19.1",
-    "@dynamic-labs-sdk/react-hooks": "1.19.1",
+    "@dynamic-labs-sdk/client": "catalog:",
+    "@dynamic-labs-sdk/evm": "catalog:",
+    "@dynamic-labs-sdk/react-hooks": "catalog:",
     "@t3-oss/env-nextjs": "catalog:",
     "@tanstack/react-query": "catalog:",
     "clsx": "catalog:",
@@ -31,7 +31,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwind-merge": "catalog:",
-    "viem": "2.42.1",
+    "viem": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

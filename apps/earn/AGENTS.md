@@ -129,4 +129,4 @@ export const middleware = createDemoMiddleware({
 
 - WAAS / wallet-creation logic here is bespoke; Phase 4 considers extending `@dynamic-demos/dynamic` to model that pattern.
 - Mock-mode pattern in this app is the reference for trade + future demos.
-- Panel snippets in `lib/code-steps.ts` teach the current docs APIs (`@dynamic-labs-sdk` 1.x + react-hooks) while the app internals remain on the catalog 0.25.0 SDK - migrating earn to 1.x (wallet's direct-pin precedent) is a tracked follow-up. Every TypeScript snippet must open with its import line (test-enforced in `src/__tests__/code-steps.test.ts`).
+- Panel snippets in `lib/code-steps.ts` teach the current docs APIs (`@dynamic-labs-sdk` + react-hooks), which the catalog SDK now matches. Every TypeScript snippet must open with its import line (test-enforced in `src/__tests__/code-steps.test.ts`).

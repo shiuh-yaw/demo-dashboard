@@ -30,7 +30,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwind-merge": "catalog:",
-    "viem": "2.42.1",
+    "viem": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
