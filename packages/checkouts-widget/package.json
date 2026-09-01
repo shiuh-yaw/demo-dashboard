@@ -26,9 +26,9 @@
     "@dynamic-demos/utils": "workspace:*",
     "@dynamic-demos/ui": "workspace:*",
     "@dynamic-labs/iconic": "catalog:",
-    "lucide-react": "0.541.0",
+    "lucide-react": "catalog:",
     "qrcode.react": "4.2.0",
-    "zod": "3.25.76"
+    "zod": "catalog:"
   },
   "peerDependenciesMeta": {
     "@dynamic-labs-sdk/client": { "optional": false },
@@ -43,11 +43,11 @@
     "@dynamic-labs-sdk/evm": "1.19.1",
     "@dynamic-labs-sdk/solana": "1.19.1",
     "@testing-library/react": "16.0.1",
-    "@types/node": "20.19.25",
+    "@types/node": "catalog:",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "fastestsmallesttextencoderdecoder": "catalog:",
-    "jsdom": "26.0.0",
+    "jsdom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:",

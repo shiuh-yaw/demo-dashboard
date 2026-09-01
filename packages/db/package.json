@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
-    "@types/node": "20.19.25",
+    "@types/node": "catalog:",
     "prisma": "5.22.0",
     "tsx": "4.19.2",
     "typescript": "catalog:",

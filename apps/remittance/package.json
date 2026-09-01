@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "0.13.8",
+    "@t3-oss/env-nextjs": "catalog:",
     "@dynamic-demos/alchemy": "workspace:*",
     "@dynamic-demos/analytics": "workspace:*",
     "@dynamic-demos/code-highlight": "workspace:*",
@@ -29,26 +29,26 @@
     "@faker-js/faker": "^9.5.0",
     "clsx": "catalog:",
     "jsonwebtoken": "9.0.2",
-    "lucide-react": "0.541.0",
+    "lucide-react": "catalog:",
     "next": "catalog:",
     "qrcode.react": "4.2.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "3.4.0",
+    "tailwind-merge": "catalog:",
     "viem": "2.42.1",
-    "zod": "3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
     "@eslint/eslintrc": "catalog:",
-    "@tailwindcss/postcss": "4.1.17",
+    "@tailwindcss/postcss": "catalog:",
     "eslint": "catalog:",
     "eslint-config-next": "catalog:",
     "@types/jsonwebtoken": "9.0.10",
-    "@types/node": "20.19.25",
+    "@types/node": "catalog:",
     "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
-    "tailwindcss": "4.1.17",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

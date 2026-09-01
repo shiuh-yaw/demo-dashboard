@@ -25,7 +25,7 @@
     "@dynamic-demos/tsconfig": "workspace:*",
     "@dynamic-labs-sdk/client": "1.19.1",
     "@dynamic-labs-sdk/react-hooks": "1.19.1",
-    "@types/node": "20.19.25",
+    "@types/node": "catalog:",
     "@types/react": "19.2.5",
     "react": "catalog:",
     "typescript": "catalog:",

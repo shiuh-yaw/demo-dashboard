@@ -39,7 +39,9 @@ catalog:
   react-dom: "19.1.6"
 
   # Solana ecosystem (used by checkouts, wallet, etc.)
-  "@solana/web3.js": "1.98.4"
+  # Must match the copy @dynamic-labs-sdk/solana depends on, or Transaction /
+  # VersionedTransaction resolve to two type identities and stop being assignable.
+  "@solana/web3.js": "1.98.1"
   # Peer required by `@solana/codecs-strings` and ~50 other @solana/* 2.x/3.x
   # packages. Pure-JS TextEncoder/TextDecoder polyfill for legacy runtimes;
   # modern Node + browsers already have those natives, but pnpm flags the
@@ -55,8 +57,26 @@ catalog:
   # Cross-chain SDK
   "@lifi/sdk": "3.14.1"
 
+  # Validation - one zod 3.x across the workspace; mixing majors breaks
+  # instanceof checks on schemas passed between packages.
+  zod: "3.25.76"
+
+  # Upstash / Redis. ioredis floor is set by unstorage's `^5.4.2` peer.
+  ioredis: "5.6.1"
+  "@upstash/qstash": "2.8.4"
+  "@upstash/redis": "1.34.8"
+
   # Data fetching
   "@tanstack/react-query": "5.90.16"
+
+  # Build + UI toolchain (tailwindcss and @tailwindcss/postcss move as a pair)
+  lucide-react: "0.542.0"
+  tailwindcss: "4.1.18"
+  "@tailwindcss/postcss": "4.1.18"
+  "@t3-oss/env-nextjs": "0.13.8"
+  tailwind-merge: "3.4.0"
+  "@types/node": "20.19.27"
+  jsdom: "26.0.0"
 
   # Shared UI primitives
   clsx: "2.1.1"

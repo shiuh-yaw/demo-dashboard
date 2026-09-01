@@ -13,11 +13,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "zod": "3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
-    "@types/node": "20.19.25",
+    "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

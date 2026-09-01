@@ -24,15 +24,15 @@
   },
   "dependencies": {
     "@dynamic-demos/utils": "workspace:*",
-    "zod": "3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@dynamic-demos/tsconfig": "workspace:*",
     "@testing-library/react": "16.0.1",
-    "@types/node": "20.19.25",
+    "@types/node": "catalog:",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "jsdom": "26.0.0",
+    "jsdom": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

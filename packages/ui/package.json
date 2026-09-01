@@ -28,7 +28,7 @@
     "@dynamic-labs/iconic": "catalog:",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "lucide-react": "^0.511.0",
+    "lucide-react": "catalog:",
     "next-themes": "^0.4.6"
   },
   "devDependencies": {

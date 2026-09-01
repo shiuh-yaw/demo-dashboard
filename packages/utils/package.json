@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "clsx": "catalog:",
-    "tailwind-merge": "3.3.0"
+    "tailwind-merge": "catalog:"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
