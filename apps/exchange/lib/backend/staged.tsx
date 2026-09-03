@@ -256,6 +256,7 @@ export function StagedBackendProvider({ children }: { children: ReactNode }) {
       completeOAuthRedirect,
       signOut,
       canFaucet: true,
+      faucetAmounts: [100, 500, 1000],
       fund,
       depositAddress: () => state.wallet?.address ?? null,
       openPosition,

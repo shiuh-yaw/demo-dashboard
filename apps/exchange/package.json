@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "faucet:keygen": "node scripts/faucet-keygen.mjs"
   },
   "dependencies": {
     "@dynamic-demos/analytics": "workspace:*",

@@ -9,7 +9,8 @@ import { Badge, Button, ErrorNote, Sheet } from "@/components/primitives";
 export function FundSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const backend = useBackend();
   const { state } = useSession();
-  const [amount, setAmount] = useState(500);
+  const amounts = backend.faucetAmounts.length ? backend.faucetAmounts : [100, 500, 1000];
+  const [amount, setAmount] = useState<number>(amounts[Math.min(1, amounts.length - 1)] ?? 100);
   const [copied, setCopied] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
 
@@ -30,7 +31,7 @@ export function FundSheet({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="space-y-5">
           <p className="text-[14px] text-ink-2">Choose an amount. Testnet funds arrive from the Exchange faucet in a few seconds.</p>
           <div className="grid grid-cols-3 gap-2">
-            {[100, 500, 1000].map((v) => (
+            {amounts.map((v) => (
               <button
                 key={v}
                 onClick={() => setAmount(v)}

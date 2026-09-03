@@ -12,6 +12,14 @@ Press **P** for the presenter rail. Beat 1 is the sign-in card on `/`; beats 2 a
 
 ## Live mode (Dynamic sandbox) checklist
 
+**Add funds in live mode.** Set up the faucet once and "Add funds" pays real Sepolia USDC on stage:
+
+```bash
+pnpm --filter @dynamic-demos/exchange faucet:keygen   # prints FAUCET_PRIVATE_KEY and the treasury address
+```
+
+Put the key in `apps/exchange/.env` (server-only, gitignored), then fund the printed address: USDC from [Circle's faucet](https://faucet.circle.com) on Ethereum Sepolia, and about 0.05 Sepolia ETH for gas from the [Google Cloud faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia). Restart the dev server. The sheet offers 10 / 25 / 50 USDC, capped at 200 USDC per address per day. Without the key, the sheet shows the deposit address instead.
+
 **Connect MetaMask asks to confirm it's you.** That is Dynamic's step-up authentication (on by default for new environments): the app re-verifies you, silently with the embedded wallet where the backend allows it, otherwise with an email code or a quick social round trip, then links the wallet. Nothing to configure.
 
 Staged mode needs nothing. Live mode needs a Dynamic **sandbox** environment set up like this, then the env vars below.

@@ -54,6 +54,8 @@ export interface Backend {
 
   /** Staged mode credits a testnet faucet. Live mode: false - use depositAddress(). */
   canFaucet: boolean;
+  /** Amounts the faucet offers, in USDC. Empty when there is no faucet. */
+  faucetAmounts: number[];
   fund(amountUsdc: number): Promise<void>;
   depositAddress(): `0x${string}` | null;
 

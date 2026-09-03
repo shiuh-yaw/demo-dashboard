@@ -15,6 +15,14 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
+    /** Live-mode faucet treasury key (server only, never NEXT_PUBLIC). Unset = no faucet. */
+    FAUCET_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/).optional(),
+    /** Per-request cap in USDC (default 50). */
+    FAUCET_MAX_USDC: z.coerce.number().positive().optional(),
+    /** Per-address cap per 24h in USDC (default 200). */
+    FAUCET_DAILY_PER_ADDRESS: z.coerce.number().positive().optional(),
+    /** Server-side Sepolia RPC for the faucet; falls back to the public one. */
+    SEPOLIA_RPC_URL: z.string().url().optional(),
   },
   client: {
     /** Dynamic environment id - optional; absent means staged mode. */
@@ -28,6 +36,10 @@ export const env = createEnv({
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    FAUCET_PRIVATE_KEY: process.env.FAUCET_PRIVATE_KEY,
+    FAUCET_MAX_USDC: process.env.FAUCET_MAX_USDC,
+    FAUCET_DAILY_PER_ADDRESS: process.env.FAUCET_DAILY_PER_ADDRESS,
+    SEPOLIA_RPC_URL: process.env.SEPOLIA_RPC_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID:
       process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
     NEXT_PUBLIC_EXCHANGE_MODE: process.env.NEXT_PUBLIC_EXCHANGE_MODE,

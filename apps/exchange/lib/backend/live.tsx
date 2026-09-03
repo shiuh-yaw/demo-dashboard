@@ -45,6 +45,8 @@ import {
   type SocialProvider,
   type UserLike,
 } from "@/lib/dynamic";
+import { getFaucetStatus, requestFaucet, type FaucetStatus } from "@/lib/faucet/client";
+import { publicClient } from "@/lib/dynamic";
 import { BackendContext } from "./context";
 import { APY, fakeTxHash, uid } from "./sim";
 import { SEPOLIA_CHAIN_ID, SEPOLIA_NAME, type Backend, type Progress } from "./types";
@@ -112,6 +114,16 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
   const [walletTick, setWalletTick] = useState(0);
   const [providerTick, setProviderTick] = useState(0);
   const [linkStepUp, setLinkStepUp] = useState<Backend["linkStepUp"]>(null);
+  const [faucet, setFaucet] = useState<FaucetStatus>({ enabled: false, amounts: [] });
+  useEffect(() => {
+    let cancelled = false;
+    getFaucetStatus().then((f) => {
+      if (!cancelled) setFaucet(f);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const otpRef = useRef<OTPVerification | null>(null);
   const seenUser = useRef<string | null>(null);
   const creating = useRef(false);
@@ -293,9 +305,26 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "signed-out" });
   }, [dispatch]);
 
-  const fund = useCallback(async () => {
-    throw new Error("Live mode has no faucet. Send Sepolia USDC to the deposit address; the balance updates on its own.");
-  }, []);
+  // Live faucet: the server's treasury wallet sends real Sepolia USDC. Off
+  // (deposit address only) unless FAUCET_PRIVATE_KEY is set on the server.
+  const fund = useCallback(
+    async (amount: number) =>
+      run("Receiving testnet funds", async () => {
+        const address = state.wallet?.address;
+        if (!address) throw new Error("No wallet to fund yet.");
+        if (!faucet.enabled) throw new Error("Live mode has no faucet on this server. Send Sepolia USDC to the deposit address; the balance updates on its own.");
+        const { txHash } = await requestFaucet(address, amount);
+        dispatch({
+          type: "activity",
+          item: { id: uid(), at: Date.now(), kind: "fund", title: "Deposit received", detail: "Exchange testnet faucet · Ethereum Sepolia", amount, txHash },
+        });
+        milestone("wallet_funded");
+        setBusy("Waiting for confirmation");
+        await publicClient.waitForTransactionReceipt({ hash: txHash, timeout: 90_000 }).catch(() => undefined);
+        await refreshBalances().catch(() => undefined);
+      }),
+    [run, state.wallet?.address, faucet.enabled, dispatch, milestone, refreshBalances],
+  );
 
   const openPosition = useCallback(
     async (protocol: Position["protocol"], amount: number) =>
@@ -480,7 +509,8 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       verifyEmailCode,
       completeOAuthRedirect,
       signOut,
-      canFaucet: false,
+      canFaucet: faucet.enabled,
+      faucetAmounts: faucet.amounts,
       fund,
       depositAddress: () => state.wallet?.address ?? null,
       openPosition,
@@ -497,7 +527,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       refreshBalances,
       hardReset,
     }),
-    [ready, loggedIn, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, linkStepUp, submitLinkStepUpCode, cancelLinkStepUp, rescan, externalWalletHint, loseDevice, recover, refreshBalances, hardReset],
+    [ready, loggedIn, busy, progress, error, auth, sponsorship, faucet, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, linkStepUp, submitLinkStepUpCode, cancelLinkStepUp, rescan, externalWalletHint, loseDevice, recover, refreshBalances, hardReset],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;
