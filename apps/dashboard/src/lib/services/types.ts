@@ -649,7 +649,8 @@ export type DemoConfigKind =
   | "flow"
   | "card"
   | "connections"
-  | "accounts";
+  | "accounts"
+  | "rimau";
 
 /**
  * Demo config row as it lives in Postgres (mirrors the Prisma `DemoConfig`

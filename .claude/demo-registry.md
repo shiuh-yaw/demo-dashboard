@@ -17,6 +17,7 @@
 | `flow` | checkout | mixed | experimental |
 | `proceeds` | offramp | non-custodial | stable |
 | `remittance` | offramp | non-custodial | stable |
+| `rimau` | wallet | non-custodial | experimental |
 | `shop` | checkout | non-custodial | experimental |
 | `spark26` | checkout | mixed | stable |
 | `trade` | wallet | non-custodial | stable |

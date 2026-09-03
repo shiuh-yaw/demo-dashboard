@@ -29,6 +29,7 @@ const SECTION_LABELS: Record<string, string> = {
   earns: "Earn",
   remittance: "Remittance",
   trade: "Trade",
+  rimau: "Rimau",
   widgets: "Widgets",
   "visa-direct": "Fireblocks MTLco",
   documentation: "Documentation",

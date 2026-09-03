@@ -6,12 +6,13 @@
  * strings its legacy list client already rendered.
  */
 
-import { ArrowDownToLine, Banknote, CreditCard, LineChart, Send, Wallet, ArrowUpDown } from "lucide-react";
+import { ArrowDownToLine, Banknote, CreditCard, Landmark, LineChart, Send, Wallet, ArrowUpDown } from "lucide-react";
 import { deleteWalletConfig } from "@/lib/actions/wallets";
 import { deleteEarnConfig } from "@/lib/actions/earns";
 import { deleteCheckout } from "@/lib/actions/checkouts";
 import { deleteRemittanceConfig } from "@/lib/actions/remittance";
 import { deleteTradeConfig } from "@/lib/actions/trade";
+import { deleteRimauConfig } from "@/lib/actions/rimau";
 import { deleteVisaDirectConfig } from "@/lib/actions/visa-direct";
 import type {
   StoredWalletConfig,
@@ -19,6 +20,7 @@ import type {
   StoredCheckoutConfig,
   StoredRemittanceConfig,
   StoredTradeConfig,
+  StoredRimauConfig,
   StoredVisaDirectConfig,
 } from "@/lib/types/dashboard";
 import type { DemoKindListConfig } from "@/components/shared/demo-kind-list-client";
@@ -131,6 +133,22 @@ export const tradeListConfig: DemoKindListConfig<StoredTradeConfig> = {
   deleteSuccessMessage: "Trade config deleted",
   deleteFailureMessage: "Failed to delete config",
   deleteAction: deleteTradeConfig,
+};
+
+export const rimauListConfig: DemoKindListConfig<StoredRimauConfig> = {
+  kind: "rimau",
+  pageTitle: "Rimau",
+  routeBase: "/rimau",
+  icon: Landmark,
+  newButtonLabel: "New Config",
+  createButtonLabel: "Create Config",
+  emptyTitle: "No Rimau configs yet",
+  emptyDescription:
+    "Create your first Rimau config to customize the branding of the exchange demo.",
+  deleteModalTitle: "Delete Rimau Config",
+  deleteSuccessMessage: "Rimau config deleted",
+  deleteFailureMessage: "Failed to delete config",
+  deleteAction: deleteRimauConfig,
 };
 
 export const visaDirectListConfig: DemoKindListConfig<StoredVisaDirectConfig> = {

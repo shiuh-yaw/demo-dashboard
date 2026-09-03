@@ -268,6 +268,31 @@ export const LANDING_DEMOS: LandingDemo[] = [
     ],
   },
   {
+    ...catalogEntry("rimau"),
+    kind: "rimau",
+    description:
+      "A fictional regional exchange puts a non-custodial embedded wallet inside its consumer app without becoming the custodian. Social login creates a 2-of-2 TSS-MPC wallet silently, a yield position opens from inside the app, a transfer goes through with zero ETH, a lost device recovers without a seed phrase, and a live architecture view shows exactly who holds what. Staged for a five-beat sales demo; runs offline or live on Sepolia.",
+    highlights: [
+      "Social login, silent 2-of-2 MPC wallet creation",
+      "Yield position from inside the exchange app",
+      "Sponsored transfer with zero native token (EIP-7702)",
+      "Device loss and recovery without a seed phrase",
+      "Live architecture and blast-radius view",
+    ],
+    stack: [
+      "Embedded MPC wallets",
+      "Email + social login",
+      "Gas sponsorship (ZeroDev, EIP-7702)",
+      "Encrypted key-share backup",
+    ],
+    resources: [
+      {
+        label: "Embedded wallets docs",
+        url: "https://www.dynamic.xyz/docs/overview/wallets/overview",
+      },
+    ],
+  },
+  {
     ...catalogEntry("checkouts"),
     kind: "checkout",
     description:

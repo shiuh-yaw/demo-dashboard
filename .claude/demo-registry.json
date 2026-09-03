@@ -196,6 +196,13 @@
       ]
     },
     {
+      "name": "@dynamic-demos/rimau",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "non-custodial",
+      "status": "experimental"
+    },
+    {
       "name": "@dynamic-demos/shop",
       "kind": "app",
       "flow_role": "checkout",

@@ -42,6 +42,7 @@ const KIND_LABEL: Record<DemoConfigKind, string> = {
   earn: "Earn",
   wallet: "Wallet",
   trade: "Trade",
+  rimau: "Rimau",
   "visa-direct": "Fireblocks Liquidity",
   checkout: "Checkouts",
   remittance: "Remittance",

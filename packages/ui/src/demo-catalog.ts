@@ -113,6 +113,15 @@ export const DEMO_CATALOG: DemoCatalogEntry[] = [
     showOnLanding: true,
   },
   {
+    slug: "rimau",
+    category: "wallet",
+    name: "Rimau",
+    tagline: "A non-custodial embedded wallet inside a consumer exchange app.",
+    // Operator-only until it has a public domain: an SE enablement demo,
+    // built for a stage before it is built for the catalog.
+    showOnLanding: false,
+  },
+  {
     slug: "checkouts",
     category: "checkout",
     name: "Checkouts",

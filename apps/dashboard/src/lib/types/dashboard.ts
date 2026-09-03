@@ -502,6 +502,54 @@ export interface StoredTradeConfig {
 }
 
 // =============================================================================
+// Rimau Configuration (Branding)
+// =============================================================================
+
+/**
+ * Rimau branding
+ * Matches apps/rimau/lib/rimau-config.ts RimauBranding
+ */
+export interface RimauBranding {
+  logoUrl?: string;
+  appName?: string;
+}
+
+/**
+ * Full Rimau configuration
+ * Matches apps/rimau/lib/rimau-config.ts RimauConfig (theme is hydrated from
+ * the bound Prospect by the mapper, like trade)
+ */
+export interface RimauConfig {
+  branding?: RimauBranding;
+}
+
+/**
+ * Default Rimau configuration
+ */
+export const DEFAULT_RIMAU_CONFIG: RimauConfig = {
+  branding: {},
+};
+
+/**
+ * Stored Rimau configuration with metadata
+ */
+export interface StoredRimauConfig {
+  id: string;
+  name: string;
+  description?: string;
+  config: RimauConfig;
+  createdAt: string;
+  updatedAt: string;
+  ownerId?: string;
+  /** Linked Prospect id; null/undefined means unbound. */
+  prospectId?: string | null;
+  /** Bound Prospect's name, for list-row display; null when unbound. */
+  prospectName?: string | null;
+  /** Bound Prospect's domain-ish value (companyUrl), for ProspectIcon; null when unbound. */
+  prospectDomain?: string | null;
+}
+
+// =============================================================================
 // Visa Direct Configuration (Branding + Theme)
 // =============================================================================
 

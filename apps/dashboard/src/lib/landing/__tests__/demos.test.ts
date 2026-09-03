@@ -19,6 +19,7 @@ describe("LANDING_DEMOS config", () => {
       "flow",
       "playground",
       "remittance",
+      "rimau",
       "stablecoin-card",
       "trade",
       "visa-direct",

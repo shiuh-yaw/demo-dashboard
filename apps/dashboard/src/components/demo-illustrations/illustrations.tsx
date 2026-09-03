@@ -46,6 +46,7 @@ export const OPERATOR_DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
   "stablecoin-card": StablecoinCardIllustration,
   checkouts: FlowIllustration,
   "visa-direct": StablecoinCardIllustration,
+  rimau: TradeIllustration,
 };
 
 export function getOperatorDemoIllustration(slug: string): () => ReactElement {

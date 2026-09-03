@@ -14,6 +14,7 @@ import { getWalletConfig } from "@/lib/actions/wallets";
 import { getEarnConfig } from "@/lib/actions/earns";
 import { getRemittanceConfig } from "@/lib/actions/remittance";
 import { getTradeConfig } from "@/lib/actions/trade";
+import { getRimauConfig } from "@/lib/actions/rimau";
 import { getVisaDirectConfig } from "@/lib/actions/visa-direct";
 import { getProspectProfile } from "@/lib/actions/prospects";
 import { SetBreadcrumbLeaf } from "@/components/breadcrumbs";
@@ -65,6 +66,10 @@ async function loadStored(
     }
     case "visa-direct": {
       const r = await getVisaDirectConfig(id);
+      return r.success ? r.data : null;
+    }
+    case "rimau": {
+      const r = await getRimauConfig(id);
       return r.success ? r.data : null;
     }
     default:

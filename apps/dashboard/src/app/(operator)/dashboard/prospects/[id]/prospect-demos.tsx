@@ -28,8 +28,7 @@ import {
   Workflow,
   Link2,
   Users,
-  CircleCheck,
-} from "lucide-react";
+  CircleCheck, Landmark } from "lucide-react";
 import type { ProspectProfile } from "@/lib/types/dashboard";
 import type { DemoSummary } from "@/lib/services";
 import { createMissingDemos } from "@/lib/actions/prospects";
@@ -90,6 +89,7 @@ const DEMO_CONFIGS = [
   // Same: apps/accounts owns its config and reads the theme through the
   // prospect. A kind missing from this list is created but never listed.
   { type: "accounts", label: "Accounts", icon: Users, configRoute: "" },
+  { type: "rimau", label: "Rimau", icon: Landmark, configRoute: "/rimau" },
 ] as const satisfies readonly DemoConfig[];
 
 /**

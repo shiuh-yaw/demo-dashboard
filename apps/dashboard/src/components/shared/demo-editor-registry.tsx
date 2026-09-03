@@ -24,6 +24,7 @@ import { updateWalletConfig } from "@/lib/actions/wallets";
 import { updateEarnConfig } from "@/lib/actions/earns";
 import { updateRemittanceConfig } from "@/lib/actions/remittance";
 import { updateTradeConfig } from "@/lib/actions/trade";
+import { updateRimauConfig } from "@/lib/actions/rimau";
 import { updateVisaDirectConfig } from "@/lib/actions/visa-direct";
 import type { DemoConfigKind } from "@/lib/services/types";
 import {
@@ -32,12 +33,14 @@ import {
   type StoredEarnConfig,
   type StoredRemittanceConfig,
   type StoredTradeConfig,
+  type StoredRimauConfig,
   type StoredVisaDirectConfig,
   type WalletConfig,
   type EarnConfig,
   type EarnBrand,
   type RemittanceConfig,
   type TradeConfig,
+  type RimauConfig,
   type VisaDirectConfig,
 } from "@/lib/types/dashboard";
 
@@ -46,6 +49,7 @@ export type StoredDemoConfig =
   | StoredEarnConfig
   | StoredRemittanceConfig
   | StoredTradeConfig
+  | StoredRimauConfig
   | StoredVisaDirectConfig;
 
 export interface AppearanceState {
@@ -455,6 +459,56 @@ const tradeEntry: DemoEditorEntry = {
 };
 
 // ---------------------------------------------------------------------------
+// Rimau - branding only, trade's shape: logo URL + appName. The theme comes
+// from the bound prospect (hydrated by the mapper), so no appearance editor.
+// ---------------------------------------------------------------------------
+
+function RimauKindFields({ state, setState }: KindFieldsProps) {
+  const set = (patch: Partial<KindState>) =>
+    setState((prev) => ({ ...prev, ...patch }));
+  return (
+    <Section title="Branding">
+      <Field label="Logo URL">
+        <Input
+          value={str(state.logoUrl)}
+          onChange={(e) => set({ logoUrl: e.target.value })}
+          placeholder="https://example.com/logo.png"
+          className="dark:bg-background dark:text-foreground dark:border-border dark:placeholder:text-muted-foreground"
+        />
+      </Field>
+      <Field label="App Name">
+        <Input
+          value={str(state.appName)}
+          onChange={(e) => set({ appName: e.target.value })}
+          placeholder="Rimau"
+          className="dark:bg-background dark:text-foreground dark:border-border dark:placeholder:text-muted-foreground"
+        />
+      </Field>
+    </Section>
+  );
+}
+
+const rimauEntry: DemoEditorEntry = {
+  appearanceMode: "none",
+  backHref: "/rimau",
+  KindFields: RimauKindFields,
+  initAppearance: () => ({ theme: {}, branding: {} }),
+  initKindState: (c) => {
+    const b = (c as StoredRimauConfig).config.branding;
+    return { logoUrl: b?.logoUrl ?? "", appName: b?.appName ?? "Rimau" };
+  },
+  save: async (id, { name, kindState, prospectId }) => {
+    const config: Partial<RimauConfig> = {
+      branding: {
+        logoUrl: str(kindState.logoUrl).trim() || undefined,
+        appName: str(kindState.appName).trim() || undefined,
+      },
+    };
+    return updateRimauConfig(id, { name, config, prospectId });
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Visa Direct - primary color + logo (common); banner text kind-specific.
 // ---------------------------------------------------------------------------
 
@@ -566,6 +620,7 @@ export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   card: cardEntry,
   connections: connectEntry,
   accounts: accountsEntry,
+  rimau: rimauEntry,
 };
 
 export function getDemoEditorEntry(kind: DemoConfigKind): DemoEditorEntry {

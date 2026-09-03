@@ -27,7 +27,8 @@ export type ProspectDemoType =
   | "card"
   | "connections"
   | "accounts"
-  | "visa-direct";
+  | "visa-direct"
+  | "rimau";
 
 export interface AddDemoRow {
   kind: DemoConfigKind;

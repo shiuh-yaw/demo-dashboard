@@ -55,6 +55,7 @@ export const DEMO_ILLUSTRATIONS: Record<string, () => ReactElement> = {
   "stablecoin-card": StablecoinCardIllustration,
   checkouts: FlowIllustration,
   "visa-direct": StablecoinCardIllustration,
+  rimau: TradeIllustration,
 };
 
 export function getDemoIllustration(slug: string): () => ReactElement {
