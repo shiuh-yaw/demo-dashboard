@@ -1,13 +1,21 @@
 "use client";
 
 /**
- * EVM transfers - the sponsored path (ZeroDev kernel client, EIP-7702) when
- * the environment sponsors Sepolia, the plain viem path otherwise.
+ * EVM transfers. Three paths, tried in order:
  *
- * @see https://www.dynamic.xyz/docs/javascript/reference/evm/getting-viem-wallet-client
+ *   1. Dynamic's native gas sponsorship - the 7702 relayer the brief names.
+ *      One dashboard toggle, one call; the SDK signs the one-time EIP-7702
+ *      delegation itself.
+ *   2. ZeroDev account abstraction in 7702 mode, when the environment
+ *      configures that provider for Sepolia instead.
+ *   3. The plain viem wallet client - the user pays gas.
+ *
+ * @see https://www.dynamic.xyz/docs/javascript/reference/evm/evm-gas-sponsorship
  * @see https://www.dynamic.xyz/docs/javascript/reference/zerodev/create-kernel-client-for-wallet-account
+ * @see https://www.dynamic.xyz/docs/javascript/reference/evm/getting-viem-wallet-client
  */
 
+import { isEvmGasSponsorshipEnabled, sendSponsoredTransaction, SponsorTransactionError } from "@dynamic-labs-sdk/evm";
 import { createWalletClientForWalletAccount } from "@dynamic-labs-sdk/evm/viem";
 import {
   createKernelClientForWalletAccount,
@@ -46,6 +54,8 @@ export interface SendUsdcResult {
 }
 
 export interface SponsorshipDiagnostics {
+  /** Dynamic's native EVM gas sponsorship (7702 relayer) is enabled on the environment. */
+  nativeSponsorship: boolean;
   /** A ZeroDev smart-account wrapper exists for the embedded wallet (account abstraction enabled). */
   zerodevAccount: boolean;
   /** Sepolia is in the environment's sponsored-network list. */
@@ -59,6 +69,7 @@ export function getSponsorshipDiagnostics(): SponsorshipDiagnostics {
   const base = getEmbeddedEvmWallet();
   const network = getSepoliaNetwork();
   return {
+    nativeSponsorship: isEvmGasSponsorshipEnabled(),
     zerodevAccount: !!base && !!getZerodevWalletFor(base.address),
     sepoliaSponsored: !!network && isNetworkSponsored(network.networkId),
     networkId: network?.networkId,
@@ -80,6 +91,22 @@ export async function sendUsdc(to: `0x${string}`, amount: number): Promise<SendU
     value: BigInt(0),
   };
 
+  // 1. Native relayer. autoDelegate signs the 7702 authorization on first use.
+  let nativeFailure: string | undefined;
+  if (isEvmGasSponsorshipEnabled()) {
+    try {
+      const { transactionHash } = await sendSponsoredTransaction({
+        walletAccount: base as EvmWalletAccount,
+        calls: [{ target: tx.to, data: tx.data, value: tx.value }],
+      });
+      return { txHash: transactionHash, sponsored: true };
+    } catch (e) {
+      if (!(e instanceof SponsorTransactionError)) throw e;
+      nativeFailure = e.message;
+    }
+  }
+
+  // 2. ZeroDev, if the environment runs sponsorship through that provider.
   const zerodev = getZerodevWalletFor(base.address);
   const sponsored = !!zerodev && isNetworkSponsored(network.networkId);
   if (sponsored && zerodev) {
@@ -100,13 +127,15 @@ export async function sendUsdc(to: `0x${string}`, amount: number): Promise<SendU
   // bare "gas required exceeds allowance (0)", so say what actually happened.
   const eth = await publicClient.getBalance({ address: base.address as `0x${string}` });
   if (eth === BigInt(0)) {
-    const why = !zerodev
-      ? "the environment has no ZeroDev smart account for this wallet (account abstraction is off)"
-      : !isNetworkSponsored(network.networkId)
-        ? "Ethereum Sepolia is not in the environment's sponsored-network list"
-        : "the paymaster declined to sponsor this transaction";
+    const why = nativeFailure
+      ? `the relayer refused it (${nativeFailure})`
+      : !isEvmGasSponsorshipEnabled() && !zerodev
+        ? "gas sponsorship is not enabled on this Dynamic environment"
+        : !isNetworkSponsored(network.networkId)
+          ? "Ethereum Sepolia is not in the environment's sponsored-network list"
+          : "the paymaster declined to sponsor this transaction";
     throw new Error(
-      `This transfer was not sponsored because ${why}, and the wallet holds no ETH to pay gas itself. Enable ZeroDev gas sponsorship for Sepolia in the Dynamic dashboard (Enterprise, provisioned by Dynamic), or fund the wallet with a little Sepolia ETH to rehearse unsponsored.`,
+      `This transfer was not sponsored because ${why}, and the wallet holds no ETH to pay gas itself. Turn on EVM gas sponsorship for this environment in the Dynamic dashboard (Enterprise, provisioned by Dynamic), or fund the wallet with a little Sepolia ETH to rehearse unsponsored.`,
     );
   }
   const walletClient = await createWalletClientForWalletAccount({ walletAccount: base as EvmWalletAccount });

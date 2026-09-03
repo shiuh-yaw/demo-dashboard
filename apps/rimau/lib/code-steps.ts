@@ -82,19 +82,18 @@ const usdc = await publicClient.readContract({
     num: "04",
     title: "Send with zero ETH: sponsor the network fee",
     prose:
-      "Beat 3. The user holds no native token and will not buy any for a first transaction. With gas sponsorship provisioned on the environment (Enterprise tier, set up manually), the ZeroDev extension upgrades the EOA in place via EIP-7702 and the relayer pays the fee.",
+      "Beat 3. The user holds no native token and will not buy any for a first transaction. With gas sponsorship enabled on the environment (Enterprise tier, provisioned by Dynamic), one call routes the transfer through Dynamic's native 7702 relayer: the SDK signs the one-time EIP-7702 delegation itself and the relayer pays the fee.",
     filename: "lib/dynamic/evm.ts",
     lang: "typescript",
-    code: `import { createKernelClientForWalletAccount, signEip7702Authorization } from "@dynamic-labs-sdk/zerodev";
+    code: `import { isEvmGasSponsorshipEnabled, sendSponsoredTransaction } from "@dynamic-labs-sdk/evm";
 
-const zerodev = accounts.find((w) => w.walletProviderKey.includes("zerodev"));
-const eip7702Auth = await signEip7702Authorization({
-  smartWalletAccount: zerodev,
-  networkId: sepolia.networkId,
-});
-const kernel = await createKernelClientForWalletAccount({ smartWalletAccount: zerodev, eip7702Auth });
-const txHash = await kernel.sendTransaction({ to: USDC_SEPOLIA, data: transferCalldata, value: 0n });`,
-    docsUrl: "https://www.dynamic.xyz/docs/javascript/reference/zerodev/create-kernel-client-for-wallet-account",
+if (isEvmGasSponsorshipEnabled()) {
+  const { transactionHash } = await sendSponsoredTransaction({
+    walletAccount,
+    calls: [{ target: USDC_SEPOLIA, data: transferCalldata, value: 0n }],
+  });
+}`,
+    docsUrl: "https://www.dynamic.xyz/docs/javascript/reference/evm/evm-gas-sponsorship",
   },
   {
     num: "05",

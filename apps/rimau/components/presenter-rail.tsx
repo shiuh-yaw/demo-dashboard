@@ -101,14 +101,14 @@ export function PresenterRail() {
         <span>Address</span>
         <span className="text-white">{state.revealAddress ? "revealed" : "hidden"}</span>
         <span>Beat 3 gas</span>
-        <span className={backend.sponsorship.zerodevAccount && backend.sponsorship.sepoliaSponsored ? "text-emerald-300" : "text-amber-300"}>
+        <span className={backend.sponsorship.nativeSponsorship || (backend.sponsorship.zerodevAccount && backend.sponsorship.sepoliaSponsored) ? "text-emerald-300" : "text-amber-300"}>
           {!signedIn
             ? "—"
-            : backend.sponsorship.zerodevAccount && backend.sponsorship.sepoliaSponsored
-              ? "sponsored (ZeroDev · Sepolia)"
-              : !backend.sponsorship.zerodevAccount
-                ? "no ZeroDev account · AA off"
-                : "Sepolia not sponsored"}
+            : backend.sponsorship.nativeSponsorship
+              ? "sponsored · native 7702 relayer"
+              : backend.sponsorship.zerodevAccount && backend.sponsorship.sepoliaSponsored
+                ? "sponsored · ZeroDev on Sepolia"
+                : "not enabled on this environment"}
         </span>
       </div>
 

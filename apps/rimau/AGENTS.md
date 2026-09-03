@@ -15,7 +15,7 @@ Rimau Exchange: a fictional regional retail exchange puts a non-custodial embedd
 - Scenario front door at `/` (shared chrome via `buildScenarioChrome`): the sign-in card IS beat 1 - email OTP + the environment's social providers through the shared `LoginForm`, then the embedded EVM wallet is created silently and the session lands on `/portfolio`.
 - Exchange shell (`/portfolio`, `/markets`, `/earn`, `/activity`, `/architecture`) with one continuous session across the beats, persisted in `localStorage` (`lib/session/store.tsx`, reducer unit-tested).
 - Two backends behind one interface (`lib/backend/types.ts`): **staged** (offline simulation of the 2-of-2 flow, deterministic address per email, the mode for a stage) and **live** (`@dynamic-labs-sdk/client` 1.x on Ethereum Sepolia). `lib/mode.ts` picks: `NEXT_PUBLIC_RIMAU_MODE`, else live iff an environment id is set. The SDK is `next/dynamic`-loaded only in live mode.
-- Beat 3 sponsored send (`lib/dynamic/evm.ts`): ZeroDev kernel client in **EIP-7702** mode when the environment sponsors Sepolia, plain viem wallet client otherwise. Never ERC-4337.
+- Beat 3 sponsored send (`lib/dynamic/evm.ts`): Dynamic's native EVM gas sponsorship (`sendSponsoredTransaction`, the 7702 relayer) when the environment enables it; ZeroDev kernel client in **EIP-7702** mode when the environment sponsors Sepolia through that provider instead; plain viem wallet client otherwise, with a plain-words error on a zero ETH balance. Never ERC-4337.
 - Beat 4 device loss: `logout()` + wipe of the SDK's web storage; the next sign-in restores the client share from Dynamic's encrypted backup and the session marks the wallet recovered when the same address reappears.
 - Beat 5 architecture view (`components/architecture/`): SVG diagram bound to the session wallet (key-share ids, `thresholdSignatureScheme`, `keyShares[].backupLocation` from the credential), blast-radius toggles, the Shamir / encrypted-at-rest / TSS comparison, and the Fireblocks-vs-Dynamic boundary. The address is first shown here, on purpose.
 - Presenter rail (press `P`): show/say/watch cues per beat, do-not-oversell boundaries, lose-device, reveal-address, immersive-chrome and reset controls. Never persisted across a refresh.
@@ -37,7 +37,7 @@ Cookie / header contract (D-008): `?theme=<configId>` → cookie `rimau_config_i
 - `NEXT_PUBLIC_SEPOLIA_RPC_URL` - live-mode balance reads - optional (public RPC fallback).
 - `NEXT_PUBLIC_TRACK_URL` - `@dynamic-demos/analytics` ingest base - optional; unset means every emitter is a no-op.
 
-Live mode also needs, in the Dynamic dashboard: Ethereum Sepolia enabled, Google (and/or Apple) social sign-in, embedded wallets on, and - for beat 3 to be sponsored - ZeroDev gas sponsorship on Sepolia (Enterprise tier, provisioned manually; without it the send falls back to user-paid gas and fails honestly on a zero ETH balance).
+Live mode also needs, in the Dynamic dashboard: Ethereum Sepolia enabled, Google (and/or Apple) social sign-in, embedded wallets on, and - for beat 3 to be sponsored - EVM gas sponsorship enabled for the environment (Enterprise tier, provisioned manually; without it the send falls back to user-paid gas and fails honestly on a zero ETH balance). The presenter rail's "Beat 3 gas" line reports which path is active.
 
 ## Analytics taxonomy
 
@@ -74,7 +74,7 @@ Live mode also needs, in the Dynamic dashboard: Ethereum Sepolia enabled, Google
 - Non-custodial: the app never holds key material; the staged simulation models exactly the 2-of-2 split it describes.
 - No `0x` string reaches the screen before beat 5 (`revealAddress`); the send sheet uses a named recipient.
 - The Earn position ledger is exchange-side and simulated in both modes; it is labelled as such in live mode. Wiring the Dynamic Earn API is a follow-up, server-side.
-- Sponsored sends are 7702 via the SDK's ZeroDev extension; never a custom relayer or delegate contract.
+- Sponsored sends are 7702 via the SDK (native relayer first, ZeroDev second); never a custom relayer or delegate contract.
 - Sandbox-by-default (D-005); testnet only; no real customer names on any screen (Rimau is fictional).
 - Branded URLs get `X-Robots-Tag: noindex, nofollow` via `createConfigForwardingMiddleware`.
 - `app/opengraph-image.tsx` renders the shared `renderDemoOgImage` for slug `rimau` (generic; no prospect data).

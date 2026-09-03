@@ -20,7 +20,7 @@ In the Dynamic dashboard (https://app.dynamic.xyz), on the sandbox environment:
 2. **Security → CORS / allowed origins** → add `http://localhost:4015` (and the Vercel preview origin later). Social sign-in redirects back to `/`.
 3. **Embedded wallets** → Dynamic embedded wallets (TSS-MPC) on, EVM enabled. The app creates the EVM wallet itself right after sign-in.
 4. **Chains & networks** → EVM on, **Ethereum Sepolia** (11155111) enabled. The app switches the wallet to Sepolia before every send.
-5. **Gas sponsorship** (beat 3) → ZeroDev account abstraction with Sepolia sponsored. This is Enterprise tier and provisioned by the Dynamic team, not a self-serve toggle; ask internally. Without it the send falls back to user-paid gas and fails honestly on a zero ETH balance.
+5. **Gas sponsorship** (beat 3) → enable EVM gas sponsorship for the environment (Dynamic's native 7702 relayer; the app also accepts ZeroDev sponsorship on Sepolia). Enterprise tier, provisioned by the Dynamic team; ask internally if the toggle is not offered. Without it the send falls back to user-paid gas and fails honestly on a zero ETH balance. Press P in the app: the "Beat 3 gas" line says which path is active.
 6. **MFA** → leave off for the demo. A step-up would interrupt the 7702 authorization signature, which this app does not handle.
 
 Then in `apps/rimau/.env`:

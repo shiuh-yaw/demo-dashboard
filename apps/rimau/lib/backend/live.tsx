@@ -340,7 +340,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
   );
 
   const sponsorship = useMemo(
-    () => (ready && loggedIn ? getSponsorshipDiagnostics() : { zerodevAccount: false, sepoliaSponsored: false }),
+    () => (ready && loggedIn ? getSponsorshipDiagnostics() : { nativeSponsorship: false, zerodevAccount: false, sepoliaSponsored: false }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-read when the wallet list moves
     [ready, loggedIn, walletTick],
   );
