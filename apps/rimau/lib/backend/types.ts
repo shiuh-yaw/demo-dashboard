@@ -33,6 +33,8 @@ export interface Backend {
   error: string | null;
   clearError(): void;
   auth: AuthSurface;
+  /** Whether beat 3 will be sponsored, and why not when it will not. */
+  sponsorship: { zerodevAccount: boolean; sepoliaSponsored: boolean; networkId?: string };
 
   /** Social sign-in. Live mode redirects to the provider and returns after the round trip. */
   signInWithSocial(provider: Provider, hint?: SignInHint): Promise<void>;

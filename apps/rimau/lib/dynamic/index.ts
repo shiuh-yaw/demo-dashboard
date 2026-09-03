@@ -25,6 +25,6 @@ export {
   type EvmWalletAccount,
 } from "./wallets";
 export { getSepoliaNetwork, isNetworkSponsored, switchToSepolia, type NetworkData } from "./networks";
-export { readBalances, sendUsdc, publicClient } from "./evm";
+export { readBalances, sendUsdc, publicClient, getSponsorshipDiagnostics, type SponsorshipDiagnostics } from "./evm";
 export { onEvent, getInitStatus, waitForClientInitialized, type InitStatus } from "./events";
 export { wipeSdkStorage } from "./storage";

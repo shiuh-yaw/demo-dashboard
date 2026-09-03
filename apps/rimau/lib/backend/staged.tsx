@@ -248,6 +248,7 @@ export function StagedBackendProvider({ children }: { children: ReactNode }) {
       error,
       clearError: () => setError(null),
       auth: { emailEnabled: true, socialProviders: ["google", "apple"] },
+      sponsorship: { zerodevAccount: true, sepoliaSponsored: true, networkId: "evm-11155111" },
       signInWithSocial,
       sendEmailCode,
       verifyEmailCode,

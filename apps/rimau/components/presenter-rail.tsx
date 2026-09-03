@@ -100,6 +100,16 @@ export function PresenterRail() {
         </span>
         <span>Address</span>
         <span className="text-white">{state.revealAddress ? "revealed" : "hidden"}</span>
+        <span>Beat 3 gas</span>
+        <span className={backend.sponsorship.zerodevAccount && backend.sponsorship.sepoliaSponsored ? "text-emerald-300" : "text-amber-300"}>
+          {!signedIn
+            ? "—"
+            : backend.sponsorship.zerodevAccount && backend.sponsorship.sepoliaSponsored
+              ? "sponsored (ZeroDev · Sepolia)"
+              : !backend.sponsorship.zerodevAccount
+                ? "no ZeroDev account · AA off"
+                : "Sepolia not sponsored"}
+        </span>
       </div>
 
       <div className="flex border-b border-white/10 text-[13px]">

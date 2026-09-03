@@ -19,7 +19,7 @@ import { sepolia } from "viem/chains";
 import { env } from "@/lib/env";
 import { SEPOLIA_USDC } from "@/lib/backend/types";
 import { getEmbeddedEvmWallet, getZerodevWalletFor, type EvmWalletAccount } from "./wallets";
-import { isNetworkSponsored, switchToSepolia } from "./networks";
+import { getSepoliaNetwork, isNetworkSponsored, switchToSepolia } from "./networks";
 
 export const publicClient = createPublicClient({
   chain: sepolia,
@@ -43,6 +43,26 @@ async function has7702Delegation(address: `0x${string}`): Promise<boolean> {
 export interface SendUsdcResult {
   txHash: string;
   sponsored: boolean;
+}
+
+export interface SponsorshipDiagnostics {
+  /** A ZeroDev smart-account wrapper exists for the embedded wallet (account abstraction enabled). */
+  zerodevAccount: boolean;
+  /** Sepolia is in the environment's sponsored-network list. */
+  sepoliaSponsored: boolean;
+  /** The SDK's id for Sepolia in this environment, when enabled. */
+  networkId?: string;
+}
+
+/** Why beat 3 will or will not be sponsored, for the presenter rail. */
+export function getSponsorshipDiagnostics(): SponsorshipDiagnostics {
+  const base = getEmbeddedEvmWallet();
+  const network = getSepoliaNetwork();
+  return {
+    zerodevAccount: !!base && !!getZerodevWalletFor(base.address),
+    sepoliaSponsored: !!network && isNetworkSponsored(network.networkId),
+    networkId: network?.networkId,
+  };
 }
 
 /**
@@ -75,6 +95,19 @@ export async function sendUsdc(to: `0x${string}`, amount: number): Promise<SendU
       // Sponsorship refused (policy, quota): fall through to the user-paid path so
       // the demo fails honestly on "no ETH" rather than on an opaque error.
     }
+  }
+  // Unsponsored: the user pays gas. With zero ETH that fails at the node with a
+  // bare "gas required exceeds allowance (0)", so say what actually happened.
+  const eth = await publicClient.getBalance({ address: base.address as `0x${string}` });
+  if (eth === BigInt(0)) {
+    const why = !zerodev
+      ? "the environment has no ZeroDev smart account for this wallet (account abstraction is off)"
+      : !isNetworkSponsored(network.networkId)
+        ? "Ethereum Sepolia is not in the environment's sponsored-network list"
+        : "the paymaster declined to sponsor this transaction";
+    throw new Error(
+      `This transfer was not sponsored because ${why}, and the wallet holds no ETH to pay gas itself. Enable ZeroDev gas sponsorship for Sepolia in the Dynamic dashboard (Enterprise, provisioned by Dynamic), or fund the wallet with a little Sepolia ETH to rehearse unsponsored.`,
+    );
   }
   const walletClient = await createWalletClientForWalletAccount({ walletAccount: base as EvmWalletAccount });
   const txHash = await walletClient.sendTransaction(tx);

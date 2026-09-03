@@ -23,6 +23,7 @@ import {
   getEnabledSocialProviders,
   getExternalWallet,
   getInitStatus,
+  getSponsorshipDiagnostics,
   getUser,
   isEmailAuthEnabled,
   logout,
@@ -338,6 +339,12 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     [ready],
   );
 
+  const sponsorship = useMemo(
+    () => (ready && loggedIn ? getSponsorshipDiagnostics() : { zerodevAccount: false, sepoliaSponsored: false }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-read when the wallet list moves
+    [ready, loggedIn, walletTick],
+  );
+
   const value = useMemo<Backend>(
     () => ({
       mode: "live",
@@ -347,6 +354,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       error,
       clearError: () => setError(null),
       auth,
+      sponsorship,
       signInWithSocial,
       sendEmailCode,
       verifyEmailCode,
@@ -363,7 +371,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       refreshBalances,
       hardReset,
     }),
-    [ready, busy, progress, error, auth, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, connectExternal, loseDevice, recover, refreshBalances, hardReset],
+    [ready, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, connectExternal, loseDevice, recover, refreshBalances, hardReset],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;
