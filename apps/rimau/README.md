@@ -35,3 +35,17 @@ NEXT_PUBLIC_SEPOLIA_RPC_URL=<alchemy or infura sepolia url>   # optional, public
 Before the session, pre-fund the wallet with **Sepolia USDC** (Circle faucet: https://faucet.circle.com, network Ethereum Sepolia). Sign in once, open the presenter rail (P) → "Reveal address", or use Add funds → "Show deposit address", and send USDC there. No ETH is needed when sponsorship is on.
 
 Rehearse beats 3 and 4 against the sandbox once before the day: beat 3 signs the EIP-7702 authorization on the first sponsored send, and beat 4's "Lose device A" wipes this browser's SDK storage, so the restore is only faithful with a real sign-in afterwards.
+
+## Installing without Artifactory access
+
+The workspace `.npmrc` routes every package through Fireblocks' JFrog mirror (`JFROG_TOKEN`, a Fireblocks infra credential; CI has it as a repo secret). If you cannot get a token, install from public npm instead. The lockfile pins mirror URLs and mirror checksums for the `@dynamic-labs*` packages, so rewrite those entries in a working copy, install, then restore the lockfile. Local only - never commit the rewritten lockfile.
+
+```bash
+cp pnpm-lock.yaml /tmp/pnpm-lock.orig.yaml
+sed -i.bak -E 's#https://fbinfra555artifactory.jfrog.io/artifactory/api/npm/dynamic-npm/#https://registry.npmjs.org/#g; s#(https://registry\.npmjs\.org/(@[^/]+)/([^/]+)/-/)@[^/]+/#\1#g' pnpm-lock.yaml
+perl -0pi -e 's/resolution: \{integrity: [^,}]+, (tarball: https:\/\/registry\.npmjs\.org\/\@dynamic-labs[^}]+\})/resolution: {$1/g' pnpm-lock.yaml
+JFROG_TOKEN=unused npm_config_registry=https://registry.npmjs.org/ pnpm install --frozen-lockfile
+cp /tmp/pnpm-lock.orig.yaml pnpm-lock.yaml && rm -f pnpm-lock.yaml.bak
+```
+
+`JFROG_TOKEN=unused` only stops pnpm from rejecting the `.npmrc` for an unset variable; nothing is sent to the mirror. Verified against a fresh clone with an empty store (about eight minutes).
