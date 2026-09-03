@@ -20,6 +20,7 @@
     "dev:deposit": "turbo run dev --filter=@dynamic-demos/deposit",
     "dev:spark26": "turbo run dev --filter=@dynamic-demos/spark26",
     "dev:proceeds": "turbo run dev --filter=@dynamic-demos/proceeds",
+    "dev:rimau": "turbo run dev --filter=@dynamic-demos/rimau",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "registry": "node scripts/generate-demo-registry.mjs",
