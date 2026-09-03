@@ -259,6 +259,7 @@ export function StagedBackendProvider({ children }: { children: ReactNode }) {
       depositAddress: () => state.wallet?.address ?? null,
       openPosition,
       transfer,
+      externalWalletOptions: [{ key: "metamask", name: "MetaMask" }],
       connectExternal,
       loseDevice,
       recover,

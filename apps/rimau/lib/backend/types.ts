@@ -53,7 +53,10 @@ export interface Backend {
 
   openPosition(protocol: Position["protocol"], amountUsdc: number): Promise<void>;
   transfer(to: `0x${string}`, amountUsdc: number): Promise<void>;
-  connectExternal(): Promise<void>;
+  /** Wallets the user could link right now (live: discovered by the SDK; staged: MetaMask). */
+  externalWalletOptions: { key: string; name: string; icon?: string }[];
+  /** Link an external wallet by provider key. Staged mode ignores the key and simulates MetaMask. */
+  connectExternal(walletProviderKey?: string): Promise<void>;
 
   /** Beat 4: discard the client share and the session on this device. */
   loseDevice(): Promise<void>;

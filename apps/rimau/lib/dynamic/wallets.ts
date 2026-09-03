@@ -6,7 +6,13 @@
  * @see https://www.dynamic.xyz/docs/javascript/reference/wallets/get-wallet-accounts
  */
 
-import { getWalletAccounts as sdkGetWalletAccounts, type WalletAccount } from "@dynamic-labs-sdk/client";
+import {
+  connectAndVerifyWithWalletProvider as sdkConnectAndVerifyWithWalletProvider,
+  getAvailableWalletProvidersData as sdkGetAvailableWalletProvidersData,
+  getWalletAccounts as sdkGetWalletAccounts,
+  type WalletAccount,
+  type WalletProviderData,
+} from "@dynamic-labs-sdk/client";
 import {
   createWaasWalletAccounts as sdkCreateWaasWalletAccounts,
   isWaasWalletAccount as sdkIsWaasWalletAccount,
@@ -59,6 +65,49 @@ export function getZerodevWalletFor(address: string): EvmWalletAccount | undefin
       w.address.toLowerCase() === address.toLowerCase() &&
       w.walletProviderKey.includes("zerodev"),
   ) as EvmWalletAccount | undefined;
+}
+
+/** A browser or mobile wallet the user could link: the "bring your own" options (beat 2 curveball). */
+export interface ExternalWalletOption {
+  key: string;
+  name: string;
+  icon: string;
+}
+
+const isEmbeddedProviderKey = (key: string) => /dynamicwaas|zerodev|turnkey/i.test(key);
+
+/**
+ * Installed / reachable EVM wallet providers, minus the embedded ones. The
+ * EVM extension discovers browser extensions (EIP-6963) and injected wallets;
+ * the list is empty until the client has initialised.
+ */
+export function getExternalWalletOptions(): ExternalWalletOption[] {
+  const client = getClient();
+  if (!client) return [];
+  let providers: WalletProviderData[] = [];
+  try {
+    providers = sdkGetAvailableWalletProvidersData();
+  } catch {
+    return [];
+  }
+  const seen = new Set<string>();
+  return providers
+    .filter((p) => p.chain === "EVM" && String(p.walletProviderType) !== "embeddedWallet" && !isEmbeddedProviderKey(p.key))
+    .filter((p) => (seen.has(p.groupKey) ? false : (seen.add(p.groupKey), true)))
+    .map((p) => ({ key: p.key, name: p.metadata.displayName, icon: p.metadata.icon }));
+}
+
+/**
+ * Link an external wallet to the signed-in user: connect, then verify by
+ * signature so it joins the user's wallet accounts (same session, same
+ * policy surface as the embedded wallet).
+ *
+ * @see https://www.dynamic.xyz/docs/javascript/reference/wallets/connect-and-verify-with-wallet-provider
+ */
+export async function linkExternalWallet(walletProviderKey: string): Promise<WalletAccount> {
+  const client = getClient();
+  if (!client) throw new Error("Dynamic client not initialized");
+  return sdkConnectAndVerifyWithWalletProvider({ walletProviderKey });
 }
 
 /** Any linked wallet that is not the embedded one - the "bring your own" wallet. */

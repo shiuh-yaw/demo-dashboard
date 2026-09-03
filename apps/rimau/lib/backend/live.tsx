@@ -22,7 +22,9 @@ import {
   getEmbeddedEvmWallet,
   getEnabledSocialProviders,
   getExternalWallet,
+  getExternalWalletOptions,
   getInitStatus,
+  linkExternalWallet,
   getSponsorshipDiagnostics,
   getUser,
   isEmailAuthEnabled,
@@ -187,8 +189,9 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     if (!ext) return;
     const address = getAddress(ext.address);
     if (state.external?.address === address) return;
-    dispatch({ type: "external-linked", external: { address, label: ext.walletProviderKey, linkedAt: Date.now() } });
-    dispatch({ type: "activity", item: { id: uid(), at: Date.now(), kind: "external-linked", title: "External wallet linked", detail: "Same session, same policy surface." } });
+    const label = getExternalWalletOptions().find((o) => o.key === ext.walletProviderKey)?.name ?? ext.walletProviderKey;
+    dispatch({ type: "external-linked", external: { address, label, linkedAt: Date.now() } });
+    dispatch({ type: "activity", item: { id: uid(), at: Date.now(), kind: "external-linked", title: `${label} linked`, detail: "External wallet, same session, same policy surface." } });
     milestone("external_wallet_linked");
   }, [ready, loggedIn, walletTick, state.external?.address, dispatch, milestone]);
 
@@ -300,12 +303,21 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     [run, dispatch, milestone, refreshBalances],
   );
 
+  const externalWalletOptions = useMemo(
+    () => (ready && loggedIn ? getExternalWalletOptions() : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- providers appear as the client discovers them
+    [ready, loggedIn, walletTick],
+  );
+
   const connectExternal = useCallback(
-    async () =>
+    async (walletProviderKey?: string) =>
       run("Connecting wallet", async () => {
-        throw new Error("Linking an external wallet in live mode uses the wallet picker from the Connections demo; staged mode simulates it. See AGENTS.md.");
+        const key = walletProviderKey ?? externalWalletOptions[0]?.key;
+        if (!key) throw new Error("No browser wallet was found. Install MetaMask (or another EVM wallet extension) in this browser, then try again.");
+        await linkExternalWallet(key);
+        setWalletTick((n) => n + 1);
       }),
-    [run],
+    [run, externalWalletOptions],
   );
 
   const loseDevice = useCallback(async () => {
@@ -365,13 +377,14 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       depositAddress: () => state.wallet?.address ?? null,
       openPosition,
       transfer,
+      externalWalletOptions,
       connectExternal,
       loseDevice,
       recover,
       refreshBalances,
       hardReset,
     }),
-    [ready, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, connectExternal, loseDevice, recover, refreshBalances, hardReset],
+    [ready, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, loseDevice, recover, refreshBalances, hardReset],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

@@ -113,6 +113,6 @@ const txHash = await kernel.sendTransaction({ to: USDC, data, value: 0n });
 
 ## Open questions / known gaps
 
-- Live-mode "connect an external wallet" is not wired (staged mode simulates it); the Connections demo owns that surface.
+- Live-mode "connect an external wallet" lists the EVM wallets the SDK discovers in the browser (EIP-6963 / injected) and links one with `connectAndVerifyWithWalletProvider`; WalletConnect QR / mobile deep links are not wired here - the Connections demo owns that surface.
 - Live-mode device loss wipes this browser's SDK storage; a genuinely separate device is the faithful rehearsal.
 - Earn positions are simulated in both modes.

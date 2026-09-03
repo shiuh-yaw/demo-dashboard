@@ -20,7 +20,10 @@ export {
   getEmbeddedEvmWallet,
   getZerodevWalletFor,
   getExternalWallet,
+  getExternalWalletOptions,
+  linkExternalWallet,
   isEvmWalletAccount,
+  type ExternalWalletOption,
   type WalletAccount,
   type EvmWalletAccount,
 } from "./wallets";
