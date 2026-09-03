@@ -14,10 +14,10 @@
 | `dashboard` | utility | mixed | stable |
 | `deposit` | wallet | mixed | experimental |
 | `earn` | wallet | non-custodial | stable |
+| `exchange` | wallet | non-custodial | experimental |
 | `flow` | checkout | mixed | experimental |
 | `proceeds` | offramp | non-custodial | stable |
 | `remittance` | offramp | non-custodial | stable |
-| `rimau` | wallet | non-custodial | experimental |
 | `shop` | checkout | non-custodial | experimental |
 | `spark26` | checkout | mixed | stable |
 | `trade` | wallet | non-custodial | stable |

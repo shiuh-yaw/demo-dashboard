@@ -89,7 +89,7 @@ const DEMO_CONFIGS = [
   // Same: apps/accounts owns its config and reads the theme through the
   // prospect. A kind missing from this list is created but never listed.
   { type: "accounts", label: "Accounts", icon: Users, configRoute: "" },
-  { type: "rimau", label: "Rimau", icon: Landmark, configRoute: "/rimau" },
+  { type: "exchange", label: "Exchange", icon: Landmark, configRoute: "/exchange" },
 ] as const satisfies readonly DemoConfig[];
 
 /**

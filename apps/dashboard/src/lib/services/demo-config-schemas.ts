@@ -36,7 +36,7 @@ export const DEMO_CONFIG_KINDS = [
   "card",
   "connections",
   "accounts",
-  "rimau",
+  "exchange",
 ] as const satisfies readonly DemoConfigKind[];
 
 export const demoConfigKindSchema = z.enum(DEMO_CONFIG_KINDS);
@@ -99,8 +99,8 @@ const accountsConfigSchema = z.object({
   config: permissiveConfig,
 });
 
-const rimauConfigSchema = z.object({
-  kind: z.literal("rimau"),
+const exchangeConfigSchema = z.object({
+  kind: z.literal("exchange"),
   config: permissiveConfig,
 });
 
@@ -123,7 +123,7 @@ export const demoConfigPayloadSchema = z.discriminatedUnion("kind", [
   cardConfigSchema,
   connectConfigSchema,
   accountsConfigSchema,
-  rimauConfigSchema,
+  exchangeConfigSchema,
 ]);
 
 /**

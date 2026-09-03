@@ -12,7 +12,7 @@ import { deleteEarnConfig } from "@/lib/actions/earns";
 import { deleteCheckout } from "@/lib/actions/checkouts";
 import { deleteRemittanceConfig } from "@/lib/actions/remittance";
 import { deleteTradeConfig } from "@/lib/actions/trade";
-import { deleteRimauConfig } from "@/lib/actions/rimau";
+import { deleteExchangeConfig } from "@/lib/actions/exchange";
 import { deleteVisaDirectConfig } from "@/lib/actions/visa-direct";
 import type {
   StoredWalletConfig,
@@ -20,7 +20,7 @@ import type {
   StoredCheckoutConfig,
   StoredRemittanceConfig,
   StoredTradeConfig,
-  StoredRimauConfig,
+  StoredExchangeConfig,
   StoredVisaDirectConfig,
 } from "@/lib/types/dashboard";
 import type { DemoKindListConfig } from "@/components/shared/demo-kind-list-client";
@@ -135,20 +135,20 @@ export const tradeListConfig: DemoKindListConfig<StoredTradeConfig> = {
   deleteAction: deleteTradeConfig,
 };
 
-export const rimauListConfig: DemoKindListConfig<StoredRimauConfig> = {
-  kind: "rimau",
-  pageTitle: "Rimau",
-  routeBase: "/rimau",
+export const exchangeListConfig: DemoKindListConfig<StoredExchangeConfig> = {
+  kind: "exchange",
+  pageTitle: "Exchange",
+  routeBase: "/exchange",
   icon: Landmark,
   newButtonLabel: "New Config",
   createButtonLabel: "Create Config",
-  emptyTitle: "No Rimau configs yet",
+  emptyTitle: "No Exchange configs yet",
   emptyDescription:
-    "Create your first Rimau config to customize the branding of the exchange demo.",
-  deleteModalTitle: "Delete Rimau Config",
-  deleteSuccessMessage: "Rimau config deleted",
+    "Create your first Exchange config to customize the branding of the exchange demo.",
+  deleteModalTitle: "Delete Exchange Config",
+  deleteSuccessMessage: "Exchange config deleted",
   deleteFailureMessage: "Failed to delete config",
-  deleteAction: deleteRimauConfig,
+  deleteAction: deleteExchangeConfig,
 };
 
 export const visaDirectListConfig: DemoKindListConfig<StoredVisaDirectConfig> = {

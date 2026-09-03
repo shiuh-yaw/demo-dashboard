@@ -32,5 +32,5 @@ export const DASHBOARD_EDITABLE_KINDS: ReadonlySet<DemoConfigKind> = new Set([
   "remittance",
   "trade",
   "visa-direct",
-  "rimau",
+  "exchange",
 ]);

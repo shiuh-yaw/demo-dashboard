@@ -64,6 +64,13 @@
       "status": "stable"
     },
     {
+      "name": "@dynamic-demos/exchange",
+      "kind": "app",
+      "flow_role": "wallet",
+      "custody": "non-custodial",
+      "status": "experimental"
+    },
+    {
       "name": "@dynamic-demos/flow",
       "kind": "app",
       "flow_role": "checkout",
@@ -194,13 +201,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "@dynamic-demos/rimau",
-      "kind": "app",
-      "flow_role": "wallet",
-      "custody": "non-custodial",
-      "status": "experimental"
     },
     {
       "name": "@dynamic-demos/shop",

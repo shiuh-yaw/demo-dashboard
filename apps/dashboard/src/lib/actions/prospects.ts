@@ -71,7 +71,7 @@ import {
   DEFAULT_WALLET_CONFIG,
   DEFAULT_REMITTANCE_CONFIG,
   DEFAULT_TRADE_CONFIG,
-  DEFAULT_RIMAU_CONFIG,
+  DEFAULT_EXCHANGE_CONFIG,
   DEFAULT_FLOW_CONFIG,
   DEFAULT_VISA_DIRECT_CONFIG,
 } from "@/lib/types/dashboard";
@@ -99,7 +99,7 @@ const PROSPECT_DEMO_TYPES = [
   "connections",
   "accounts",
   "visa-direct",
-  "rimau",
+  "exchange",
 ] as const satisfies readonly DemoConfigKind[];
 
 type ProspectDemoTypeKey = (typeof PROSPECT_DEMO_TYPES)[number];
@@ -132,7 +132,7 @@ async function createProspectDemoConfigs(
   const createConnect = createAll || options?.connections === true;
   const createAccounts = createAll || options?.accounts === true;
   const createVisaDirect = createAll || options?.["visa-direct"] === true;
-  const createRimau = createAll || options?.rimau === true;
+  const createExchange = createAll || options?.exchange === true;
 
   // Create Earn config with prospect settings
   if (createEarn) {
@@ -347,28 +347,28 @@ async function createProspectDemoConfigs(
     demos.trade = record.id;
   }
 
-  // Create Rimau config with prospect branding (theme hydrates from the
+  // Create Exchange config with prospect branding (theme hydrates from the
   // prospect on read, like trade - no theme editor)
-  if (createRimau) {
-    const rimauConfigPayload = {
-      ...DEFAULT_RIMAU_CONFIG,
+  if (createExchange) {
+    const exchangeConfigPayload = {
+      ...DEFAULT_EXCHANGE_CONFIG,
       branding: {
-        ...DEFAULT_RIMAU_CONFIG.branding,
+        ...DEFAULT_EXCHANGE_CONFIG.branding,
         appName: prospectName,
         logoUrl: prospect.logo === "custom" ? prospect.logoUrl : undefined,
       },
     };
     const record = await services.demoConfigs.create({
-      kind: "rimau",
+      kind: "exchange",
       ownerId,
-      name: `${prospectName} - Rimau`,
+      name: `${prospectName} - Exchange`,
       description: `Auto-generated from prospect profile: ${prospectId}`,
       prospectId,
       isPrimary: true,
       themeOverrides: null,
-      config: rimauConfigPayload as unknown as Record<string, unknown>,
+      config: exchangeConfigPayload as unknown as Record<string, unknown>,
     });
-    demos.rimau = record.id;
+    demos.exchange = record.id;
   }
 
   // Create Flow config with prospect theme + branding

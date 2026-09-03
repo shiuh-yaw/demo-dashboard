@@ -21,7 +21,7 @@ import { checkoutMapper } from "@/lib/services/demo-config-mappers/checkout";
 import { earnMapper } from "@/lib/services/demo-config-mappers/earn";
 import { remittanceMapper } from "@/lib/services/demo-config-mappers/remittance";
 import { tradeMapper } from "@/lib/services/demo-config-mappers/trade";
-import { rimauMapper } from "@/lib/services/demo-config-mappers/rimau";
+import { exchangeMapper } from "@/lib/services/demo-config-mappers/exchange";
 import { visaDirectMapper } from "@/lib/services/demo-config-mappers/visa-direct";
 import { walletMapper } from "@/lib/services/demo-config-mappers/wallet";
 import type {
@@ -54,7 +54,7 @@ const MAPPERS: Partial<Record<DemoConfigKind, ReadMapper>> = {
   "visa-direct": visaDirectMapper,
   checkout: checkoutMapper,
   remittance: remittanceMapper,
-  rimau: rimauMapper,
+  exchange: exchangeMapper,
 };
 
 export async function handleGetDemoConfig(rawInput: unknown): Promise<unknown> {

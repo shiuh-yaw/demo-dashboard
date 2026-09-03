@@ -502,42 +502,42 @@ export interface StoredTradeConfig {
 }
 
 // =============================================================================
-// Rimau Configuration (Branding)
+// Exchange Configuration (Branding)
 // =============================================================================
 
 /**
- * Rimau branding
- * Matches apps/rimau/lib/rimau-config.ts RimauBranding
+ * Exchange branding
+ * Matches apps/exchange/lib/exchange-config.ts ExchangeBranding
  */
-export interface RimauBranding {
+export interface ExchangeBranding {
   logoUrl?: string;
   appName?: string;
 }
 
 /**
- * Full Rimau configuration
- * Matches apps/rimau/lib/rimau-config.ts RimauConfig (theme is hydrated from
+ * Full Exchange configuration
+ * Matches apps/exchange/lib/exchange-config.ts ExchangeConfig (theme is hydrated from
  * the bound Prospect by the mapper, like trade)
  */
-export interface RimauConfig {
-  branding?: RimauBranding;
+export interface ExchangeConfig {
+  branding?: ExchangeBranding;
 }
 
 /**
- * Default Rimau configuration
+ * Default Exchange configuration
  */
-export const DEFAULT_RIMAU_CONFIG: RimauConfig = {
+export const DEFAULT_EXCHANGE_CONFIG: ExchangeConfig = {
   branding: {},
 };
 
 /**
- * Stored Rimau configuration with metadata
+ * Stored Exchange configuration with metadata
  */
-export interface StoredRimauConfig {
+export interface StoredExchangeConfig {
   id: string;
   name: string;
   description?: string;
-  config: RimauConfig;
+  config: ExchangeConfig;
   createdAt: string;
   updatedAt: string;
   ownerId?: string;

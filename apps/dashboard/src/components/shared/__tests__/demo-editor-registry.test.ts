@@ -20,7 +20,7 @@ describe("demoEditorRegistry", () => {
         "earn",
         "flow",
         "remittance",
-        "rimau",
+        "exchange",
         "trade",
         "visa-direct",
         "wallet",

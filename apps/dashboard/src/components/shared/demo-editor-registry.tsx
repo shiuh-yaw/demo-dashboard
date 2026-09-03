@@ -24,7 +24,7 @@ import { updateWalletConfig } from "@/lib/actions/wallets";
 import { updateEarnConfig } from "@/lib/actions/earns";
 import { updateRemittanceConfig } from "@/lib/actions/remittance";
 import { updateTradeConfig } from "@/lib/actions/trade";
-import { updateRimauConfig } from "@/lib/actions/rimau";
+import { updateExchangeConfig } from "@/lib/actions/exchange";
 import { updateVisaDirectConfig } from "@/lib/actions/visa-direct";
 import type { DemoConfigKind } from "@/lib/services/types";
 import {
@@ -33,14 +33,14 @@ import {
   type StoredEarnConfig,
   type StoredRemittanceConfig,
   type StoredTradeConfig,
-  type StoredRimauConfig,
+  type StoredExchangeConfig,
   type StoredVisaDirectConfig,
   type WalletConfig,
   type EarnConfig,
   type EarnBrand,
   type RemittanceConfig,
   type TradeConfig,
-  type RimauConfig,
+  type ExchangeConfig,
   type VisaDirectConfig,
 } from "@/lib/types/dashboard";
 
@@ -49,7 +49,7 @@ export type StoredDemoConfig =
   | StoredEarnConfig
   | StoredRemittanceConfig
   | StoredTradeConfig
-  | StoredRimauConfig
+  | StoredExchangeConfig
   | StoredVisaDirectConfig;
 
 export interface AppearanceState {
@@ -459,11 +459,11 @@ const tradeEntry: DemoEditorEntry = {
 };
 
 // ---------------------------------------------------------------------------
-// Rimau - branding only, trade's shape: logo URL + appName. The theme comes
+// Exchange - branding only, trade's shape: logo URL + appName. The theme comes
 // from the bound prospect (hydrated by the mapper), so no appearance editor.
 // ---------------------------------------------------------------------------
 
-function RimauKindFields({ state, setState }: KindFieldsProps) {
+function ExchangeKindFields({ state, setState }: KindFieldsProps) {
   const set = (patch: Partial<KindState>) =>
     setState((prev) => ({ ...prev, ...patch }));
   return (
@@ -480,7 +480,7 @@ function RimauKindFields({ state, setState }: KindFieldsProps) {
         <Input
           value={str(state.appName)}
           onChange={(e) => set({ appName: e.target.value })}
-          placeholder="Rimau"
+          placeholder="Exchange"
           className="dark:bg-background dark:text-foreground dark:border-border dark:placeholder:text-muted-foreground"
         />
       </Field>
@@ -488,23 +488,23 @@ function RimauKindFields({ state, setState }: KindFieldsProps) {
   );
 }
 
-const rimauEntry: DemoEditorEntry = {
+const exchangeEntry: DemoEditorEntry = {
   appearanceMode: "none",
-  backHref: "/rimau",
-  KindFields: RimauKindFields,
+  backHref: "/exchange",
+  KindFields: ExchangeKindFields,
   initAppearance: () => ({ theme: {}, branding: {} }),
   initKindState: (c) => {
-    const b = (c as StoredRimauConfig).config.branding;
-    return { logoUrl: b?.logoUrl ?? "", appName: b?.appName ?? "Rimau" };
+    const b = (c as StoredExchangeConfig).config.branding;
+    return { logoUrl: b?.logoUrl ?? "", appName: b?.appName ?? "Exchange" };
   },
   save: async (id, { name, kindState, prospectId }) => {
-    const config: Partial<RimauConfig> = {
+    const config: Partial<ExchangeConfig> = {
       branding: {
         logoUrl: str(kindState.logoUrl).trim() || undefined,
         appName: str(kindState.appName).trim() || undefined,
       },
     };
-    return updateRimauConfig(id, { name, config, prospectId });
+    return updateExchangeConfig(id, { name, config, prospectId });
   },
 };
 
@@ -620,7 +620,7 @@ export const demoEditorRegistry: Record<DemoConfigKind, DemoEditorEntry> = {
   card: cardEntry,
   connections: connectEntry,
   accounts: accountsEntry,
-  rimau: rimauEntry,
+  exchange: exchangeEntry,
 };
 
 export function getDemoEditorEntry(kind: DemoConfigKind): DemoEditorEntry {
