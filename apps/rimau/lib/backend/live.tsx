@@ -22,6 +22,7 @@ import {
   getEmbeddedEvmWallet,
   getEnabledSocialProviders,
   getExternalWallet,
+  getInitStatus,
   getUser,
   isEmailAuthEnabled,
   logout,
@@ -100,6 +101,16 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
   const [walletTick, setWalletTick] = useState(0);
   const seenUser = useRef<string | null>(null);
   const creating = useRef(false);
+
+  // A failed init leaves the card with no sign-in methods and no explanation.
+  // Name the likely causes instead: the SDK's own error is a bare "Failed to fetch".
+  useEffect(() => {
+    if (ready && getInitStatus() === "failed") {
+      setError(
+        "Could not reach Dynamic to load this environment. Check the environment id, that this origin is in the environment's CORS allowed origins, and that app.dynamicauth.com is reachable from this network.",
+      );
+    }
+  }, [ready]);
 
   const run = useCallback(async <T,>(label: string, fn: () => Promise<T>) => {
     setBusy(label);
