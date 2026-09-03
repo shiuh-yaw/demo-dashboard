@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBackend } from "@/lib/backend";
 import { useSession } from "@/lib/session/store";
 import { money } from "@/lib/format";
@@ -46,7 +46,12 @@ export function FundSheet({ open, onClose }: { open: boolean; onClose: () => voi
   const backend = useBackend();
   const { state } = useSession();
   const amounts = backend.faucetAmounts.length ? backend.faucetAmounts : [100, 500, 1000];
-  const [amount, setAmount] = useState<number>(amounts[Math.min(1, amounts.length - 1)] ?? 100);
+  // Default to the smallest amount; the live faucet's list arrives after mount,
+  // so re-pick when the list changes rather than trusting the initial state.
+  const [amount, setAmount] = useState<number>(amounts[0] ?? 10);
+  useEffect(() => {
+    if (!amounts.includes(amount)) setAmount(amounts[0] ?? 10);
+  }, [amounts, amount]);
 
   const fund = async () => {
     try {
