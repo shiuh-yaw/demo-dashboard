@@ -23,6 +23,8 @@ import {
   getEnabledSocialProviders,
   getExternalWallet,
   getExternalWalletOptions,
+  externalWalletDiagnostics,
+  rescanExternalWallets,
   getInitStatus,
   linkExternalWallet,
   getSponsorshipDiagnostics,
@@ -102,6 +104,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [walletTick, setWalletTick] = useState(0);
+  const [providerTick, setProviderTick] = useState(0);
   const seenUser = useRef<string | null>(null);
   const creating = useRef(false);
 
@@ -136,6 +139,29 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     ];
     return () => unsubs.forEach((u) => u?.());
   }, []);
+
+  // Browser wallets register asynchronously (EIP-6963 announcements); follow
+  // the registry so the connect sheet lists them the moment they appear, and
+  // re-ask once or twice after init for extensions that were slow to answer.
+  useEffect(() => {
+    const bump = () => setProviderTick((n) => n + 1);
+    const unsubs = [
+      onEvent({ event: "walletProviderRegistered", listener: bump }),
+      onEvent({ event: "walletProviderChanged", listener: bump }),
+      onEvent({ event: "walletProviderUnregistered", listener: bump }),
+    ];
+    return () => unsubs.forEach((u) => u?.());
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    const timers = [300, 2000].map((ms) =>
+      setTimeout(() => {
+        rescanExternalWallets();
+        setProviderTick((n) => n + 1);
+      }, ms),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [ready]);
 
   // Auth + embedded wallet → session. Also completes a beat-4 recovery.
   useEffect(() => {
@@ -304,10 +330,19 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
   );
 
   const externalWalletOptions = useMemo(
-    () => (ready && loggedIn ? getExternalWalletOptions() : []),
+    () => (ready ? getExternalWalletOptions() : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- providers appear as the client discovers them
-    [ready, loggedIn, walletTick],
+    [ready, walletTick, providerTick],
   );
+  const externalWalletHint = useMemo(
+    () => (ready ? externalWalletDiagnostics() : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- same triggers as the options list
+    [ready, walletTick, providerTick],
+  );
+  const rescan = useCallback(() => {
+    rescanExternalWallets();
+    setProviderTick((n) => n + 1);
+  }, []);
 
   const connectExternal = useCallback(
     async (walletProviderKey?: string) =>
@@ -361,6 +396,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     () => ({
       mode: "live",
       ready,
+      sessionActive: ready && loggedIn,
       busy,
       progress,
       error,
@@ -379,12 +415,14 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       transfer,
       externalWalletOptions,
       connectExternal,
+      rescanExternalWallets: rescan,
+      externalWalletHint,
       loseDevice,
       recover,
       refreshBalances,
       hardReset,
     }),
-    [ready, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, loseDevice, recover, refreshBalances, hardReset],
+    [ready, loggedIn, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, rescan, externalWalletHint, loseDevice, recover, refreshBalances, hardReset],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

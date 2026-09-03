@@ -243,6 +243,7 @@ export function StagedBackendProvider({ children }: { children: ReactNode }) {
     () => ({
       mode: "staged",
       ready: true,
+      sessionActive: true,
       busy,
       progress,
       error,

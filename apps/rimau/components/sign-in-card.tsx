@@ -24,7 +24,10 @@ export function SignInCard() {
   const [otp, setOtp] = useState<{ email: string; verification: unknown } | null>(null);
   const [code, setCode] = useState("");
 
-  const signedIn = hydrated && !!state.person && !!state.wallet && !state.deviceLost;
+  const signedIn = hydrated && backend.ready && backend.sessionActive && !!state.person && !!state.wallet && !state.deviceLost;
+  // The saved session outlived the SDK's: the JWT expired, or the SDK storage
+  // was cleared. Same account, same wallet - signing in again picks it back up.
+  const expired = hydrated && backend.ready && !backend.sessionActive && !!state.person && !state.deviceLost;
   useEffect(() => {
     if (signedIn) router.replace("/portfolio");
   }, [signedIn, router]);
@@ -100,10 +103,14 @@ export function SignInCard() {
           )}
         </div>
         <h2 className="text-lg font-semibold text-ink">
-          {returning ? `Welcome back, ${state.knownPerson!.name.split(" ")[0]}` : "Welcome back"}
+          {returning ? `Welcome back, ${state.knownPerson!.name.split(" ")[0]}` : expired ? `Welcome back, ${state.person!.name.split(" ")[0]}` : "Welcome back"}
         </h2>
         <p className="text-sm text-muted mt-1 mb-5">
-          {returning ? "New phone? Sign in the way you always do and your account comes with you." : "Sign in to your account."}
+          {returning
+            ? "New phone? Sign in the way you always do and your account comes with you."
+            : expired
+              ? "Your session timed out. Sign in with the same account and your wallet is right where you left it."
+              : "Sign in to your account."}
         </p>
         <LoginForm
           emailEnabled={backend.auth.emailEnabled}

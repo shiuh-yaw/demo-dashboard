@@ -29,7 +29,7 @@ export function ExchangeScreen({ children }: { children: ReactNode }) {
   const { state, hydrated } = useSession();
   const backend = useBackend();
   const router = useRouter();
-  const ok = hydrated && backend.ready && !!state.person && !!state.wallet && !state.deviceLost;
+  const ok = hydrated && backend.ready && backend.sessionActive && !!state.person && !!state.wallet && !state.deviceLost;
 
   useEffect(() => {
     if (hydrated && backend.ready && !ok) router.replace("/");

@@ -11,6 +11,7 @@
 
 import { createDynamicClient, type DynamicClient } from "@dynamic-labs-sdk/client";
 import { addEvmExtension } from "@dynamic-labs-sdk/evm";
+import { addEvmWindowInjectedExtension } from "@dynamic-labs-sdk/evm/window-injected";
 import { addZerodevExtension } from "@dynamic-labs-sdk/zerodev";
 import {
   createDynamicClientSingleton,
@@ -32,6 +33,10 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
     // EVM only: the wallet is an Ethereum Sepolia wallet, and the sponsored
     // transfer rides ZeroDev's EIP-7702 path (never ERC-4337).
     addEvmExtension(client);
+    // Fallback for wallets that only inject `window.ethereum` (older
+    // extensions, in-app wallet browsers). EIP-6963 announcements win when
+    // a wallet does both.
+    addEvmWindowInjectedExtension(client);
     addZerodevExtension(client);
   },
 });

@@ -98,6 +98,29 @@ export function getExternalWalletOptions(): ExternalWalletOption[] {
 }
 
 /**
+ * Ask every EIP-6963 wallet in the page to announce itself again. The SDK's
+ * listener stays registered for the life of the client, so a late-loading or
+ * re-enabled extension lands in the registry without a reload.
+ */
+export function rescanExternalWallets(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+}
+
+/** One line for the empty state: what the SDK registry holds and whether anything is injected. */
+export function externalWalletDiagnostics(): string {
+  const client = getClient();
+  let keys: string[] = [];
+  try {
+    keys = sdkGetAvailableWalletProvidersData().map((p) => p.key);
+  } catch {
+    keys = [];
+  }
+  const injected = typeof window !== "undefined" && "ethereum" in window;
+  return `SDK providers: ${keys.length ? keys.join(", ") : "none"} · window.ethereum ${injected ? "present" : "absent"} · client ${client?.initStatus ?? "not created"}`;
+}
+
+/**
  * Link an external wallet to the signed-in user: connect, then verify by
  * signature so it joins the user's wallet accounts (same session, same
  * policy surface as the embedded wallet).

@@ -26,6 +26,12 @@ export interface Backend {
   mode: Mode;
   /** SDK initialised (live) - always true in staged mode. */
   ready: boolean;
+  /**
+   * The backend still holds a sign-in. Live mode: the SDK session is valid
+   * (false once it expires, or after the SDK storage is wiped). Staged mode:
+   * always true; the saved person is the session.
+   */
+  sessionActive: boolean;
   /** Human-readable label of the operation in flight, or null. */
   busy: string | null;
   /** Multi-step progress (recovery), or null. */
@@ -57,6 +63,10 @@ export interface Backend {
   externalWalletOptions: { key: string; name: string; icon?: string }[];
   /** Link an external wallet by provider key. Staged mode ignores the key and simulates MetaMask. */
   connectExternal(walletProviderKey?: string): Promise<void>;
+  /** Live only: re-ask the page's wallets to announce themselves (EIP-6963). */
+  rescanExternalWallets?(): void;
+  /** Live only: what the SDK's provider registry holds, for the empty state. */
+  externalWalletHint?: string;
 
   /** Beat 4: discard the client share and the session on this device. */
   loseDevice(): Promise<void>;

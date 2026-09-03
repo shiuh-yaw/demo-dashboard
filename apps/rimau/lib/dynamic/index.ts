@@ -21,6 +21,8 @@ export {
   getZerodevWalletFor,
   getExternalWallet,
   getExternalWalletOptions,
+  rescanExternalWallets,
+  externalWalletDiagnostics,
   linkExternalWallet,
   isEvmWalletAccount,
   type ExternalWalletOption,

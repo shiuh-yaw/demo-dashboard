@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useBackend } from "@/lib/backend";
 import { Button, ErrorNote, Icon, Sheet } from "@/components/primitives";
 
@@ -11,6 +12,10 @@ import { Button, ErrorNote, Icon, Sheet } from "@/components/primitives";
 export function ConnectSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const backend = useBackend();
   const options = backend.externalWalletOptions;
+  const rescan = backend.rescanExternalWallets;
+  useEffect(() => {
+    if (open) rescan?.();
+  }, [open, rescan]);
   const go = async (key?: string) => {
     try {
       await backend.connectExternal(key);
@@ -32,9 +37,15 @@ export function ConnectSheet({ open, onClose }: { open: boolean; onClose: () => 
         </ul>
         <ErrorNote message={backend.error} onDismiss={backend.clearError} />
         {options.length === 0 ? (
-          <p className="rounded-xl bg-ground p-3.5 text-[13px] text-muted">
-            No browser wallet found. Install MetaMask or another EVM wallet extension in this browser, then reopen this sheet.
-          </p>
+          <div className="rounded-xl bg-ground p-3.5 text-[13px] text-muted space-y-2">
+            <p>No browser wallet found. Install MetaMask or another EVM wallet extension in this browser, unlock it, then scan again.</p>
+            {backend.externalWalletHint ? <p className="font-mono text-[11px] break-words">{backend.externalWalletHint}</p> : null}
+            {rescan ? (
+              <Button size="sm" variant="secondary" onClick={rescan}>
+                Scan again
+              </Button>
+            ) : null}
+          </div>
         ) : (
           <div className="space-y-2">
             {options.map((o) => (
