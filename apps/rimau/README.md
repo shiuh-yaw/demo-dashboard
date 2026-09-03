@@ -12,6 +12,8 @@ Press **P** for the presenter rail. Beat 1 is the sign-in card on `/`; beats 2 a
 
 ## Live mode (Dynamic sandbox) checklist
 
+**Connect MetaMask asks to confirm it's you.** That is Dynamic's step-up authentication (on by default for new environments): the app re-verifies you, silently with the embedded wallet where the backend allows it, otherwise with an email code or a quick social round trip, then links the wallet. Nothing to configure.
+
 Staged mode needs nothing. Live mode needs a Dynamic **sandbox** environment set up like this, then the env vars below.
 
 In the Dynamic dashboard (https://app.dynamic.xyz), on the sandbox environment:

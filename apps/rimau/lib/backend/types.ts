@@ -63,6 +63,14 @@ export interface Backend {
   externalWalletOptions: { key: string; name: string; icon?: string }[];
   /** Link an external wallet by provider key. Staged mode ignores the key and simulates MetaMask. */
   connectExternal(walletProviderKey?: string): Promise<void>;
+  /**
+   * Step-up in progress for the link (environments that enforce it): the
+   * sheet shows a code field for `email`. Silent methods never surface here.
+   */
+  linkStepUp: { kind: "email"; email: string; walletProviderKey: string } | null;
+  /** Finish an email step-up with the one-time code, then link the wallet. */
+  submitLinkStepUpCode(code: string): Promise<void>;
+  cancelLinkStepUp(): void;
   /** Live only: re-ask the page's wallets to announce themselves (EIP-6963). */
   rescanExternalWallets?(): void;
   /** Live only: what the SDK's provider registry holds, for the empty state. */

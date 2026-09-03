@@ -33,3 +33,4 @@ export { getSepoliaNetwork, isNetworkSponsored, switchToSepolia, type NetworkDat
 export { readBalances, sendUsdc, publicClient, getSponsorshipDiagnostics, type SponsorshipDiagnostics } from "./evm";
 export { onEvent, getInitStatus, waitForClientInitialized, type InitStatus } from "./events";
 export { wipeSdkStorage } from "./storage";
+export { LINK_SCOPE, checkLinkStepUp, hasLinkToken, mintLinkTokenWithWallet, withLinkStepUp, type LinkStepUp } from "./step-up";

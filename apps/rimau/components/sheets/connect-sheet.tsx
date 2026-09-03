@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Input } from "@dynamic-demos/ui";
 import { useBackend } from "@/lib/backend";
 import { Button, ErrorNote, Icon, Sheet } from "@/components/primitives";
 
@@ -13,6 +14,7 @@ export function ConnectSheet({ open, onClose }: { open: boolean; onClose: () => 
   const backend = useBackend();
   const options = backend.externalWalletOptions;
   const rescan = backend.rescanExternalWallets;
+  const [code, setCode] = useState("");
   useEffect(() => {
     if (open) rescan?.();
   }, [open, rescan]);
@@ -24,6 +26,43 @@ export function ConnectSheet({ open, onClose }: { open: boolean; onClose: () => 
       /* inline */
     }
   };
+  if (backend.linkStepUp?.kind === "email") {
+    const stepUp = backend.linkStepUp;
+    return (
+      <Sheet open={open} onClose={onClose} title="Confirm it's you">
+        <form
+          className="space-y-4"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!code.trim()) return;
+            try {
+              await backend.submitLinkStepUpCode(code.trim());
+              setCode("");
+              onClose();
+            } catch {
+              /* inline */
+            }
+          }}
+        >
+          <p className="text-[14px] text-ink-2">
+            Adding a wallet changes how this account can be used, so Rimau re-checks it's you first. Enter the code sent to <span className="font-medium text-ink">{stepUp.email}</span>.
+          </p>
+          <Input label="Verification code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="6-digit code" maxLength={6} autoFocus inputMode="numeric" disabled={!!backend.busy} />
+          <ErrorNote message={backend.error} onDismiss={backend.clearError} />
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" className="flex-1" onClick={backend.cancelLinkStepUp} disabled={!!backend.busy}>
+              Back
+            </Button>
+            <Button type="submit" className="flex-1" loading={!!backend.busy} disabled={!code.trim()}>
+              Continue
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted">Step-up authentication: a short-lived, single-purpose token, scoped to this one action.</p>
+        </form>
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet open={open} onClose={onClose} title="Connect your own wallet">
       <div className="space-y-4">

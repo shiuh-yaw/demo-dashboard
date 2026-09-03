@@ -19,6 +19,7 @@ import {
   createSafeWrapper as packageCreateSafeWrapper,
 } from "@dynamic-demos/dynamic/client-singleton";
 import { resolveCredentials } from "@dynamic-demos/dynamic/resolve-credentials";
+import { linkStepUpHeaders } from "./step-up";
 
 const singleton = createDynamicClientSingleton<DynamicClient>({
   create: () => {
@@ -27,6 +28,9 @@ const singleton = createDynamicClientSingleton<DynamicClient>({
       environmentId,
       autoInitialize: true,
       metadata: { name: "Rimau Exchange" },
+      // Step-up: carry the `credential:link` elevated token on the wallet-link
+      // request. The SDK mints it but does not attach it there (see step-up.ts).
+      coreConfig: { getApiHeaders: linkStepUpHeaders },
     });
   },
   extend: (client) => {

@@ -27,6 +27,10 @@ import {
   rescanExternalWallets,
   getInitStatus,
   linkExternalWallet,
+  LINK_SCOPE,
+  checkLinkStepUp,
+  mintLinkTokenWithWallet,
+  withLinkStepUp,
   getSponsorshipDiagnostics,
   getUser,
   isEmailAuthEnabled,
@@ -44,6 +48,8 @@ import {
 import { BackendContext } from "./context";
 import { APY, fakeTxHash, uid } from "./sim";
 import { SEPOLIA_CHAIN_ID, SEPOLIA_NAME, type Backend, type Progress } from "./types";
+
+const PENDING_LINK_KEY = "rimau:pending-link";
 
 const personFrom = (user: UserLike): Person => {
   const social = user.verifiedCredentials?.find((c) => c.oauthProvider);
@@ -105,6 +111,8 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [walletTick, setWalletTick] = useState(0);
   const [providerTick, setProviderTick] = useState(0);
+  const [linkStepUp, setLinkStepUp] = useState<Backend["linkStepUp"]>(null);
+  const otpRef = useRef<OTPVerification | null>(null);
   const seenUser = useRef<string | null>(null);
   const creating = useRef(false);
 
@@ -344,16 +352,80 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
     setProviderTick((n) => n + 1);
   }, []);
 
+  /** The link itself: elevated token attached (when one exists), then the wallet's signature prompt. */
+  const linkNow = useCallback(async (key: string) => {
+    await withLinkStepUp(() => linkExternalWallet(key));
+    setLinkStepUp(null);
+    setWalletTick((n) => n + 1);
+  }, []);
+
   const connectExternal = useCallback(
     async (walletProviderKey?: string) =>
       run("Connecting wallet", async () => {
         const key = walletProviderKey ?? externalWalletOptions[0]?.key;
         if (!key) throw new Error("No browser wallet was found. Install MetaMask (or another EVM wallet extension) in this browser, then try again.");
-        await linkExternalWallet(key);
-        setWalletTick((n) => n + 1);
+        // Step-up (Dynamic re-verifies the user before a credential is linked).
+        const need = await checkLinkStepUp({ embedded: getEmbeddedEvmWallet(), email: getUser()?.email ?? undefined });
+        if (need.kind === "wallet") {
+          const embedded = getEmbeddedEvmWallet();
+          if (!embedded) throw new Error("No embedded wallet to re-verify with.");
+          setBusy("Confirming it's you");
+          await mintLinkTokenWithWallet(embedded);
+        } else if (need.kind === "email") {
+          setBusy("Sending your code");
+          otpRef.current = await sendEmailOTP({ email: need.email });
+          setLinkStepUp({ kind: "email", email: need.email, walletProviderKey: key });
+          return;
+        } else if (need.kind === "social") {
+          window.sessionStorage.setItem(PENDING_LINK_KEY, key);
+          await authenticateWithSocial({ provider: need.provider as SocialProvider, redirectUrl: `${window.location.origin}/portfolio` });
+          return;
+        } else if (need.kind === "unsupported") {
+          throw new Error(`This environment requires step-up before linking, and none of the user's credentials (${need.formats.join(", ") || "none"}) can be re-verified here.`);
+        }
+        setBusy("Connecting wallet");
+        await linkNow(key);
       }),
-    [run, externalWalletOptions],
+    [run, externalWalletOptions, linkNow],
   );
+
+  const submitLinkStepUpCode = useCallback(
+    async (code: string) =>
+      run("Confirming it's you", async () => {
+        const pending = linkStepUp;
+        const otp = otpRef.current;
+        if (!pending || pending.kind !== "email" || !otp) throw new Error("No step-up in progress.");
+        await verifyOTP({ otpVerification: otp, verificationToken: code, requestedScopes: [LINK_SCOPE] });
+        otpRef.current = null;
+        setBusy("Connecting wallet");
+        await linkNow(pending.walletProviderKey);
+      }),
+    [run, linkStepUp, linkNow],
+  );
+
+  const cancelLinkStepUp = useCallback(() => {
+    otpRef.current = null;
+    setLinkStepUp(null);
+  }, []);
+
+  // Social step-up comes back here with the OAuth code: finish it for the
+  // link scope, then continue the link that was pending.
+  const pendingLinkHandled = useRef(false);
+  useEffect(() => {
+    if (!ready || !loggedIn || pendingLinkHandled.current) return;
+    const key = window.sessionStorage.getItem(PENDING_LINK_KEY);
+    if (!key) return;
+    pendingLinkHandled.current = true;
+    window.sessionStorage.removeItem(PENDING_LINK_KEY);
+    void run("Confirming it's you", async () => {
+      if (await detectOAuthRedirect()) {
+        await completeSocialAuthentication([LINK_SCOPE]);
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+      setBusy("Connecting wallet");
+      await linkNow(key);
+    }).catch(() => undefined);
+  }, [ready, loggedIn, run, linkNow]);
 
   const loseDevice = useCallback(async () => {
     dispatch({ type: "activity", item: { id: uid(), at: Date.now(), kind: "device-lost", title: "Device lost", detail: "Client share and session discarded on this device. The enclave share alone cannot sign." } });
@@ -415,6 +487,9 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       transfer,
       externalWalletOptions,
       connectExternal,
+      linkStepUp,
+      submitLinkStepUpCode,
+      cancelLinkStepUp,
       rescanExternalWallets: rescan,
       externalWalletHint,
       loseDevice,
@@ -422,7 +497,7 @@ export function LiveBackendProvider({ children }: { children: ReactNode }) {
       refreshBalances,
       hardReset,
     }),
-    [ready, loggedIn, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, rescan, externalWalletHint, loseDevice, recover, refreshBalances, hardReset],
+    [ready, loggedIn, busy, progress, error, auth, sponsorship, signInWithSocial, sendEmailCode, verifyEmailCode, completeOAuthRedirect, signOut, fund, state.wallet?.address, openPosition, transfer, externalWalletOptions, connectExternal, linkStepUp, submitLinkStepUpCode, cancelLinkStepUp, rescan, externalWalletHint, loseDevice, recover, refreshBalances, hardReset],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

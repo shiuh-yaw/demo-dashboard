@@ -18,6 +18,7 @@ import {
   waitForClientInitialized as sdkWaitForClientInitialized,
   type OTPVerification,
   type SocialProvider,
+  type TokenScope,
 } from "@dynamic-labs-sdk/client";
 import { getClient, createSafeWrapper } from "./client";
 
@@ -54,7 +55,8 @@ export async function sendEmailOTP(params: { email: string }): Promise<OTPVerifi
   return sdkSendEmailOTP(params);
 }
 
-export async function verifyOTP(params: { otpVerification: OTPVerification; verificationToken: string }) {
+/** Signs in, or - for a signed-in user with `requestedScopes` - re-verifies to mint an elevated access token. */
+export async function verifyOTP(params: { otpVerification: OTPVerification; verificationToken: string; requestedScopes?: TokenScope[] }) {
   const client = getClient();
   if (!client) throw new Error("Dynamic client not initialized");
   await sdkWaitForClientInitialized(client);
@@ -76,11 +78,12 @@ export async function detectOAuthRedirect(): Promise<boolean> {
   return sdkDetectOAuthRedirect({ url: new URL(window.location.href) });
 }
 
-export async function completeSocialAuthentication() {
+/** Finishes the OAuth round trip; with `requestedScopes` a signed-in user gets an elevated access token instead of a new session. */
+export async function completeSocialAuthentication(requestedScopes?: TokenScope[]) {
   const client = getClient();
   if (!client) throw new Error("Dynamic client not initialized");
   await sdkWaitForClientInitialized(client);
-  return sdkCompleteSocialAuthentication({ url: new URL(window.location.href) });
+  return sdkCompleteSocialAuthentication({ url: new URL(window.location.href), requestedScopes });
 }
 
 /** Structural view of the parts of the user profile this demo reads. */
