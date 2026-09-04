@@ -55,15 +55,18 @@ async function treasuryBalances(address: `0x${string}`) {
   return { eth: Number(formatUnits(eth, 18)), usdc: Number(formatUnits(usdc, 6)) };
 }
 
+/**
+ * Also the deploy health check, so it must answer fast: the balance read is
+ * best-effort with a short deadline, and a slow RPC just omits the numbers.
+ */
 export async function GET() {
   const t = treasury();
   if (!t) return NextResponse.json({ enabled: false, amounts: [] });
-  try {
-    const balances = await treasuryBalances(t.account.address);
-    return NextResponse.json({ enabled: true, amounts: limits.amounts, treasury: { address: t.account.address, ...balances } });
-  } catch {
-    return NextResponse.json({ enabled: true, amounts: limits.amounts, treasury: { address: t.account.address } });
-  }
+  const balances = await Promise.race([
+    treasuryBalances(t.account.address).catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 4_000)),
+  ]);
+  return NextResponse.json({ enabled: true, amounts: limits.amounts, treasury: { address: t.account.address, ...(balances ?? {}) } });
 }
 
 export async function POST(req: Request) {
