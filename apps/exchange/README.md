@@ -46,6 +46,23 @@ Before the session, pre-fund the wallet with **Sepolia USDC** (Circle faucet: ht
 
 Rehearse beats 3 and 4 against the sandbox once before the day: beat 3 signs the EIP-7702 authorization on the first sponsored send, and beat 4's "Lose device A" wipes this browser's SDK storage, so the restore is only faithful with a real sign-in afterwards.
 
+## Deploy to Railway
+
+`apps/exchange/Dockerfile` builds the app from the repo root without a JFrog token (it applies the lockfile rewrite below inside the image). `apps/exchange/railway.json` points Railway at it and sets the health check.
+
+1. Railway → New project → Deploy from GitHub repo → pick this repo and the branch. Leave **Root Directory** empty; the workspace install needs the repo root.
+2. Service → Settings → Config-as-code: set the path to `apps/exchange/railway.json`. (Alternative: add the variable `RAILWAY_DOCKERFILE_PATH=apps/exchange/Dockerfile`.)
+3. Service → Variables, before the first build (the `NEXT_PUBLIC_*` values are inlined at build time):
+   - `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` - the sandbox environment id.
+   - `NEXT_PUBLIC_SEPOLIA_RPC_URL` - an Alchemy or Infura Sepolia URL; the public RPC rate-limits a shared host.
+   - `FAUCET_PRIVATE_KEY` - the treasury key, if you want "Add funds" live. Server-only. Optional `FAUCET_MAX_USDC`, `FAUCET_DAILY_PER_ADDRESS`.
+   - Leave `NEXT_PUBLIC_APP_ENV` unset (sandbox by default, D-005).
+4. Settings → Networking → Generate domain. Copy it.
+5. Dynamic dashboard → the sandbox environment → Settings → Security → **Allowed origins**: add `https://<your-domain>`. Without it the SDK cannot initialise from that host and Google sign-in cannot return to it.
+6. Redeploy once after adding variables. Health: `https://<your-domain>/api/faucet` returns `{"enabled":true,...}` when the faucet key loaded.
+
+Changing a `NEXT_PUBLIC_*` variable later needs a rebuild (Railway does one automatically when variables change). The first build takes about ten minutes; later ones reuse the layer cache.
+
 ## Installing without Artifactory access
 
 The workspace `.npmrc` routes every package through Fireblocks' JFrog mirror (`JFROG_TOKEN`, a Fireblocks infra credential; CI has it as a repo secret). If you cannot get a token, install from public npm instead. The lockfile pins mirror URLs and mirror checksums for the `@dynamic-labs*` packages, so rewrite those entries in a working copy, install, then restore the lockfile. Local only - never commit the rewritten lockfile.

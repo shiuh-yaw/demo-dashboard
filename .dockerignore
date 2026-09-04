@@ -1,0 +1,14 @@
+# Docker build context is the repo root (monorepo installs need the workspace).
+.git
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/tsconfig.tsbuildinfo
+**/*.log
+**/coverage
+**/playwright-report
+**/test-results
